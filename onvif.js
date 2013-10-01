@@ -1,7 +1,16 @@
+//
+// onvif.js
+//
+// talks to onvif cameras 
+//
+
 var request = require('request');
 
 
-//
+/**
+ * testIpForOnvifCamera
+ *
+ */
 var testIpForOnvifCamera = function( ip, cb ) {
     request({ 
             method: 'GET', 
@@ -19,8 +28,14 @@ var testIpForOnvifCamera = function( ip, cb ) {
             }
     });
 }
+// - - end of testIpForOnvifCamera
+// - - - - - - - - - - - - - - - - - - - -
 
-//
+
+/**
+ * findOnvifCamera
+ *
+ */
 var findOnvifCamera = function( ipPrefix, cb ) {
     
     var total = 0;
@@ -47,6 +62,10 @@ var findOnvifCamera = function( ipPrefix, cb ) {
         });
     }
 }
+// - - end of findOnvifCamera
+// - - - - - - - - - - - - - - - - - - - -
 
+
+// exports
 exports.scan = findOnvifCamera
 

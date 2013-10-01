@@ -1,14 +1,29 @@
+//
+// db.js
+//
+// queries the sqlite database
+//
+
 var sqlite3 = require('sqlite3').verbose();
 var path = require('path');
 var fs = require('fs');
 
+
+/**
+ * setup
+ *
+ */
 var setup = function() {
-    
     createVideosTable();
-    createNewVideosTable();
 }
+// - - end of setup
+// - - - - - - - - - - - - - - - - - - - -
 
 
+/**
+ * testIpForOnvifCamera
+ *
+ */
 var createVideosTable = function() {
     var db = new sqlite3.Database('db.sqlite');
 
@@ -19,152 +34,14 @@ var createVideosTable = function() {
         db.close();
     });
 }
+// - - end of createVideosTable
+// - - - - - - - - - - - - - - - - - - - -
 
 
-var createNewVideosTable = function() {
-    var db = new sqlite3.Database('db.sqlite');
-    
-    db.run("CREATE TABLE new_videos (id INTEGER PRIMARY KEY AUTOINCREMENT, cam INT, file TEXT, start INT, end INT)", function(err) {
-        if (err) {
-            console.log("error: " + err);
-        }
-        db.close();
-    });
-}
-
-
-var getNewVideos = function(cb) {
-
-    var db = new sqlite3.Database('db.sqlite');
-    
-    var videosList = [];
-
-    db.all("SELECT file, start FROM new_videos ORDER BY start ASC", 
-            function(err, rows) {    
-
-                if (err) {
-                    console.log("error retrieving list of new videos: " + err);
-                }
-
-                var offset = 0;
-                console.log("found " + rows.length + "new videos");
-                for (var i = 0; i < rows.length; i++) {
-                    videosList.push( rows[i] );
-                }
-                db.close();
-                cb( err, videosList );
-            });      
-}
-
-//
-var getNewVideoByFilename = function( filename, cb ) {
-    
-    filename = path.basename( filename );
-    
-    var db = new sqlite3.Database('db.sqlite');
-    var videosList = [];
-
-    db.all("SELECT * FROM new_videos", 
-            function(err, rows) {    
-
-                if (err) {
-                    console.log("error retrieving list of new videos: " + err);
-                } 
-                else {
-                    for (var i = 0; i < rows.length; i++) {
-                        if ( filename == path.basename( rows[i].file ) ) { 
-                            var video = {
-                                id: rows[i].id,
-                                file: rows[i].file,
-                                cam: rows[i].cam,
-                                start: rows[i].start,
-                                end: rows[i].end
-                            };
-                            videosList.push( rows[i] );
-                        }
-                    }
-                }
-                db.close();
-                cb( err, videosList );
-            });     
-}
-
-//
-archiveNewVideoByFilename = function( filename, cb ) {
-    getNewVideoByFilename( filename, function(err, list) {
-        if (err) {
-            console.log("error while archiving new video: " + err);
-        }
-        else if (list.length > 0) {
-            var video = list[0];
-            archiveNewVideo(video, function() {});
-
-        } else {
-            console.log("no new videos yet");
-        }
-    });
-}
-
-//
-archiveNewVideo = function( video, cb ) {
-    console.log("archiving...");
-    console.log(video);
-
-    var filename = video.file;
-
-    removeNewVideo( video.id, function(err) {
-        if (err) {
-            console.log("error archiving video: " + err);
-        }
-        else {
-            var dest = __dirname + "/videos/" + Date.now() + path.extname(filename);
-            fs.rename( filename, dest, function(err) {
-                if (err) {
-                    console.log("an error occurred when trying to move " + filename + " to " + dest);
-                }
-                else {
-                    video.file = dest;
-                    insertVideo( video );
-                }
-            });            
-        }
-    });
-}
-
-
-var removeNewVideo = function( new_video_id, cb ) {
-     var db = new sqlite3.Database('db.sqlite');
-
-     db.run("DELETE FROM new_videos WHERE id = " + new_video_id, function(err) {
-
-         if (err) {
-             console.log("error removing new video " + new_video_id + "from database: " + err);
-         }
-         
-         cb(err);
-
-         db.close();
-     });
-}
-
-
-var insertNewVideo = function( data ) {
-    var db = new sqlite3.Database('db.sqlite');
-
-    db.run("INSERT INTO new_videos( cam, file, start, end )" +
-            "VALUES( \""+data.cam+"\", " +
-            "\""+data.file+"\", " +
-            "\""+data.start+"\", " +
-            "\""+data.end+"\")",
-            function(err){
-                if (err) { 
-                    console.log("error inserting new video: " + err); 
-                }
-                db.close();
-            });
-}
-
-
+/**
+ * insertVideo
+ *
+ */
 var insertVideo = function( data ) {
     var db = new sqlite3.Database('db.sqlite');
 
@@ -180,8 +57,14 @@ var insertVideo = function( data ) {
                 db.close();
             });
 }
+// - - end of insertVideo
+// - - - - - - - - - - - - - - - - - - - -
 
 
+/**
+ * searchVideosByInterval
+ *
+ */
 var searchVideosByInterval = function( start, end, cb ) {
 
     var db = new sqlite3.Database('db.sqlite');
@@ -219,7 +102,15 @@ var searchVideosByInterval = function( start, end, cb ) {
                 cb( err, fileList, offset );
             });    
 }
+// - - end of searchVideosByInterval
+// - - - - - - - - - - - - - - - - - - - -
 
+
+
+/**
+ * searchVideoByTime
+ *
+ */
 var searchVideoByTime = function( startTime, cb ) {
     var db = new sqlite3.Database('db.sqlite');
 
@@ -246,8 +137,15 @@ var searchVideoByTime = function( startTime, cb ) {
                 db.close();
             });
 }
+// - - end of searchVideoByTime
+// - - - - - - - - - - - - - - - - - - - -
 
 
+
+/**
+ * listAll
+ *
+ */
 var listAll = function( table ) {
     var db = new sqlite3.Database('db.sqlite');
     
@@ -257,14 +155,15 @@ var listAll = function( table ) {
 
     db.close();
 }
+// - - end of listAll
+// - - - - - - - - - - - - - - - - - - - -
 
 
+// exports
 exports.setup = setup
 exports.searchVideosByInterval = searchVideosByInterval
 exports.listAll = listAll
 exports.insertVideo = insertVideo
-exports.insertNewVideo = insertNewVideo
-exports.archiveNewVideoByFilename = archiveNewVideoByFilename
 exports.searchVideoByTime = searchVideoByTime
-exports.getNewVideoByFilename = getNewVideoByFilename
+
 

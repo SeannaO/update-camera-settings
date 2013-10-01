@@ -1,3 +1,9 @@
+//
+// ffmpeg.js
+//
+// calls to ffmpeg
+//
+
 var ffmpeg = require('fluent-ffmpeg');
 var fs = require('fs');
 var path = require('path');
@@ -11,6 +17,10 @@ var Metalib = ffmpeg.Metadata;
  */
 var convertFromTsToMp4 = function( tsFile, cb ) {
     
+    console.log("- - - convertFromTsToMp4 - - -");
+    console.log("file: " + tsFile);
+    console.log("- - -");
+
     var exec = require('child_process').exec;
 
     var mp4File = __dirname + "/tmp/" + path.basename(tsFile, '.ts') + ".mp4"; 
@@ -35,10 +45,13 @@ var convertFromTsToMp4 = function( tsFile, cb ) {
  */
 var snapshot = function ( file, offset, cb ) { 
 
-    console.log("taking a snapshot of: " + file + " offset: " + offset);
+    console.log("- - - snapshot - - -");
+    console.log("file: " + file);
+    console.log("offset: " + offset);
+    console.log("- - -");
     
     var ext = path.extname(file);
-    console.log("file: " + file);
+
     if (ext == ".ts") {
         convertFromTsToMp4( file, function( mp4file, error ) {
             if (error) {
@@ -77,15 +90,15 @@ var snapshot = function ( file, offset, cb ) {
  */
 var stitch = function( files, out, offset, cb ) {
     
+    console.log("- - - stitch - - -");
+    console.log("offset: " + offset);
+    console.log("- - -");
+
     var exec = require('child_process').exec;
 
     var fileList = files.join('|');
     fileList = "concat:" + fileList;
     
-    console.log("* * * offset * * *");
-    console.log(offset);
-    console.log("* * *");
-
     var child = exec('ffmpeg -y  -i "' + fileList + '" -ss ' + offset.begin/1000 + ' -t ' + offset.duration/1000 + ' -c copy ' + out,
             function (error, stdout, stderr) {
                 if (error !== null) {
@@ -168,8 +181,11 @@ var sendWebMStream = function(req, res) {
  */
 var sendMp4Stream = function(file, offset, req, res) {
     
+    console.log("- - - sendMp4Stream - - -");
+    console.log("offset: " + offset);
     console.log("file: " + file);
-    //file = "tmp/0.mp4"
+    console.log("- - -");
+    
     fs.exists(file, function(exists) {
         if (!exists) {
             console.log("sendStream: couldn't find video " + file + "." );

@@ -1,8 +1,17 @@
+//
+// hls.js
+//
+// module for handling hls streams
+// 
+
 var path = require('path');
 var ffmpeg = require('./ffmpeg');
 
-//
 
+/**
+ * generatePlaylist
+ *
+ */
 var generatePlaylist = function( videos, targetDuration, closed, cb ) {
     
     var content = "#EXTM3U\n" +
@@ -20,7 +29,14 @@ var generatePlaylist = function( videos, targetDuration, closed, cb ) {
 
     cb( content );
 }
+// - - end of generatePlaylist
+// - - - - - - - - - - - - - - - - - - - -
 
+
+/**
+ * calculateLengths
+ *
+ */
 var calculateLengths = function( files, cb ) {
 
     var counter = 0;
@@ -43,8 +59,11 @@ var calculateLengths = function( files, cb ) {
         });
     }
 }
+// - - end of calculateLengths
+// - - - - - - - - - - - - - - - - - - - -
 
 
+// exports
 exports.generatePlaylist = generatePlaylist
 exports.calculateLengths = calculateLengths
 
