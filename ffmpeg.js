@@ -25,6 +25,7 @@ var convertFromTsToMp4 = function( tsFile, cb ) {
                 cb( mp4File, error );
             });    
 }
+// - - end of convertFromTsToMp4
 // - - - - - - - - - - - - - - - - - - - -
 
 
@@ -66,6 +67,7 @@ var snapshot = function ( file, offset, cb ) {
             });    
     }
 }
+// - - end of snapshot
 // - - - - - - - - - - - - - - - - - - - -
 
 
@@ -94,40 +96,7 @@ var stitch = function( files, out, offset, cb ) {
                 cb( out, error );
             });
 }
-// - - - - - - - - - - - - - - - - - - - -
-
-
-/**
- * recordRTSPts
- *
- */
-function recordRTSPts (input, out, cb) {
-
-    var error = false;
-    
-    var fileName = out + ".ts"
-
-	var util = require('util'),
-			exec = require('child_process').exec,
-			//rate = 4, // Video FPS rate.
-			quality = 'qvga', // Quality of the image
-			extraparams = '-b:v 32k';
-
-    // -c copy: faster
-    // -c:v libx264 - converts to h264
-    var child = exec('ffmpeg -y -i ' + input + ' -preset ultrafast -c:v libx264 -an -t 30 -f mpegts ' + fileName,
-		function (error, stdout, stderr) {
-            
-			if (error !== null) {
-                error = true;
-				console.error('FFmpeg\'s ' + out + ' exec error: ' + error);
-                console.log(stderr);
-			}
-            cb(fileName, error);
-	    }
-    );
-
-}
+// - - end of stitch
 // - - - - - - - - - - - - - - - - - - - -
 
 
@@ -142,60 +111,7 @@ function calcDuration(input, cb) {
         cb( metadata.durationsec, input );
     });    
 }
-// - - - - - - - - - - - - - - - - - - - -
-
-
-/**
- * recordRTSP
- *
- */
-function recordRTSP (input, out, cb) {
-
-    var error = false;
-
-    var fileName = out + ".mp4"
-	var util = require('util'),
-			exec = require('child_process').exec,
-			quality = 'qvga',
-			extraparams = '-b:v 32k';
-
-    var child = exec('ffmpeg -y -i ' + input + ' -preset ultrafast -c:v libx264 -an -t 30 ' + fileName,
-
-		function (error, stdout, stderr) {
-            
-			if (error !== null) {
-                error = true;
-				console.error('FFmpeg\'s ' + out + ' exec error: ' + error);
-			}
-            cb(fileName, error);
-	    }
-    );
-
-    /*
-	child.on('exit', function (code) {
-        cb(error);
-	});
-	child.on('SIGTERM', function() {
-        cb(error);
-	});
-    */
-}
-// - - - - - - - - - - - - - - - - - - - -
-
-
-/**
- * sendFlashStream
- *
- */
-var sendFlashStream = function(req, res) {
-    res.contentType('video/mp4');
-    var pathToMovie = './test_video.mp4'; 
-    var proc = new ffmpeg({ source: pathToMovie, nolog: true })
-        .usingPreset('flash')
-        .writeToStream(res, function(retcode, error){
-            console.log('file has been converted succesfully');
-        });
-}
+// - - end of calcDuration
 // - - - - - - - - - - - - - - - - - - - -
 
 
@@ -242,14 +158,15 @@ var sendWebMStream = function(req, res) {
             }
         });
 }
+// - - end of sendWebMStream
 // - - - - - - - - - - - - - - - - - - - -
 
 
 /**
- * sendStreamDirectly
+ * sendMp4Stream
  *
  */
-var sendStreamDirectly = function(file, offset, req, res) {
+var sendMp4Stream = function(file, offset, req, res) {
     
     console.log("file: " + file);
     //file = "tmp/0.mp4"
@@ -300,17 +217,13 @@ var sendStreamDirectly = function(file, offset, req, res) {
         } 
     });
 }
+// - - end of sendMp4Stream
 // - - - - - - - - - - - - - - - - - - - -
 
 
-
 // exports
-
-exports.recordRTSPts = recordRTSPts
-exports.sendFlashStream = sendFlashStream
 exports.sendWebMStream = sendWebMStream
-exports.sendStream = sendStreamDirectly
-exports.recordRTSP = recordRTSP
+exports.sendStream = sendMp4Stream
 exports.snapshot = snapshot
 exports.stitch = stitch
 exports.calcDuration = calcDuration

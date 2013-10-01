@@ -11,6 +11,7 @@
 ############
 *.sqlite
 
+*.swp
 .DS_Store
 
 

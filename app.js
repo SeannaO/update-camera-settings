@@ -58,7 +58,7 @@ app.get('/m3u8', function(req, res) {
 // - -
 // 
 app.get('/stream', function(req, res) {
-    res.sendfile(__dirname + "/videos/tmp/player.html");
+    res.sendfile(__dirname + "/player.html");
 });
 // - - - - -
 
