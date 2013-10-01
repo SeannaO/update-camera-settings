@@ -30,6 +30,7 @@ app.use('/css', express.static(__dirname + '/css'));
 app.use('/js', express.static(__dirname + '/js'));
 app.use('/tmp', express.static(__dirname + '/videos/tmp'));
 
+
 // - -
 // 
 app.get('/', function (req, res) {
@@ -38,20 +39,43 @@ app.get('/', function (req, res) {
 // - - -
 
 
-
+// - -
+//
 app.get('/ts/:file', function(req, res) {
-  res.writeHead(200, { "Content-Type": "video/MP2T" });
-  var file = fs.createReadStream( __dirname + '/videos/' + req.params.file);
-  file.pipe(res);
+  
+    var fileUri =  __dirname + '/videos/' + path.basename(req.params.file) + '.ts';
+
+    fs.exists(fileUri, function( exists ) {
+
+        if (exists) {
+            res.writeHead(200, { "Content-Type": "video/MP2T" });
+            var fileStream = fs.createReadStream( fileUri );
+            fileStream.pipe(res);
+        } 
+        else {
+             res.writeHead(200, { "Content-Type": "text" });
+             res.end("file not found");
+        }
+    });
+
 });
+// - - -
 
 
+// - -
+//
 app.get('/live', function(req, res) {
-    res.writeHead(200, { "Content-Type":"application/x-mpegURL" });
-    
+       
     var begin = parseInt( req.query.begin );
     //var end = begin + req.session.end;
     var end = Date.now();
+
+    if ( isNaN( begin ) ) {
+        res.end("invalid time");
+        return;
+    }
+
+    res.writeHead( 200, { "Content-Type":"application/x-mpegURL" } );
 
     db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
         
@@ -77,6 +101,7 @@ app.get('/live', function(req, res) {
         });
     });
 });
+// - - -
 
 
 // - -
@@ -113,10 +138,17 @@ app.get('/stream', function(req, res) {
 // - - -
 
 
+// - -
+//
 app.get('/video', function(req, res) {
     
     var begin = parseInt( req.query.begin );
     var end = parseInt( req.query.end );
+
+    if ( isNaN(begin) || isNaN(end) ) {
+        res.end("invalid interval");
+        return;
+    }
 
     var fileName = __dirname + "/tmp/" + begin + "_" + end + ".mp4";
 
@@ -158,6 +190,12 @@ app.get('/video', function(req, res) {
 // 
 app.get('/seek', function(req, res) {
     var begin = parseInt(req.query.begin);
+
+    if ( isNaN(begin) ) {
+        res.end("invalid start time");
+        return;
+    }
+
     db.searchVideoByTime( begin, function( file, offset ) {
         offset = Math.round( offset );
         console.log( "streaming " + file );
@@ -174,6 +212,11 @@ app.get('/seek', function(req, res) {
 //
 app.get('/snapshot', function(req, res) {
     var time = parseInt(req.query.time);
+    
+    if ( isNaN(time) ) {
+        res.end("invalid time");
+        return;
+    }
 
     db.searchVideoByTime( time, function( file, offset ) {
         offset = Math.round( offset );
@@ -195,15 +238,19 @@ app.get('/snapshot', function(req, res) {
             });
     });
 });
+// - - -
 
 
+// - -
 //
 app.get('/player', function(req, res) {
     res.sendfile(__dirname + '/html/player.html');
 });
+// - - -
 
 
-//
+// - -
+// 
 app.get('/scan', function(req, res) {
     var prefix = localIp.substr(0,11);
     console.log("scanning for ONVIF cameras...");
@@ -217,18 +264,7 @@ app.get('/scan', function(req, res) {
         res.end(']');
     });    
 });
-
-
-//
-app.get('/:file', function(req, res) {
-    if (path.extname(req.params.file) == ".ts") {
-        var file = fs.createReadStream( __dirname + '/videos/' + req.params.file);
-        file.pipe(res);
-    }
-    else {
-        res.end();
-    }
-});
+// - - -
 
 app.listen(process.env.PORT || 8080);
 

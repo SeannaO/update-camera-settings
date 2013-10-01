@@ -23,7 +23,7 @@ var generatePlaylist = function( videos, targetDuration, mediaSequence, closed, 
 
     for ( var i = 0; i < videos.length; i++ ) {
         content = content + "#EXTINF:" + videos[i].duration + ",\n";
-        content = content + path.basename(videos[i].url) + "\n";
+        content = content + "/videos/" + path.basename(videos[i].url) + "\n";
     }
 
     if ( closed ) {
