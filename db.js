@@ -96,7 +96,11 @@ var searchVideosByInterval = function( start, end, cb ) {
                         }
                         offset.duration = rows[i].end - rows[0].start - offset.begin - endOffset;
                     }
-                    fileList.push( rows[i].file );
+                    fileList.push({
+                        start: rows[i].start,
+                        end: rows[i].end,
+                        file: rows[i].file 
+                    });
                 }
                 db.close();
                 cb( err, fileList, offset );

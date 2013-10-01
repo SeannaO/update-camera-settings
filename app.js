@@ -4,6 +4,7 @@ var ffmpeg = require('./ffmpeg');
 var fs = require('fs');
 var db = require('./db');
 var hls = require('./hls');
+var path = require('path');
 
 var localIp = "";
 require('dns').lookup(require('os').hostname(), function (err, add, fam) {
@@ -22,6 +23,9 @@ app.all('/*', function(req, res, next) {
 
 db.setup();
 
+app.use(express.cookieParser());
+app.use(express.session({secret: 'solink'}));
+
 app.use('/css', express.static(__dirname + '/css'));
 app.use('/js', express.static(__dirname + '/js'));
 app.use('/tmp', express.static(__dirname + '/videos/tmp'));
@@ -31,7 +35,8 @@ app.use('/tmp', express.static(__dirname + '/videos/tmp'));
 app.get('/', function (req, res) {
     res.sendfile(__dirname + '/index.html');    
 });
-// - - - - -
+// - - -
+
 
 
 app.get('/ts/:file', function(req, res) {
@@ -40,27 +45,72 @@ app.get('/ts/:file', function(req, res) {
   file.pipe(res);
 });
 
-app.get('/m3u8', function(req, res) {
-    res.writeHead(200, { "Content-Type":"application/x-mpegURL" });
-    var begin = parseInt( req.query.begin );
-    var end = parseInt( req.query.end );
 
-    db.searchVideosByInterval( begin, end, function( err, fileList, offset ) {
-        fileList = fileList.reverse();
+app.get('/live', function(req, res) {
+    res.writeHead(200, { "Content-Type":"application/x-mpegURL" });
+    
+    var begin = parseInt( req.query.begin );
+    //var end = begin + req.session.end;
+    var end = Date.now();
+
+    db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
+        
+        videoList = videoList.reverse();
+        
+        //if ( begin + req.session.end < Date.now() ) {
+        //    req.session.end = req.session.end + 60000;
+        //}
+        
+        for (var i = 0; i < req.session.mediaSequence; i++) {
+            videoList.shift(req.session.mediaSequence);
+        }
+        
+        var fileList = videoList.map( function(video) {
+            return video.file;
+        });
+
         hls.calculateLengths( fileList, function(videos) {
-            hls.generatePlaylist(videos, 10, true, function(playlist) {
+            hls.generatePlaylist(videos, 15, req.session.mediaSequence, false, function(playlist) {
                 res.end(playlist);
+                req.session.mediaSequence = req.session.mediaSequence + 1;
             });
         });
     });
 });
 
+
+// - -
+//
+app.get('/m3u8', function(req, res) {
+    res.writeHead(200, { "Content-Type":"application/x-mpegURL" });
+    var begin = parseInt( req.query.begin );
+    var end = parseInt( req.query.end );
+
+    db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
+
+        videoList = videoList.reverse();
+
+        var fileList = videoList.map( function(video) {
+            return video.file;
+        });
+
+        hls.calculateLengths( fileList, function(videos) {
+            hls.generatePlaylist(videos, 15, 0, true, function(playlist) {
+                res.end(playlist);
+            });
+        });
+    });
+});
+// - - -
+
+
 // - -
 // 
 app.get('/stream', function(req, res) {
+    req.session.mediaSequence = 0;
     res.sendfile(__dirname + "/player.html");
 });
-// - - - - -
+// - - -
 
 
 app.get('/video', function(req, res) {
@@ -74,9 +124,9 @@ app.get('/video', function(req, res) {
         if (exists) {
             ffmpeg.sendStream( fileName, 0, req, res );
         } else {
-            db.searchVideosByInterval( begin, end, function( err, fileList, offset ) {
-                console.log(fileList);
-                if (fileList.length == 0) {
+            db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
+                
+                if (videoList.length == 0) {
                     
                     var formatedBegin = new Date(begin).toISOString();
                     var formatedEnd = new Date(end).toISOString();
@@ -84,6 +134,10 @@ app.get('/video', function(req, res) {
                     res.end("couldn't find any video within " + formatedBegin + " and " + formatedEnd + "... :(");
                 }
                 else {
+                    var fileList = videoList.map( function(video) {
+                        return video.file;
+                    });
+
                     ffmpeg.stitch( fileList, fileName, offset, function(mergedFile, error) {
                         if ( !error ) {
                             ffmpeg.sendStream( mergedFile, 0, req, res );
@@ -97,9 +151,11 @@ app.get('/video', function(req, res) {
     });
 
  });
+// - - -
 
 
-//
+// - -
+// 
 app.get('/seek', function(req, res) {
     var begin = parseInt(req.query.begin);
     db.searchVideoByTime( begin, function( file, offset ) {
@@ -111,8 +167,10 @@ app.get('/seek', function(req, res) {
         ffmpeg.sendStream(file, offset, req, res);        
     });
 });
+// - - -
 
 
+// - -
 //
 app.get('/snapshot', function(req, res) {
     var time = parseInt(req.query.time);
@@ -155,11 +213,21 @@ app.get('/scan', function(req, res) {
         for (var i = 0; i < ipList.length; i++) {
             console.log("found ONVIF camera on ip: " + ipList[i]);      
             res.write('{ "ip": "' + ipList[i]+ '" }');
-            //res.write('"ip": "' + ipList[i] +'"');
-            //res.write('}');
         }
         res.end(']');
     });    
+});
+
+
+//
+app.get('/:file', function(req, res) {
+    if (path.extname(req.params.file) == ".ts") {
+        var file = fs.createReadStream( __dirname + '/videos/' + req.params.file);
+        file.pipe(res);
+    }
+    else {
+        res.end();
+    }
 });
 
 app.listen(process.env.PORT || 8080);
