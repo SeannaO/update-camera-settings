@@ -43,7 +43,7 @@ app.get('/', function (req, res) {
 //
 app.get('/ts/:file', function(req, res) {
   
-    var fileUri =  __dirname + '/videos/' + path.basename(req.params.file) + '.ts';
+    var fileUri =  __dirname + '/videos/' + path.basename(req.params.file, '.ts') + '.ts';
 
     fs.exists(fileUri, function( exists ) {
 
@@ -54,7 +54,7 @@ app.get('/ts/:file', function(req, res) {
         } 
         else {
              res.writeHead(200, { "Content-Type": "text" });
-             res.end("file not found");
+             res.end("file not found: " + fileUri);
         }
     });
 
@@ -66,24 +66,27 @@ app.get('/ts/:file', function(req, res) {
 //
 app.get('/live', function(req, res) {
        
-    var begin = parseInt( req.query.begin );
+    var begin = Date.now() - 120 * 1000;
     //var end = begin + req.session.end;
     var end = Date.now();
-
+    
+    console.log( Date.now() );
     if ( isNaN( begin ) ) {
         res.end("invalid time");
         return;
+    }
+    
+    if ( isNaN(parseInt(req.session.mediaSequence)) ) {
+        req.session.mediaSequence = 0;
     }
 
     res.writeHead( 200, { "Content-Type":"application/x-mpegURL" } );
 
     db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
         
-        videoList = videoList.reverse();
-        
-        //if ( begin + req.session.end < Date.now() ) {
-        //    req.session.end = req.session.end + 60000;
-        //}
+        if ( begin + req.session.end < Date.now() ) {
+            req.session.end = req.session.end + 60000;
+        }
         
         for (var i = 0; i < req.session.mediaSequence; i++) {
             videoList.shift(req.session.mediaSequence);
@@ -94,7 +97,7 @@ app.get('/live', function(req, res) {
         });
 
         hls.calculateLengths( fileList, function(videos) {
-            hls.generatePlaylist(videos, 15, req.session.mediaSequence, false, function(playlist) {
+            hls.livePlaylist(videos, 12, req.session.mediaSequence, function(playlist) {
                 res.end(playlist);
                 req.session.mediaSequence = req.session.mediaSequence + 1;
             });
@@ -107,21 +110,29 @@ app.get('/live', function(req, res) {
 // - -
 //
 app.get('/m3u8', function(req, res) {
-    res.writeHead(200, { "Content-Type":"application/x-mpegURL" });
+    // res.writeHead(200, { "Content-Type":"application/x-mpegURL" });
     var begin = parseInt( req.query.begin );
     var end = parseInt( req.query.end );
 
     db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
 
-        videoList = videoList.reverse();
+        // videoList = videoList.reverse();
+   //     console.log(videoList);
 
         var fileList = videoList.map( function(video) {
             return video.file;
         });
+  //      console.log(fileList);
 
         hls.calculateLengths( fileList, function(videos) {
-            hls.generatePlaylist(videos, 15, 0, true, function(playlist) {
+            console.log("*** lengths");
+            console.log(fileList);
+            console.log(videos);
+            hls.generatePlaylist(videos, 12, 0, true, function(playlist) {
+                console.log("*** playlist");
+                console.log(playlist);
                 res.end(playlist);
+                //res.sendfile(__dirname + "/list.m3u8");
             });
         });
     });
@@ -158,6 +169,8 @@ app.get('/video', function(req, res) {
         } else {
             db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
                 
+                console.log(videoList);
+
                 if (videoList.length == 0) {
                     
                     var formatedBegin = new Date(begin).toISOString();
@@ -244,7 +257,8 @@ app.get('/snapshot', function(req, res) {
 // - -
 //
 app.get('/player', function(req, res) {
-    res.sendfile(__dirname + '/html/player.html');
+    req.session.mediaSequence = 0;
+    res.sendfile(__dirname + '/player.html');
 });
 // - - -
 

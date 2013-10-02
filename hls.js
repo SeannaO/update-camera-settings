@@ -8,6 +8,24 @@ var path = require('path');
 var ffmpeg = require('./ffmpeg');
 
 
+var livePlaylist = function( videos, targetDuration, mediaSequence, cb ) {
+    var content = "#EXTM3U\n" +
+                  // "#EXT-X-PLAYLIST-TYPE:EVENT\n" +   
+                  "#EXT-X-ALLOW-CACHE:YES\n" +
+                  "#EXT-X-TARGETDURATION:" + targetDuration + "\n" +
+                  // "#EXT-X-VERSION:3\n" +
+                  "#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n";
+
+    for ( var i = 0; i < videos.length; i++ ) {
+        content = content + "#EXTINF:" + videos[i].duration + ",\n";
+        content = content + "/ts/" + path.basename(videos[i].url) + "\n";
+    }
+    
+    cb( content );
+    console.log( content );
+}
+
+
 /**
  * generatePlaylist
  *
@@ -15,15 +33,15 @@ var ffmpeg = require('./ffmpeg');
 var generatePlaylist = function( videos, targetDuration, mediaSequence, closed, cb ) {
     
     var content = "#EXTM3U\n" +
-                  "#EXT-X-PLAYLIST-TYPE:EVENT\n" +   
-                  "#EXT-X-ALLOW-CACHE:YES\n" +
+                  "#EXT-X-VERSION:3\n" +        
+                  "#EXT-X-PLAYLIST-TYPE:VOD\n" +   
+                  //"#EXT-X-ALLOW-CACHE:YES\n" +
                   "#EXT-X-TARGETDURATION:" + targetDuration + "\n" +
-                  "#EXT-X-VERSION:3\n" +
                   "#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n";
 
     for ( var i = 0; i < videos.length; i++ ) {
-        content = content + "#EXTINF:" + videos[i].duration + ",\n";
-        content = content + "/videos/" + path.basename(videos[i].url) + "\n";
+        content = content + "#EXTINF:" + videos[i].duration + ".0, no desc\n";
+        content = content + "/ts/" + path.basename(videos[i].url) + "\n";
     }
 
     if ( closed ) {
@@ -44,7 +62,7 @@ var generatePlaylist = function( videos, targetDuration, mediaSequence, closed, 
  */
 var calculateLengths = function( files, cb ) {
 
-    var counter = 0;
+    var wait = false;
     var videos = [];
 
     if ( files.length == 0) {
@@ -54,17 +72,21 @@ var calculateLengths = function( files, cb ) {
 
         for (var i = 0; i < files.length; i++) {
             var file = files[i];
-
+            //wait = true;
             ffmpeg.calcDuration( file, function(duration, file) {
                 videos.push({
                     url: "/ts/" + path.basename(file),
                     duration: duration
                 });
-                counter++;
-                if (counter == files.length) {
+                
+                //wait = false;
+                console.log(wait);
+                
+                if (i == files.length) {
                     cb(videos);
                 }
             });
+            while(wait) {;}
         }
     }
 }
@@ -74,6 +96,7 @@ var calculateLengths = function( files, cb ) {
 
 // exports
 exports.generatePlaylist = generatePlaylist
+exports.livePlaylist = livePlaylist
 exports.calculateLengths = calculateLengths
 
 
