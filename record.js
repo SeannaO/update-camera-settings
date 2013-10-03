@@ -17,14 +17,10 @@ var setupWatcher = function( dir ) {
 
     var pending = [];
     
-    var watcher = fs.watchFile( dir, function(curr, prev) {   
+    watch.watchTree( dir, function(f, curr, prev) {
         
-        //
-        if (pending.length == 0 && curr.size > prev.size ) {
-             addNewVideosToPendingList( pending );
-             console.log(pending);
-        }
-        else {
+        if ( (typeof f == "object" && prev === null && curr === null) || pending.length > 0) {
+            // Finished walking the tree
             var counter = 0;
 
             for (var i = 0; i < pending.length; i++) {
@@ -68,7 +64,13 @@ var setupWatcher = function( dir ) {
 
                       
                 });
-            }
+            }            
+        } 
+        else if ( pending.length == 0 && prev === null ) {
+             addNewVideosToPendingList( pending );
+             console.log( curr );
+        }
+        else {
         }
     });
 }
@@ -114,7 +116,7 @@ var recordContinuously = function() {
 
     var exec = require('child_process').exec;
     
-    var child = exec( "ffmpeg -i " + cam + " -vcodec copy -an -map 0 -f segment -segment_time 10 -initial_offset 0 -flags -global_header -segment_format mpegts '" +__dirname + "/videos/tmp/capture-%03d.ts'",
+    var child = exec( "ffmpeg -i " + cam + " -vcodec copy -an -map 0 -f segment -segment_time 10 -flags -global_header -segment_format mpegts '" +__dirname + "/videos/tmp/capture-%03d.ts'",
             function (error, stdout, stderr) {
                 if (error !== null) {
                     error = true;
