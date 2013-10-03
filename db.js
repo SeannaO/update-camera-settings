@@ -4,7 +4,8 @@
 // queries the sqlite database
 //
 
-var sqlite3 = require('sqlite3').verbose();
+//var sqlite3 = require('sqlite3').verbose();
+var sqlite3 = require('node-sqlite-purejs');
 var path = require('path');
 var fs = require('fs');
 
@@ -25,13 +26,12 @@ var setup = function() {
  *
  */
 var createVideosTable = function() {
-    var db = new sqlite3.Database('db.sqlite');
-
-    db.run("CREATE TABLE videos (id INTEGER PRIMARY KEY AUTOINCREMENT, cam INT, file TEXT, start INT, end INT)", function(err) {
-        if (err) {
-            console.log("error: " + err);
-        }
-        db.close();
+    sqlite3.open('db.sqlite', {}, function(err, db) {;
+        db.exec("CREATE TABLE videos (id INTEGER PRIMARY KEY AUTOINCREMENT, cam INT, file TEXT, start INT, end INT)", function(err) {
+            if (err) {
+                console.log("error: " + err);
+            }
+        });
     });
 }
 // - - end of createVideosTable
@@ -43,19 +43,19 @@ var createVideosTable = function() {
  *
  */
 var insertVideo = function( data ) {
-    var db = new sqlite3.Database('db.sqlite');
-
-    db.run("INSERT INTO videos( cam, file, start, end )" +
-            "VALUES( \""+data.cam+"\", " +
-            "\""+data.file+"\", " +
-            "\""+data.start+"\", " +
-            "\""+data.end+"\")",
-            function(err){
-                if (err) { 
-                    console.log("error inserting video: " + err); 
-                }
-                db.close();
-            });
+        //var db = new sqlite3.Database('db.sqlite');
+    sqlite3.open("db.sqlite", {}, function(err), {
+        db.exec("INSERT INTO videos( cam, file, start, end )" +
+                "VALUES( \""+data.cam+"\", " +
+                "\""+data.file+"\", " +
+                "\""+data.start+"\", " +
+                "\""+data.end+"\")",
+                function(err){
+                    if (err) { 
+                        console.log("error inserting video: " + err); 
+                    }
+                });
+    }
 }
 // - - end of insertVideo
 // - - - - - - - - - - - - - - - - - - - -
@@ -151,13 +151,14 @@ var searchVideoByTime = function( startTime, cb ) {
  *
  */
 var listAll = function( table ) {
-    var db = new sqlite3.Database('db.sqlite');
+    sqlite3.open('db.sqlite', {}, function(err, db) {
     
-    db.each("SELECT * FROM " + table + " ORDER BY start ASC", function(err, row) {
-        console.log(row);
-    });
+        db.exec("SELECT * FROM " + table + " ORDER BY start ASC", function(err, results) {
+            console.log(results);
+        });
 
-    db.close();
+        //db.close();
+    });
 }
 // - - end of listAll
 // - - - - - - - - - - - - - - - - - - - -
