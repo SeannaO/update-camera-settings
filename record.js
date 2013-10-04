@@ -1,11 +1,11 @@
 var ffmpeg = require('./ffmpeg.js');
-var db = require('./db.js');
+var db = require('./nedb.js');
 var fs = require('fs');
 var path = require('path');
 var watch = require('watch');
 
 //var cam = "rtsp://admin:admin@192.168.215.83/video1enc1"
-var cam = "http://localhost:1234"
+var cam = "rtsp://192.168.215.74:554/axis-media/media.amp?videocodec=h264";
 
 db.setup();
 
@@ -116,7 +116,10 @@ var recordContinuously = function() {
 
     var exec = require('child_process').exec;
     
-    var child = exec( "ffmpeg -i " + cam + " -vcodec copy -an -map 0 -f segment -segment_time 10 -flags -global_header -segment_format mpegts '" +__dirname + "/videos/tmp/capture-%03d.ts'",
+    /*
+       ffmpeg -rtsp_transport tcp -i "rtsp://192.168.215.74:554/axis-media/media.amp?streamprofile=streaming_450&camera=1" -c copy -an -map 0 -f segment -segment_time 10 -segment_format mpegts -bsf dump_extra -y -flags -global_header capture-%03d.ts
+       */
+    var child = exec( "ffmpeg -rtsp_transport tcp -i " + cam + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" +__dirname + "/videos/tmp/capture-%03d.ts'",
             function (error, stdout, stderr) {
                 if (error !== null) {
                     error = true;
