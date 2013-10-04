@@ -47,6 +47,16 @@ var insertVideo = function( data ) {
 // - - end of insertVideo
 // - - - - - - - - - - - - - - - - - - - -
 
+var sortByStartTimeDesc = function(a, b) {
+    if (a.start > b.start) {
+        return -1;
+    } else if (a.start < b.start) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 
 var sortByStartTimeAsc = function(a, b) {
     if (a.start < b.start) {
@@ -108,32 +118,28 @@ var searchVideosByInterval = function( start, end, cb ) {
  *
  */
 var searchVideoByTime = function( startTime, cb ) {
-    /*
-    //var db = new sqlite3.Database('db.sqlite');
 
-    sqlite3.open("db.sqlite", {}, function(err, db) {
-        db.exec("SELECT file, start FROM videos WHERE start <= " + startTime + " AND end >= " + startTime + " ORDER BY start DESC", 
-                function(err, rows) {
-                    
-                    if (err) {
-                        console.log("error searching for videos by start time: " + err);
-                        cb("", 0);
-                    } else {
-                        var offset = 0;
-                        console.log("found " + rows.length + " videos");
-                        if (rows.length > 0 ) {
-                            row = rows[0];
-                            console.log("found video: " + row.file);
-                            offset = Math.round( (startTime - row.start)/1000.0 );
-                            cb( row.file, offset );
-                        } else {
-                            console.log("video not found");
-                            cb("", 0);
-                        }
-                    }
-                });
-    });
-    */
+   db.find({ $and: [ {start: { $lte: startTime }}, {end: {$gte: startTime}} ] }, function(err, docs) {
+       if (err) {
+           console.log("error while searching videos by time: ");
+           console.log(err);
+           return;
+       }
+
+       docs = docs.sort(sortByStartTimeDesc);
+       
+       var offset = 0;
+       console.log("found " + docs.length + " videos");
+       if (docs.length > 0 ) {
+           doc = docs[0];
+           console.log("found video: " + doc.file);
+           offset = Math.round( (startTime - doc.start)/1000.0 );
+           cb( doc.file, offset );
+       } else {
+           console.log("video not found");
+                           
+        }
+   });
 }
 // - - end of searchVideoByTime
 // - - - - - - - - - - - - - - - - - - - -

@@ -2,7 +2,7 @@ var onvif = require('./onvif');
 var express = require('express');
 var ffmpeg = require('./ffmpeg');
 var fs = require('fs');
-var db = require('./db');
+var db = require('./nedb');
 var hls = require('./hls');
 var path = require('path');
 
