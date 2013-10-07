@@ -62,8 +62,12 @@ var snapshot = function ( file, offset, cb ) {
         });
     } 
     else {
-        var proc = new ffmpeg({ source: file })
-              .withSize('640x480')
+        var metaObject = new Metalib(file, function(metadata, err) {
+//            console.log(require('util').inspect(metadata, false, null));
+            var resolution = metadata.video.resolution;
+
+            var proc = new ffmpeg({ source: file })
+              .withSize(resolution.w + 'x' + resolution.h)
               .takeScreenshots({
                 count: 1,
                 filename: path.basename(file) + "_" + offset + "_" +  Date.now(),
@@ -78,6 +82,8 @@ var snapshot = function ( file, offset, cb ) {
                      console.log('snapshots were saved');
                 }
             });    
+            
+        });
     }
 }
 // - - end of snapshot
