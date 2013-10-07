@@ -1,0 +1,90 @@
+<html>
+    <head>
+        <script src = "/js/jquery.min.js"></script>        
+        <script src = "/js/jquery-ui.min.js"></script>
+        <script src = "/js/cameras.js"></script>
+
+        <link rel="stylesheet" href="/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
+
+        <script src="/js/bootstrap.min.js"></script>
+        
+    </head>
+
+    <body>
+        <script> 
+            list(); 
+        </script>
+
+        <h1>cameras</h1>
+        <div id = "camera-list"></div>
+        
+        <br>
+        <a data-toggle="modal" href="#add-new-camera-dialog">[ add new camera ]</a>
+
+        <div class="modal fade" id = "add-new-camera-dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">add new camera</h4>
+                    </div>
+
+                    <div class="modal-body">
+                        <form role="form">
+                            <div class="form-group">
+                                <label for="camera-name">camera name</label>
+                                <input type="text" class="form-control" id="camera-name" placeholder="camera name">
+                            </div>
+                            <div class="form-group">
+                                <label for="camera-ip">camera ip</label>
+                                <input type="text" class="form-control" id="camera-ip" placeholder="camera ip">
+                            </div>
+                            <div class="form-group">
+                                <label for="rtsp-stream">rtsp url for h264 stream</label>
+                                <input type="text" id="rtsp-stream" class = "form-control" placeholder="rtsp url">
+                                <p class="help-block">rtsp url</p>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
+                        <button type="button" class="btn btn-primary" id = "add-new-camera">save</button>
+                    </div>
+
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->        
+
+        <script>
+            // - -
+            //
+            $("#add-new-camera").click(function() {
+
+                var camera = {};
+                
+                camera.name = $("#camera-name").val();
+                camera.ip = $("#camera-ip").val();
+                camera.rtsp = $("#rtsp-stream").val();
+                
+                addCamera( camera, function(data) {
+                    $("#add-new-camera-dialog").modal('hide');
+                    addCameraItem( data );
+                });
+            });
+            // - - -
+
+            // - -
+            //
+            $('#add-new-camera-dialog').on('hidden.bs.modal', function () {
+                $("#add-new-camera-dialog form")[0].reset();
+            });
+            // - - -
+        </script>
+    </body>
+
+
+
+</html>

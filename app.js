@@ -5,6 +5,7 @@ var fs = require('fs');
 var db = require('./nedb');
 var hls = require('./hls');
 var path = require('path');
+var cameras = require('./cam');
 
 var localIp = "";
 require('dns').lookup(require('os').hostname(), function (err, add, fam) {
@@ -30,6 +31,7 @@ app.use('/css', express.static(__dirname + '/css'));
 app.use('/js', express.static(__dirname + '/js'));
 app.use('/tmp', express.static(__dirname + '/videos/tmp'));
 
+app.use(express.bodyParser());
 
 // - -
 // 
@@ -242,6 +244,73 @@ app.get('/snapshot', function(req, res) {
     });
 });
 // - - -
+
+// - - 
+// 
+app.get('/cameras.json', function(req, res) {
+    cameras.listCameras( function(err, list) {
+        if (err) {
+            res.end("{ 'error': '" + JSON.stringify(err) + "'}");
+        } else {
+            res.end( JSON.stringify(list) );
+        }
+    });
+});
+// - - -
+
+// - - 
+// 
+app.get('/cameras', function(req, res) {
+    res.sendfile(__dirname + '/html/cameras.html');
+});
+// - - -
+
+// - - 
+// 
+app.get('/cameras/:id', function(req, res) {
+    var camId = req.params.id;
+    
+    cameras.getCamera( camId, function(err, cam) {
+        if (err || cam.length == 0) {
+            res.json({ success: false, error: err });
+        } else {
+            res.json({ success: true, camera: cam[0] });
+        }
+    });
+});
+// - - -
+
+
+
+// - -
+//
+app.delete('/cameras/:id', function(req, res) {
+
+    cameras.removeCamera( req.params.id, function( err, numRemoved ) {
+        if (err) {
+            res.json({success: false, error: err});
+        } else {
+            res.json({success: true, _id: req.params.id});
+        }
+    });
+    
+});
+// - - -
+
+
+// - -
+//
+app.post('/cameras/new', function(req, res) {
+    console.log( req.body );
+    cameras.insertNewCamera( req.body, function( err, newDoc ) {
+        if (err) {
+            res.json({ sucess: false, error: err  });
+        } else {
+            res.json( newDoc );
+        }
+    });
+});
+// - -
 
 
 // - -
