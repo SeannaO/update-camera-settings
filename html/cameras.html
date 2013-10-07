@@ -20,7 +20,7 @@
         <div id = "camera-list"></div>
         
         <br>
-        <a data-toggle="modal" href="#add-new-camera-dialog">[ add new camera ]</a>
+        <a href="javascript:openAddCameraDialog()">[ add new camera ]</a>
 
         <div class="modal fade" id = "add-new-camera-dialog">
             <div class="modal-dialog">
@@ -51,7 +51,8 @@
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
-                        <button type="button" class="btn btn-primary" id = "add-new-camera">save</button>
+                        <button type="button" class="btn btn-primary" id = "add-new-camera">add</button>
+                        <button type="button" class="btn btn-primary" id = "update-camera">save</button>
                     </div>
 
                 </div><!-- /.modal-content -->
@@ -68,18 +69,27 @@
                 camera.name = $("#camera-name").val();
                 camera.ip = $("#camera-ip").val();
                 camera.rtsp = $("#rtsp-stream").val();
-                
+
+                $("#update-camera").hide();
+                $("#add-new-camera").show();
+
                 addCamera( camera, function(data) {
                     $("#add-new-camera-dialog").modal('hide');
                     addCameraItem( data );
                 });
             });
             // - - -
-
+            var openAddCameraDialog = function() {
+                $("#update-camera").hide();
+                $("#add-new-camera").show();
+                $("#add-new-camera-dialog").modal('show');
+            }
             // - -
             //
             $('#add-new-camera-dialog').on('hidden.bs.modal', function () {
                 $("#add-new-camera-dialog form")[0].reset();
+                $("#update-camera").hide();
+                $("#add-new-camera").show();
             });
             // - - -
         </script>

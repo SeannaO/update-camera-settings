@@ -104,6 +104,9 @@ var deleteCamera = function(id) {
 
 var editCamera = function(camId) {
 
+    $("#update-camera").show();
+    $("#add-new-camera").hide();
+
     $.ajax({
         type: "GET",
         url: "/cameras/" + camId,
