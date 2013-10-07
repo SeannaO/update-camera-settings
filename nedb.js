@@ -73,6 +73,8 @@ var sortByStartTimeAsc = function(a, b) {
  *
  */
 var searchVideosByInterval = function( start, end, cb ) {
+    
+    db.loadDatabase();
 
     db.find({ $and: [ {start: { $lte: end }}, {end: {$gte: start}} ] }, function(err, docs) {
         if (err) {
@@ -119,6 +121,8 @@ var searchVideosByInterval = function( start, end, cb ) {
  */
 var searchVideoByTime = function( startTime, cb ) {
 
+   db.loadDatabase();
+
    db.find({ $and: [ {start: { $lte: startTime }}, {end: {$gte: startTime}} ] }, function(err, docs) {
        if (err) {
            console.log("error while searching videos by time: ");
@@ -137,7 +141,7 @@ var searchVideoByTime = function( startTime, cb ) {
            cb( doc.file, offset );
        } else {
            console.log("video not found");
-                           
+           cb( "", offset );                
         }
    });
 }
@@ -151,6 +155,8 @@ var searchVideoByTime = function( startTime, cb ) {
  *
  */
 var listAll = function( table ) {
+    
+    db.loadDatabase();
 
     db.find({}, function (err, docs) {
         if (err) {

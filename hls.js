@@ -10,10 +10,10 @@ var ffmpeg = require('./ffmpeg');
 
 var livePlaylist = function( videos, targetDuration, mediaSequence, cb ) {
     var content = "#EXTM3U\n" +
-                  // "#EXT-X-PLAYLIST-TYPE:EVENT\n" +   
+                  "#EXT-X-VERSION:3\n" +          
+//                  "#EXT-X-PLAYLIST-TYPE:EVENT\n" + 
                   "#EXT-X-ALLOW-CACHE:YES\n" +
                   "#EXT-X-TARGETDURATION:" + targetDuration + "\n" +
-                  // "#EXT-X-VERSION:3\n" +
                   "#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n";
 
     for ( var i = 0; i < videos.length; i++ ) {
@@ -35,12 +35,12 @@ var generatePlaylist = function( videos, targetDuration, mediaSequence, closed, 
     var content = "#EXTM3U\n" +
                   "#EXT-X-VERSION:3\n" +        
                   "#EXT-X-PLAYLIST-TYPE:VOD\n" +   
-                  //"#EXT-X-ALLOW-CACHE:YES\n" +
+                  "#EXT-X-ALLOW-CACHE:YES\n" +
                   "#EXT-X-TARGETDURATION:" + targetDuration + "\n" +
                   "#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n";
 
     for ( var i = 0; i < videos.length; i++ ) {
-        content = content + "#EXTINF:" + videos[i].duration + ".0, no desc\n";
+        content = content + "#EXTINF:" + videos[i].duration + ".0,\n";
         content = content + "/ts/" + path.basename(videos[i].url) + "\n";
     }
 
@@ -55,6 +55,32 @@ var generatePlaylist = function( videos, targetDuration, mediaSequence, closed, 
 // - - end of generatePlaylist
 // - - - - - - - - - - - - - - - - - - - -
 
+var sortVideosByIndex = function( a, b ) {
+    if (a.index < b.index) {
+        return -1;
+    } else if (a.index > b.index) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+var sortVideosByName = function( a, b ) {
+    
+    //console.log("sorting by name");
+    var aName = path.basename(a.url);
+    var bName = path.basename(b.url);
+    //console.log(aName + " < " + bName + " : " + (aName < bName));
+
+    if (aName < bName) {
+        return -1;
+    } else if (aName > bName) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 
 /**
  * calculateLengths
@@ -62,7 +88,7 @@ var generatePlaylist = function( videos, targetDuration, mediaSequence, closed, 
  */
 var calculateLengths = function( files, cb ) {
 
-    var wait = false;
+
     var videos = [];
 
     if ( files.length == 0) {
@@ -72,21 +98,20 @@ var calculateLengths = function( files, cb ) {
 
         for (var i = 0; i < files.length; i++) {
             var file = files[i];
-            //wait = true;
+
             ffmpeg.calcDuration( file, function(duration, file) {
                 videos.push({
+                    index: i,
                     url: "/ts/" + path.basename(file),
                     duration: duration
                 });
                 
-                //wait = false;
-                console.log(wait);
-                
                 if (i == files.length) {
+                    // console.log("sort by name");
+                    videos = videos.sort( sortVideosByName )
                     cb(videos);
                 }
             });
-            while(wait) {;}
         }
     }
 }

@@ -5,7 +5,8 @@ var path = require('path');
 var watch = require('watch');
 
 //var cam = "rtsp://admin:admin@192.168.215.83/video1enc1"
-var cam = "rtsp://192.168.215.74:554/axis-media/media.amp?videocodec=h264";
+//var cam = "rtsp://192.168.215.74:554/axis-media/media.amp?videocodec=h264&streamprofile=Quality";
+var cam = "rtsp://192.168.215.74:554/axis-media/media.amp?streamprofile=Quality";
 
 db.setup();
 
@@ -174,27 +175,5 @@ var recordToFile = function( cb ) {
 
 setupWatcher(__dirname + "/videos/tmp");
 recordContinuously();
-
-/*
-// records files with overlapping to avoid gaps
-setInterval( 
-        function() {
-            //recordToFile( function() {
-                console.log("finished recording");
-            //});
-        }, 15000
-);
-*/
-
-
-/*
-// records one file after another
-var record = function() {
-    recordToFile( function() {
-        record();    
-    });
-}
-record();
-*/
 
 

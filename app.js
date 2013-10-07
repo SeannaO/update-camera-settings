@@ -66,7 +66,7 @@ app.get('/ts/:file', function(req, res) {
 //
 app.get('/live', function(req, res) {
        
-    var begin = Date.now() - 120 * 1000;
+    var begin = 0;
     //var end = begin + req.session.end;
     var end = Date.now();
     
@@ -83,21 +83,13 @@ app.get('/live', function(req, res) {
     res.writeHead( 200, { "Content-Type":"application/x-mpegURL" } );
 
     db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
-        
-        if ( begin + req.session.end < Date.now() ) {
-            req.session.end = req.session.end + 60000;
-        }
-        
-        for (var i = 0; i < req.session.mediaSequence; i++) {
-            videoList.shift(req.session.mediaSequence);
-        }
-        
+                        
         var fileList = videoList.map( function(video) {
             return video.file;
         });
 
         hls.calculateLengths( fileList, function(videos) {
-            hls.livePlaylist(videos, 12, req.session.mediaSequence, function(playlist) {
+            hls.livePlaylist(videos, 12, 0, function(playlist) {
                 res.end(playlist);
                 req.session.mediaSequence = req.session.mediaSequence + 1;
             });
@@ -110,7 +102,7 @@ app.get('/live', function(req, res) {
 // - -
 //
 app.get('/m3u8', function(req, res) {
-    // res.writeHead(200, { "Content-Type":"application/x-mpegURL" });
+    res.writeHead(200, { "Content-Type":"application/x-mpegURL" });
     var begin = parseInt( req.query.begin );
     var end = parseInt( req.query.end );
 
@@ -118,11 +110,10 @@ app.get('/m3u8', function(req, res) {
 
         // videoList = videoList.reverse();
    //     console.log(videoList);
-
+        
         var fileList = videoList.map( function(video) {
             return video.file;
         });
-  //      console.log(fileList);
 
         hls.calculateLengths( fileList, function(videos) {
             console.log("*** lengths");
@@ -132,7 +123,6 @@ app.get('/m3u8', function(req, res) {
                 console.log("*** playlist");
                 console.log(playlist);
                 res.end(playlist);
-                //res.sendfile(__dirname + "/list.m3u8");
             });
         });
     });
