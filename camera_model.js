@@ -4,7 +4,6 @@ var RECORDING = 0;
 var NOT_RECORDING = 1;
 
 var db;
-var recordModel;
 
 function Camera( cam, videosDb ) {
     console.log("camera constructor");
@@ -15,12 +14,12 @@ function Camera( cam, videosDb ) {
     this.status = cam.status;
 
     db = videosDb;
-    recordModel = new RecordModel(db, this);
+    this.recordModel = new RecordModel(db, this);
 
     if (this.status == RECORDING) {
-        recordModel.startRecording();
+        this.recordModel.startRecording();
     } else {
-        recordModel.stopRecording();
+        this.recordModel.stopRecording();
     }
     
 }
@@ -32,7 +31,7 @@ Camera.prototype.startRecording = function() {
     if (this.status !== RECORDING) {
         console.log(this.name + " will start recording...");
         this.status = RECORDING; 
-        recordModel.startRecording();
+        this.recordModel.startRecording();
     } else {
         console.log(this.name + " is already recording.");
     }
@@ -44,7 +43,7 @@ Camera.prototype.stopRecording = function() {
     if (this.status !== NOT_RECORDING) {
         console.log(this.name + " will stop recording...");
         this.status = NOT_RECORDING;
-        recordModel.stopRecording();
+        this.recordModel.stopRecording();
     } else {
         console.log( this.name + " is already stopped.");
     }
