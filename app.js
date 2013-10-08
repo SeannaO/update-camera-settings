@@ -4,7 +4,8 @@ var db = require('./nedb');
 var tsHandler = require('./ts_handler');
 var hlsHandler = require('./hls_handler');
 var mp4Handler = require('./mp4_handler');
-var cameras = require('./cam');
+var CamerasController = require('./cam');
+
 var localIp = "";
 
 require('dns').lookup(require('os').hostname(), function (err, add, fam) {
@@ -12,6 +13,8 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 });
 
 var app = express();
+
+var camerasController = new CamerasController();
 
 /*
 app.all('/*', function(req, res, next) {
@@ -96,7 +99,7 @@ app.get('/snapshot', function(req, res) {
 // 
 app.get('/cameras.json', function(req, res) {
 
-    cameras.listCameras( function(err, list) {
+    camerasController.listCameras( function(err, list) {
         if (err) {
             res.end("{ 'error': '" + JSON.stringify(err) + "'}");
         } else {
@@ -118,7 +121,7 @@ app.get('/cameras', function(req, res) {
 app.get('/cameras/:id', function(req, res) {
     var camId = req.params.id;
     
-    cameras.getCamera( camId, function(err, cam) {
+    camerasController.getCamera( camId, function(err, cam) {
         if (err || cam.length == 0) {
             res.json({ success: false, error: err });
         } else {
@@ -129,12 +132,43 @@ app.get('/cameras/:id', function(req, res) {
 // - - -
 
 
+// - - 
+// 
+app.get('/cameras/:id/start_recording', function(req, res) {
+    var camId = req.params.id;
+    
+    camerasController.startRecording( camId, function(err) {
+        if ( err ) {
+            res.json({ success: false, error: err });
+        } else {
+            res.json({ success: true });
+        }
+    });
+});
+// - - -
+
+
+// - - 
+// 
+app.get('/cameras/:id/stop_recording', function(req, res) {
+    var camId = req.params.id;
+    
+    camerasController.stopRecording( camId, function(err) {
+        if (err || cam.length == 0) {
+            res.json({ success: false, error: err });
+        } else {
+            res.json({ success: true });
+        }
+    });
+});
+// - - -
+
 
 // - -
 //
 app.delete('/cameras/:id', function(req, res) {
 
-    cameras.removeCamera( req.params.id, function( err, numRemoved ) {
+    camerasController.removeCamera( req.params.id, function( err, numRemoved ) {
         if (err) {
             res.json({success: false, error: err});
         } else {
@@ -149,8 +183,8 @@ app.delete('/cameras/:id', function(req, res) {
 // - -
 //
 app.post('/cameras/new', function(req, res) {
-    console.log( req.body );
-    cameras.insertNewCamera( req.body, function( err, newDoc ) {
+    
+    camerasController.insertNewCamera( req.body, function( err, newDoc ) {
         if (err) {
             res.json({ sucess: false, error: err  });
         } else {

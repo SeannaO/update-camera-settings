@@ -2,16 +2,16 @@ var RECORDING = 0;
 var NOT_RECORDING = 1;
 
 function Camera( cam ) {
-    this.id = cam._id;
+    this._id = cam._id;
     this.name = cam.name;
     this.ip = cam.ip;
     this.rtsp = cam.rtsp;
-    this.status = NOT_RECORDING;
+    this.status = cam.status;
 }
 
 Camera.prototype.startRecording = function() {
     
-    if (this.status != RECORDING) {
+    if (this.status !== RECORDING) {
         console.log(this.name + " will start recording...");
         this.status = RECORDING; 
     } else {
@@ -19,8 +19,10 @@ Camera.prototype.startRecording = function() {
     }
 }
 
+
 Camera.prototype.stopRecording = function() {
-    if (this.status != NOT_RECORDING) {
+
+    if (this.status !== NOT_RECORDING) {
         console.log(this.name + " will stop recording...");
         this.status = NOT_RECORDING;
     } else {
