@@ -11,28 +11,6 @@ var fs = require('fs');
 var  db = new Datastore({ filename: 'datastore', autoload: true });
 
 /**
- * setup
- *
- */
-var setup = function() {
-    createVideosTable();
-}
-// - - end of setup
-// - - - - - - - - - - - - - - - - - - - -
-
-
-/**
- * testIpForOnvifCamera
- *
- */
-var createVideosTable = function() {
-    
-}
-// - - end of createVideosTable
-// - - - - - - - - - - - - - - - - - - - -
-
-
-/**
  * insertVideo
  *
  */
@@ -171,7 +149,6 @@ var listAll = function( table ) {
 
 
 // exports
-exports.setup = setup
 exports.searchVideosByInterval = searchVideosByInterval
 exports.listAll = listAll
 exports.insertVideo = insertVideo
