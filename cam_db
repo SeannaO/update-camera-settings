@@ -1,12 +1,4 @@
 {"name":"axis camera","ip":"192.168.215.74","rtsp":"rtsp://192.168.215.74:554/axis-media/media.amp?streamprofile=Quality","_id":"RnpEWrEqEoQOjd3m","status":1}
 {"name":"axis2","ip":"192.168.215.74","rtsp":"rtsp://192.168.215.74:554/axis-media/media.amp?streamprofile=Quality","_id":"wgU1Dr8yWYSlTjJd","status":1}
-{"name":"axis camera","ip":"192.168.215.74","rtsp":"rtsp://192.168.215.74:554/axis-media/media.amp?streamprofile=Quality","_id":"RnpEWrEqEoQOjd3m","status":0}
-{"name":"axis2","ip":"192.168.215.74","rtsp":"rtsp://192.168.215.74:554/axis-media/media.amp?streamprofile=Quality","_id":"wgU1Dr8yWYSlTjJd","status":0}
-{"name":"axis camera","ip":"192.168.215.74","rtsp":"rtsp://192.168.215.74:554/axis-media/media.amp?streamprofile=Quality","_id":"RnpEWrEqEoQOjd3m","status":1}
-{"name":"axis2","ip":"192.168.215.74","rtsp":"rtsp://192.168.215.74:554/axis-media/media.amp?streamprofile=Quality","_id":"wgU1Dr8yWYSlTjJd","status":1}
-{"name":"axis2","ip":"192.168.215.74","rtsp":"rtsp://192.168.215.74:554/axis-media/media.amp?streamprofile=Quality","_id":"wgU1Dr8yWYSlTjJd","status":0}
-{"name":"axis2","ip":"192.168.215.74","rtsp":"rtsp://192.168.215.74:554/axis-media/media.amp?streamprofile=Quality","_id":"wgU1Dr8yWYSlTjJd","status":1}
-{"name":"axis2","ip":"192.168.215.74","rtsp":"rtsp://192.168.215.74:554/axis-media/media.amp?streamprofile=Quality","_id":"wgU1Dr8yWYSlTjJd","status":0}
-{"name":"axis2","ip":"192.168.215.74","rtsp":"rtsp://192.168.215.74:554/axis-media/media.amp?streamprofile=Quality","_id":"wgU1Dr8yWYSlTjJd","status":1}
-{"name":"axis camera","ip":"192.168.215.74","rtsp":"rtsp://192.168.215.74:554/axis-media/media.amp?streamprofile=Quality","_id":"RnpEWrEqEoQOjd3m","status":0}
-{"name":"axis camera","ip":"192.168.215.74","rtsp":"rtsp://192.168.215.74:554/axis-media/media.amp?streamprofile=Quality","_id":"RnpEWrEqEoQOjd3m","status":1}
+{"name":"test","ip":"","rtsp":"","_id":"c2Of49vDrukDBStN"}
+{"$$deleted":true,"_id":"c2Of49vDrukDBStN"}

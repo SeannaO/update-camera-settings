@@ -32,7 +32,7 @@ CamerasController.prototype.getCamera = function(camId, cb) {
         if (err) {
             cb( err, null );
         } else {
-            var cam = findCameraById( camId );
+            var cam = findCameraById( camId ).cam;
             cb( err, cam );
         }
     });
@@ -57,8 +57,10 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 
     db.remove({ _id: camId }, {}, function (err, numRemoved) {
         if( err ) {
-           cb( err, numRemoved );
+            cb( err, numRemoved );
         } else {
+            var i = findCameraById( camId ).index;
+            cameras.splice(i,1);            
             refresh( function() {
                 cb( err, numRemoved );
             });    
@@ -101,7 +103,7 @@ CamerasController.prototype.stopRecording = function (camId, cb) {
             return false;
         }
 
-        cam = findCameraById(camId);
+        cam = findCameraById(camId).cam;
         if (cam) {
             cam.stopRecording();  
             db.update({ _id: cam._id }, { $set: { status: cam.status } }, { multi: true }, function (err, numReplaced) {
@@ -150,7 +152,7 @@ function findCameraById( id ) {
     for (var i = 0; i < cameras.length; i++) { 
         var cam = cameras[i];
         if (cam._id === id) {
-            return cam;
+            return { index: i, cam: cam };
         }
     }
     return false;

@@ -125,7 +125,7 @@ app.get('/cameras/:id', function(req, res) {
         if (err || cam.length == 0) {
             res.json({ success: false, error: err });
         } else {
-            res.json({ success: true, camera: cam[0] });
+            res.json({ success: true, camera: cam });
         }
     });
 });
