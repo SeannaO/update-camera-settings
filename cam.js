@@ -4,8 +4,13 @@ var Camera = require('./camera_model');
 var db = new Datastore({ filename: 'cam_db', autoload: true });
 
 var cameras = [];
+var videosDb;
 
-function CamerasController() {
+
+function CamerasController( videosDatastore ) {
+    console.log("cameras controller constructor");
+    videosDb = videosDatastore;
+    setup( function(err) {} );
 }
 
 
@@ -42,7 +47,7 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
             cb( err, "{ success: false }" );
         } else {
             cb( err, newDoc );
-            cameras.push( new Camera(cam) );
+            cameras.push( new Camera(cam, videosDb) );
         }
     });
 }
@@ -115,11 +120,15 @@ CamerasController.prototype.stopRecording = function (camId, cb) {
 
 
 function refresh( cb ) {
+    cb( false );
+}
+
+
+function setup( cb ) {
     
     db.loadDatabase();
     
-    cameras = [];
-
+    
     db.find( {}, function( err, docs ) {
         console.log(docs);
         if (err) {
@@ -128,7 +137,8 @@ function refresh( cb ) {
         } else {
             for ( var k = 0; k < docs.length; k++ ) {
                 var cam = docs[k];
-                cameras.push( new Camera(cam) );
+                var newCam = new Camera(cam, videosDb);
+                cameras.push( newCam );
             }
             cb( false );
         }

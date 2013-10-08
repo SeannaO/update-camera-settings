@@ -14,7 +14,7 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 
 var app = express();
 
-var camerasController = new CamerasController();
+var camerasController = new CamerasController( db );
 
 /*
 app.all('/*', function(req, res, next) {
