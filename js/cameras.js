@@ -66,10 +66,65 @@ var addCameraItem = function( camera ) {
         row += "<td>"+camera.name+"</td>";
         row += "<td>"+camera.ip+"</td>";
         row += "<td>"+camera.rtsp+"</td>";
-        row += "<td> ? </td>";
+        row += "<td>";
+        row += "<div>";
+        row += '<input type="checkbox" id="switch-'+camera._id+'" name="switch'+camera._id+'" class="switch" />';
+        row += '<label for="switch-'+camera._id+'">on/off</label>';
+        row += '</div>';        
+        row += "</td>";
         row += "</tr>";
         $("#camera-list table tbody").append(row);
+            
+
+        if (camera.status == 0) {
+             $("#switch-"+camera._id).attr('checked', true);
+        } else {
+             $("#switch-"+camera._id).attr('checked', false);
+        }
+
+        $("#switch-"+camera._id).change( function() {
+            
+            if ( $("#switch-"+camera._id).is(':checked') ) {
+                startRecording(camera._id);
+            } else {
+                stopRecording(camera._id);
+            }
+        });
 }
+
+var startRecording = function(camId) {
+    $.ajax({
+        url: "/cameras/"+camId+"/start_recording",
+        success: function(data) {
+            if (data.error || data.success === false) {
+                $("#switch-"+camId).attr('checked', false);
+            } else {
+                $("#switch-"+camId).attr('checked', true);
+            }
+        }, 
+        error: function() {
+            $("#switch-"+camId).attr('checked', false);
+        }
+    });
+}
+
+var stopRecording = function(camId) {
+    $.ajax({
+        url: "/cameras/"+camId+"/stop_recording",
+        success: function(data) {
+            if (data.error || data.success === false) {
+                console.log(  $("#switch-"+camId).is(':checked') );
+                $("#switch-"+camId).attr('checked', true);
+            } else {
+                $("#switch-"+camId).attr('checked', false);
+            }
+        }, 
+        error: function() {
+            $("#switch-"+camId).attr('checked', true);
+        }
+    });
+}
+
 
 var addCamera = function(camera, cb) {
         
