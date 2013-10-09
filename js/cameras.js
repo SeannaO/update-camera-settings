@@ -157,7 +157,28 @@ var deleteCamera = function(id) {
 }
 
 
+var updateCamera = function(id, cb) {
+
+    var camera = {};
+
+    camera.name = $("#camera-name").val();
+    camera.ip = $("#camera-ip").val();
+    camera.rtsp = $("#rtsp-stream").val();
+    
+    $.ajax({
+        type: "PUT",
+        url: "/cameras/" + id,
+        data: JSON.stringify( camera ),
+        contentType: 'application/json',
+        success: function(data) {
+            cb( data );
+        }
+    });
+}
+
+
 var editCamera = function(camId) {
+
 
     $("#update-camera").show();
     $("#add-new-camera").hide();
@@ -173,6 +194,18 @@ var editCamera = function(camId) {
                 $("#add-new-camera-dialog #camera-ip").val(data.camera.ip);
                 $("#add-new-camera-dialog #rtsp-stream").val(data.camera.rtsp);                
 
+                $("#update-camera").unbind();
+                $("#update-camera").click( function() {
+                    updateCamera( camId, function(data) {
+                        //console.log(data);
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert(data.error);
+                        }
+                    });
+                });
+                
                 $("#add-new-camera-dialog").modal('show');
             } else {
                 

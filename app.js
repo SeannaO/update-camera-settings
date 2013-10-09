@@ -100,10 +100,11 @@ app.get('/snapshot', function(req, res) {
 app.get('/cameras.json', function(req, res) {
 
     camerasController.listCameras( function(err, list) {
+        console.log(list);
         if (err) {
             res.end("{ 'error': '" + JSON.stringify(err) + "'}");
         } else {
-            res.end( JSON.stringify(list) );
+            res.json(list);
         }
     });
 });
@@ -116,18 +117,24 @@ app.get('/cameras', function(req, res) {
 });
 // - - -
 
+
+
 // - - 
 // 
-app.get('/cameras/:id', function(req, res) {
+app.get('/cameras/:id/snapshot', function(req, res) {
     var camId = req.params.id;
     
-    camerasController.getCamera( camId, function(err, cam) {
-        if (err || cam.length == 0) {
-            res.json({ success: false, error: err });
-        } else {
-            res.json({ success: true, camera: cam });
-        }
-    });
+    mp4Handler.takeSnapshot( db, camId, req, res );
+});
+// - - -
+
+
+// - - 
+// 
+app.get('/cameras/:id/video', function(req, res) {
+    var camId = req.params.id;
+    
+    mp4Handler.generateMp4Video( db, camId, req, res );
 });
 // - - -
 
@@ -162,6 +169,36 @@ app.get('/cameras/:id/stop_recording', function(req, res) {
     });
 });
 // - - -
+
+
+// - - 
+// 
+app.get('/cameras/:id', function(req, res) {
+    var camId = req.params.id;
+    
+    camerasController.getCamera( camId, function(err, cam) {
+        if (err || cam.length == 0) {
+            res.json({ success: false, error: err });
+        } else {
+            res.json({ success: true, camera: cam });
+        }
+    });
+});
+// - - -
+
+
+app.put('/cameras/:id', function(req, res) {
+    var cam = req.body;
+    cam._id = req.params.id;
+
+    camerasController.updateCamera( cam, function(err) {
+        if (err) {
+            res.json({success: false, error: err});
+        } else {
+            res.json({success: true});
+        }
+    });
+});
 
 
 // - -

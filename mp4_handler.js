@@ -1,7 +1,7 @@
 var ffmpeg = require('./ffmpeg');
 var fs = require('fs');
 
-function generateMp4Video( db, req, res ) {
+function generateMp4Video( db, camId, req, res ) {
     var begin = parseInt( req.query.begin );
     var end = parseInt( req.query.end );
 
@@ -10,13 +10,13 @@ function generateMp4Video( db, req, res ) {
         return;
     }
 
-    var fileName = __dirname + "/tmp/" + begin + "_" + end + ".mp4";
+    var fileName = __dirname + "/tmp/" + camId + "_" + begin + "_" + end + ".mp4";
 
     fs.exists( fileName, function(exists) {
         if (exists) {
             ffmpeg.sendStream( fileName, 0, req, res );
         } else {
-            db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
+            db.searchVideosByInterval( camId, begin, end, function( err, videoList, offset ) {
                 
                 console.log(videoList);
 
@@ -48,7 +48,7 @@ function generateMp4Video( db, req, res ) {
 
 
 //
-function takeSnapshot( db, req, res ) {
+function takeSnapshot( db, camId, req, res ) {
     var time = parseInt(req.query.time);
     
     if ( isNaN(time) ) {
@@ -56,7 +56,7 @@ function takeSnapshot( db, req, res ) {
         return;
     }
 
-    db.searchVideoByTime( time, function( file, offset ) {
+    db.searchVideoByTime( camId, time, function( file, offset ) {
         offset = Math.round( offset );
         console.log( "taking snapshot of: " + file );
         

@@ -26,7 +26,7 @@ function RecordModel( datastore, camera ) {
     console.log("camera: " + camera.name);
     console.log("folder: " + this.folder);
     console.log("rtsp: " + this.rtsp);
-    console.log("ffmpeg: " + this.ffmpegCommand);
+    //console.log("ffmpeg: " + this.ffmpegCommand);
 
 }
 
@@ -179,21 +179,36 @@ RecordModel.prototype.recordContinuously = function() {
     var exec = require('child_process').exec;
     var self = this;
 
-    console.log("ffmpeg -rtsp_transport tcp -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'");
+    if (self.rtsp.indexOf("rtsp") >= 0) {
+        this.ffmpegProcess = exec( "ffmpeg -rtsp_transport tcp -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
+                function (error, stdout, stderr) {
+                    if (error !== null) {
+                        error = true;
+                        console.error('FFmpeg\'s  exec error: ' + stderr);
+                        //console.log(stderr);
+                    }
+                }); 
 
-    this.ffmpegProcess = exec( "ffmpeg -rtsp_transport tcp -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
-            function (error, stdout, stderr) {
-                if (error !== null) {
-                    error = true;
-                    console.error('FFmpeg\'s  exec error: ' + stderr);
-                    //console.log(stderr);
-                }
-            }); 
+        this.ffmpegProcess.on('exit', function() {
+            console.log( "ffmpeg terminated, restarting..." );
+            self.recordContinuously();
+        });
+ 
+    } else if (self.rtsp.indexOf("http") >= 0) {
+        this.ffmpegProcess = exec( "ffmpeg -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
+                function (error, stdout, stderr) {
+                    if (error !== null) {
+                        error = true;
+                        console.error('FFmpeg\'s  exec error: ' + stderr);
+                        //console.log(stderr);
+                    }
+                }); 
 
-    this.ffmpegProcess.on('exit', function() {
-        console.log( "ffmpeg terminated, restarting..." );
-        recordContinuously();
-    });
+        this.ffmpegProcess.on('exit', function() {
+            console.log( "ffmpeg terminated, restarting..." );
+            self.recordContinuously();
+        });   
+    }
 }
 // - - -
 

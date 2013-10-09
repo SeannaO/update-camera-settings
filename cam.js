@@ -14,13 +14,27 @@ function CamerasController( videosDatastore ) {
 }
 
 
+function cameraInfo(camera) {
+    var info = {};
+    
+    info.name = camera.name;
+    info.rtsp = camera.rtsp;
+    info.ip = camera.ip;
+    info._id = camera._id;
+    info.status = camera.status;
+
+    return info;
+}
+
 CamerasController.prototype.listCameras = function( cb ) {
     
     refresh( function(err) {
         if (err) {
             cb( err, [] );
         } else {
-            cb( err, cameras );                        
+            
+            
+            cb( err, cameras.map(cameraInfo) );                        
         }
     });
 }
@@ -69,6 +83,34 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 }
 
 
+CamerasController.prototype.updateCamera = function(cam, cb) {
+
+    var camera = findCameraById( cam._id );
+    if (!camera) {
+        cb("{error: 'camera not found'}");
+        return;
+    }
+    
+    db.update({ _id: cam._id }, { 
+        $set: { 
+            name: cam.name, 
+            rtsp: cam.rtsp, 
+            ip: cam.ip 
+        } 
+    }, { multi: true }, function (err, numReplaced) {
+        if (err) {
+            cb(err);
+        } else {
+            
+            camera.cam.name = cam.name;
+            camera.cam.rtsp = cam.rtsp;
+            camera.cam.ip = cam.ip;
+            cb(err);
+        }
+    });    
+}
+
+
 CamerasController.prototype.startRecording = function (camId, cb) {
 
     refresh( function(err) {
@@ -77,7 +119,10 @@ CamerasController.prototype.startRecording = function (camId, cb) {
             return false;
         }
 
-        cam = findCameraById(camId);
+        cam = findCameraById(camId).cam;
+        console.log("found camera: ");
+        console.log(cam);
+           
         if (cam) {
             cam.startRecording();  
             db.update({ _id: cam._id }, { $set: { status: cam.status } }, { multi: true }, function (err, numReplaced) {

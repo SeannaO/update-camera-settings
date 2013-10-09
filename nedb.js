@@ -50,11 +50,11 @@ var sortByStartTimeAsc = function(a, b) {
  * searchVideosByInterval
  *
  */
-var searchVideosByInterval = function( start, end, cb ) {
+var searchVideosByInterval = function( camId, start, end, cb ) {
     
     db.loadDatabase();
 
-    db.find({ $and: [ {start: { $lte: end }}, {end: {$gte: start}} ] }, function(err, docs) {
+    db.find({ $and: [ {cam: camId}, {start: { $lte: end }}, {end: {$gte: start}} ] }, function(err, docs) {
         if (err) {
             console.log("error searching for videos by interval: " + err);
             cb (err, [], 0);
@@ -97,11 +97,11 @@ var searchVideosByInterval = function( start, end, cb ) {
  * searchVideoByTime
  *
  */
-var searchVideoByTime = function( startTime, cb ) {
+var searchVideoByTime = function( camId, startTime, cb ) {
 
    db.loadDatabase();
-
-   db.find({ $and: [ {start: { $lte: startTime }}, {end: {$gte: startTime}} ] }, function(err, docs) {
+    
+   db.find({ $and: [ {cam: camId}, {start: { $lte: startTime }}, {end: {$gte: startTime}} ] }, function(err, docs) {
        if (err) {
            console.log("error while searching videos by time: ");
            console.log(err);
@@ -132,17 +132,28 @@ var searchVideoByTime = function( startTime, cb ) {
  * listAll
  *
  */
-var listAll = function( table ) {
+var listAll = function( camId ) {
     
     db.loadDatabase();
 
-    db.find({}, function (err, docs) {
-        if (err) {
-            console.log(err);
-            return;
-        }
-        console.log(docs);
-    });    
+    if (camId == "") {
+        db.find({}, function (err, docs) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            console.log(docs);
+        });
+    } else {
+        db.find({ cam: camId }, function (err, docs) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            console.log(docs);
+        });
+    }
+
 }
 // - - end of listAll
 // - - - - - - - - - - - - - - - - - - - -

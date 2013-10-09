@@ -3,8 +3,6 @@ var RecordModel = require('./record_model');
 var RECORDING = 0;
 var NOT_RECORDING = 1;
 
-var db;
-
 function Camera( cam, videosDb ) {
     console.log("camera constructor");
     this._id = cam._id;
@@ -13,14 +11,15 @@ function Camera( cam, videosDb ) {
     this.rtsp = cam.rtsp;
     this.status = cam.status;
 
-    db = videosDb;
-    this.recordModel = new RecordModel(db, this);
+    this.recordModel = new RecordModel(videosDb, this);
 
     if (this.status == RECORDING) {
         this.recordModel.startRecording();
     } else {
         this.recordModel.stopRecording();
     }
+
+    console.log(this);
     
 }
 
