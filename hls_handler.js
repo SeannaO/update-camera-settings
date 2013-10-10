@@ -1,11 +1,8 @@
 var hls = require('./hls');
 
-function generateFinitePlaylist( db, req, res ) {
-    res.writeHead(200, { "Content-Type":"application/x-mpegURL" });
-    var begin = parseInt( req.query.begin );
-    var end = parseInt( req.query.end );
-
-    db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
+function generateFinitePlaylist( db, camId, begin, end, cb ) {
+   
+    db.searchVideosByInterval( camId, begin, end, function( err, videoList, offset ) {
 
         // videoList = videoList.reverse();
    //     console.log(videoList);
@@ -14,15 +11,29 @@ function generateFinitePlaylist( db, req, res ) {
             return video.file;
         });
 
+        
+        //res.writeHead(200, { 
+        //    "Content-Type":"application/x-mpegURL", 
+        //    'content-length': 0 
+        //});
+        ///res.setHeader("Content-Type","application/x-mpegURL");
+
         hls.calculateLengths( fileList, function(videos) {
-            console.log("*** lengths");
-            console.log(fileList);
-            console.log(videos);
+            //console.log("*** lengths");
+            //console.log(fileList);
+            //console.log(videos);
             hls.generatePlaylist(videos, 12, 0, true, function(playlist) {
                 console.log("*** playlist");
                 console.log(playlist);
-                res.end(playlist);
+                //res.setHeader("content-length", playlist.length);
+                
+                cb( playlist );
+                //res.write(playlist);
+                //res.end();
+                console.log("playlist length: " + Buffer.byteLength(playlist) );
+                //return;
             });
+            //res.end("error when trying to generate m3u8 list");
         });
     });
 }

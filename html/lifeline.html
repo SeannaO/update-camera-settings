@@ -2,7 +2,7 @@
     <head>
         <script src = "/js/jquery.min.js"></script>        
         <script src = "/js/jquery-ui.min.js"></script>
-        <script src = "/js/cameras.js"></script>
+        <script src = "/js/lifeline.js"></script>
 
         <link rel="stylesheet" href="/css/bootstrap.min.css">
         <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
@@ -50,6 +50,10 @@
                                 <label for="camera-ip">camera ip</label>
                                 <input type="text" class="form-control" id="camera-ip" placeholder="camera ip">
                             </div>
+                           <div class="form-group">
+                                <label for="camera-id">id</label>
+                                <input type="text" class="form-control" id="camera-id" placeholder="id">
+                            </div>                            
                             <div class="form-group">
                                 <label for="rtsp-stream">rtsp url for h264 stream</label>
                                 <input type="text" id="rtsp-stream" class = "form-control" placeholder="rtsp url">
@@ -81,6 +85,7 @@
                 camera.name = $("#camera-name").val();
                 camera.ip = $("#camera-ip").val();
                 camera.rtsp = $("#rtsp-stream").val();
+                camera.id = $("#camera-id").val();
 
                 $("#update-camera").hide();
                 $("#add-new-camera").show();
@@ -104,8 +109,6 @@
                 $("#add-new-camera").show();
             });
             // - - -
-
-                        timelineSetup();
 
         </script>
     </body>

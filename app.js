@@ -5,6 +5,8 @@ var tsHandler = require('./ts_handler');
 var hlsHandler = require('./hls_handler');
 var mp4Handler = require('./mp4_handler');
 var CamerasController = require('./cam');
+var Stream = require('stream')
+var fs = require('fs');
 
 var localIp = "";
 
@@ -121,6 +123,22 @@ app.get('/cameras', function(req, res) {
 
 // - - 
 // 
+app.get('/cameras/:id/list_videos', function(req, res) {
+    var camId = req.params.id;
+    
+    camerasController.listVideosByCamera( camId, req.query.start, req.query.end, function(err, fileList, offset) {
+        if (err) {
+            res.json({error: err, success: false});
+        } else {
+            res.json({success: true, offset: offset, videos: fileList});
+        }
+    });
+});
+// - - -
+
+
+// - - 
+// 
 app.get('/cameras/:id/snapshot', function(req, res) {
     var camId = req.params.id;
     
@@ -138,6 +156,46 @@ app.get('/cameras/:id/video', function(req, res) {
 });
 // - - -
 
+// - - 
+// 
+app.get('/cameras/:id/video.hls', function(req, res) {
+    var camId = req.params.id;
+
+    // res.header( "Content-Type","application/x-mpegURL" );
+    // res.header( "Content-Length",99999999999 );
+
+    var begin = parseInt( req.query.begin );
+    var end = parseInt( req.query.end );
+
+    hlsHandler.generateFinitePlaylist( db, camId, begin, end, function( playlist ) {
+        //res.writeHead(200, { 
+        //     "Content-Type":"application/x-mpegURL",
+        //     'content-length': length 
+        // });
+        //res.header( "Content-Type","application/x-mpegURL" );
+        /*
+           var stream = new Stream();
+           stream.pipe = function(dest) {
+           dest.write(playlist);
+           }
+           stream.pipe(res);
+         */
+        console.log(playlist);
+
+        var filename = __dirname+"/tmp/" + camId + "_" + begin + "_" + end + ".m3u8";
+        fs.writeFile(__dirname+"/tmp/" + camId + "_" + begin + "_" + end + ".m3u8", playlist, function(err) {
+            if(err) {
+                console.log(err);
+                res.end(err);
+            } else {
+                res.sendfile(filename);
+            }
+        });   
+    
+    });
+});
+// - - -
+
 
 // - - 
 // 
@@ -146,6 +204,37 @@ app.get('/cameras/:id/start_recording', function(req, res) {
     
     camerasController.startRecording( camId, function(err) {
         if ( err ) {
+            res.json({ success: false, error: err });
+        } else {
+            res.json({ success: true });
+        }
+    });
+});
+// - - -
+
+// - - 
+// 
+app.post('/cameras/:id/start_recording', function(req, res) {
+    var camId = req.params.id;
+    
+    camerasController.startRecording( camId, function(err) {
+        if ( err ) {
+            res.json({ success: false, error: err });
+        } else {
+            res.json({ success: true });
+        }
+    });
+});
+// - - -
+
+
+// - - 
+// 
+app.post('/cameras/:id/stop_recording', function(req, res) {
+    var camId = req.params.id;
+    
+    camerasController.stopRecording( camId, function(err) {
+        if (err || cam.length == 0) {
             res.json({ success: false, error: err });
         } else {
             res.json({ success: true });
@@ -180,7 +269,7 @@ app.get('/cameras/:id', function(req, res) {
         if (err || cam.length == 0) {
             res.json({ success: false, error: err });
         } else {
-            res.json({ success: true, camera: cam });
+            res.json({ success: true, camera: {_id: cam._id, name: cam.name, ip: cam.ip, rtsp: cam.rtsp } });
         }
     });
 });
@@ -257,6 +346,128 @@ app.get('/scan', function(req, res) {
     });    
 });
 // - - -
+
+
+
+
+
+
+/////////////////////
+/// lifeline     ///
+////////////////////
+
+// - - 
+// 
+app.get('/lifeline/cameras.json', function(req, res) {
+
+    camerasController.listCameras( function(err, list) {
+        console.log(list);
+        if (err) {
+            res.end("{ 'error': '" + JSON.stringify(err) + "'}");
+        } else {
+            res.json(list);
+        }
+    });
+});
+// - - -
+
+
+// - -
+//
+app.put('/lifeline/cameras/:id', function(req, res) {
+
+    var cam = req.body;
+    cam._id = camerasController.findCameraByLifelineId( req.params.id ).cam._id;
+    
+    if (cam.status == 0) {
+
+        camerasController.startRecording( cam._id, function(err) {
+            if ( err ) {
+                res.json({ success: false, error: err });
+            } else {
+                res.json({ success: true });
+            }
+        });
+    } else if (cam.status == 1) {
+
+        camerasController.stopRecording( cam._id, function(err) {
+            if ( err ) {
+                res.json({ success: false, error: err });
+            } else {
+                res.json({ success: true });
+            }
+        });
+    } else {
+
+        camerasController.updateCamera( cam, function(err) {
+            if (err) {
+                res.json({success: false, error: err});
+            } else {
+                res.json({success: true});
+            }
+        });
+    }
+});
+// - - -
+
+
+// - -
+//
+app.delete('/lifeline/cameras/:id', function(req, res) {
+    
+    var cam = camerasController.findCameraByLifelineId( req.params.id ).cam;
+
+    camerasController.removeCamera( cam._id, function( err, numRemoved ) {
+        if (err) {
+            res.json({success: false, error: err});
+        } else {
+            res.json({success: true, _id: req.params.id});
+        }
+    });
+    
+});
+// - - -
+
+
+// - -
+//
+app.post('/lifeline/cameras', function(req, res) {
+
+    camerasController.insertNewCamera( req.body, function( err, newDoc ) {
+        if (err) {
+            res.json({ sucess: false, error: err  });
+        } else {
+            res.json( newDoc );
+        }
+    });
+});
+// - -
+
+
+// - - 
+// 
+app.get('/lifeline/cameras/:id', function(req, res) {
+    var cam = camerasController.findCameraByLifelineId( req.params.id ).cam;
+
+    camerasController.getCamera( cam._id, function(err, cam) {
+        if (err || cam.length == 0) {
+            res.json({ success: false, error: err });
+        } else {
+            res.json({ success: true, camera: {_id: cam._id, name: cam.name, ip: cam.ip, rtsp: cam.rtsp, id: cam.id } });
+        }
+    });
+});
+// - - -
+
+
+// - - 
+// 
+app.get('/lifeline', function(req, res) {
+    res.sendfile(__dirname + '/html/lifeline.html');
+});
+// - - -
+
+
 
 app.listen(process.env.PORT || 8080);
 

@@ -1,12 +1,18 @@
 {"name":"vlc clone","ip":"localhost","rtsp":"http://localhost:1234","_id":"5nnpGZ33ccBTkadZ","status":1}
-{"name":"vlc","ip":"localhost","rtsp":"http://localhost:1234","_id":"7iqTklhzN9BlDpx5","status":1}
+{"name":"no name","ip":"","rtsp":"","id":"1","_id":"9Y8E759Q6gWDnJ2p"}
+{"name":"hello","ip":"","rtsp":"","id":"0","_id":"jRRvF0C4EsBEjlC7"}
+{"name":"hello2","ip":"oi","rtsp":"1234","id":"2","_id":"pMZ0BmGrJ4DwfXfy"}
+{"name":"helllo 3","ip":"","rtsp":"","id":"3","_id":"tPemnFpDgVIXXgMv"}
+{"name":"vlc clone","ip":"localhost","rtsp":"http://localhost:1234","_id":"5nnpGZ33ccBTkadZ","status":0}
 {"name":"vlc clone","ip":"localhost","rtsp":"http://localhost:1234","_id":"5nnpGZ33ccBTkadZ","status":0}
 {"name":"vlc clone","ip":"localhost","rtsp":"http://localhost:1234","_id":"5nnpGZ33ccBTkadZ","status":1}
 {"name":"vlc clone","ip":"localhost","rtsp":"http://localhost:1234","_id":"5nnpGZ33ccBTkadZ","status":0}
-{"name":"vlc","ip":"localhost","rtsp":"http://localhost:1234","_id":"7iqTklhzN9BlDpx5","status":0}
-{"name":"vlc","ip":"localhost","rtsp":"http://localhost:1234","_id":"7iqTklhzN9BlDpx5","status":1}
 {"name":"vlc clone","ip":"localhost","rtsp":"http://localhost:1234","_id":"5nnpGZ33ccBTkadZ","status":1}
-{"name":"vlc clone","ip":"localhost","rtsp":"http://localhost:1234","_id":"5nnpGZ33ccBTkadZ","status":0}
-{"name":"vlc","ip":"localhost","rtsp":"http://localhost:1234","_id":"7iqTklhzN9BlDpx5","status":0}
-{"name":"vlc clone","ip":"localhost","rtsp":"http://localhost:1234","_id":"5nnpGZ33ccBTkadZ","status":1}
-{"name":"vlc","ip":"localhost","rtsp":"http://localhost:1234","_id":"7iqTklhzN9BlDpx5","status":1}
+{"name":"no name","ip":"","rtsp":"","id":"1","_id":"9Y8E759Q6gWDnJ2p","status":0}
+{"name":"no name","ip":"","rtsp":"","id":"1","_id":"9Y8E759Q6gWDnJ2p","status":1}
+{"name":"hello","ip":"","rtsp":"","id":"0","_id":"jRRvF0C4EsBEjlC7","status":0}
+{"name":"hello","ip":"","rtsp":"","id":"0","_id":"jRRvF0C4EsBEjlC7","status":1}
+{"name":"hello2","ip":"oi","rtsp":"1234","id":"2","_id":"pMZ0BmGrJ4DwfXfy","status":0}
+{"name":"hello2","ip":"oi","rtsp":"1234","id":"2","_id":"pMZ0BmGrJ4DwfXfy","status":1}
+{"name":"helllo 3","ip":"","rtsp":"","id":"3","_id":"tPemnFpDgVIXXgMv","status":0}
+{"name":"helllo 3","ip":"","rtsp":"","id":"3","_id":"tPemnFpDgVIXXgMv","status":1}

@@ -22,8 +22,38 @@ function cameraInfo(camera) {
     info.ip = camera.ip;
     info._id = camera._id;
     info.status = camera.status;
+    console.log("camera.id: " + camera.id);
+    if (camera.id) {
+        info.id = camera.id;
+    } else {
+        info.id = camera._id;
+    }
+    console.log("camera.id: " + info.id);
+    if (!camera.id) {
+        info.id = camera._id;
+    } else {
+        info.id = camera.id;
+    }
 
     return info;
+}
+
+
+CamerasController.prototype.listVideosByCamera = function( camId, start, end, cb ) {
+    
+    start = parseInt( start );
+    end = parseInt( end );
+
+    console.log("listing videos recorded by camera " + camId + " between " + start + " and " + end);
+    videosDb.searchVideosByInterval( camId, start, end, function(err, fileList, offset) {
+        if (err) {
+            console.log("error while trying to list videos by camera: " + err);
+            cb(err);
+        } else {
+            console.log(fileList);
+            cb(err, fileList, offset);
+        }
+    });
 }
 
 CamerasController.prototype.listCameras = function( cb ) {
@@ -32,8 +62,6 @@ CamerasController.prototype.listCameras = function( cb ) {
         if (err) {
             cb( err, [] );
         } else {
-            
-            
             cb( err, cameras.map(cameraInfo) );                        
         }
     });
@@ -55,13 +83,17 @@ CamerasController.prototype.getCamera = function(camId, cb) {
 
 CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
+    console.log( "inserting new camera: ");
+    console.log( cam );
+
     db.insert( cam, function( err, newDoc ) {
         if (err) {
             console.log("error when inserting camera: " + err);
             cb( err, "{ success: false }" );
         } else {
             cb( err, newDoc );
-            cameras.push( new Camera(cam, videosDb) );
+            cameras.push( new Camera(newDoc, videosDb) );
+            console.log( newDoc );
         }
     });
 }
@@ -163,6 +195,18 @@ CamerasController.prototype.stopRecording = function (camId, cb) {
             cb(true);
         }
     });
+}
+
+
+CamerasController.prototype.findCameraByLifelineId = function( lifelineId ) {
+
+    for (var i = 0; i < cameras.length; i++) { 
+        var cam = cameras[i];
+        if ( (cam.id && cam.id === lifelineId) || (!cam.id && cam._id === lifelineId) ) {
+            return { index: i, cam: cam };
+        }
+    }
+    return false;
 }
 
 

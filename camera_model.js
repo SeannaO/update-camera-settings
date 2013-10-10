@@ -10,7 +10,11 @@ function Camera( cam, videosDb ) {
     this.ip = cam.ip;
     this.rtsp = cam.rtsp;
     this.status = cam.status;
-
+    if (cam.id) {
+        this.id = cam.id;
+    } else {
+        this.id = cam._id;
+    }
     this.recordModel = new RecordModel(videosDb, this);
 
     if (this.status == RECORDING) {
