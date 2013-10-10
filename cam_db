@@ -1,16 +1,23 @@
+{"name":"vlc clone","ip":"localhost","rtsp":"http://localhost:1234","_id":"5nnpGZ33ccBTkadZ","status":0}
+{"name":"no name","ip":"","rtsp":"","id":"1","_id":"9Y8E759Q6gWDnJ2p","status":0}
+{"name":"test","ip":"123","rtsp":"","id":"id_0.06478006718680263","_id":"vGrQj8y1p9tYAYqw","status":1}
 {"name":"vlc clone","ip":"localhost","rtsp":"http://localhost:1234","_id":"5nnpGZ33ccBTkadZ","status":1}
 {"name":"no name","ip":"","rtsp":"","id":"1","_id":"9Y8E759Q6gWDnJ2p","status":1}
-{"name":"hello","ip":"","rtsp":"","id":"0","_id":"jRRvF0C4EsBEjlC7","status":1}
-{"name":"hello2","ip":"oi","rtsp":"1234","id":"2","_id":"pMZ0BmGrJ4DwfXfy","status":1}
-{"name":"helllo 3","ip":"","rtsp":"","id":"3","_id":"tPemnFpDgVIXXgMv","status":1}
+{"name":"no name","ip":"","rtsp":"","id":"1","_id":"9Y8E759Q6gWDnJ2p","status":0}
+{"name":"no name","ip":"","rtsp":"","id":"1","_id":"9Y8E759Q6gWDnJ2p","status":1}
 {"name":"vlc clone","ip":"localhost","rtsp":"http://localhost:1234","_id":"5nnpGZ33ccBTkadZ","status":0}
 {"name":"vlc clone","ip":"localhost","rtsp":"http://localhost:1234","_id":"5nnpGZ33ccBTkadZ","status":1}
-{"$$deleted":true,"_id":"pMZ0BmGrJ4DwfXfy"}
-{"$$deleted":true,"_id":"tPemnFpDgVIXXgMv"}
-{"$$deleted":true,"_id":"jRRvF0C4EsBEjlC7"}
-{"name":"test","ip":"","rtsp":"","id":"id_0.06478006718680263","_id":"vGrQj8y1p9tYAYqw"}
-{"name":"test","ip":"","rtsp":"","id":"id_0.06478006718680263","_id":"vGrQj8y1p9tYAYqw","status":0}
-{"name":"test","ip":"","rtsp":"","id":"id_0.06478006718680263","_id":"vGrQj8y1p9tYAYqw","status":1}
-{"name":"test","ip":"123","rtsp":"","id":"id_0.06478006718680263","_id":"vGrQj8y1p9tYAYqw","status":1}
-{"name":"test","ip":"123","rtsp":"","id":"id_0.06478006718680263","_id":"vGrQj8y1p9tYAYqw","status":0}
-{"name":"test","ip":"123","rtsp":"","id":"id_0.06478006718680263","_id":"vGrQj8y1p9tYAYqw","status":1}
+{"name":"vlc clone","ip":"localhost","rtsp":"http://localhost:1234","_id":"5nnpGZ33ccBTkadZ","status":0}
+{"name":"vlc clone","ip":"localhost","rtsp":"http://localhost:1234","_id":"5nnpGZ33ccBTkadZ","status":1}
+{"name":"0","ip":"","rtsp":"","id":"x","_id":"AiVnQMCdg40h7PGS"}
+{"name":"0","ip":"","rtsp":"","id":"x","_id":"AiVnQMCdg40h7PGS","status":0}
+{"name":"0","ip":"","rtsp":"","id":"x","_id":"AiVnQMCdg40h7PGS","status":1}
+{"name":"0","ip":"","rtsp":"","id":"x","_id":"AiVnQMCdg40h7PGS","status":0}
+{"name":"0","ip":"","rtsp":"","id":"x","_id":"AiVnQMCdg40h7PGS","status":1}
+{"$$deleted":true,"_id":"vGrQj8y1p9tYAYqw"}
+{"name":"0","ip":"","rtsp":"","id":"x","_id":"AiVnQMCdg40h7PGS","status":0}
+{"name":"0","ip":"","rtsp":"","id":"x","_id":"AiVnQMCdg40h7PGS","status":1}
+{"name":"no name","ip":"","rtsp":"","id":"1","_id":"9Y8E759Q6gWDnJ2p","status":0}
+{"name":"no name","ip":"","rtsp":"","id":"1","_id":"9Y8E759Q6gWDnJ2p","status":1}
+{"name":"vlc clone","ip":"localhost","rtsp":"http://localhost:1234","_id":"5nnpGZ33ccBTkadZ","status":0}
+{"name":"vlc clone","ip":"localhost","rtsp":"http://localhost:1234","_id":"5nnpGZ33ccBTkadZ","status":1}

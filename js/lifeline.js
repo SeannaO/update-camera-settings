@@ -77,9 +77,8 @@ var addCameraItem = function( camera ) {
 var startRecording = function(camId) {
 
     $.ajax({
-        type: "PUT",
-        url: "lifeline/cameras/" + camId,
-        data: JSON.stringify( { status: 0 } ),
+        type: "POST",
+        url: "lifeline/cameras/" + camId + "/start_recording",
         contentType: 'application/json',
         success: function(data) {
             //cb( data );
@@ -94,9 +93,8 @@ var startRecording = function(camId) {
 var stopRecording = function(camId) {
 
     $.ajax({
-        type: "PUT",
-        url: "lifeline/cameras/" + camId,
-        data: JSON.stringify( { status: 1 } ),
+        type: "POST",
+        url: "lifeline/cameras/" + camId + "/stop_recording",
         contentType: 'application/json',
         success: function(data) {
             //cb( data );

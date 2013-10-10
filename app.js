@@ -356,6 +356,43 @@ app.get('/scan', function(req, res) {
 /// lifeline     ///
 ////////////////////
 
+
+// - - 
+// 
+app.post('/lifeline/cameras/:id/start_recording', function(req, res) {
+    
+    var cam = req.body;
+    cam._id = camerasController.findCameraByLifelineId( req.params.id ).cam._id;
+    
+    camerasController.startRecording( cam._id, function(err) {
+        if (err || cam.length == 0) {
+            res.json({ success: false, error: err });
+        } else {
+            res.json({ success: true });
+        }
+    });
+});
+// - - -
+
+http://localhost:8080/lifeline/cameras/1/stop_recording
+// - - 
+// 
+app.post('/lifeline/cameras/:id/stop_recording', function(req, res) {
+
+    var cam = req.body;
+    cam._id = camerasController.findCameraByLifelineId( req.params.id ).cam._id;
+
+    camerasController.stopRecording( cam._id, function(err) {
+        if (err || cam.length == 0) {
+            res.json({ success: false, error: err });
+        } else {
+            res.json({ success: true });
+        }
+    });
+});
+// - - -
+
+
 // - - 
 // 
 app.get('/lifeline/cameras.json', function(req, res) {
@@ -379,34 +416,13 @@ app.put('/lifeline/cameras/:id', function(req, res) {
     var cam = req.body;
     cam._id = camerasController.findCameraByLifelineId( req.params.id ).cam._id;
     
-    if (cam.status == 0) {
-
-        camerasController.startRecording( cam._id, function(err) {
-            if ( err ) {
-                res.json({ success: false, error: err });
-            } else {
-                res.json({ success: true });
-            }
-        });
-    } else if (cam.status == 1) {
-
-        camerasController.stopRecording( cam._id, function(err) {
-            if ( err ) {
-                res.json({ success: false, error: err });
-            } else {
-                res.json({ success: true });
-            }
-        });
-    } else {
-
-        camerasController.updateCamera( cam, function(err) {
-            if (err) {
-                res.json({success: false, error: err});
-            } else {
-                res.json({success: true});
-            }
-        });
-    }
+    camerasController.updateCamera( cam, function(err) {
+        if (err) {
+            res.json({success: false, error: err});
+        } else {
+            res.json({success: true});
+        }
+    });
 });
 // - - -
 
