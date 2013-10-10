@@ -1,22 +1,28 @@
 var cameras = [];
 
-var timelineSetup = function() {
+var timelineSetup = function( id ) {
 
     var timelineData = [];
-    timelineData.push({label: '7iqTklhzN9BlDpx5', times: []});
+    timelineData.push({label: id, times: []});
     var startTime = Date.now() - 1*60*60*1000;
-    $.getJSON( "/cameras/" + '7iqTklhzN9BlDpx5' + "/list_videos?start="+startTime+"&end="+Date.now(), function( data ) {
+    $.getJSON( "/cameras/" + id + "/list_videos?start="+startTime+"&end="+Date.now(), function( data ) {
         var videos = data.videos;
         for (var i = 0; i < videos.length; i++) {
-            timelineData[0].times.push({starting_time: videos[i].start, ending_time: videos[i].end});             
+            timelineData[0].times.push({starting_time: videos[i].start-15000, ending_time: videos[i].end});             
         }
-        var chart = d3.timeline().width(800).rotateTicks(90).showToday().tickFormat({
+        var chart = d3.timeline().width(800).rotateTicks(90).showToday().stack(true).tickFormat({
             format: d3.time.format("%H:%M"), 
             tickTime: d3.time.minute, 
             tickNumber: 1, 
             tickSize: 5 
         });
-        var svg = d3.select("#timeline").append("svg").attr("width", 800).datum(timelineData).call(chart);         
+        if (id) {
+            $("<div>", {
+                id: "timeline-"+id
+            }).appendTo("#timelines");
+        }
+
+        var svg = d3.select("#timeline-"+id).append("svg").attr("width", 800).datum(timelineData).call(chart);         
     });
                
 }
@@ -47,8 +53,11 @@ var list = function() {
         console.log(data);
 
         for (var i = 0; i < data.length; i++) {
-            cameras.push( data[i] );
-            addCameraItem(data[i]);
+            if (data[i]) {
+                cameras.push( data[i] );
+                addCameraItem(data[i]);
+                timelineSetup(data[i]._id);
+            }
         }
         
         $("#camera-list table").append("</tbody></table>");
@@ -133,6 +142,7 @@ var startRecording = function(camId) {
     });
 }
 
+
 var stopRecording = function(camId) {
     $.ajax({
         url: "/cameras/"+camId+"/stop_recording",
@@ -208,13 +218,12 @@ var updateCamera = function(id, cb) {
 
 var editCamera = function(camId) {
 
-
     $("#update-camera").show();
     $("#add-new-camera").hide();
 
     $.ajax({
         type: "GET",
-        url: "/cameras/" + camId + ".json",
+        url: "/cameras/" + camId + "/json",
         contentType: 'application/json',
         success: function(data) {
             console.log(data);

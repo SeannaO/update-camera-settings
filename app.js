@@ -273,11 +273,11 @@ app.get('/cameras/:id', function(req, res) {
 
 // - - 
 // 
-app.get('/cameras/:id.json', function(req, res) {
+app.get('/cameras/:id/json', function(req, res) {
     var camId = req.params.id;
     
     camerasController.getCamera( camId, function(err, cam) {
-        if (err || cam.length == 0) {
+        if (err || !cam || cam.length == 0) {
             res.json({ success: false, error: err });
         } else {
             res.json({ success: true, camera: {_id: cam._id, name: cam.name, ip: cam.ip, rtsp: cam.rtsp } });
@@ -375,7 +375,7 @@ app.post('/lifeline/cameras/:id/start_recording', function(req, res) {
 });
 // - - -
 
-http://localhost:8080/lifeline/cameras/1/stop_recording
+
 // - - 
 // 
 app.post('/lifeline/cameras/:id/stop_recording', function(req, res) {
@@ -450,6 +450,9 @@ app.delete('/lifeline/cameras/:id', function(req, res) {
 //
 app.post('/lifeline/cameras', function(req, res) {
 
+    console.log("app: insert camera: ");
+    console.log(req.body);
+
     camerasController.insertNewCamera( req.body, function( err, newDoc ) {
         if (err) {
             res.json({ sucess: false, error: err  });
@@ -479,8 +482,39 @@ app.get('/lifeline/cameras/:id', function(req, res) {
 
 // - - 
 // 
+app.get('/lifeline/cameras/:id/video', function(req, res) {
+    var camId = req.params.id;
+    var begin = req.query.begin;
+    var end = req.query.end;
+    
+    var cam = camerasController.findCameraByLifelineId( camId ).cam;
+
+    mp4Handler.generateMp4Video( db, cam._id, begin, end, function( response ) {
+        if(response.success) {
+            mp4Handler.sendMp4Video( response.file, req, res );
+        } else {
+            res.end(response.error);
+        }
+    });
+});
+// - - -
+
+
+// - - 
+// 
+app.get('/lifeline/cameras/:id/snapshot', function(req, res) {
+    var camId = req.params.id;
+    var cam = camerasController.findCameraByLifelineId( camId ).cam;
+    
+    mp4Handler.takeSnapshot( db, cam._id, req, res );
+});
+// - - -
+
+
+// - - 
+// 
 app.get('/lifeline', function(req, res) {
-    res.sendfile(__dirname + '/html/lifeline.html');
+    res.sendfile(__dirname + '/views/lifeline.html');
 });
 // - - -
 

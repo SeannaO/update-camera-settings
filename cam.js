@@ -70,11 +70,16 @@ CamerasController.prototype.listCameras = function( cb ) {
 
 CamerasController.prototype.getCamera = function(camId, cb) {
 
+    var self = this;
+
     refresh( function(err) {
         if (err) {
             cb( err, null );
         } else {
-            var cam = findCameraById( camId ).cam;
+            var cam = self.findCameraById( camId ).cam;
+            console.log("getCamera: ");
+            console.log(cam);
+            
             cb( err, cam );
         }
     });
@@ -101,11 +106,13 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
 CamerasController.prototype.removeCamera = function( camId, cb ) {
 
+    var self = this;
+
     db.remove({ _id: camId }, {}, function (err, numRemoved) {
         if( err ) {
             cb( err, numRemoved );
         } else {
-            var i = findCameraById( camId ).index;
+            var i = self.findCameraById( camId ).index;
             cameras.splice(i,1);            
             refresh( function() {
                 cb( err, numRemoved );
@@ -117,7 +124,7 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 
 CamerasController.prototype.updateCamera = function(cam, cb) {
 
-    var camera = findCameraById( cam._id );
+    var camera = this.findCameraById( cam._id );
     if (!camera) {
         cb("{error: 'camera not found'}");
         return;
@@ -145,13 +152,15 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 
 CamerasController.prototype.startRecording = function (camId, cb) {
 
+    var self = this;
+
     refresh( function(err) {
         if (err) {
             cb( err );
             return false;
         }
 
-        cam = findCameraById(camId).cam;
+        cam = self.findCameraById(camId).cam;
         console.log("found camera: ");
         console.log(cam);
            
@@ -174,13 +183,15 @@ CamerasController.prototype.startRecording = function (camId, cb) {
 
 CamerasController.prototype.stopRecording = function (camId, cb) {
 
+    var self = this;
+
     refresh( function(err) {
         if (err) {
             cb( err );
             return false;
         }
 
-        cam = findCameraById(camId).cam;
+        cam = self.findCameraById(camId).cam;
         if (cam) {
             cam.stopRecording();  
             db.update({ _id: cam._id }, { $set: { status: cam.status } }, { multi: true }, function (err, numReplaced) {
@@ -237,7 +248,8 @@ function setup( cb ) {
 }
 
 
-function findCameraById( id ) {
+CamerasController.prototype.findCameraById = function( id ) {
+    console.log("findCameraById: " + id);
     for (var i = 0; i < cameras.length; i++) { 
         var cam = cameras[i];
         if (cam._id === id) {
