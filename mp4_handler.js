@@ -1,12 +1,24 @@
 var ffmpeg = require('./ffmpeg');
 var fs = require('fs');
 
-function generateMp4Video( db, camId, req, res ) {
-    var begin = parseInt( req.query.begin );
-    var end = parseInt( req.query.end );
+
+function sendMp4Video( file, req, res ) {
+     fs.exists( file, function(exists) {
+         if (exists) {
+            ffmpeg.sendStream( file, 0, req, res );
+         } else {
+             res.end("couldn't find this file");
+         }
+     });
+}
+
+function generateMp4Video( db, camId, begin, end, cb ) {
+    var begin = parseInt( begin );
+    var end = parseInt( end );
 
     if ( isNaN(begin) || isNaN(end) ) {
-        res.end("invalid interval");
+        var response = {success: false, error: "invalid interval"};
+        cb( response );
         return;
     }
 
@@ -14,7 +26,8 @@ function generateMp4Video( db, camId, req, res ) {
 
     fs.exists( fileName, function(exists) {
         if (exists) {
-            ffmpeg.sendStream( fileName, 0, req, res );
+            var response = { success: true, file: fileName };
+            cb( response );
         } else {
             db.searchVideosByInterval( camId, begin, end, function( err, videoList, offset ) {
                 
@@ -22,10 +35,11 @@ function generateMp4Video( db, camId, req, res ) {
 
                 if (videoList.length == 0) {
                     
-                    var formatedBegin = new Date(begin).toISOString();
-                    var formatedEnd = new Date(end).toISOString();
-
-                    res.end("couldn't find any video within " + formatedBegin + " and " + formatedEnd + "... :(");
+                    var formatedBegin = new Date(begin);
+                    var formatedEnd = new Date(end);
+                    
+                    var response = { success: false, error: "couldn't find any recording between " + formatedBegin + " and " + formatedEnd + "... :(" };
+                    cb(response);
                 }
                 else {
                     var fileList = videoList.map( function(video) {
@@ -34,9 +48,11 @@ function generateMp4Video( db, camId, req, res ) {
 
                     ffmpeg.stitch( fileList, fileName, offset, function(mergedFile, error) {
                         if ( !error ) {
-                            ffmpeg.sendStream( mergedFile, 0, req, res );
+                            var response = { success: true, file: mergedFile };
+                            cb( response );
                         } else {
-                            res.end("there was an error when trying to deliver the video... :(");
+                            var response = { success: false, error: error };
+                            cb( response );
                         }
                     });
                 }
@@ -71,7 +87,7 @@ function takeSnapshot( db, camId, req, res ) {
                         });
                 });
                 } else {
-                    res.end( "sorry, no videos were recorded at " + (new Date(time)).toISOString() );
+                    res.end( "sorry, no videos were recorded at " + (new Date(time)) );
                 }
             });
     });
@@ -82,4 +98,4 @@ function takeSnapshot( db, camId, req, res ) {
 //
 exports.generateMp4Video = generateMp4Video;
 exports.takeSnapshot = takeSnapshot;
-
+exports.sendMp4Video = sendMp4Video;

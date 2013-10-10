@@ -35,10 +35,12 @@ app.use('/tmp', express.static(__dirname + '/videos/tmp'));
 
 app.use(express.bodyParser());
 
+app.set('view engine', 'ejs');
+
 // - -
 // 
 app.get('/', function (req, res) {    
-    res.sendfile(__dirname + '/html/cameras.html');
+    res.sendfile(__dirname + '/views/cameras.html');
 });
 // - - -
 
@@ -69,34 +71,6 @@ app.get('/m3u8', function(req, res) {
 });
 // - - -
 
-
-// - -
-// 
-app.get('/stream', function(req, res) {
-
-    req.session.mediaSequence = 0;
-    res.sendfile(__dirname + "/player.html");
-});
-// - - -
-
-
-// - -
-//
-app.get('/video', function(req, res) {
-    
-    mp4Handler.generateMp4Video( db, req, res );
- });
-// - - -
-
-
-// - -
-//
-app.get('/snapshot', function(req, res) {
-
-    mp4Handler.takeSnapshot( db, req, res );
-});
-// - - -
-
 // - - 
 // 
 app.get('/cameras.json', function(req, res) {
@@ -115,7 +89,7 @@ app.get('/cameras.json', function(req, res) {
 // - - 
 // 
 app.get('/cameras', function(req, res) {
-    res.sendfile(__dirname + '/html/cameras.html');
+    res.sendfile(__dirname + '/views/cameras.html');
 });
 // - - -
 
@@ -146,13 +120,34 @@ app.get('/cameras/:id/snapshot', function(req, res) {
 });
 // - - -
 
+// - - 
+// 
+app.get('/cameras/:id/video.json', function(req, res) {
+    var camId = req.params.id;
+    var begin = req.query.begin;
+    var end = req.query.end;
+    
+    mp4Handler.generateMp4Video( db, camId, begin, end, function( response ) {
+        res.json(response);
+    });
+});
+// - - -
+
 
 // - - 
 // 
 app.get('/cameras/:id/video', function(req, res) {
     var camId = req.params.id;
+    var begin = req.query.begin;
+    var end = req.query.end;
     
-    mp4Handler.generateMp4Video( db, camId, req, res );
+    mp4Handler.generateMp4Video( db, camId, begin, end, function( response ) {
+        if(response.success) {
+            mp4Handler.sendMp4Video( response.file, req, res );
+        } else {
+            res.end(response.error);
+        }
+    });
 });
 // - - -
 
@@ -267,6 +262,22 @@ app.get('/cameras/:id', function(req, res) {
     
     camerasController.getCamera( camId, function(err, cam) {
         if (err || cam.length == 0) {
+            res.end("couldn't find this camera");
+        } else {
+            res.render('camera', {id: cam._id, rtsp: cam.rtsp, name: cam.name});
+        }
+    });
+});
+// - - -
+
+
+// - - 
+// 
+app.get('/cameras/:id.json', function(req, res) {
+    var camId = req.params.id;
+    
+    camerasController.getCamera( camId, function(err, cam) {
+        if (err || cam.length == 0) {
             res.json({ success: false, error: err });
         } else {
             res.json({ success: true, camera: {_id: cam._id, name: cam.name, ip: cam.ip, rtsp: cam.rtsp } });
@@ -321,14 +332,6 @@ app.post('/cameras/new', function(req, res) {
 // - -
 
 
-// - -
-//
-app.get('/player', function(req, res) {
-    req.session.mediaSequence = 0;
-    res.sendfile(__dirname + '/player.html');
-});
-// - - -
-
 
 // - -
 // 
@@ -346,8 +349,6 @@ app.get('/scan', function(req, res) {
     });    
 });
 // - - -
-
-
 
 
 

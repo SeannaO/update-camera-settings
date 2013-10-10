@@ -88,7 +88,7 @@ var addCameraItem = function( camera ) {
         row += "<a href = \"javascript:deleteCamera('" + camera._id + "')\">[ - ]</a>";
         row += " || <a href = \"javascript:editCamera('" + camera._id + "')\">[ edit ]</a>";
         row += "</td>";
-        row += "<td>"+camera.name+"</td>";
+        row += "<td><a href='/cameras/" + camera._id + "'>"+ camera.name+"</a></td>";
         row += "<td>"+camera.ip+"</td>";
         row += "<td>"+camera.rtsp+"</td>";
         row += "<td>";
@@ -214,7 +214,7 @@ var editCamera = function(camId) {
 
     $.ajax({
         type: "GET",
-        url: "/cameras/" + camId,
+        url: "/cameras/" + camId + ".json",
         contentType: 'application/json',
         success: function(data) {
             console.log(data);
