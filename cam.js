@@ -144,6 +144,8 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
             camera.cam.name = cam.name;
             camera.cam.rtsp = cam.rtsp;
             camera.cam.ip = cam.ip;
+            camera.cam.updateRecorder();
+
             cb(err);
         }
     });    

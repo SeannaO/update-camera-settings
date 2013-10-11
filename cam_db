@@ -1,3 +1,5 @@
-{"id":"b2cbb21a-2d99-4377-8c02-3f9f0dc3081f","rtsp":"rtsp://admin:admin@192.168.215.83/video1enc1","_id":"A22jnE7qvFWGOuQl"}
-{"name":"x","ip":"","rtsp":"","id":"asdakj-asdasdajkh-as928312","_id":"CI5vuHeHpSjfyQb0"}
-{"name":"test","ip":"","rtsp":"","id":"test-123","_id":"MydwwJGWOE0794yz"}
+{"name":"test","ip":"http://localhost:1234","rtsp":"","id":"id_0.10736920568160713","_id":"oO7L4t0IjA3iucF1","status":0}
+{"name":"test","ip":"http://localhost:1234","rtsp":"http://localhost:1234","id":"id_0.10736920568160713","_id":"oO7L4t0IjA3iucF1","status":0}
+{"name":"test","ip":"http://localhost:1234","rtsp":"http://localhost:1234","id":"id_0.10736920568160713","_id":"oO7L4t0IjA3iucF1","status":1}
+{"name":"test","ip":"http://localhost:1234","rtsp":"http://localhost:1234","id":"id_0.10736920568160713","_id":"oO7L4t0IjA3iucF1","status":0}
+{"name":"vlc","ip":"http://localhost:1234","rtsp":"http://localhost:1234","id":"id_0.10736920568160713","_id":"oO7L4t0IjA3iucF1","status":0}

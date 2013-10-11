@@ -52,6 +52,11 @@ Camera.prototype.stopRecording = function() {
     }
 }
 
+
+Camera.prototype.updateRecorder = function() {
+    this.recordModel.updateCameraInfo( this );
+}
+
 module.exports = Camera;
 
 

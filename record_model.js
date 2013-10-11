@@ -31,6 +31,12 @@ function RecordModel( datastore, camera ) {
 }
 
 
+RecordModel.prototype.updateCameraInfo = function( camera ) {
+    this.rtsp = camera.rtsp;
+    this.camId = camera._id;
+}
+
+
 RecordModel.prototype.stopRecording = function() {
     
     if (this.ffmpegProcess) {
