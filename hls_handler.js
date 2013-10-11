@@ -2,38 +2,18 @@ var hls = require('./hls');
 
 function generateFinitePlaylist( db, camId, begin, end, cb ) {
    
-    db.searchVideosByInterval( camId, begin, end, function( err, videoList, offset ) {
+    console.log("generate finite play list");
 
-        // videoList = videoList.reverse();
-   //     console.log(videoList);
+    db.searchVideosByInterval( camId, begin, end, function( err, videoList, offset ) {
         
         var fileList = videoList.map( function(video) {
             return video.file;
         });
 
-        
-        //res.writeHead(200, { 
-        //    "Content-Type":"application/x-mpegURL", 
-        //    'content-length': 0 
-        //});
-        ///res.setHeader("Content-Type","application/x-mpegURL");
-
         hls.calculateLengths( fileList, function(videos) {
-            //console.log("*** lengths");
-            //console.log(fileList);
-            //console.log(videos);
-            hls.generatePlaylist(videos, 12, 0, true, function(playlist) {
-                console.log("*** playlist");
-                console.log(playlist);
-                //res.setHeader("content-length", playlist.length);
-                
+            hls.generatePlaylist( camId, videos, 12, 0, true, function(playlist) {
                 cb( playlist );
-                //res.write(playlist);
-                //res.end();
-                console.log("playlist length: " + Buffer.byteLength(playlist) );
-                //return;
             });
-            //res.end("error when trying to generate m3u8 list");
         });
     });
 }

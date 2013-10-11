@@ -46,9 +46,12 @@ app.get('/', function (req, res) {
 
 // - -
 //
-app.get('/ts/:file', function(req, res) {
-  
-    tsHandler.deliverTsFile( req, res );
+app.get('/ts/:id/:file', function(req, res) {
+    
+    var camId = req.params.id;
+    var file = req.params.file;
+
+    tsHandler.deliverTsFile( camId, file, res );
 });
 // - - -
 
@@ -153,39 +156,19 @@ app.get('/cameras/:id/video', function(req, res) {
 // - - 
 // 
 app.get('/cameras/:id/video.hls', function(req, res) {
+
     var camId = req.params.id;
-
-    // res.header( "Content-Type","application/x-mpegURL" );
-    // res.header( "Content-Length",99999999999 );
-
     var begin = parseInt( req.query.begin );
     var end = parseInt( req.query.end );
-
-    hlsHandler.generateFinitePlaylist( db, camId, begin, end, function( playlist ) {
-        //res.writeHead(200, { 
-        //     "Content-Type":"application/x-mpegURL",
-        //     'content-length': length 
-        // });
-        //res.header( "Content-Type","application/x-mpegURL" );
-        /*
-           var stream = new Stream();
-           stream.pipe = function(dest) {
-           dest.write(playlist);
-           }
-           stream.pipe(res);
-         */
-        console.log(playlist);
-
-        var filename = __dirname+"/tmp/" + camId + "_" + begin + "_" + end + ".m3u8";
-        fs.writeFile(__dirname+"/tmp/" + camId + "_" + begin + "_" + end + ".m3u8", playlist, function(err) {
-            if(err) {
-                console.log(err);
-                res.end(err);
-            } else {
-                res.sendfile(filename);
-            }
-        });   
     
+    hlsHandler.generateFinitePlaylist( db, camId, begin, end, function( playlist ) {
+
+        res.writeHead(200, { 
+             "Content-Type":"application/x-mpegURL",
+             'content-length': playlist.length 
+        });
+
+        res.end(playlist);    
     });
 });
 // - - -

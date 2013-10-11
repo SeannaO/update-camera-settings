@@ -8,8 +8,6 @@ var ffmpeg = require('fluent-ffmpeg');
 var fs = require('fs');
 var path = require('path');
 
-var Metalib = ffmpeg.Metadata;
-
 
 /**
  * convertFromTsToMp4
@@ -119,16 +117,34 @@ var stitch = function( files, out, offset, cb ) {
 // - - - - - - - - - - - - - - - - - - - -
 
 
+
+/**
+ * calcDurations
+ *
+ */
+function calcDurationOfMultipleFiles(list, cb) {
+}
+
+
 /**
  * calcDuration
  *
  */
 function calcDuration(input, cb) {
 
-    var metaObject = new Metalib(input, function(metadata, err) {
-        // console.log(require('util').inspect(metadata, false, null));
-        cb( metadata.durationsec, input );
-    });    
+    var Metalib = ffmpeg.Metadata;
+
+    fs.exists(input, function(exists) {
+        if(exists) {
+            var metaObject = new Metalib(input, function(metadata, err) {
+                cb( metadata.durationsec, input );
+            });
+        } else {
+            cb( 0, input );
+        }
+
+    });
+      
 }
 // - - end of calcDuration
 // - - - - - - - - - - - - - - - - - - - -

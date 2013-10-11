@@ -30,8 +30,10 @@ var livePlaylist = function( videos, targetDuration, mediaSequence, cb ) {
  * generatePlaylist
  *
  */
-var generatePlaylist = function( videos, targetDuration, mediaSequence, closed, cb ) {
+var generatePlaylist = function( camId, videos, targetDuration, mediaSequence, closed, cb ) {
     
+    console.log("generate playlist");
+
     var content = "#EXTM3U\n" +
                   "#EXT-X-VERSION:3\n" +        
                   "#EXT-X-PLAYLIST-TYPE:VOD\n" +   
@@ -41,14 +43,14 @@ var generatePlaylist = function( videos, targetDuration, mediaSequence, closed, 
 
     for ( var i = 0; i < videos.length; i++ ) {
         content = content + "#EXTINF:" + videos[i].duration + ".0,\n";
-        content = content + "/ts/" + path.basename(videos[i].url) + "\n";
+        content = content + "/ts/" + camId + "/" + path.basename(videos[i].url) + "\n";
     }
 
     if ( closed ) {
         content = content + "#EXT-X-ENDLIST\n";
     }
 
-    console.log( content );
+    // console.log( content );
 
     cb( content );
 }
@@ -82,38 +84,38 @@ var sortVideosByName = function( a, b ) {
 }
 
 
+var calculateLengthsAsync = function(files, list, cb) {
+    var file = files.shift();     
+    if (file) {
+        ffmpeg.calcDuration( file, function(duration, f) {
+            list.push({
+                url: path.basename(f),
+                duration: duration
+            });
+            
+            calculateLengthsAsync(files, list, cb);
+        });
+    } else {
+        cb( list.sort( sortVideosByName ) );
+    }
+}
+
 /**
  * calculateLengths
  *
  */
 var calculateLengths = function( files, cb ) {
 
+    console.log("calculateLengths");
+
+    var running = 0;
+    var limit = 5;
 
     var videos = [];
 
-    if ( files.length == 0) {
-        cb(videos);
-    }
-    else {
-
-        for (var i = 0; i < files.length; i++) {
-            var file = files[i];
-
-            ffmpeg.calcDuration( file, function(duration, file) {
-                videos.push({
-                    index: i,
-                    url: "/ts/" + path.basename(file),
-                    duration: duration
-                });
-                
-                if (i == files.length) {
-                    // console.log("sort by name");
-                    videos = videos.sort( sortVideosByName )
-                    cb(videos);
-                }
-            });
-        }
-    }
+    var count = 0;
+    
+    calculateLengthsAsync( files, videos, cb );
 }
 // - - end of calculateLengths
 // - - - - - - - - - - - - - - - - - - - -

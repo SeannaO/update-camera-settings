@@ -48,7 +48,8 @@
         <div id = "search-bar" class="form-inline">
             <input id="begin_date" type="text" placeholder="start time" ></input>
             <input id="end_date" placeholder="end time" ></input>
-            <button id = "search" class = 'btn btn-xs btn-info'>get video</button>
+            <button id = "search" class = 'btn btn-xs btn-info'>get mp4 video</button>
+            <button id = "get-hls" class = 'btn btn-xs btn-info'>get hls video</button>
             <button id = "get-snapshot" class = 'btn btn-xs btn-default'>get a snapshot</button>
             <button id = "get-livestream" class = 'btn btn-xs btn-default'>livestream</button>
 
@@ -75,6 +76,17 @@
 
                     queryVideo(begin, end);
                 });
+
+
+                $("#get-hls").click(function() {
+                    // converts local time to gmt and then to unix format
+                    
+                    var begin = 1000*moment( $("#begin_date").val() ).unix(); //.add("minutes", moment().zone()).unix();
+                    var end = 1000*moment( $("#end_date").val() ).unix(); //.add("minutes", moment().zone()).unix();
+                    
+                    showHls(begin, end);
+                });
+                
 
                 $("#get-snapshot").click(function() {
                     
@@ -112,6 +124,20 @@
                     }
                 });
             }
+
+
+            // 'begin' and 'end' should be on unix format
+            var showHls = function(begin, end) {
+                
+                //$("#video").html("<h5 class = 'text-muted lead video-box-message'> loading... </h5>");
+                var html = "<video controls " +
+                ' src="http://localhost:8080/cameras/'+camId+'/video.hls?begin='+begin+'&end='+end+'"' +
+                ' height="480" width="640"' +
+                ' ></video>';
+
+                $("#video").html( html );
+            }
+
 
     
             var getSnapshot = function(time) {
@@ -170,7 +196,6 @@
                     html += 'target="'+rtsp+'" /> </object>';
 
                     $("#video").html( html );
-               
             }
         </script>
 

@@ -91,35 +91,43 @@ RecordModel.prototype.setupWatcher = function( dir ) {
                 var pendingVideo = pending[i];
                 
                 counter++;
+                fs.exists( from, function(exists) {
+                    if (exists) {
+                        fs.rename( from, to, function(err) { 
+                            if (err) {
+                                console.log("error when moving file: " + err);
+                            }
+                            else {
+                                console.log("new video segment");
+                                pendingVideo.file = to;
 
-                fs.rename( from, to, function(err) { 
-                    if (err) {
-                        console.log("error when moving file: " + err);
-                    }
-                    else {
-                        console.log("new video segment");
-                        pendingVideo.file = to;
+                                fs.exists(to, function(exists) {
+                                    if (exists) {
+                                        ffmpeg.calcDuration( to, function(duration) {
+                                            pendingVideo.start = pendingVideo.end - 1000 * duration;
+                                            
+                                            if ( Math.abs(pendingVideo.start - self.lastVideo) < 2 * 1000 * duration ) {
+                                                pendingVideo.start = self.lastVideo;
+                                                pendingVideo.end = pendingVideo.start + duration*1000;
+                                            }
 
-                        fs.exists(to, function(exists) {
-                            if (exists) {
-                                ffmpeg.calcDuration( to, function(duration) {
-                                    pendingVideo.start = pendingVideo.end - 1000 * duration;
-                                    
-                                    if ( Math.abs(pendingVideo.start - self.lastVideo) < 2 * 1000 * duration ) {
-                                        pendingVideo.start = self.lastVideo;
-                                        pendingVideo.end = pendingVideo.start + duration*1000;
+                                            self.lastVideo = pendingVideo.end;
+                                            self.db.insertVideo( pendingVideo );
+                                        });
                                     }
-
-                                    self.lastVideo = pendingVideo.end;
-                                    self.db.insertVideo( pendingVideo );
                                 });
+
+                                if (counter == pending.length) {
+                                    pending = [];
+                                    self.addNewVideosToPendingList( pending );
+                                }                            
                             }
                         });
-
+                    } else {
                         if (counter == pending.length) {
                             pending = [];
                             self.addNewVideosToPendingList( pending );
-                        }                            
+                        } 
                     }
                 });
             }            
@@ -164,8 +172,6 @@ RecordModel.prototype.addNewVideosToPendingList = function( pending ) {
                             file: file
                         }
 
-                       // console.log("adding video to pending list");
-                       // console.log(video);
                         pending.push( video ); 
                     });
                 }

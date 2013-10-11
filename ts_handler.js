@@ -1,8 +1,8 @@
 var fs = require('fs');
 var path = require('path');
 
-function deliverTsFile( req, res ) {
-    var fileUri =  __dirname + '/videos/' + path.basename(req.params.file, '.ts') + '.ts';
+function deliverTsFile( camId, file, res ) {
+    var fileUri =  __dirname + '/cameras/' + camId + '/videos/' + path.basename(file, '.ts') + '.ts';
 
     fs.exists(fileUri, function( exists ) {
 
