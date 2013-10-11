@@ -20,6 +20,7 @@ function RecordModel( datastore, camera ) {
     this.setupFolderSync(this.folder);
     this.setupFolderSync(this.folder + "/videos");
     this.setupFolderSync(this.folder + "/videos/tmp");
+    this.setupFolderSync(this.folder + "/thumbs");
 
     this.setupWatcher( this.folder + "/videos/tmp" );
 
@@ -102,6 +103,9 @@ RecordModel.prototype.setupWatcher = function( dir ) {
                                 pendingVideo.file = to;
 
                                 fs.exists(to, function(exists) {
+                                    
+                                    ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() {} );
+
                                     if (exists) {
                                         ffmpeg.calcDuration( to, function(duration) {
                                             pendingVideo.start = pendingVideo.end - 1000 * duration;

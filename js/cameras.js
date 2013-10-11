@@ -1,4 +1,30 @@
+var mouseX = 0;
+var mouseY = 0;
+
+$(document).ready(function(){
+  $(document).mousemove(function(e){
+           mouseX = e.pageX;
+      mouseY = e.pageY;
+  });
+
+  $("#timelines").mouseleave( function() {
+        });
+});
+
 var cameras = [];
+
+function basename(path) {
+    return path.replace(/\\/g,'/').replace( /.*\//, '' );
+}
+ 
+function dirname(path) {
+    return path.replace(/\\/g,'/').replace(/\/[^\/]*$/, '');;
+}
+
+function removeTsExt(fileName) {
+    fileName = basename( fileName );
+    return fileName.replace('.ts', '');
+}
 
 var timelineSetup = function( id ) {
 
@@ -8,18 +34,27 @@ var timelineSetup = function( id ) {
     $.getJSON( "/cameras/" + id + "/list_videos?start="+startTime+"&end="+Date.now(), function( data ) {
         var videos = data.videos;
         for (var i = 0; i < videos.length; i++) {
-            timelineData[0].times.push({starting_time: videos[i].start-15000, ending_time: videos[i].end});             
+            timelineData[0].times.push({ thumb: "/cameras/" + id + "/thumb/" + removeTsExt(videos[i].file), starting_time: videos[i].start-18000, ending_time: videos[i].end });             
         }
         var chart = d3.timeline().width(800).rotateTicks(90).showToday().stack(true).tickFormat({
             format: d3.time.format("%H:%M"), 
             tickTime: d3.time.minute, 
             tickNumber: 1, 
             tickSize: 5 
+        }).hover(function (d, i, datum) { 
+            // d is the current rendering object
+            // i is the index during d3 rendering
+            // datum is the data object
+            //console.log(d);
+            showThumb(d.thumb);
         });
+
         if (id) {
             $("<div>", {
                 id: "timeline-"+id
-            }).appendTo("#timelines");
+            }).appendTo("#timelines").mouseleave( function() {
+                $("#thumb").fadeOut();
+            });
         }
 
         var svg = d3.select("#timeline-"+id).append("svg").attr("width", 800).datum(timelineData).call(chart);         
@@ -27,6 +62,26 @@ var timelineSetup = function( id ) {
                
 }
 
+var showThumb = function( thumb ) {
+    
+    var currentThumb = $("#thumb img").attr('src');
+   
+    $("#thumb").css('left', mouseX+'px');
+    $("#thumb").css('top', (mouseY+15)+'px');
+    $("#thumb").fadeIn();
+     if (currentThumb !== thumb) {
+       //var img = $("<img>");
+       //img.attr('src', thumb);
+       //img.ready(function() {
+       //    console.log("ready");
+           //$("#thumb").empty();
+           $("#thumb img").attr('src', thumb);
+       //});
+       //$("#thumb").html("<img src='" + thumb + "'/>");
+     } else {
+     }
+
+}
 
 var list = function() {
             

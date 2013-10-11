@@ -38,6 +38,32 @@ var convertFromTsToMp4 = function( tsFile, cb ) {
 
 
 /**
+ * makeThumb
+ *
+ */
+var makeThumb = function ( file, folder, resolution, cb ) { 
+
+    console.log("making thumb of " + file + " : " + out);
+    
+    var exec = require('child_process').exec;
+
+    var out = folder+"/" + path.basename(file, '.ts') + ".jpg"; 
+     
+     var child = exec("ffmpeg -i " + file + " -vcodec mjpeg -vframes 1 -an -f rawvideo -t 2 -s 320x240 " + out,
+             function( error, stdout, stderr ) {
+                 if (error !== null) {
+                     error = true;
+                     console.error('FFmpeg\'s  exec error: ' + error);
+                     console.log(stderr);
+                 }
+                 cb( out, error );
+            });
+}
+// - - end of snapshot
+// - - - - - - - - - - - - - - - - - - - -
+
+
+/**
  * snapshot
  *
  */
@@ -265,4 +291,4 @@ exports.sendStream = sendMp4Stream
 exports.snapshot = snapshot
 exports.stitch = stitch
 exports.calcDuration = calcDuration
-
+exports.makeThumb = makeThumb

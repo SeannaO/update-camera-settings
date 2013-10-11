@@ -7,6 +7,7 @@ var mp4Handler = require('./mp4_handler');
 var CamerasController = require('./cam');
 var Stream = require('stream')
 var fs = require('fs');
+var path = require('path');
 
 var localIp = "";
 
@@ -64,15 +65,6 @@ app.get('/live', function(req, res) {
 });
 // - - -
 
-
-// - -
-//
-app.get('/m3u8', function(req, res) {
-
-    hlsHandler.generatePlaylist( db, req, res );
-});
-// - - -
-
 // - - 
 // 
 app.get('/cameras.json', function(req, res) {
@@ -109,6 +101,28 @@ app.get('/cameras/:id/list_videos', function(req, res) {
             res.json({success: true, offset: offset, videos: fileList});
         }
     });
+});
+// - - -
+
+
+// - - 
+// 
+app.get('/cameras/:id/thumb/:thumb', function(req, res) {
+    var camId = req.params.id;
+    var thumb = req.params.thumb
+    
+    thumb = path.basename(thumb);
+    var file = __dirname+"/cameras/"+camId+"/thumbs/"+thumb+".jpg";
+    console.log(file);
+
+    fs.exists( file, function(exists) {
+        if (exists) { 
+            res.sendfile(file);
+        } else {
+            res.end("no thumb " + file);
+        }
+    }); 
+    
 });
 // - - -
 
