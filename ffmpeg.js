@@ -132,8 +132,7 @@ var smartSnapshot = function( file, outFolder, offset, cb ) {
                     console.log(stderr);
                 }
                 cb( out, error );
-            });
-            
+            });    
 };
 
 
