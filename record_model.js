@@ -5,37 +5,40 @@ var Watch = require('./watch');
 
 function RecordModel( datastore, camera ) {
     
-    console.log("record constructor");
-
     this.rtsp = camera.rtsp;
     this.db = datastore;
     this.camId = camera._id;
     this.lastVideo = 0;
     this.watch = new Watch();
-    this.folder = __dirname + "/cameras/" + camera._id;
+    this.folder = "";
 
-    this.ffmpegCommand = "ffmpeg -rtsp_transport tcp -i " + this.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + this.folder + "/videos/tmp/capture-%03d.ts'"
+    this.ffmpegCommand = "ffmpeg -rtsp_transport tcp -i " + this.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + this.folder + "/videos/tmp/capture-%03d.ts'";
     
-    this.setupFolderSync(__dirname + "/cameras");
-    this.setupFolderSync(this.folder);
-    this.setupFolderSync(this.folder + "/videos");
-    this.setupFolderSync(this.folder + "/videos/tmp");
-    this.setupFolderSync(this.folder + "/thumbs");
+    this.setupFolders( camera );
 
     this.setupWatcher( this.folder + "/videos/tmp" );
 
+    console.log("record constructor");    
     console.log("camera: " + camera.name);
     console.log("folder: " + this.folder);
     console.log("rtsp: " + this.rtsp);
-    //console.log("ffmpeg: " + this.ffmpegCommand);
-
 }
 
+RecordModel.prototype.setupFolders = function( camera ) {
+
+    this.folder = camera.videosFolder;
+   
+    this.setupFolderSync(this.folder);
+    this.setupFolderSync(this.folder + "/tmp");
+    this.setupFolderSync(this.folder + "/videos");
+    this.setupFolderSync(this.folder + "/videos/tmp");
+    this.setupFolderSync(this.folder + "/thumbs");
+};
 
 RecordModel.prototype.updateCameraInfo = function( camera ) {
     this.rtsp = camera.rtsp;
     this.camId = camera._id;
-}
+};
 
 
 RecordModel.prototype.stopRecording = function() {
@@ -46,15 +49,15 @@ RecordModel.prototype.stopRecording = function() {
         this.ffmpegProcess.removeAllListeners('exit');
         this.ffmpegProcess.kill();
         var exec = require('child_process').exec;
-        exec("kill -s 9 " + this.ffmpegProcess.pid, function(err) {console.log(err)});
+        exec("kill -s 9 " + this.ffmpegProcess.pid, function(err) {console.log(err);});
         
     }
-}
+};
 
 
 RecordModel.prototype.startRecording = function() {    
     this.recordContinuously();
-}
+};
 
 
 
@@ -66,7 +69,7 @@ RecordModel.prototype.setupFolderSync = function(folder) {
         fs.mkdirSync(folder);
         return false;
     }
-}
+};
 
 
 // - -
@@ -136,14 +139,14 @@ RecordModel.prototype.setupWatcher = function( dir ) {
                 });
             }            
         } 
-        else if ( pending.length == 0 && prev === null ) {
+        else if ( pending.length === 0 && prev === null ) {
              self.addNewVideosToPendingList( pending );
             // console.log( curr );
         }
         else {
         }
     });
-}
+};
 // - - -
 
 
@@ -174,7 +177,7 @@ RecordModel.prototype.addNewVideosToPendingList = function( pending ) {
                             start: lastModified - duration*1000,
                             end: lastModified,
                             file: file
-                        }
+                        };
 
                         pending.push( video ); 
                     });
@@ -182,7 +185,7 @@ RecordModel.prototype.addNewVideosToPendingList = function( pending ) {
             }
         }
     });
-}
+};
 // - - -
 
 
@@ -196,7 +199,7 @@ RecordModel.prototype.recordContinuously = function() {
     var self = this;
 
     if (self.rtsp.indexOf("rtsp") >= 0) {
-        this.ffmpegProcess = exec( "ffmpeg -rtsp_transport tcp -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
+        this.ffmpegProcess = exec( "ffmpeg -rtsp_transport tcp -fflags +igndts -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
                 function (error, stdout, stderr) {
                     if (error !== null) {
                         error = true;
@@ -211,7 +214,7 @@ RecordModel.prototype.recordContinuously = function() {
         });
  
     } else if (self.rtsp.indexOf("http") >= 0) {
-        this.ffmpegProcess = exec( "ffmpeg -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
+        this.ffmpegProcess = exec( "ffmpeg -fflags +igndts -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
                 function (error, stdout, stderr) {
                     if (error !== null) {
                         error = true;
@@ -225,7 +228,7 @@ RecordModel.prototype.recordContinuously = function() {
             self.recordContinuously();
         });   
     }
-}
+};
 // - - -
 
 module.exports = RecordModel;

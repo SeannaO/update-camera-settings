@@ -7,10 +7,14 @@ var cameras = [];
 var videosDb;
 
 
-function CamerasController( videosDatastore ) {
+function CamerasController( videosDatastore, videosFolder ) {
     console.log("cameras controller constructor");
     videosDb = videosDatastore;
-    setup( function(err) {} );
+    this.videosFolder = videosFolder;
+
+    this.setup( function(err) {} );
+
+    console.log(this);
 }
 
 
@@ -22,17 +26,12 @@ function cameraInfo(camera) {
     info.ip = camera.ip;
     info._id = camera._id;
     info.status = camera.status;
+
     console.log("camera.id: " + camera.id);
     if (camera.id) {
         info.id = camera.id;
     } else {
         info.id = camera._id;
-    }
-    console.log("camera.id: " + info.id);
-    if (!camera.id) {
-        info.id = camera._id;
-    } else {
-        info.id = camera.id;
     }
 
     return info;
@@ -41,8 +40,8 @@ function cameraInfo(camera) {
 
 CamerasController.prototype.listVideosByCamera = function( camId, start, end, cb ) {
     
-    start = parseInt( start );
-    end = parseInt( end );
+    start = parseInt( start, 10 );
+    end = parseInt( end, 10 );
 
     console.log("listing videos recorded by camera " + camId + " between " + start + " and " + end);
     videosDb.searchVideosByInterval( camId, start, end, function(err, fileList, offset) {
@@ -54,7 +53,8 @@ CamerasController.prototype.listVideosByCamera = function( camId, start, end, cb
             cb(err, fileList, offset);
         }
     });
-}
+};
+
 
 CamerasController.prototype.listCameras = function( cb ) {
     
@@ -65,7 +65,7 @@ CamerasController.prototype.listCameras = function( cb ) {
             cb( err, cameras.map(cameraInfo) );                        
         }
     });
-}
+};
 
 
 CamerasController.prototype.getCamera = function(camId, cb) {
@@ -83,10 +83,12 @@ CamerasController.prototype.getCamera = function(camId, cb) {
             cb( err, cam );
         }
     });
-}
+};
 
 
 CamerasController.prototype.insertNewCamera = function( cam, cb ) {
+
+    var self = this;
 
     console.log( "inserting new camera: ");
     console.log( cam );
@@ -97,11 +99,11 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
             cb( err, "{ success: false }" );
         } else {
             cb( err, newDoc );
-            cameras.push( new Camera(newDoc, videosDb) );
+            cameras.push( new Camera(newDoc, videosDb, self.videosFolder ) );
             console.log( newDoc );
         }
     });
-}
+};
 
 
 CamerasController.prototype.removeCamera = function( camId, cb ) {
@@ -119,7 +121,7 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
             });    
         }
     });
-}
+};
 
 
 CamerasController.prototype.updateCamera = function(cam, cb) {
@@ -149,7 +151,7 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
             cb(err);
         }
     });    
-}
+};
 
 
 CamerasController.prototype.startRecording = function (camId, cb) {
@@ -180,7 +182,7 @@ CamerasController.prototype.startRecording = function (camId, cb) {
             cb(true);
         }
     });
-}
+};
 
 
 CamerasController.prototype.stopRecording = function (camId, cb) {
@@ -208,7 +210,7 @@ CamerasController.prototype.stopRecording = function (camId, cb) {
             cb(true);
         }
     });
-}
+};
 
 
 CamerasController.prototype.findCameraByLifelineId = function( lifelineId ) {
@@ -220,7 +222,7 @@ CamerasController.prototype.findCameraByLifelineId = function( lifelineId ) {
         }
     }
     return false;
-}
+};
 
 
 function refresh( cb ) {
@@ -228,10 +230,11 @@ function refresh( cb ) {
 }
 
 
-function setup( cb ) {
+CamerasController.prototype.setup = function( cb ) {
     
+    var self = this;
+
     db.loadDatabase();
-    
     
     db.find( {}, function( err, docs ) {
         console.log(docs);
@@ -241,13 +244,14 @@ function setup( cb ) {
         } else {
             for ( var k = 0; k < docs.length; k++ ) {
                 var cam = docs[k];
-                var newCam = new Camera(cam, videosDb);
+                console.log("camerasController.videosFolder: " + self.videosFolder);
+                var newCam = new Camera(cam, videosDb, self.videosFolder );
                 cameras.push( newCam );
             }
             cb( false );
         }
     });
-}
+};
 
 
 CamerasController.prototype.findCameraById = function( id ) {
@@ -259,7 +263,7 @@ CamerasController.prototype.findCameraById = function( id ) {
         }
     }
     return false;
-}
+};
 
 module.exports = CamerasController;
 

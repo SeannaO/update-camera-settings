@@ -11,7 +11,7 @@ function generateFinitePlaylist( db, camId, begin, end, cb ) {
         });
 
         hls.calculateLengths( fileList, function(videos) {
-            hls.generatePlaylist( camId, videos, 12, 0, true, function(playlist) {
+            hls.generatePlaylist( camId, videos, 20, 0, true, function(playlist) {
                 cb( playlist );
             });
         });
@@ -20,8 +20,8 @@ function generateFinitePlaylist( db, camId, begin, end, cb ) {
 
 
 function generateLivePlaylist( db, req, res ) {
+
     var begin = 0;
-    //var end = begin + req.session.end;
     var end = Date.now();
     
     console.log( Date.now() );
@@ -30,7 +30,7 @@ function generateLivePlaylist( db, req, res ) {
         return;
     }
     
-    if ( isNaN(parseInt(req.session.mediaSequence)) ) {
+    if ( isNaN(parseInt(req.session.mediaSequence, 10)) ) {
         req.session.mediaSequence = 0;
     }
 

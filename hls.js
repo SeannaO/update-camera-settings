@@ -23,7 +23,7 @@ var livePlaylist = function( videos, targetDuration, mediaSequence, cb ) {
     
     cb( content );
     console.log( content );
-}
+};
 
 
 /**
@@ -50,10 +50,10 @@ var generatePlaylist = function( camId, videos, targetDuration, mediaSequence, c
         content = content + "#EXT-X-ENDLIST\n";
     }
 
-    // console.log( content );
+    console.log( content );
 
     cb( content );
-}
+};
 // - - end of generatePlaylist
 // - - - - - - - - - - - - - - - - - - - -
 
@@ -65,7 +65,7 @@ var sortVideosByIndex = function( a, b ) {
     } else {
         return 0;
     }
-}
+};
 
 var sortVideosByName = function( a, b ) {
     
@@ -81,7 +81,7 @@ var sortVideosByName = function( a, b ) {
     } else {
         return 0;
     }
-}
+};
 
 
 var calculateLengthsAsync = function(files, list, cb) {
@@ -98,7 +98,7 @@ var calculateLengthsAsync = function(files, list, cb) {
     } else {
         cb( list.sort( sortVideosByName ) );
     }
-}
+};
 
 /**
  * calculateLengths
@@ -116,14 +116,14 @@ var calculateLengths = function( files, cb ) {
     var count = 0;
     
     calculateLengthsAsync( files, videos, cb );
-}
+};
 // - - end of calculateLengths
 // - - - - - - - - - - - - - - - - - - - -
 
 
 // exports
-exports.generatePlaylist = generatePlaylist
-exports.livePlaylist = livePlaylist
-exports.calculateLengths = calculateLengths
+exports.generatePlaylist = generatePlaylist;
+exports.livePlaylist = livePlaylist;
+exports.calculateLengths = calculateLengths;
 
 

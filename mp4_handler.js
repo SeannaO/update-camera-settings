@@ -1,7 +1,6 @@
 var ffmpeg = require('./ffmpeg');
 var fs = require('fs');
 
-
 function sendMp4Video( file, req, res ) {
      fs.exists( file, function(exists) {
          if (exists) {
@@ -12,17 +11,24 @@ function sendMp4Video( file, req, res ) {
      });
 }
 
-function generateMp4Video( db, camId, begin, end, cb ) {
-    var begin = parseInt( begin );
-    var end = parseInt( end );
+
+function generateMp4Video( db, cam, begin, end, cb ) {
+
+    var camId = cam._id;
+    
+    console.log("generateMp4Video");
+    console.log("camId: " + camId);
+
+    begin = parseInt( begin, 10 );
+    end = parseInt( end, 10 );
 
     if ( isNaN(begin) || isNaN(end) ) {
-        var response = {success: false, error: "invalid interval"};
+        var response = { success: false, error: "invalid interval" };
         cb( response );
         return;
     }
 
-    var fileName = __dirname + "/tmp/" + camId + "_" + begin + "_" + end + ".mp4";
+    var fileName = cam.videosFolder + "/tmp/" + camId + "_" + begin + "_" + end + ".mp4";
 
     fs.exists( fileName, function(exists) {
         if (exists) {
@@ -33,7 +39,7 @@ function generateMp4Video( db, camId, begin, end, cb ) {
                 
                 console.log(videoList);
 
-                if (videoList.length == 0) {
+                if (videoList.length === 0) {
                     
                     var formatedBegin = new Date(begin);
                     var formatedEnd = new Date(end);
@@ -64,9 +70,11 @@ function generateMp4Video( db, camId, begin, end, cb ) {
 
 
 //
-function takeSnapshot( db, camId, req, res ) {
-    var time = parseInt(req.query.time);
+function takeSnapshot( db, cam, req, res ) {
+    var time = parseInt(req.query.time, 10);
     
+    var camId = cam._id;
+
     if ( isNaN(time) ) {
         res.end("invalid time");
         return;
@@ -78,12 +86,11 @@ function takeSnapshot( db, camId, req, res ) {
         
         fs.exists(file, function(exists) {
             if (exists) {
-                ffmpeg.snapshot(file, offset, function(fileName) {
+                ffmpeg.snapshot(file, cam.videosFolder + "/tmp", offset, function(fileName) {
                     res.sendfile("tmp/" + fileName,
                         {},
                         function() {
-                            console.log("file " + fileName + " sent");
-                            fs.unlink( __dirname + '/tmp/' + fileName  );
+                            fs.unlink( cam.videosFolder + '/tmp/' + fileName  );
                         });
                 });
                 } else {

@@ -32,7 +32,7 @@ var convertFromTsToMp4 = function( tsFile, cb ) {
                 }
                 cb( mp4File, error );
             });    
-}
+};
 // - - end of convertFromTsToMp4
 // - - - - - - - - - - - - - - - - - - - -
 
@@ -58,7 +58,7 @@ var makeThumb = function ( file, folder, resolution, cb ) {
                  }
                  cb( out, error );
             });
-}
+};
 // - - end of snapshot
 // - - - - - - - - - - - - - - - - - - - -
 
@@ -67,7 +67,7 @@ var makeThumb = function ( file, folder, resolution, cb ) {
  * snapshot
  *
  */
-var snapshot = function ( file, offset, cb ) { 
+var snapshot = function ( file, outFolder, offset, cb ) { 
 
     console.log("- - - snapshot - - -");
     console.log("file: " + file);
@@ -96,7 +96,7 @@ var snapshot = function ( file, offset, cb ) {
                 count: 1,
                 filename: path.basename(file) + "_" + offset + "_" +  Date.now(),
                 timemarks: [ ""+offset ]
-              }, 'tmp', function(err, filenames) {
+              }, outFolder, function(err, filenames) {
                 if(err){
                     cb("");
                     console.log(err.message);
@@ -109,7 +109,7 @@ var snapshot = function ( file, offset, cb ) {
             
         });
     }
-}
+};
 // - - end of snapshot
 // - - - - - - - - - - - - - - - - - - - -
 
@@ -122,6 +122,7 @@ var stitch = function( files, out, offset, cb ) {
     
     console.log("- - - stitch - - -");
     console.log("offset: " + offset);
+    console.log("out: " + out);
     console.log("- - -");
 
     var exec = require('child_process').exec;
@@ -129,7 +130,9 @@ var stitch = function( files, out, offset, cb ) {
     var fileList = files.join('|');
     fileList = "concat:" + fileList;
     
-    var child = exec('ffmpeg -y  -i "' + fileList + '" -ss ' + offset.begin/1000 + ' -t ' + offset.duration/1000 + ' -c copy ' + out,
+    console.log(fileList);
+
+    var child = exec('ffmpeg -y -i "' + fileList + '" -ss ' + offset.begin/1000 + ' -t ' + offset.duration/1000 + ' -c copy ' + out,
             function (error, stdout, stderr) {
                 if (error !== null) {
                     error = true;
@@ -138,7 +141,7 @@ var stitch = function( files, out, offset, cb ) {
                 }
                 cb( out, error );
             });
-}
+};
 // - - end of stitch
 // - - - - - - - - - - - - - - - - - - - -
 
@@ -188,13 +191,13 @@ var sendWebMStream = function(req, res) {
     var start = 0;
     var end = 0;
     var range = req.header('Range');
-    if (range != null) {
-        start = parseInt(range.slice(range.indexOf('bytes=')+6,
-                    range.indexOf('-')));
-        end = parseInt(range.slice(range.indexOf('-')+1,
-                    range.length));
+    if (range !== null) {
+        start = parseInt( range.slice(range.indexOf('bytes=')+6,
+                    range.indexOf('-')), 10 );
+        end = parseInt( range.slice(range.indexOf('-')+1,
+                    range.length), 10 );
     }
-    if (isNaN(end) || end == 0) end = stat.size-1;
+    if (isNaN(end) || end === 0) end = stat.size-1;
     if (start > end) return;
 
     var duration = (end / 1024) * 8 / 1024;
@@ -218,7 +221,7 @@ var sendWebMStream = function(req, res) {
                 console.log('file conversion error',error);
             }
         });
-}
+};
 // - - end of sendWebMStream
 // - - - - - - - - - - - - - - - - - - - -
 
@@ -242,9 +245,9 @@ var sendMp4Stream = function(file, offset, req, res) {
         else {
             
             var stat = fs.statSync(file+"");
-            var total = parseInt( stat.size );
+            var total = parseInt( stat.size, 10 );
             
-            if (req.headers['range']) {
+            if (req.headers.range) {
                 
                 var range = req.headers.range;
                 var parts = range.replace(/bytes=/, "").split("-");
@@ -280,15 +283,15 @@ var sendMp4Stream = function(file, offset, req, res) {
             }
         } 
     });
-}
+};
 // - - end of sendMp4Stream
 // - - - - - - - - - - - - - - - - - - - -
 
 
 // exports
-exports.sendWebMStream = sendWebMStream
-exports.sendStream = sendMp4Stream
-exports.snapshot = snapshot
-exports.stitch = stitch
-exports.calcDuration = calcDuration
-exports.makeThumb = makeThumb
+exports.sendWebMStream = sendWebMStream;
+exports.sendStream = sendMp4Stream;
+exports.snapshot = snapshot;
+exports.stitch = stitch;
+exports.calcDuration = calcDuration;
+exports.makeThumb = makeThumb;
