@@ -86,11 +86,13 @@ function takeSnapshot( db, cam, req, res ) {
         
         fs.exists(file, function(exists) {
             if (exists) {
-                ffmpeg.snapshot(file, cam.videosFolder + "/tmp", offset, function(fileName) {
-                    res.sendfile("tmp/" + fileName,
+                ffmpeg.smartSnapshot( file, cam.videosFolder + "/tmp", offset, function(fileName, error) {
+                    console.log("== takeSnapshot ==");
+                    console.log("file: " + fileName );
+                    res.sendfile( fileName,
                         {},
                         function() {
-                            fs.unlink( cam.videosFolder + '/tmp/' + fileName  );
+                            fs.unlink( fileName );
                         });
                 });
                 } else {

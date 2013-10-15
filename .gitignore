@@ -11,6 +11,10 @@
 ############
 *.sqlite
 
+# folders #
+###########
+./cameras/*
+
 *.swp
 .DS_Store
 

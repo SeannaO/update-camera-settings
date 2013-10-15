@@ -142,7 +142,6 @@ app.get('/cameras/:id/snapshot', function(req, res) {
         if (err) {
             res.json( { error: err } );
         } else {
-
             mp4Handler.takeSnapshot( db, cam, req, res );
         }
     });

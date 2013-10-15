@@ -49,7 +49,7 @@ var makeThumb = function ( file, folder, resolution, cb ) {
 
     var out = folder+"/" + path.basename(file, '.ts') + ".jpg"; 
      
-     var child = exec("ffmpeg -i " + file + " -vcodec mjpeg -vframes 1 -an -f rawvideo -t 2 -s 320x240 " + out,
+     var child = exec("ffmpeg -y -i " + file + " -vcodec mjpeg -vframes 1 -an -f rawvideo -t 2 -s 320x240 " + out,
              function( error, stdout, stderr ) {
                  if (error !== null) {
                      error = true;
@@ -86,6 +86,7 @@ var snapshot = function ( file, outFolder, offset, cb ) {
         });
     } 
     else {
+        var Metalib = ffmpeg.Metadata;
         var metaObject = new Metalib(file, function(metadata, err) {
 //            console.log(require('util').inspect(metadata, false, null));
             var resolution = metadata.video.resolution;
@@ -95,7 +96,7 @@ var snapshot = function ( file, outFolder, offset, cb ) {
               .takeScreenshots({
                 count: 1,
                 filename: path.basename(file) + "_" + offset + "_" +  Date.now(),
-                timemarks: [ ""+offset ]
+                timemarks: [ "" + offset ]
               }, outFolder, function(err, filenames) {
                 if(err){
                     cb("");
@@ -112,6 +113,28 @@ var snapshot = function ( file, outFolder, offset, cb ) {
 };
 // - - end of snapshot
 // - - - - - - - - - - - - - - - - - - - -
+
+
+var smartSnapshot = function( file, outFolder, offset, cb ) {
+    var exec = require('child_process').exec;
+
+    var out = outFolder + "/" + path.basename(file, '.ts') + "_" + offset + ".jpg"; 
+    console.log("== smartSnapshot ==");
+    console.log("input: " + file);
+    console.log("output: " +  out);
+    
+    var child = exec("ffmpeg -y -i " + file + " -vcodec mjpeg -vframes 1 -an -f rawvideo -t 2 -ss " + offset + " -s 640x480 " + out,
+            function( error, stdout, stderr ) {
+                cb( "", true );
+                if (error !== null) {
+                    error = true;
+                    console.error('FFmpeg\'s  exec error: ' + error);
+                    console.log(stderr);
+                }
+                cb( out, error );
+            });
+            
+};
 
 
 /**
@@ -131,7 +154,6 @@ var stitch = function( files, out, offset, cb ) {
     fileList = "concat:" + fileList;
     
     console.log(fileList);
-
     var child = exec('ffmpeg -y -i "' + fileList + '" -ss ' + offset.begin/1000 + ' -t ' + offset.duration/1000 + ' -c copy ' + out,
             function (error, stdout, stderr) {
                 if (error !== null) {
@@ -295,3 +317,4 @@ exports.snapshot = snapshot;
 exports.stitch = stitch;
 exports.calcDuration = calcDuration;
 exports.makeThumb = makeThumb;
+exports.smartSnapshot = smartSnapshot;
