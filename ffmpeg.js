@@ -187,7 +187,9 @@ function calcDuration(input, cb) {
     fs.exists(input, function(exists) {
         if(exists) {
             var metaObject = new Metalib(input, function(metadata, err) {
-                cb( metadata.durationsec, input );
+                
+                var duration = 1000 * parseFloat( metadata.durationraw.split(':')[2] );
+                cb( duration, input );
             });
         } else {
             cb( 0, input );

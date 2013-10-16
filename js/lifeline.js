@@ -30,9 +30,8 @@ var list = function() {
         }
         
         $("#camera-list table").append("</tbody></table>");
-    });
-    
-}
+    });  
+};
 
 
 var addCameraItem = function( camera ) {
@@ -49,7 +48,7 @@ var addCameraItem = function( camera ) {
         row += "<td>"+camera.rtsp+"</td>";
         row += "<td>";
         row += "<div>";
-        row += '<input type="checkbox" id="switch-'+camera.id+'" name="switch'+camera.id+'" class="switch" />';
+        row += '<input type="checkbox" id="switch-'+camera.id+'" name="switch-'+camera.id+'" class="switch" />';
         row += '<label for="switch-'+camera.id+'">on/off</label>';
         row += '</div>';        
         row += "</td>";
@@ -57,7 +56,7 @@ var addCameraItem = function( camera ) {
         $("#camera-list table tbody").append(row);
             
 
-        if (camera.status == 0) {
+        if (camera.status === 0) {
              $("#switch-"+camera.id).attr('checked', true);
         } else {
              $("#switch-"+camera.id).attr('checked', false);
@@ -71,7 +70,7 @@ var addCameraItem = function( camera ) {
                 stopRecording(camera.id);
             }
         });
-}
+};
 
 
 var startRecording = function(camId) {
@@ -87,7 +86,7 @@ var startRecording = function(camId) {
             $("#switch-"+camId).attr('checked', false);
         }
     });
-}
+};
 
 
 var stopRecording = function(camId) {
@@ -103,7 +102,7 @@ var stopRecording = function(camId) {
             $("#switch-"+camId).attr('checked', true);
         }
     });
-}
+};
 
 
 var addCamera = function(camera, cb) {
@@ -117,7 +116,7 @@ var addCamera = function(camera, cb) {
             cb( data );
         }
     });
-}
+};
 
 
 var deleteCamera = function(id) {
@@ -134,7 +133,7 @@ var deleteCamera = function(id) {
             }
         }
     });    
-}
+};
 
 
 var updateCamera = function(id, cb) {
@@ -154,7 +153,7 @@ var updateCamera = function(id, cb) {
             cb( data );
         }
     });
-}
+};
 
 
 var editCamera = function(camId) {
@@ -193,4 +192,4 @@ var editCamera = function(camId) {
             }
         }
     });    
-}
+};

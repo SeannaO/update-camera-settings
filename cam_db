@@ -1,3 +1,5 @@
-{"name":"axis","ip":"","rtsp":"rtsp://192.168.215.74/axis-media/media.amp","id":"id_0.4202852565795183","_id":"AdzM4h184cT6j9RW","status":1}
-{"name":"test","ip":"","rtsp":"rtsp://192.168.215.74/axis-media/media.amp","id":"id_0.11292668525129557","_id":"msFoz01VBJJL54oy","status":1}
-{"name":"axis cam","ip":"","rtsp":"rtsp://192.168.215.74/axis-media/media.amp","id":"id_0.4202852565795183","_id":"AdzM4h184cT6j9RW","status":1}
+{"name":"vlc","ip":"","rtsp":"http://localhost:1234","id":"id_0.1409004176966846","_id":"tmNvOZVcqIzVrCXN","status":0}
+{"name":"vlc clone","ip":"","rtsp":"http://localhost:1234","id":"id_0.32067724829539657","_id":"rauqaLiAIeAit0tU"}
+{"name":"vlc clone","ip":"","rtsp":"http://localhost:1234","id":"id_0.32067724829539657","_id":"rauqaLiAIeAit0tU","status":0}
+{"name":"vlc","ip":"","rtsp":"http://localhost:1234","id":"id_0.1409004176966846","_id":"tmNvOZVcqIzVrCXN","status":1}
+{"name":"vlc","ip":"","rtsp":"http://localhost:1234","id":"id_0.1409004176966846","_id":"tmNvOZVcqIzVrCXN","status":0}

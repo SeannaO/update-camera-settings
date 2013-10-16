@@ -27,7 +27,7 @@ var testIpForOnvifCamera = function( ip, cb ) {
                 cb( error, false, ip );
             }
     });
-}
+};
 // - - end of testIpForOnvifCamera
 // - - - - - - - - - - - - - - - - - - - -
 
@@ -61,11 +61,11 @@ var findOnvifCamera = function( ipPrefix, cb ) {
             }
         });
     }
-}
+};
 // - - end of findOnvifCamera
 // - - - - - - - - - - - - - - - - - - - -
 
 
 // exports
-exports.scan = findOnvifCamera
+exports.scan = findOnvifCamera;
 

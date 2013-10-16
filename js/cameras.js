@@ -18,7 +18,7 @@ function basename(path) {
 }
  
 function dirname(path) {
-    return path.replace(/\\/g,'/').replace(/\/[^\/]*$/, '');;
+    return path.replace(/\\/g,'/').replace(/\/[^\/]*$/, '');
 }
 
 function removeTsExt(fileName) {
@@ -30,22 +30,23 @@ var timelineSetup = function( id ) {
 
     var timelineData = [];
     timelineData.push({label: id, times: []});
-    var startTime = Date.now() - 1*60*60*1000;
+
+    var startTime = Date.now() - 1*60*60*1000; // 1hour from now
+
     $.getJSON( "/cameras/" + id + "/list_videos?start="+startTime+"&end="+Date.now(), function( data ) {
+
         var videos = data.videos;
+
         for (var i = 0; i < videos.length; i++) {
-            timelineData[0].times.push({ thumb: "/cameras/" + id + "/thumb/" + removeTsExt(videos[i].file), starting_time: videos[i].start-18000, ending_time: videos[i].end });             
+            timelineData[0].times.push({ thumb: "/cameras/" + id + "/thumb/" + removeTsExt(videos[i].file), starting_time: (videos[i].start-1000), ending_time: (videos[i].end + 1000)});             
         }
+
         var chart = d3.timeline().width(800).rotateTicks(90).showToday().stack(true).tickFormat({
             format: d3.time.format("%H:%M"), 
             tickTime: d3.time.minute, 
             tickNumber: 1, 
             tickSize: 5 
         }).hover(function (d, i, datum) { 
-            // d is the current rendering object
-            // i is the index during d3 rendering
-            // datum is the data object
-            //console.log(d);
             showThumb(d.thumb);
         });
 
@@ -60,7 +61,7 @@ var timelineSetup = function( id ) {
         var svg = d3.select("#timeline-"+id).append("svg").attr("width", 800).datum(timelineData).call(chart);         
     });
                
-}
+};
 
 var showThumb = function( thumb ) {
     
@@ -81,7 +82,7 @@ var showThumb = function( thumb ) {
      } else {
      }
 
-}
+};
 
 var list = function() {
             
@@ -118,7 +119,7 @@ var list = function() {
         $("#camera-list table").append("</tbody></table>");
     });
     
-}
+};
 
 
 var scan = function() {
@@ -136,11 +137,11 @@ var scan = function() {
 
         for (var i = 0; i < data.length; i++) {
             console.log("item");
-            $("#list").append("<span class = 'item'>"+data[i].ip+"</span>")
+            $("#list").append("<span class = 'item'>"+data[i].ip+"</span>");
             console.log(data[i]);
         }
     });
-}
+};
 
 
 var addCameraItem = function( camera ) {
@@ -157,7 +158,7 @@ var addCameraItem = function( camera ) {
         row += "<td>"+camera.rtsp+"</td>";
         row += "<td>";
         row += "<div>";
-        row += '<input type="checkbox" id="switch-'+camera._id+'" name="switch'+camera._id+'" class="switch" />';
+        row += '<input type="checkbox" id="switch-'+camera._id+'" name="switch-'+camera._id+'" class="switch" />';
         row += '<label for="switch-'+camera._id+'">on/off</label>';
         row += '</div>';        
         row += "</td>";
@@ -165,7 +166,7 @@ var addCameraItem = function( camera ) {
         $("#camera-list table tbody").append(row);
             
 
-        if (camera.status == 0) {
+        if (camera.status === 0) {
              $("#switch-"+camera._id).attr('checked', true);
         } else {
              $("#switch-"+camera._id).attr('checked', false);
@@ -179,7 +180,7 @@ var addCameraItem = function( camera ) {
                 stopRecording(camera._id);
             }
         });
-}
+};
 
 var startRecording = function(camId) {
     $.ajax({
@@ -195,7 +196,7 @@ var startRecording = function(camId) {
             $("#switch-"+camId).attr('checked', false);
         }
     });
-}
+};
 
 
 var stopRecording = function(camId) {
@@ -213,7 +214,7 @@ var stopRecording = function(camId) {
             $("#switch-"+camId).attr('checked', true);
         }
     });
-}
+};
 
 
 var addCamera = function(camera, cb) {
@@ -231,7 +232,7 @@ var addCamera = function(camera, cb) {
             cb( data );
         }
     });
-}
+};
 
 
 var deleteCamera = function(id) {
@@ -248,7 +249,7 @@ var deleteCamera = function(id) {
             }
         }
     });    
-}
+};
 
 
 var updateCamera = function(id, cb) {
@@ -268,7 +269,7 @@ var updateCamera = function(id, cb) {
             cb( data );
         }
     });
-}
+};
 
 
 var editCamera = function(camId) {
@@ -305,4 +306,4 @@ var editCamera = function(camId) {
             }
         }
     });    
-}
+};

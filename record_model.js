@@ -2,6 +2,8 @@ var ffmpeg = require('./ffmpeg.js');
 var fs = require('fs');
 var path = require('path');
 var Watch = require('./watch');
+var pending = [];
+var lastEndTime = 0;
 
 function RecordModel( datastore, camera ) {
     
@@ -11,8 +13,6 @@ function RecordModel( datastore, camera ) {
     this.lastVideo = 0;
     this.watch = new Watch();
     this.folder = "";
-
-    this.ffmpegCommand = "ffmpeg -rtsp_transport tcp -i " + this.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + this.folder + "/videos/tmp/capture-%03d.ts'";
     
     this.setupFolders( camera );
 
@@ -72,117 +72,145 @@ RecordModel.prototype.setupFolderSync = function(folder) {
 };
 
 
+moveFilesSync = function( recordModel, pendingList, cb ) {
+
+    var pendingVideo = pendingList.shift();
+
+    if (!pendingVideo) {
+
+        cb();
+        return;
+    } else {
+
+        var self = recordModel;
+        var from = self.folder + "/videos/tmp/" + path.basename( pendingVideo.file );
+        var to = self.folder + "/videos/" + pendingVideo.start + path.extname( pendingVideo.file );
+
+        fs.exists( from, function(exists) {
+            if (exists) {
+                fs.rename( from, to, function(err) { 
+                    if (err) {
+                        console.log("error when moving file: " + err);
+                    }
+                    else {
+                        pendingVideo.file = to;
+                        ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() {} );
+                        self.db.insertVideo( pendingVideo );
+                    }                        
+                    moveFilesSync( recordModel, pendingList, cb );
+                });
+            } else {
+                moveFilesSync( recordModel, pendingList, cb );
+            }
+        });
+    }
+};
+
+
 // - -
 // 
 RecordModel.prototype.setupWatcher = function( dir ) {
-
-    var pending = [];
     
+    console.log("** setupWacher");
     console.log("watching " + dir);
+
     var self = this;
 
     this.watch.watchTree( dir, function(f, curr, prev) {
-        
-        if ( (typeof f == "object" && prev === null && curr === null) || pending.length > 0) {
+
+        // console.log("* watcher");
+
+        if ( typeof f == "object"  && prev === null && curr === null ) {
             
-            var counter = 0;
+        //    console.log("new file");
+        //    self.addNewVideosToPendingList( function() {
+        //        console.log("new videos added to pending list");
+        //        console.log(pending);
+        //    });
+        //    console.log("* watcher");
+        } else if (prev === null) {
 
-            for (var i = 0; i < pending.length; i++) {
-                
-                var from = self.folder + "/videos/tmp/" + path.basename(pending[i].file);
-                var to = self.folder + "/videos/" + pending[i].start + path.extname(pending[i].file);
-
-                var pendingVideo = pending[i];
-                
-                counter++;
-                fs.exists( from, function(exists) {
-                    if (exists) {
-                        fs.rename( from, to, function(err) { 
-                            if (err) {
-                                console.log("error when moving file: " + err);
-                            }
-                            else {
-                                console.log("new video segment");
-                                pendingVideo.file = to;
-
-                                fs.exists(to, function(exists) {
-                                    
-                                    ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() {} );
-
-                                    if (exists) {
-                                        ffmpeg.calcDuration( to, function(duration) {
-                                            pendingVideo.start = pendingVideo.end - 1000 * duration;
-                                            
-                                            if ( Math.abs(pendingVideo.start - self.lastVideo) < 2 * 1000 * duration ) {
-                                                pendingVideo.start = self.lastVideo;
-                                                pendingVideo.end = pendingVideo.start + duration*1000;
-                                            }
-
-                                            self.lastVideo = pendingVideo.end;
-                                            self.db.insertVideo( pendingVideo );
-                                        });
-                                    }
-                                });
-
-                                if (counter == pending.length) {
-                                    pending = [];
-                                    self.addNewVideosToPendingList( pending );
-                                }                            
-                            }
-                        });
-                    } else {
-                        if (counter == pending.length) {
-                            pending = [];
-                            self.addNewVideosToPendingList( pending );
-                        } 
-                    }
+            self.addNewVideosToPendingList( function() {
+                // console.log("pending list ready");
+                moveFilesSync( self, pending, function() {
+                    // console.log("done moving files");
                 });
-            }            
-        } 
-        else if ( pending.length === 0 && prev === null ) {
-             self.addNewVideosToPendingList( pending );
-            // console.log( curr );
-        }
-        else {
+            });
         }
     });
 };
 // - - -
 
+RecordModel.prototype.addNewVideosToPendingListSync = function( files, cb ) {
+
+    files.shift();
+
+    var self = this;
+    var file = files.shift();
+
+    if (file) {
+        
+        file = self.folder + "/videos/tmp/" + file;
+
+        fs.exists(file, function(exists) {
+
+            if ( exists && path.extname(file) === '.ts' ) {
+
+                var fileInfo = fs.statSync( file );
+                var lastModified = ( new Date(fileInfo.mtime) ).getTime();
+
+                ffmpeg.calcDuration( file, function(duration, f) {
+
+                    var start =  lastModified - duration;
+                    var end = lastModified;
+
+                    var video = {
+                        cam: self.camId,
+                        start: start,
+                        end: end,
+                        file: file
+                    };
+
+                    pending.push( video );
+                    
+                    lastEndTime = end;
+
+                    self.addNewVideosToPendingListSync( files, cb );
+                });
+            } else {
+                 self.addNewVideosToPendingListSync( files, cb );
+            }
+        });  
+    } else {
+        cb();
+    }
+};
+
 
 // - -
 //
-RecordModel.prototype.addNewVideosToPendingList = function( pending ) {
-    
+RecordModel.prototype.addNewVideosToPendingList = function( cb ) {
+
     var self = this;
 
     fs.readdir( self.folder + "/videos/tmp", function(err, files) {
+        var dir = self.folder + "/videos/tmp/";
+        files.sort(function(a, b) {
+               return fs.statSync(dir + b).mtime.getTime() - 
+                      fs.statSync(dir + a).mtime.getTime();
+           });
+        
+        files.shift();
+            
         if (err) {
+
             console.log("there was an error when trying to list files on tmp folder: " + err);
+            cb();
         } else {
-
-            for (var i = 0; i < files.length; i++) {
-
-                var file =  self.folder + "/videos/tmp/" + files[i];
-
-                if ( path.extname(file) == '.ts' ) {
-
-                    var fileInfo = fs.statSync( file );
-                    var lastModified = ( new Date(fileInfo.mtime) ).getTime();
-                    
-                    ffmpeg.calcDuration( file, function(duration, f) {
-                        
-                        var video = {
-                            cam: self.camId,
-                            start: lastModified - duration*1000,
-                            end: lastModified,
-                            file: file
-                        };
-
-                        pending.push( video ); 
-                    });
-                }
-            }
+            
+            self.addNewVideosToPendingListSync( files, function() {
+                cb();
+            });
         }
     });
 };
@@ -214,7 +242,7 @@ RecordModel.prototype.recordContinuously = function() {
         });
  
     } else if (self.rtsp.indexOf("http") >= 0) {
-        this.ffmpegProcess = exec( "ffmpeg -fflags +igndts -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
+        this.ffmpegProcess = exec( "ffmpeg -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
                 function (error, stdout, stderr) {
                     if (error !== null) {
                         error = true;
@@ -232,3 +260,4 @@ RecordModel.prototype.recordContinuously = function() {
 // - - -
 
 module.exports = RecordModel;
+
