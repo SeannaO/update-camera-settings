@@ -250,6 +250,39 @@ var sendWebMStream = function(req, res) {
 
 
 /**
+ * sendMp4File
+ *
+ */
+var sendMp4File = function(file, offset, req, res) {
+    
+    console.log("- - - sendMp4VFile - - -");
+    console.log("offset: " + offset);
+    console.log("file: " + file);
+    console.log("- - -");
+    
+    fs.exists(file, function(exists) {
+        if (!exists) {
+            console.log("sendStream: couldn't find video " + file + "." );
+            res.end("couldn't find any recordings within this range :(");
+        }
+        else {
+
+            var stat = fs.statSync(file+"");
+            var total = parseInt( stat.size, 10 );
+
+            console.log('ALL: ' + total);
+            //res.writeHead(200, { 'Content-Length': total, 'Content-Type': 'video/mp4' });
+            //fs.createReadStream(file).pipe(res);
+            res.sendfile(file);
+        }
+    });
+};
+// - - end of sendMp4File
+// - - - - - - - - - - - - - - - - - - - -
+
+
+
+/**
  * sendMp4Stream
  *
  */
@@ -319,3 +352,4 @@ exports.stitch = stitch;
 exports.calcDuration = calcDuration;
 exports.makeThumb = makeThumb;
 exports.smartSnapshot = smartSnapshot;
+exports.sendMp4File = sendMp4File;

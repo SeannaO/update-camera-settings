@@ -143,7 +143,7 @@ RecordModel.prototype.setupWatcher = function( dir ) {
 
 RecordModel.prototype.addNewVideosToPendingListSync = function( files, cb ) {
 
-    files.shift();
+    // files.shift();
 
     var self = this;
     var file = files.shift();
@@ -227,7 +227,7 @@ RecordModel.prototype.recordContinuously = function() {
     var self = this;
 
     if (self.rtsp.indexOf("rtsp") >= 0) {
-        this.ffmpegProcess = exec( "ffmpeg -rtsp_transport tcp -fflags +igndts -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
+        this.ffmpegProcess = exec( "ffmpeg -rtsp_transport tcp -fflags +igndts -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 5 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
                 function (error, stdout, stderr) {
                     if (error !== null) {
                         error = true;

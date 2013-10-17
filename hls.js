@@ -90,7 +90,7 @@ var calculateLengthsAsync = function(files, list, cb) {
         ffmpeg.calcDuration( file, function(duration, f) {
             list.push({
                 url: path.basename(f),
-                duration: duration
+                duration: duration/1000.0
             });
             
             calculateLengthsAsync(files, list, cb);

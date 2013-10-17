@@ -383,7 +383,7 @@ app.get('/scan', function(req, res) {
 /// lifeline     ///
 ////////////////////
 
-lifeline.setup( app, camerasController, mp4Handler );
+lifeline.setup( app, camerasController, db, mp4Handler, hlsHandler );
 
 ////////////////////
 

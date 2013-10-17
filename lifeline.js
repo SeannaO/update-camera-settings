@@ -1,4 +1,4 @@
-function setup( app, camerasController, mp4Handler ) {    
+function setup( app, camerasController, db, mp4Handler, hlsHandler ) {    
 
     // - - 
     // 
@@ -16,6 +16,30 @@ function setup( app, camerasController, mp4Handler ) {
         });
     });
     // - - -
+
+
+    // - - 
+    // 
+    app.get('/lifeline/cameras/:id/video.hls', function(req, res) {
+    
+        var camId = req.params.id;
+        var cam = camerasController.findCameraByLifelineId( req.params.id ).cam._id;
+
+        var begin = parseInt( req.query.begin, 10 );
+        var end = parseInt( req.query.end, 10 );
+    
+        hlsHandler.generateFinitePlaylist( db, cam._id, begin, end, function( playlist ) {
+    
+            res.writeHead(200, { 
+                "Content-Type":"application/x-mpegURL",
+                'content-length': playlist.length 
+            });
+    
+            res.end(playlist);    
+        });
+    });
+    // - - -
+
 
 
     // - - 
@@ -137,6 +161,32 @@ function setup( app, camerasController, mp4Handler ) {
                 mp4Handler.generateMp4Video( db, cam, begin, end, function( response ) {
                     if(response.success) {
                         mp4Handler.sendMp4Video( response.file, req, res );
+                    } else {
+                        res.end( response.error );
+                    }
+                });
+            }
+        });
+    });
+    // - - -
+
+
+    // - - 
+    // 
+    app.get('/lifeline/cameras/:id/video/download', function(req, res) {
+        var camId = req.params.id;
+        var begin = req.query.begin;
+        var end = req.query.end;
+
+        var cam = camerasController.findCameraByLifelineId( camId ).cam;
+
+        camerasController.getCamera( cam._id, function(err, cam) {
+            if (err) {
+                res.json( { error: err } );
+            } else {
+                mp4Handler.generateMp4Video( db, cam, begin, end, function( response ) {
+                    if(response.success) {
+                        mp4Handler.sendMp4VideoForDownload( response.file, req, res );
                     } else {
                         res.end( response.error );
                     }

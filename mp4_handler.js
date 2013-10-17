@@ -1,10 +1,22 @@
 var ffmpeg = require('./ffmpeg');
 var fs = require('fs');
 
+
 function sendMp4Video( file, req, res ) {
      fs.exists( file, function(exists) {
          if (exists) {
             ffmpeg.sendStream( file, 0, req, res );
+         } else {
+             res.end("couldn't find this file");
+         }
+     });
+}
+
+
+function sendMp4VideoForDownload( file, req, res ) {
+     fs.exists( file, function(exists) {
+         if (exists) {
+            ffmpeg.sendMp4File( file, 0, req, res );
          } else {
              res.end("couldn't find this file");
          }
@@ -108,3 +120,4 @@ function takeSnapshot( db, cam, req, res ) {
 exports.generateMp4Video = generateMp4Video;
 exports.takeSnapshot = takeSnapshot;
 exports.sendMp4Video = sendMp4Video;
+exports.sendMp4VideoForDownload = sendMp4VideoForDownload;
