@@ -4,6 +4,7 @@ var path = require('path');
 var Watch = require('./watch');
 var pending = [];
 var lastEndTime = 0;
+var exec = require('child_process').exec;
 
 function RecordModel( datastore, camera ) {
     
@@ -33,6 +34,19 @@ RecordModel.prototype.setupFolders = function( camera ) {
     this.setupFolderSync(this.folder + "/videos");
     this.setupFolderSync(this.folder + "/videos/tmp");
     this.setupFolderSync(this.folder + "/thumbs");
+ 
+    var tmpFolder = this.folder + "/videos/tmp";
+    fs.readdirSync(tmpFolder).forEach(function(file, index){
+
+        var curPath = tmpFolder + "/" + file;
+
+        if(fs.statSync(curPath).isDirectory()) { 
+            deleteFolderRecursive(curPath);
+
+        } else { 
+            fs.unlinkSync(curPath);
+        }
+    });
 };
 
 RecordModel.prototype.updateCameraInfo = function( camera ) {
@@ -156,27 +170,30 @@ RecordModel.prototype.addNewVideosToPendingListSync = function( files, cb ) {
 
             if ( exists && path.extname(file) === '.ts' ) {
 
-                var fileInfo = fs.statSync( file );
-                var lastModified = ( new Date(fileInfo.mtime) ).getTime();
+                try {
+                    var fileInfo = fs.statSync( file );
+                    var lastModified = ( new Date(fileInfo.mtime) ).getTime();
 
-                ffmpeg.calcDuration( file, function(duration, f) {
+                    ffmpeg.calcDuration( file, function(duration, f) {
 
-                    var start =  lastModified - duration;
-                    var end = lastModified;
+                        var start =  lastModified - duration;
+                        var end = lastModified;
 
-                    var video = {
-                        cam: self.camId,
+                        var video = {
+                            cam: self.camId,
                         start: start,
                         end: end,
                         file: file
-                    };
+                        };
 
-                    pending.push( video );
-                    
-                    lastEndTime = end;
+                        pending.push( video );
 
-                    self.addNewVideosToPendingListSync( files, cb );
-                });
+                        lastEndTime = end;
+
+                        self.addNewVideosToPendingListSync( files, cb );
+                    });
+                } catch(err) {
+                }
             } else {
                  self.addNewVideosToPendingListSync( files, cb );
             }
@@ -221,23 +238,23 @@ RecordModel.prototype.addNewVideosToPendingList = function( cb ) {
 //
 RecordModel.prototype.recordContinuously = function() {
 
-    console.log("record...");
+    // console.log("record...");
 
-    var exec = require('child_process').exec;
+    //var exec = require('child_process').exec;
     var self = this;
 
     if (self.rtsp.indexOf("rtsp") >= 0) {
-        this.ffmpegProcess = exec( "ffmpeg -rtsp_transport tcp -fflags +igndts -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 5 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
+        this.ffmpegProcess = exec( "ffmpeg -rtsp_transport tcp -fflags +igndts -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
                 function (error, stdout, stderr) {
                     if (error !== null) {
                         error = true;
-                        console.error('FFmpeg\'s  exec error: ' + stderr);
+                        //console.error('FFmpeg\'s  exec error: ' + stderr);
                         //console.log(stderr);
                     }
                 }); 
 
         this.ffmpegProcess.on('exit', function() {
-            console.log( "ffmpeg terminated, restarting..." );
+            // console.log( "ffmpeg terminated, restarting..." );
             self.recordContinuously();
         });
  

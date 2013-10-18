@@ -117,13 +117,13 @@ app.get('/cameras/:id/thumb/:thumb', function(req, res) {
             res.json( { error: err } );
         } else {
             var file = cam.videosFolder + "/thumbs/"+thumb+".jpg";
-            console.log(file);
+            //console.log(file);
 
             fs.exists( file, function(exists) {
                 if (exists) { 
                     res.sendfile(file);
                 } else {
-                    res.end("no thumb " + file);
+                    res.end("no thumb " + thumb);
                 }
             }); 
         }

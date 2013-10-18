@@ -10,6 +10,8 @@ var fs = require('fs');
 
 var  db = new Datastore({ filename: 'datastore', autoload: true });
 
+db.loadDatabase();
+
 /**
  * insertVideo
  *
@@ -52,7 +54,7 @@ var sortByStartTimeAsc = function(a, b) {
  */
 var searchVideosByInterval = function( camId, start, end, cb ) {
     
-    db.loadDatabase();
+    // db.loadDatabase();
 
     db.find({ $and: [ {cam: camId}, {start: { $lte: (end+500) }}, {end: {$gte: (start-500)}} ] }, function(err, docs) {
         if (err) {
@@ -99,16 +101,17 @@ var searchVideosByInterval = function( camId, start, end, cb ) {
  */
 var searchVideoByTime = function( camId, startTime, cb ) {
 
-   db.loadDatabase();
+   //db.loadDatabase();
+   //console.log("done");
     
-   db.find({ $and: [ {cam: camId}, {start: { $lte: (startTime+500) }}, {end: {$gte: (startTime-500) }} ] }, function(err, docs) {
+   db.find({ $and: [ {cam: camId}, {start: { $lte: (startTime+2500) }}, {end: {$gte: (startTime-2500) }} ] }, function(err, docs) {
        if (err) {
            console.log("error while searching videos by time: ");
            console.log(err);
            return;
        }
 
-       docs = docs.sort(sortByStartTimeDesc);
+       //docs = docs.sort(sortByStartTimeDesc);
        
        var offset = 0;
        console.log("found " + docs.length + " videos");
@@ -122,6 +125,7 @@ var searchVideoByTime = function( camId, startTime, cb ) {
            cb( "", offset );                
         }
    });
+   
 };
 // - - end of searchVideoByTime
 // - - - - - - - - - - - - - - - - - - - -
@@ -134,7 +138,7 @@ var searchVideoByTime = function( camId, startTime, cb ) {
  */
 var listAll = function( camId ) {
     
-    db.loadDatabase();
+    // db.loadDatabase();
 
     if (camId === "") {
         db.find({}, function (err, docs) {
