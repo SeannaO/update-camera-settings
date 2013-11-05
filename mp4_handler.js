@@ -49,7 +49,9 @@ function generateMp4Video( db, cam, begin, end, cb ) {
         } else {
             db.searchVideosByInterval( camId, begin, end, function( err, videoList, offset ) {
                 
-                console.log(videoList);
+                //console.log(videoList);
+                console.log("** offset **");
+                console.log(offset);
 
                 if (videoList.length === 0) {
                     
@@ -93,14 +95,15 @@ function takeSnapshot( db, cam, req, res ) {
     }
 
     db.searchVideoByTime( camId, time, function( file, offset ) {
+        
         offset = Math.round( offset );
         console.log( "taking snapshot of: " + file );
         
         fs.exists(file, function(exists) {
             if (exists) {
                 ffmpeg.smartSnapshot( file, cam.videosFolder + "/tmp", offset, function(fileName, error) {
-                    console.log("== takeSnapshot ==");
-                    console.log("file: " + fileName );
+                    //console.log("== takeSnapshot ==");
+                    //console.log("file: " + fileName );
                     res.sendfile( fileName,
                         {},
                         function() {
@@ -111,7 +114,10 @@ function takeSnapshot( db, cam, req, res ) {
                     res.end( "sorry, no videos were recorded at " + (new Date(time)) );
                 }
             });
+            
+        //res.end("ok");
     });
+    
 }
 //
 

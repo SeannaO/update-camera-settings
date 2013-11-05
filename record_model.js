@@ -6,8 +6,10 @@ var pending = [];
 var lastEndTime = 0;
 var exec = require('child_process').exec;
 
+var events = require('events');
+
 function RecordModel( datastore, camera ) {
-    
+
     this.rtsp = camera.rtsp;
     this.db = datastore;
     this.camId = camera._id;
@@ -23,7 +25,19 @@ function RecordModel( datastore, camera ) {
     console.log("camera: " + camera.name);
     console.log("folder: " + this.folder);
     console.log("rtsp: " + this.rtsp);
+
+    events.EventEmitter.call(this);
+   
 }
+
+RecordModel.super_ = events.EventEmitter;
+RecordModel.prototype = Object.create(events.EventEmitter.prototype, {
+    constructor: {
+        value: RecordModel,
+        enumerable: false
+    }
+});
+
 
 RecordModel.prototype.setupFolders = function( camera ) {
 
@@ -108,7 +122,11 @@ moveFilesSync = function( recordModel, pendingList, cb ) {
                     }
                     else {
                         pendingVideo.file = to;
-                        ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() {} );
+                        ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() {
+                            self.emit('chunk', {
+                                chunk: to
+                            });   
+                        });
                         self.db.insertVideo( pendingVideo );
                     }                        
                     moveFilesSync( recordModel, pendingList, cb );
@@ -181,9 +199,9 @@ RecordModel.prototype.addNewVideosToPendingListSync = function( files, cb ) {
 
                         var video = {
                             cam: self.camId,
-                        start: start,
-                        end: end,
-                        file: file
+                            start: start,
+                            end: end,
+                            file: file
                         };
 
                         pending.push( video );

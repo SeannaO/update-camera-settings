@@ -4,7 +4,7 @@ var RECORDING = 0;
 var NOT_RECORDING = 1;
 
 function Camera( cam, videosDb, videosFolder ) {
-    
+
     this._id = cam._id;
     this.name = cam.name;
     this.ip = cam.ip;

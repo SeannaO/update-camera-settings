@@ -7,13 +7,13 @@ var cameras = [];
 var videosDb;
 
 
-function CamerasController( videosDatastore, videosFolder ) {
+function CamerasController( videosDatastore, videosFolder, socket ) {
     console.log("cameras controller constructor");
     videosDb = videosDatastore;
     this.videosFolder = videosFolder;
 
-    this.setup( function(err) {} );
-
+    this.setup( function(err) {} );    
+   
     console.log(this);
 }
 

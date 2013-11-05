@@ -1,6 +1,8 @@
 var onvif = require('./onvif');
 var express = require('express');
-var db = require('./nedb');
+// var db = require('./nedb');
+//var db = require('./mongo.js');
+var db = require('./dblite.js');
 var tsHandler = require('./ts_handler');
 var hlsHandler = require('./hls_handler');
 var mp4Handler = require('./mp4_handler');
@@ -10,6 +12,21 @@ var fs = require('fs');
 var path = require('path');
 var lifeline = require('./lifeline.js');
 
+var events = require('events');
+
+//
+var listener = new events.EventEmitter();
+listener.on('chunk', function(data) {
+    console.log("### new event ###");
+    console.log(data);
+});
+//
+
+// *** socket.io 
+var http = require('http');
+// ***
+
+
 var localIp = "";
 
 require('dns').lookup(require('os').hostname(), function (err, add, fam) {
@@ -18,7 +35,12 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 
 var app = express();
 
-var camerasController = new CamerasController( db, __dirname + "/cameras" );
+// *** socket.io
+var server = http.createServer(app);
+var io = require('socket.io').listen(server);
+//
+
+var camerasController = new CamerasController( db, __dirname + "/cameras", io );
 
 app.use(express.bodyParser()); // this must come before app.all 
 

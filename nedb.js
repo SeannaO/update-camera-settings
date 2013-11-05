@@ -10,7 +10,17 @@ var fs = require('fs');
 
 var  db = new Datastore({ filename: 'datastore', autoload: true });
 
-db.loadDatabase();
+// db.loadDatabase();
+
+db.ensureIndex({ fieldName: 'start' }, function (err) {
+  console.log("error while creating index on start:");
+  console.log(err);
+});
+db.ensureIndex({ fieldName: 'end' }, function (err) {
+  console.log("error while creating index on end: ");
+  console.log(err);
+});
+
 
 /**
  * insertVideo
@@ -26,6 +36,18 @@ var insertVideo = function( data ) {
 };
 // - - end of insertVideo
 // - - - - - - - - - - - - - - - - - - - -
+
+var cleanUp = function( time ) {
+    
+    db.remove( {start: { $lte: (time) }} , {multi: true}, function(err, numRemoved) {
+        if(err) {
+            console.log(err);
+        } else {
+            console.log("***** removed: " + numRemoved);
+        }
+    });    
+    
+};
 
 var sortByStartTimeDesc = function(a, b) {
     if (a.start > b.start) {
@@ -114,10 +136,10 @@ var searchVideoByTime = function( camId, startTime, cb ) {
        //docs = docs.sort(sortByStartTimeDesc);
        
        var offset = 0;
-       console.log("found " + docs.length + " videos");
+       //console.log("found " + docs.length + " videos");
        if (docs.length > 0 ) {
            doc = docs[0];
-           console.log("found video: " + doc.file);
+           // console.log("found video: " + doc.file);
            offset = Math.round( (startTime - doc.start)/1000.0 );
            cb( doc.file, offset );
        } else {
@@ -160,6 +182,9 @@ var listAll = function( camId ) {
 };
 // - - end of listAll
 // - - - - - - - - - - - - - - - - - - - -
+
+
+cleanUp(1382168259450);
 
 
 // exports

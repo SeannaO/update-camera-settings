@@ -153,6 +153,8 @@ var stitch = function( files, out, offset, cb ) {
     fileList = "concat:" + fileList;
     
     console.log(fileList);
+    console.log(offset);
+
     var child = exec('ffmpeg -y -i "' + fileList + '" -ss ' + offset.begin/1000 + ' -t ' + offset.duration/1000 + ' -c copy ' + out,
             function (error, stdout, stderr) {
                 if (error !== null) {
