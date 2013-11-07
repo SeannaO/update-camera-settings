@@ -13,21 +13,6 @@ var lifeline = require('./helpers/lifeline_api.js');
 
 var CamHelper = require('./helpers/cameras_helper.js');
 
-var events = require('events');
-
-//
-var listener = new events.EventEmitter();
-listener.on('chunk', function(data) {
-    console.log("### new event ###");
-    console.log(data);
-});
-//
-
-// *** socket.io 
-var http = require('http');
-// ***
-
-
 var localIp = "";
 
 require('dns').lookup(require('os').hostname(), function (err, add, fam) {
@@ -36,13 +21,7 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 
 var app = express();
 
-// *** socket.io
-var server = http.createServer(app);
-var io = require('socket.io').listen(server);
-//
-
-var camerasController = new CamerasController( __dirname + '/db/cam_db', db, '/Users/manuel/solink/nas/cameras', io );
-//var camHelper = new CamHelper( camerasController );
+var camerasController = new CamerasController( __dirname + '/db/cam_db', db, '/Users/manuel/solink/nas/cameras');
 
 app.use(express.bodyParser()); // this must come before app.all 
 

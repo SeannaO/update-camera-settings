@@ -6,7 +6,7 @@ var cameras = [];
 var videosDb;
 
 
-function CamerasController( filename, videosDatastore, videosFolder, socket ) {
+function CamerasController( filename, videosDatastore, videosFolder ) {
 
     console.log("cameras controller constructor");
 

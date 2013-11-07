@@ -150,22 +150,13 @@ RecordModel.prototype.setupWatcher = function( dir ) {
 
     this.watch.watchTree( dir, function(f, curr, prev) {
 
-        // console.log("* watcher");
-
         if ( typeof f == "object"  && prev === null && curr === null ) {
-            
-        //    console.log("new file");
-        //    self.addNewVideosToPendingList( function() {
-        //        console.log("new videos added to pending list");
-        //        console.log(pending);
-        //    });
-        //    console.log("* watcher");
+            //
         } else if (prev === null) {
 
             self.addNewVideosToPendingList( function() {
-                // console.log("pending list ready");
                 moveFilesSync( self, pending, function() {
-                    // console.log("done moving files");
+                    //
                 });
             });
         }
@@ -174,8 +165,6 @@ RecordModel.prototype.setupWatcher = function( dir ) {
 // - - -
 
 RecordModel.prototype.addNewVideosToPendingListSync = function( files, cb ) {
-
-    // files.shift();
 
     var self = this;
     var file = files.shift();
@@ -256,9 +245,6 @@ RecordModel.prototype.addNewVideosToPendingList = function( cb ) {
 //
 RecordModel.prototype.recordContinuously = function() {
 
-    // console.log("record...");
-
-    //var exec = require('child_process').exec;
     var self = this;
 
     if (self.rtsp.indexOf("rtsp") >= 0) {
@@ -266,13 +252,10 @@ RecordModel.prototype.recordContinuously = function() {
                 function (error, stdout, stderr) {
                     if (error !== null) {
                         error = true;
-                        //console.error('FFmpeg\'s  exec error: ' + stderr);
-                        //console.log(stderr);
                     }
                 }); 
 
         this.ffmpegProcess.on('exit', function() {
-            // console.log( "ffmpeg terminated, restarting..." );
             self.recordContinuously();
         });
  
@@ -282,7 +265,6 @@ RecordModel.prototype.recordContinuously = function() {
                     if (error !== null) {
                         error = true;
                         console.error('FFmpeg\'s  exec error: ' + stderr);
-                        //console.log(stderr);
                     }
                 }); 
 
