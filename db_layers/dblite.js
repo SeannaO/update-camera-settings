@@ -134,40 +134,23 @@ var searchVideosByInterval = function( camId, start, end, cb ) {
  */
 var searchVideoByTime = function( camId, startTime, cb ) {
 
-   //db.loadDatabase();
-   //console.log("done");
+    var fileList = db.query('SELECT start, end, file FROM videos WHERE cam = ? AND start < ? AND end > ? ORDER BY start ASC', 
+            [camId, startTime+1500, startTime-1500], 
+            ['start', 'end', 'file'], 
+            function(err, data) {
+
+                if (!data || data.length === 0) {
+                     cb( "", offset );
+                } else {
+                    offset = Math.round( (startTime - data[0].start)/1000.0 );
+                    cb(data[0].file, offset);
+                }
+            });
     
-    /*
-   db.find({ $and: [ {cam: camId}, {start: { $lte: (startTime+2500) }}, {end: {$gte: (startTime-2500) }} ] }).toArray(function(err, docs) {
-       if (err) {
-           console.log("error while searching videos by time: ");
-           console.log(err);
-           return;
-       }
-
-       //docs = docs.sort(sortByStartTimeDesc);
-       
-       var offset = 0;
-       //console.log("found " + docs.length + " videos");
-       if (docs.length > 0 ) {
-           doc = docs[0];
-           // console.log("found video: " + doc.file);
-           offset = Math.round( (startTime - doc.start)/1000.0 );
-           cb( doc.file, offset );
-       } else {
-           console.log("video not found");
-           cb( "", offset );                
-        }
-   });
-   */
-
     console.log("- - - - - - - - - -");
     console.log("search video by time");
     console.log( camId + " : " + startTime );
     console.log("- - - - - - - - - -");
-
-    cb("", 0);
-
    
 };
 // - - end of searchVideoByTime
