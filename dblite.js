@@ -25,6 +25,10 @@ var insertVideo = function( data ) {
         console.log("db is not ready yet");
     }
 
+    if ( !data || !data.start || !data.end || !data.cam || !data.file ) {
+        return;
+    }
+
     console.log("* * * inserting video");
     console.log(data);
     db.query('INSERT INTO videos(start, end, cam, file) VALUES(?, ?, ?, ?)', [data.start, data.end, data.cam, data.file]);
