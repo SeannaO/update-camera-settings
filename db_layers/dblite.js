@@ -113,7 +113,7 @@ var searchVideosByInterval = function( camId, start, end, cb ) {
                 if (!data || data.length === 0) {
                     cb(err, [], offset);
                 } else {
-                    if ( docs[0].start < start ) {
+                    if ( data[0].start < start ) {
                         offset.begin = start - data[0].start;
                     }
                     offset.end = data[data.length-1].end - end;

@@ -5,6 +5,9 @@
 
 *.jpg
 
+*.swp
+nohup.out
+
 # playlist #
 ############
 *.m3u8

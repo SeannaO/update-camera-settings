@@ -1,4 +1,4 @@
-var ffmpeg = require('./ffmpeg');
+var ffmpeg = require('./../helpers/ffmpeg');
 var fs = require('fs');
 
 
@@ -102,8 +102,6 @@ function takeSnapshot( db, cam, req, res ) {
         fs.exists(file, function(exists) {
             if (exists) {
                 ffmpeg.smartSnapshot( file, cam.videosFolder + "/tmp", offset, function(fileName, error) {
-                    //console.log("== takeSnapshot ==");
-                    //console.log("file: " + fileName );
                     res.sendfile( fileName,
                         {},
                         function() {
@@ -114,8 +112,6 @@ function takeSnapshot( db, cam, req, res ) {
                     res.end( "sorry, no videos were recorded at " + (new Date(time)) );
                 }
             });
-            
-        //res.end("ok");
     });
     
 }

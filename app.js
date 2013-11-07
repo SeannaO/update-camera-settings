@@ -1,16 +1,17 @@
-var onvif = require('./onvif');
+var onvif = require('./helpers/onvif');
 var express = require('express');
-// var db = require('./nedb');
 //var db = require('./mongo.js');
-var db = require('./dblite.js');
-var tsHandler = require('./ts_handler');
-var hlsHandler = require('./hls_handler');
-var mp4Handler = require('./mp4_handler');
-var CamerasController = require('./cam');
+var db = require('./db_layers/dblite.js');
+var tsHandler = require('./helpers/ts');
+var hlsHandler = require('./controllers/hls_controller');
+var mp4Handler = require('./controllers/mp4_controller');
+var CamerasController = require('./controllers/cameras_controller');
 var Stream = require('stream');
 var fs = require('fs');
 var path = require('path');
-var lifeline = require('./lifeline.js');
+var lifeline = require('./helpers/lifeline_api.js');
+
+var CamHelper = require('./helpers/cameras_helper.js');
 
 var events = require('events');
 
@@ -40,7 +41,8 @@ var server = http.createServer(app);
 var io = require('socket.io').listen(server);
 //
 
-var camerasController = new CamerasController( db, __dirname + "/cameras", io );
+var camerasController = new CamerasController( __dirname + '/db/cam_db', db, '/Users/manuel/solink/nas/cameras', io );
+//var camHelper = new CamHelper( camerasController );
 
 app.use(express.bodyParser()); // this must come before app.all 
 
@@ -53,8 +55,8 @@ app.all('/*', function(req, res, next) {
 app.use(express.cookieParser());
 app.use(express.session({secret: 'solink'}));
 
-app.use('/css', express.static(__dirname + '/css'));
-app.use('/js', express.static(__dirname + '/js'));
+app.use('/css', express.static(__dirname + '/assets/css'));
+app.use('/js', express.static(__dirname + '/assets/js'));
 
 app.set('view engine', 'ejs');
 
@@ -138,6 +140,8 @@ app.get('/cameras/:id/thumb/:thumb', function(req, res) {
         if (err) {
             res.json( { error: err } );
         } else {
+            console.log(cam.videosFolder + "/thumbs/"+thumb+".jpg");
+
             var file = cam.videosFolder + "/thumbs/"+thumb+".jpg";
             //console.log(file);
 
@@ -243,55 +247,41 @@ app.get('/cameras/:id/video.hls', function(req, res) {
 // - - 
 // 
 app.get('/cameras/:id/start_recording', function(req, res) {
-    var camId = req.params.id;
-    
-    camerasController.startRecording( camId, function(err) {
-        if ( err ) {
-            res.json({ success: false, error: err });
-        } else {
-            res.json({ success: true });
-        }
-    });
+    startRecording(req, res);
 });
-// - - -
-
-// - - 
-// 
 app.post('/cameras/:id/start_recording', function(req, res) {
-    var camId = req.params.id;
-    
-    camerasController.startRecording( camId, function(err) {
-        if ( err ) {
-            res.json({ success: false, error: err });
-        } else {
-            res.json({ success: true });
-        }
-    });
+    startRecording(req, res);
 });
 // - - -
-
+//
 
 // - - 
 // 
 app.post('/cameras/:id/stop_recording', function(req, res) {
-    var camId = req.params.id;
-    
-    camerasController.stopRecording( camId, function(err) {
-        if (err || cam.length === 0) {
-            res.json({ success: false, error: err });
-        } else {
-            res.json({ success: true });
-        }
-    });
+    stopRecording( req, res );
 });
-// - - -
-
-
-// - - 
-// 
 app.get('/cameras/:id/stop_recording', function(req, res) {
+    stopRecording( req, res );
+});
+// - - -
+
+
+// - - -
+var startRecording = function(req, res) {
     var camId = req.params.id;
     
+    camerasController.startRecording( camId, function(err) {
+        if ( err ) {
+            res.json({ success: false, error: err });
+        } else {
+            res.json({ success: true });
+        }
+    });
+};
+
+var stopRecording = function( req, res ) {
+    var camId = req.params.id;
+
     camerasController.stopRecording( camId, function(err) {
         if (err || cam.length === 0) {
             res.json({ success: false, error: err });
@@ -299,8 +289,9 @@ app.get('/cameras/:id/stop_recording', function(req, res) {
             res.json({ success: true });
         }
     });
-});
+};
 // - - -
+
 
 
 // - - 

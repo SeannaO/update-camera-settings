@@ -1,20 +1,21 @@
 var Datastore = require('nedb');
-var Camera = require('./camera_model');
+var Camera = require('./../models/camera_model');
 
-var db = new Datastore({ filename: 'cam_db', autoload: true });
-
+var db;
 var cameras = [];
 var videosDb;
 
 
-function CamerasController( videosDatastore, videosFolder, socket ) {
+function CamerasController( filename, videosDatastore, videosFolder, socket ) {
+
     console.log("cameras controller constructor");
+
+    db = new Datastore({ filename: filename, autoload: true });
+
     videosDb = videosDatastore;
     this.videosFolder = videosFolder;
 
-    this.setup( function(err) {} );    
-   
-    console.log(this);
+    this.setup( function(err) {} );
 }
 
 

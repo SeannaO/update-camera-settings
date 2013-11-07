@@ -26,10 +26,12 @@ function removeTsExt(fileName) {
     return fileName.replace('.ts', '');
 }
 
-var timelineSetup = function( id ) {
+var timelineSetup = function( id, name ) {
+
+    var label = name ? name : id;
 
     var timelineData = [];
-    timelineData.push({label: id, times: []});
+    timelineData.push({label: label, times: []});
 
     var startTime = Date.now() - 1*60*60*1000; // 1hour from now
 
@@ -38,8 +40,11 @@ var timelineSetup = function( id ) {
         var videos = data.videos;
 
         for (var i = 0; i < videos.length; i++) {
-            timelineData[0].times.push({ thumb: "/cameras/" + id + "/thumb/" + removeTsExt(videos[i].file), starting_time: (videos[i].start-1000), ending_time: (videos[i].end + 1000)});             
-        }
+		if ( videos[i].file && videos[i].start && videos[i].end) {
+ 			timelineData[0].times.push({ thumb: "/cameras/" + id + "/thumb/" + removeTsExt(videos[i].file), starting_time: (parseInt(videos[i].start)-1000), ending_time: (parseInt(videos[i].end) + 1000)}); 
+		} 
+	}
+
 
         var chart = d3.timeline().width(800).rotateTicks(90).showToday().stack(true).tickFormat({
             format: d3.time.format("%H:%M"), 
@@ -59,16 +64,25 @@ var timelineSetup = function( id ) {
         }
 
         var svg = d3.select("#timeline-"+id).append("svg").attr("width", 800).datum(timelineData).call(chart);         
-    });
+    
+	});
                
 };
 
 var showThumb = function( thumb ) {
     
     var currentThumb = $("#thumb img").attr('src');
-   
-    $("#thumb").css('left', mouseX+'px');
-    $("#thumb").css('top', (mouseY+15)+'px');
+    
+   if (mouseX < $(window).width()/2) { 
+    	$("#thumb").css('left', mouseX+'px');
+   } else {
+	$("#thumb").css('left', (mouseX-300)+'px');
+   }
+   if (mouseY < $(window).height()/2) {
+   	$("#thumb").css('top', (mouseY+15)+'px');
+   } else {
+	$("#thumb").css('top', (mouseY-250)+'px');
+  }
     $("#thumb").fadeIn();
      if (currentThumb !== thumb) {
        //var img = $("<img>");
@@ -106,13 +120,13 @@ var list = function() {
             $("#camera-list").html("no cameras have been added<br>");
         }
 
-        console.log(data);
+       // console.log(data);
 
         for (var i = 0; i < data.length; i++) {
             if (data[i]) {
                 cameras.push( data[i] );
                 addCameraItem(data[i]);
-                timelineSetup(data[i]._id);
+                timelineSetup(data[i]._id, data[i].name);
             }
         }
         
@@ -307,3 +321,4 @@ var editCamera = function(camId) {
         }
     });    
 };
+

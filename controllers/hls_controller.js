@@ -1,4 +1,4 @@
-var hls = require('./hls');
+var hls = require('./../helpers/hls');
 
 function generateFinitePlaylist( db, camId, begin, end, cb ) {
    
