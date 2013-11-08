@@ -1,42 +1,42 @@
 var ffmpeg = require('./../helpers/ffmpeg.js');
 var fs = require('fs');
 var path = require('path');
-var Watch = require('./../helpers/watch');
-var pending = [];
-var lastEndTime = 0;
+var Watcher = require('./../helpers/watcher.js');
 var exec = require('child_process').exec;
 
-var events = require('events');
 
 function RecordModel( datastore, camera ) {
+
+    var self = this;
+
+    this.pending = [];
 
     this.rtsp = camera.rtsp;
     this.db = datastore;
     this.camId = camera._id;
     this.lastVideo = 0;
-    this.watch = new Watch();
+    
     this.folder = "";
     
     this.setupFolders( camera );
 
-    this.setupWatcher( this.folder + "/videos/tmp" );
+    this.watcher = new Watcher( self.folder + '/videos/tmp', 'ts');
+    
+    this.watcher.on("new_files", function( files ) {
+        console.log("new files");
+        console.log(files);
+        self.addNewVideosToPendingList( files );
+    });
+
+    setInterval( function() {
+        self.indexPendingFiles();
+    }, 5000);
 
     console.log("record constructor");    
     console.log("camera: " + camera.name);
     console.log("folder: " + this.folder);
-    console.log("rtsp: " + this.rtsp);
-
-    events.EventEmitter.call(this);
-   
+    console.log("rtsp: " + this.rtsp);  
 }
-
-RecordModel.super_ = events.EventEmitter;
-RecordModel.prototype = Object.create(events.EventEmitter.prototype, {
-    constructor: {
-        value: RecordModel,
-        enumerable: false
-    }
-});
 
 
 RecordModel.prototype.setupFolders = function( camera ) {
@@ -50,6 +50,7 @@ RecordModel.prototype.setupFolders = function( camera ) {
     this.setupFolderSync(this.folder + "/thumbs");
  
     var tmpFolder = this.folder + "/videos/tmp";
+
     fs.readdirSync(tmpFolder).forEach(function(file, index){
 
         var curPath = tmpFolder + "/" + file;
@@ -62,6 +63,7 @@ RecordModel.prototype.setupFolders = function( camera ) {
         }
     });
 };
+
 
 RecordModel.prototype.updateCameraInfo = function( camera ) {
     this.rtsp = camera.rtsp;
@@ -79,6 +81,19 @@ RecordModel.prototype.stopRecording = function() {
         var exec = require('child_process').exec;
         exec("kill -s 9 " + this.ffmpegProcess.pid, function(err) {console.log(err);});
         
+    }
+};
+
+RecordModel.prototype.indexPendingFiles = function() {
+    
+    console.log("index pending files");
+    console.log(this.pending);
+
+    var self = this;
+
+    while (self.pending.length > 1)  {
+        var file = self.pending.shift();        
+        self.moveAndIndexFile( file );
     }
 };
 
@@ -100,146 +115,72 @@ RecordModel.prototype.setupFolderSync = function(folder) {
 };
 
 
-moveFilesSync = function( recordModel, pendingList, cb ) {
+RecordModel.prototype.moveAndIndexFile = function( file ) {
 
-    var pendingVideo = pendingList.shift();
+    var self = this;
 
-    if (!pendingVideo) {
-
-        cb();
-        return;
-    } else {
-
-        var self = recordModel;
-        var from = self.folder + "/videos/tmp/" + path.basename( pendingVideo.file );
-        var to = self.folder + "/videos/" + pendingVideo.start + path.extname( pendingVideo.file );
-
-        fs.exists( from, function(exists) {
-            if (exists) {
-                fs.rename( from, to, function(err) { 
-                    if (err) {
-                        console.log("error when moving file: " + err);
-                    }
-                    else {
-                        pendingVideo.file = to;
-                        ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() {
-                            self.emit('chunk', {
-                                chunk: to
-                            });   
-                        });
-                        self.db.insertVideo( pendingVideo );
-                    }                        
-                    moveFilesSync( recordModel, pendingList, cb );
-                });
-            } else {
-                moveFilesSync( recordModel, pendingList, cb );
-            }
-        });
-    }
+    self.calcDuration( file, function( video ) {
+        self.moveFile( video );
+    });
 };
 
 
-// - -
-// 
-RecordModel.prototype.setupWatcher = function( dir ) {
+RecordModel.prototype.calcDuration = function( file, cb ) {
+
+    var self = this;
+
+    var fileInfo = fs.statSync( file );
+    var lastModified = ( new Date(fileInfo.mtime) ).getTime();
     
-    console.log("** setupWacher");
-    console.log("watching " + dir);
+    ffmpeg.calcDuration( file, function(duration) {
 
-    var self = this;
+        var start =  lastModified - duration;
+        var end = lastModified;
 
-    this.watch.watchTree( dir, function(f, curr, prev) {
+        video = {
+            cam: self.camId,
+            start: start,
+            end: end,
+            file: file
+        };
 
-        if ( typeof f == "object"  && prev === null && curr === null ) {
-            //
-        } else if (prev === null) {
-
-            self.addNewVideosToPendingList( function() {
-                moveFilesSync( self, pending, function() {
-                    //
-                });
-            });
-        }
-    });
+        cb( video );
+    });    
 };
-// - - -
 
-RecordModel.prototype.addNewVideosToPendingListSync = function( files, cb ) {
+
+RecordModel.prototype.moveFile = function( video ) { 
 
     var self = this;
-    var file = files.shift();
 
-    if (file) {
-        
-        file = self.folder + "/videos/tmp/" + file;
-
-        fs.exists(file, function(exists) {
-
-            if ( exists && path.extname(file) === '.ts' ) {
-
-                try {
-                    var fileInfo = fs.statSync( file );
-                    var lastModified = ( new Date(fileInfo.mtime) ).getTime();
-
-                    ffmpeg.calcDuration( file, function(duration, f) {
-
-                        var start =  lastModified - duration;
-                        var end = lastModified;
-
-                        var video = {
-                            cam: self.camId,
-                            start: start,
-                            end: end,
-                            file: file
-                        };
-
-                        pending.push( video );
-
-                        lastEndTime = end;
-
-                        self.addNewVideosToPendingListSync( files, cb );
-                    });
-                } catch(err) {
-                }
-            } else {
-                 self.addNewVideosToPendingListSync( files, cb );
+    var from = self.folder + "/videos/tmp/" + path.basename( video.file );
+    var to = self.folder + "/videos/" + video.start + path.extname( video.file );
+ 
+    fs.exists( from, function(exists) {
+        fs.rename( from, to, function(err) { 
+            if (err) {
+                console.log("error when moving file: " + err);
             }
-        });  
-    } else {
-        cb();
-    }
+            else {
+                video.file = to;
+                ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() { 
+                });
+                self.db.insertVideo( video );
+            }                        
+        });
+    });
 };
 
 
-// - -
-//
-RecordModel.prototype.addNewVideosToPendingList = function( cb ) {
+RecordModel.prototype.addNewVideosToPendingList = function( files ) {
 
     var self = this;
 
-    fs.readdir( self.folder + "/videos/tmp", function(err, files) {
-        var dir = self.folder + "/videos/tmp/";
-        files.sort(function(a, b) {
-               return fs.statSync(dir + b).mtime.getTime() - 
-                      fs.statSync(dir + a).mtime.getTime();
-           });
-        
-        files.shift();
-            
-        if (err) {
-
-            console.log("there was an error when trying to list files on tmp folder: " + err);
-            cb();
-        } else {
-            
-            self.addNewVideosToPendingListSync( files, function() {
-                cb();
-            });
+    for ( var i in files ) {
+            var file = files[i];
+            self.pending.push(  self.folder + "/videos/tmp/" + file );
         }
-    });
 };
-// - - -
-
 
 // - -
 //
