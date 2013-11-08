@@ -22,7 +22,7 @@ Watcher.prototype.setupWatcher = function() {
 
     setInterval( function() {
         self.checkNewFile();
-    }, 500 );
+    }, 1000 );
 };
 
 
@@ -40,6 +40,7 @@ Watcher.prototype.isValidExtension = function( file ) {
 
     return( file.lastIndexOf('.' + self.ext) === file.length - self.ext.length - 1 );
 };
+
 
 Watcher.prototype.checkNewFile = function() {
     
