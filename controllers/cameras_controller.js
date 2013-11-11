@@ -53,7 +53,6 @@ CamerasController.prototype.listVideosByCamera = function( camId, start, end, cb
             console.log("error while trying to list videos by camera: " + err);
             cb(err);
         } else {
-            // console.log(fileList);
             cb(err, fileList, offset);
         }
     });
@@ -81,9 +80,6 @@ CamerasController.prototype.getCamera = function(camId, cb) {
             cb( err, null );
         } else {
             var cam = self.findCameraById( camId ).cam;
-            //console.log("getCamera: ");
-            //console.log(cam);
-            
             cb( err, cam );
         }
     });
@@ -115,7 +111,14 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
         if( err ) {
             cb( err, numRemoved );
         } else {
-            var i = self.findCameraById( camId ).index;
+            var whichCam = self.findCameraById( camId );
+            var cam = whichCam.cam;
+
+            var i = whichCam.index;
+
+            cam.stopRecording();
+            cam.deleteAllFiles();
+
             cameras.splice(i,1);            
             refresh( function() {
                 cb( err, numRemoved );

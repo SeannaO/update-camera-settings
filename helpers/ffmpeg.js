@@ -43,7 +43,7 @@ var convertFromTsToMp4 = function( tsFile, cb ) {
  */
 var makeThumb = function ( file, folder, resolution, cb ) { 
 
-    console.log("making thumb of " + file + " : " + out);
+    // console.log("making thumb of " + file + " : " + out);
     
     var exec = require('child_process').exec;
 
@@ -69,10 +69,10 @@ var makeThumb = function ( file, folder, resolution, cb ) {
  */
 var snapshot = function ( file, outFolder, offset, cb ) { 
 
-    console.log("- - - snapshot - - -");
-    console.log("file: " + file);
-    console.log("offset: " + offset);
-    console.log("- - -");
+    //console.log("- - - snapshot - - -");
+    //console.log("file: " + file);
+    //console.log("offset: " + offset);
+    //console.log("- - -");
     
     var ext = path.extname(file);
 
@@ -119,9 +119,9 @@ var smartSnapshot = function( file, outFolder, offset, cb ) {
     var exec = require('child_process').exec;
 
     var out = outFolder + "/" + path.basename(file, '.ts') + "_" + offset + ".jpg"; 
-    console.log("== smartSnapshot ==");
-    console.log("input: " + file);
-    console.log("output: " +  out);
+    //console.log("== smartSnapshot ==");
+    //console.log("input: " + file);
+    //console.log("output: " +  out);
     
     var child = exec("ffmpeg -y -i " + file + " -vcodec mjpeg -vframes 1 -an -f rawvideo -t 2 -ss " + offset + " -s 640x480 " + out,
             function( error, stdout, stderr ) {

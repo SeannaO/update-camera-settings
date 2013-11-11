@@ -1,3 +1,4 @@
+var fs = require('fs');
 var RecordModel = require('./record_model');
 var Dblite = require('../db_layers/dblite.js');
 
@@ -37,7 +38,8 @@ function Camera( cam, videosFolder ) {
 
 
 Camera.prototype.setup = function( cb ) {
-        var self = this;
+
+    var self = this;
 
     db.loadDatabase();
     
@@ -56,8 +58,11 @@ Camera.prototype.startRecording = function() {
     
     var self = this;
     
-    if (this.status !== RECORDING) {
+    if (this.status === RECORDING) {
         console.log(this.name + " is already recording.");
+    } else {
+        this.recordModel.startRecording();
+        this.status = RECORDING;
     }
 };
 
@@ -77,6 +82,28 @@ Camera.prototype.stopRecording = function() {
 Camera.prototype.updateRecorder = function() {
     this.recordModel.updateCameraInfo( this );
 };
+
+
+Camera.prototype.deleteAllFiles = function() {
+
+    deleteFolderRecursive( this.videosFolder );
+};
+
+
+var deleteFolderRecursive = function( path ) {
+    if( fs.existsSync(path) ) {
+        fs.readdirSync(path).forEach(function(file,index){
+            var curPath = path + "/" + file;
+            if(fs.statSync(curPath).isDirectory()) { // recurse
+                deleteFolderRecursive(curPath);
+            } else { // delete file
+                fs.unlinkSync(curPath);
+            }
+        });
+        fs.rmdirSync(path);
+    }
+};
+
 
 module.exports = Camera;
 

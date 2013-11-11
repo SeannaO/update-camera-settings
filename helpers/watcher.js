@@ -20,7 +20,23 @@ Watcher.prototype.setupWatcher = function() {
     
     self.checkNewFile();
 
-    setInterval( function() {
+    this.intervalId = setInterval( function() {
+        self.checkNewFile();
+    }, 1000 );
+};
+
+
+Watcher.prototype.stopWatching = function() {
+    
+    clearInterval( this.intervalId );
+};
+
+
+Watcher.prototype.startWatching = function() {
+
+    var self = this;
+
+    this.intervalId = setInterval( function() {
         self.checkNewFile();
     }, 1000 );
 };
@@ -48,8 +64,14 @@ Watcher.prototype.checkNewFile = function() {
     
     var added = [];
     var removed = [];
+    var files = [];
 
-    var files = fs.readdirSync( self.dir );
+    try {
+        files = fs.readdirSync( self.dir );
+    } catch (err) {
+        console.log( err );
+    }
+
     for (var i in files) {
         var f = files[i];
         if ( self.files.indexOf(f) == -1 && self.isValidExtension(f) ) {

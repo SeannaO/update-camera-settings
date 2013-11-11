@@ -99,13 +99,13 @@ Dblite.prototype.searchVideosByInterval = function( start, end, cb ) {
  */
 Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
 
-    var fileList = this.db.query('SELECT start, end, file FROM videos WHERE cam = ? AND start < ? AND end > ? ORDER BY start ASC', 
+    var fileList = this.db.query('SELECT start, end, file FROM videos WHERE start < ? AND end > ? ORDER BY start ASC', 
             [startTime+1500, startTime-1500], 
             ['start', 'end', 'file'], 
             function(err, data) {
 
                 if (!data || data.length === 0) {
-                     cb( "", offset );
+                     cb( "", 0 );
                 } else {
                     offset = Math.round( (startTime - data[0].start)/1000.0 );
                     cb(data[0].file, offset);

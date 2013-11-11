@@ -21,16 +21,6 @@ function RecordModel( datastore, camera ) {
     this.setupFolders( camera );
 
     this.watcher = new Watcher( self.folder + '/videos/tmp', 'ts');
-    
-    this.watcher.on("new_files", function( files ) {
-        //console.log("new files");
-        //console.log(files);
-        self.addNewVideosToPendingList( files );
-    });
-
-    setInterval( function() {
-        self.indexPendingFiles();
-    }, 5000);
 
     console.log("record constructor");    
     console.log("camera: " + camera.name);
@@ -74,7 +64,12 @@ RecordModel.prototype.updateCameraInfo = function( camera ) {
 
 
 RecordModel.prototype.stopRecording = function() {
-    
+   
+    this.watcher.removeAllListeners('new_files');
+    this.watcher.stopWatching();
+
+    clearInterval( this.indexIntervalId );
+
     if (this.ffmpegProcess) {
         console.log("killing ffmpeg process: " + this.ffmpegProcess.pid);
 
@@ -101,6 +96,20 @@ RecordModel.prototype.indexPendingFiles = function() {
 
 
 RecordModel.prototype.startRecording = function() {    
+
+    var self = this;
+
+    this.watcher.on("new_files", function( files ) {
+        //console.log("new files");
+        //console.log(files);
+        self.addNewVideosToPendingList( files );
+    });
+    this.watcher.startWatching();
+
+    this.indexIntervalId = setInterval( function() {
+        self.indexPendingFiles();
+    }, 5000);
+    
     this.recordContinuously();
 };
 
