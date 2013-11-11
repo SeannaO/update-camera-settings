@@ -3,16 +3,11 @@ var Camera = require('./../models/camera_model');
 
 var db;
 var cameras = [];
-var videosDb;
 
-
-function CamerasController( filename, videosDatastore, videosFolder ) {
-
-    console.log("cameras controller constructor");
+function CamerasController( filename, videosFolder ) {
 
     db = new Datastore({ filename: filename, autoload: true });
 
-    videosDb = videosDatastore;
     this.videosFolder = videosFolder;
 
     this.setup( function(err) {} );
@@ -28,7 +23,6 @@ function cameraInfo(camera) {
     info._id = camera._id;
     info.status = camera.status;
 
-    console.log("camera.id: " + camera.id);
     if (camera.id) {
         info.id = camera.id;
     } else {
@@ -41,11 +35,20 @@ function cameraInfo(camera) {
 
 CamerasController.prototype.listVideosByCamera = function( camId, start, end, cb ) {
     
+    var self = this;
+
+    var cam = self.findCameraById( camId ).cam;    
+    
+
+    if (!cam) {
+        cb("camera not found");
+        return;
+    }
+
     start = parseInt( start, 10 );
     end = parseInt( end, 10 );
 
-    console.log("listing videos recorded by camera " + camId + " between " + start + " and " + end);
-    videosDb.searchVideosByInterval( camId, start, end, function(err, fileList, offset) {
+    cam.db.searchVideosByInterval( start, end, function(err, fileList, offset) {
         if (err) {
             console.log("error while trying to list videos by camera: " + err);
             cb(err);
@@ -91,8 +94,6 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
     var self = this;
 
-    console.log( "inserting new camera: ");
-    console.log( cam );
 
     db.insert( cam, function( err, newDoc ) {
         if (err) {
@@ -100,8 +101,7 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
             cb( err, "{ success: false }" );
         } else {
             cb( err, newDoc );
-            cameras.push( new Camera(newDoc, videosDb, self.videosFolder ) );
-            console.log( newDoc );
+            cameras.push( new Camera(newDoc, self.videosFolder ) );
         }
     });
 };
@@ -166,8 +166,6 @@ CamerasController.prototype.startRecording = function (camId, cb) {
         }
 
         cam = self.findCameraById(camId).cam;
-        console.log("found camera: ");
-        console.log(cam);
            
         if (cam) {
             cam.startRecording();  
@@ -238,15 +236,13 @@ CamerasController.prototype.setup = function( cb ) {
     db.loadDatabase();
     
     db.find( {}, function( err, docs ) {
-        console.log(docs);
         if (err) {
             console.log(err);
             cb( err );
         } else {
             for ( var k = 0; k < docs.length; k++ ) {
                 var cam = docs[k];
-                console.log("camerasController.videosFolder: " + self.videosFolder);
-                var newCam = new Camera(cam, videosDb, self.videosFolder );
+                var newCam = new Camera(cam, self.videosFolder );
                 cameras.push( newCam );
             }
             cb( false );

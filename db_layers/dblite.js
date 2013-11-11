@@ -9,33 +9,36 @@ var format = require('util').format;
 var path = require('path');
 var fs = require('fs');
 
-var db = dblite('./db.sqlite');
+var Dblite = function( db_path ) {
+    this.db = dblite( db_path );
 
-db.query('CREATE TABLE IF NOT EXISTS videos (id INTEGER PRIMARY KEY, start INTEGER, end INTEGER, cam STRING, file TEXT)');
-db.query('.show');
-// db.loadDatabase();
-
+    this.db.query('CREATE TABLE IF NOT EXISTS videos (id INTEGER PRIMARY KEY, start INTEGER, end INTEGER, file TEXT)');
+    this.db.query('.show');
+};
 
 /**
  * insertVideo
  *
  */
-var insertVideo = function( data ) {
-    if (!db) {
+Dblite.prototype.insertVideo = function( data ) {
+    if (!this.db) {
         console.log("db is not ready yet");
     }
 
-    if ( !data || !data.start || !data.end || !data.cam || !data.file ) {
+    if ( !data || !data.start || !data.end || !data.file ) {
         return;
     }
 
-    console.log("* * * inserting video");
-    console.log(data);
-    db.query('INSERT INTO videos(start, end, cam, file) VALUES(?, ?, ?, ?)', [data.start, data.end, data.cam, data.file]);
+    // console.log("* * * inserting video");
+    // console.log(data);
+    this.db.query('INSERT INTO videos(start, end, file) VALUES(?, ?, ?)', [data.start, data.end, data.file]);
 };
 // - - end of insertVideo
 // - - - - - - - - - - - - - - - - - - - -
-var sortByStartTimeDesc = function(a, b) {
+//
+
+
+Dblite.prototype.sortByStartTimeDesc = function(a, b) {
     if (a.start > b.start) {
         return -1;
     } else if (a.start < b.start) {
@@ -46,7 +49,7 @@ var sortByStartTimeDesc = function(a, b) {
 };
 
 
-var sortByStartTimeAsc = function(a, b) {
+Dblite.prototype.sortByStartTimeAsc = function(a, b) {
     if (a.start < b.start) {
         return -1;
     } else if (a.start > b.start) {
@@ -60,49 +63,12 @@ var sortByStartTimeAsc = function(a, b) {
  * searchVideosByInterval
  *
  */
-var searchVideosByInterval = function( camId, start, end, cb ) {
-    
-    // db.loadDatabase();
-/*
-    db.find({ $and: [ {cam: camId}, {start: { $lte: (end+500) }}, {end: {$gte: (start-500)}} ] }).toArray(function(err, docs) {
-        if (err) {
-            console.log("error searching for videos by interval: " + err);
-            cb (err, [], 0);
-            return;
-        }
-        
-        var fileList = [];
+Dblite.prototype.searchVideosByInterval = function( start, end, cb ) {
 
-        var offset = {
-            begin: 0,
-            duration: 0
-        };
-        
-        docs = docs.sort(sortByStartTimeAsc);
-
-        console.log("found " + docs.length + " videos");
-
-        for (var i = 0; i < docs.length; i++) {
-            if (i === 0 && docs[i].start < start) {
-                offset.begin = start - docs[i].start;                                 
-            } 
-            if (i == docs.length-1) {
-                var endOffset = 0;
-                if (docs[i].end > end) {
-                    endOffset = docs[i].end - end;
-                }
-                offset.duration = docs[i].end - docs[0].start - offset.begin - endOffset;
-            }
-            fileList.push(docs[i]);
-        }
-        cb( err, fileList, offset );   
-    });
-    */
-    var fileList = db.query('SELECT start, end, file FROM videos WHERE cam = ? AND start < ? AND end > ? ORDER BY start ASC', 
-            [camId, end+500, start-500], 
+    var fileList = this.db.query('SELECT start, end, file FROM videos WHERE start < ? AND end > ? ORDER BY start ASC', 
+            [end+500, start-500], 
             ['start', 'end', 'file'], 
             function(err, data) {
-                //console.log(data);
 
                     var offset = {
                         begin: 0,
@@ -127,15 +93,14 @@ var searchVideosByInterval = function( camId, start, end, cb ) {
 // - - - - - - - - - - - - - - - - - - - -
 
 
-
 /**
  * searchVideoByTime
  *
  */
-var searchVideoByTime = function( camId, startTime, cb ) {
+Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
 
-    var fileList = db.query('SELECT start, end, file FROM videos WHERE cam = ? AND start < ? AND end > ? ORDER BY start ASC', 
-            [camId, startTime+1500, startTime-1500], 
+    var fileList = this.db.query('SELECT start, end, file FROM videos WHERE cam = ? AND start < ? AND end > ? ORDER BY start ASC', 
+            [startTime+1500, startTime-1500], 
             ['start', 'end', 'file'], 
             function(err, data) {
 
@@ -147,50 +112,24 @@ var searchVideoByTime = function( camId, startTime, cb ) {
                 }
             });
     
-    console.log("- - - - - - - - - -");
-    console.log("search video by time");
-    console.log( camId + " : " + startTime );
-    console.log("- - - - - - - - - -");
+    //console.log("- - - - - - - - - -");
+    //console.log("search video by time");
+    //console.log( camId + " : " + startTime );
+    //console.log("- - - - - - - - - -");
    
 };
 // - - end of searchVideoByTime
 // - - - - - - - - - - - - - - - - - - - -
 
 
-
 /**
  * listAll
  *
  */
-var listAll = function( camId ) {
+Dblite.prototype.listAll = function() {
     
-    //console.log(db);
-    // db.loadDatabase();
-
-    /*
-    if (camId === "" || camId === undefined) {
-        console.log("listing data from all cameras");
-        db.find({}).toArray(function(err, docs) {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            console.log(docs);
-        });
-    } else {
-        db.find({ cam: camId }, function (err, docs) {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            // console.log(docs);
-        });
-    }
-    */
-
     console.log("- - - - - - - - - -");
     console.log("listAll");
-    console.log( camId  );
     console.log("- - - - - - - - - -");
     
 };
@@ -199,10 +138,11 @@ var listAll = function( camId ) {
 
 
 // exports
-exports.searchVideosByInterval = searchVideosByInterval;
-exports.listAll = listAll;
-exports.insertVideo = insertVideo;
-exports.searchVideoByTime = searchVideoByTime;
+module.exports = Dblite;
+//exports.searchVideosByInterval = searchVideosByInterval;
+//exports.listAll = listAll;
+//exports.insertVideo = insertVideo;
+//exports.searchVideoByTime = searchVideoByTime;
 
 
 

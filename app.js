@@ -1,7 +1,5 @@
 var onvif = require('./helpers/onvif');
 var express = require('express');
-//var db = require('./mongo.js');
-var db = require('./db_layers/dblite.js');
 var tsHandler = require('./helpers/ts');
 var hlsHandler = require('./controllers/hls_controller');
 var mp4Handler = require('./controllers/mp4_controller');
@@ -21,8 +19,7 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 
 var app = express();
 
-var camerasController = new CamerasController( __dirname + '/db/cam_db', db, '/Users/manuel/solink/nas/cameras');
-
+var camerasController = new CamerasController( __dirname + '/db/cam_db', '/Users/manuel/solink/nas/cameras');
 app.use(express.bodyParser()); // this must come before app.all 
 
 app.all('/*', function(req, res, next) {
@@ -119,7 +116,7 @@ app.get('/cameras/:id/thumb/:thumb', function(req, res) {
         if (err) {
             res.json( { error: err } );
         } else {
-            console.log(cam.videosFolder + "/thumbs/"+thumb+".jpg");
+            // console.log(cam.videosFolder + "/thumbs/"+thumb+".jpg");
 
             var file = cam.videosFolder + "/thumbs/"+thumb+".jpg";
             //console.log(file);
@@ -148,7 +145,7 @@ app.get('/cameras/:id/snapshot', function(req, res) {
         if (err) {
             res.json( { error: err } );
         } else {
-            mp4Handler.takeSnapshot( db, cam, req, res );
+            mp4Handler.takeSnapshot( cam.db, cam, req, res );
         }
     });
 });
@@ -167,7 +164,7 @@ app.get('/cameras/:id/video.json', function(req, res) {
          if (err) {
             res.json( { error: err } );
         } else {
-            mp4Handler.generateMp4Video( db, cam, begin, end, function( response ) {
+            mp4Handler.generateMp4Video( cam.db, cam, begin, end, function( response ) {
                 res.json( response );
             });
         }
@@ -188,7 +185,7 @@ app.get('/cameras/:id/video', function(req, res) {
         if (err) {
             res.json( { error: err } );
         } else {
-            mp4Handler.generateMp4Video( db, cam, begin, end, function( response ) {
+            mp4Handler.generateMp4Video( cam.db, cam, begin, end, function( response ) {
                 if(response.success) {
                     mp4Handler.sendMp4Video( response.file, req, res );
                 } else {
@@ -210,7 +207,7 @@ app.get('/cameras/:id/video.hls', function(req, res) {
     var begin = parseInt( req.query.begin, 10 );
     var end = parseInt( req.query.end, 10 );
     
-    hlsHandler.generateFinitePlaylist( db, camId, begin, end, function( playlist ) {
+    hlsHandler.generateFinitePlaylist( cam.db, camId, begin, end, function( playlist ) {
 
         res.writeHead(200, { 
              "Content-Type":"application/x-mpegURL",
@@ -375,7 +372,7 @@ app.get('/scan', function(req, res) {
 /// lifeline     ///
 ////////////////////
 
-lifeline.setup( app, camerasController, db, mp4Handler, hlsHandler );
+lifeline.setup( app, camerasController, mp4Handler, hlsHandler );
 
 ////////////////////
 

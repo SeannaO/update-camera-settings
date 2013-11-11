@@ -47,7 +47,7 @@ function generateMp4Video( db, cam, begin, end, cb ) {
             var response = { success: true, file: fileName };
             cb( response );
         } else {
-            db.searchVideosByInterval( camId, begin, end, function( err, videoList, offset ) {
+            db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
                 
                 //console.log(videoList);
                 console.log("** offset **");
@@ -94,7 +94,7 @@ function takeSnapshot( db, cam, req, res ) {
         return;
     }
 
-    db.searchVideoByTime( camId, time, function( file, offset ) {
+    db.searchVideoByTime( time, function( file, offset ) {
         
         offset = Math.round( offset );
         console.log( "taking snapshot of: " + file );

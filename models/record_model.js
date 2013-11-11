@@ -17,14 +17,14 @@ function RecordModel( datastore, camera ) {
     this.lastVideo = 0;
     
     this.folder = "";
-    
+
     this.setupFolders( camera );
 
     this.watcher = new Watcher( self.folder + '/videos/tmp', 'ts');
     
     this.watcher.on("new_files", function( files ) {
-        console.log("new files");
-        console.log(files);
+        //console.log("new files");
+        //console.log(files);
         self.addNewVideosToPendingList( files );
     });
 
@@ -42,7 +42,9 @@ function RecordModel( datastore, camera ) {
 RecordModel.prototype.setupFolders = function( camera ) {
 
     this.folder = camera.videosFolder;
-   
+    console.log( "*** folder: " + this.folder );
+    
+    
     this.setupFolderSync(this.folder);
     this.setupFolderSync(this.folder + "/tmp");
     this.setupFolderSync(this.folder + "/videos");
@@ -86,8 +88,8 @@ RecordModel.prototype.stopRecording = function() {
 
 RecordModel.prototype.indexPendingFiles = function() {
     
-    console.log("index pending files");
-    console.log(this.pending);
+    //console.log("index pending files");
+    //console.log(this.pending);
 
     var self = this;
 
@@ -101,7 +103,6 @@ RecordModel.prototype.indexPendingFiles = function() {
 RecordModel.prototype.startRecording = function() {    
     this.recordContinuously();
 };
-
 
 
 RecordModel.prototype.setupFolderSync = function(folder) {

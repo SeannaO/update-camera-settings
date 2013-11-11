@@ -1,1 +1,4 @@
-{"name":"vlc","ip":"","rtsp":"http://localhost:1234","id":"id_0.4355226415209472","_id":"oeRkdn0Q6FE4A6sK","status":0}
+{"name":"march #2","ip":"","rtsp":"rtsp://admin:admin@192.168.215.83/video1enc1","id":"id_0.7545665656216443","_id":"BX8MMDGMEy5XxhdH","status":0}
+{"name":"axis #1","ip":"","rtsp":"rtsp://192.168.215.66/axis-media/media.amp","id":"id_0.08488385728560388","_id":"GNCJgMjCVBTYD6hi","status":0}
+{"name":"march #1","ip":"","rtsp":"rtsp://admin:admin@192.168.215.83/video1enc1","id":"id_0.8924225913360715","_id":"KiHVtBNweNWXfTXD","status":0}
+{"name":"axis #2","ip":"","rtsp":"rtsp://192.168.215.66/axis-media/media.amp","id":"id_0.3433457857463509","_id":"kGUxJK55YBBrh5yy","status":0}

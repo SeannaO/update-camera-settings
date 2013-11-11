@@ -1,4 +1,4 @@
-function setup( app, camerasController, db, mp4Handler, hlsHandler ) {    
+function setup( app, camerasController, mp4Handler, hlsHandler ) {    
 
     // - - 
     // 
@@ -28,7 +28,7 @@ function setup( app, camerasController, db, mp4Handler, hlsHandler ) {
         var begin = parseInt( req.query.begin, 10 );
         var end = parseInt( req.query.end, 10 );
     
-        hlsHandler.generateFinitePlaylist( db, cam._id, begin, end, function( playlist ) {
+        hlsHandler.generateFinitePlaylist( cam._id, begin, end, function( playlist ) {
     
             res.writeHead(200, { 
                 "Content-Type":"application/x-mpegURL",
@@ -158,7 +158,7 @@ function setup( app, camerasController, db, mp4Handler, hlsHandler ) {
             if (err) {
                 res.json( { error: err } );
             } else {
-                mp4Handler.generateMp4Video( db, cam, begin, end, function( response ) {
+                mp4Handler.generateMp4Video( cam, begin, end, function( response ) {
                     if(response.success) {
                         mp4Handler.sendMp4Video( response.file, req, res );
                     } else {
@@ -184,7 +184,7 @@ function setup( app, camerasController, db, mp4Handler, hlsHandler ) {
             if (err) {
                 res.json( { error: err } );
             } else {
-                mp4Handler.generateMp4Video( db, cam, begin, end, function( response ) {
+                mp4Handler.generateMp4Video( cam, begin, end, function( response ) {
                     if(response.success) {
                         mp4Handler.sendMp4VideoForDownload( response.file, req, res );
                     } else {
@@ -210,7 +210,7 @@ function setup( app, camerasController, db, mp4Handler, hlsHandler ) {
             if (err) {
                 res.json( { error: err } );
             } else {
-                mp4Handler.generateMp4Video( db, cam, begin, end, function( response ) {
+                mp4Handler.generateMp4Video( cam, begin, end, function( response ) {
                     res.json( response );
                 });
             }
@@ -231,7 +231,7 @@ function setup( app, camerasController, db, mp4Handler, hlsHandler ) {
             if (err) {
                 res.json( { error: err } );
             } else {
-                mp4Handler.takeSnapshot( db, cam, req, res );
+                mp4Handler.takeSnapshot( cam, req, res );
             }
         });
     });
