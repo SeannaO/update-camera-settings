@@ -1,5 +1,7 @@
 var Datastore = require('nedb');
 var Camera = require('./../models/camera_model');
+var EventEmitter = require('events').EventEmitter;
+var util = require('util');
 
 var db;
 var cameras = [];
@@ -11,8 +13,11 @@ function CamerasController( filename, videosFolder ) {
     this.videosFolder = videosFolder;
 
     this.setup( function(err) {} );
+
+    this.indexFiles();
 }
 
+util.inherits(CamerasController, EventEmitter);
 
 function cameraInfo(camera) {
     var info = {};
@@ -71,6 +76,21 @@ CamerasController.prototype.listCameras = function( cb ) {
 };
 
 
+CamerasController.prototype.indexFiles = function() {
+
+    var k = 0;
+    setInterval( 
+        function() {
+            k = (k + 1) % cameras.length;
+            var cam = cameras[k];
+            if (cam) {
+                cam.indexPendingFiles();
+            }
+        }, 1000
+    );
+};
+
+
 CamerasController.prototype.getCamera = function(camId, cb) {
 
     var self = this;
@@ -90,17 +110,34 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
     var self = this;
 
-
     db.insert( cam, function( err, newDoc ) {
         if (err) {
             console.log("error when inserting camera: " + err);
             cb( err, "{ success: false }" );
         } else {
-            cb( err, newDoc );
-            cameras.push( new Camera(newDoc, self.videosFolder ) );
+            var cam = new Camera(newDoc, self.videosFolder );
+            self.pushCamera( cam );
+            cb( err, newDoc );            
         }
     });
 };
+
+
+CamerasController.prototype.pushCamera = function( cam ) {
+    
+    var self = this;
+
+    cameras.push( cam );
+
+    cam.on('new_chunk', function( data ) {
+        self.emit('new_chunk', data );
+    });
+
+    cam.on('camera_disconnected', function( data ) {
+        self.emit('camera_disconnected', {cam_id: data.cam_id});
+    });
+};
+
 
 
 CamerasController.prototype.removeCamera = function( camId, cb ) {
@@ -246,7 +283,7 @@ CamerasController.prototype.setup = function( cb ) {
             for ( var k = 0; k < docs.length; k++ ) {
                 var cam = docs[k];
                 var newCam = new Camera(cam, self.videosFolder );
-                cameras.push( newCam );
+                self.pushCamera( newCam );
             }
             cb( false );
         }
@@ -255,7 +292,7 @@ CamerasController.prototype.setup = function( cb ) {
 
 
 CamerasController.prototype.findCameraById = function( id ) {
-    // console.log("findCameraById: " + id);
+    
     for (var i = 0; i < cameras.length; i++) { 
         var cam = cameras[i];
         if (cam._id === id) {

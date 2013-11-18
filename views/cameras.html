@@ -12,6 +12,35 @@
         <script src="/js/d3.v3.min.js"></script>
         <script src="/js/d3-timeline.js"></script>
 
+        <script src="/js/socket.io.js"></script>
+        
+        <script>
+            var socket = io.connect();
+
+            socket.on('new_chunk', function (data) {
+				console.log(data);
+                $("#timeline-"+data.cam).animate({
+					backgroundColor: "none"
+				}, 1000);
+            });
+            /*
+            socket.on('camera_connected', function(data) {
+                console.log('camera_connected');
+                console.log(data);
+            });
+            */
+            socket.on('camera_disconnected', function(data) {
+                //console.log("camera disconnected");
+                console.log("#timeline-"+data.cam_id);
+//                $("#timeline-"+data.cam_id).css('background', '#ff0');
+				$("#timeline-"+data.cam_id).animate({
+					backgroundColor: "rgb(243, 255, 102)"
+				}, 1000);
+
+                //console.log(data);
+            });
+            
+        </script>
     </head>
 
     <body>

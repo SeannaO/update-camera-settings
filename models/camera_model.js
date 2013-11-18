@@ -1,24 +1,31 @@
 var fs = require('fs');
 var RecordModel = require('./record_model');
 var Dblite = require('../db_layers/dblite.js');
+var util = require('util');
+var EventEmitter = require('events').EventEmitter;
 
-var RECORDING = 0;
-var NOT_RECORDING = 1;
+
 
 function Camera( cam, videosFolder ) {
 
-    console.log( "*** videosFolder: " + videosFolder );
+	console.log("initializing camera... ?");
+
+    var self = this;
+
+	this.RECORDING = 0;
+	this.NOT_RECORDING = 1;
+	this.NEW = 2;
 
     this._id = cam._id;
     this.name = cam.name;
     this.ip = cam.ip;
     this.rtsp = cam.rtsp;
     this.videosFolder = videosFolder + "/" + this._id;
-    this.status = cam.status;
     
-    this.db = new Dblite( this.videosFolder + "/db.sqlite" );
+    this.status = this.NEW;
+	this.lastChunkTime = Date.now();
 
-    console.log("*** cam dblite: " + this.db);
+    this.db = new Dblite( this.videosFolder + "/db.sqlite" );
 
     if (cam.id) {
         this.id = cam.id;
@@ -27,30 +34,39 @@ function Camera( cam, videosFolder ) {
     }
     
     this.recordModel = new RecordModel( this.db, this );
+	
+	this.setupEvents();
 
-    if (this.status == RECORDING) {
-        this.recordModel.startRecording();
+    if (cam.status === this.RECORDING) {
+		console.log("starting camera " + this.name);
+        this.startRecording();
     } else {
-        this.recordModel.stopRecording();
+		console.log("stopping camera " + this.name);
+        this.stopRecording();
     }
-
 }
 
+util.inherits(Camera, EventEmitter);
 
-Camera.prototype.setup = function( cb ) {
+Camera.prototype.setupEvents = function( cb ) {
 
     var self = this;
 
-    db.loadDatabase();
-    
-    db.find( {}, function( err, docs ) {
-        if (err) {
-            console.log(err);
-            cb( err );
-        } else {
-            cb( false );
-        }
+    this.recordModel.on( 'new_chunk', function(data) {
+		this.lastChunkTime = Date.now();
+        self.emit( 'new_chunk', data);
     });
+
+    this.recordModel.on('camera_disconnected', function() {
+        self.emit('camera_disconnected', { cam_id: self._id } );
+    });
+	
+	setInterval( function() {
+		if ( Date.now() - self.lastChunkTime >= 30000 && self.status === self.RECORDING ) {
+			self.lastChunkTime = Date.now();
+			//self.emit('camera_disconnected', {cam_id: self._id});
+		}
+	}, 1000);
 };
 
 
@@ -58,20 +74,24 @@ Camera.prototype.startRecording = function() {
     
     var self = this;
     
-    if (this.status === RECORDING) {
+	this.lastChunkTime = Date.now();
+
+    if (this.status === this.RECORDING) {
+
         console.log(this.name + " is already recording.");
     } else {
+        console.log("* * * " + this.name + " will start recording...");
         this.recordModel.startRecording();
-        this.status = RECORDING;
+        this.status = this.RECORDING;
     }
 };
 
 
 Camera.prototype.stopRecording = function() {
 
-    if (this.status !== NOT_RECORDING) {
+    if (this.status !== this.NOT_RECORDING) {
         console.log(this.name + " will stop recording...");
-        this.status = NOT_RECORDING;
+        this.status = this.NOT_RECORDING;
         this.recordModel.stopRecording();
     } else {
         console.log( this.name + " is already stopped.");
@@ -90,13 +110,19 @@ Camera.prototype.deleteAllFiles = function() {
 };
 
 
+Camera.prototype.indexPendingFiles = function() {
+ 
+    this.recordModel.indexPendingFiles();
+};
+
+
 var deleteFolderRecursive = function( path ) {
     if( fs.existsSync(path) ) {
         fs.readdirSync(path).forEach(function(file,index){
             var curPath = path + "/" + file;
-            if(fs.statSync(curPath).isDirectory()) { // recurse
+            if(fs.statSync(curPath).isDirectory()) { 
                 deleteFolderRecursive(curPath);
-            } else { // delete file
+            } else { 
                 fs.unlinkSync(curPath);
             }
         });

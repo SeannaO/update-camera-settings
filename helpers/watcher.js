@@ -4,25 +4,21 @@ var util = require('util');
 
 function Watcher( dir, ext ) {
 
+	this.intervalId = 0;
+
     this.dir = dir;
     this.files = [];
 
     this.ext = ext;
-
     this.setupWatcher();
 }
 
 util.inherits(Watcher, EventEmitter);
 
+
 Watcher.prototype.setupWatcher = function() {
 
     var self = this;
-    
-    self.checkNewFile();
-
-    this.intervalId = setInterval( function() {
-        self.checkNewFile();
-    }, 1000 );
 };
 
 
@@ -35,6 +31,8 @@ Watcher.prototype.stopWatching = function() {
 Watcher.prototype.startWatching = function() {
 
     var self = this;
+
+    self.checkNewFile();
 
     this.intervalId = setInterval( function() {
         self.checkNewFile();
@@ -60,6 +58,8 @@ Watcher.prototype.isValidExtension = function( file ) {
 
 Watcher.prototype.checkNewFile = function() {
     
+//    console.log("checking for new files on " + this.dir );
+
     var self = this;
     
     var added = [];

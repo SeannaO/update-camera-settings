@@ -1,3 +1,5 @@
+//require('look').start();  -- profiler ( NOT for production )
+
 var onvif = require('./helpers/onvif');
 var express = require('express');
 var tsHandler = require('./helpers/ts');
@@ -9,6 +11,9 @@ var fs = require('fs');
 var path = require('path');
 var lifeline = require('./helpers/lifeline_api.js');
 
+var io = require('socket.io');
+
+
 var CamHelper = require('./helpers/cameras_helper.js');
 
 var localIp = "";
@@ -19,8 +24,25 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 
 var app = express();
 
+// for socket.io 
+var server = require('http').createServer(app);
+io = io.listen(server);
+//
+server.listen(process.env.PORT || 8080);
+
 var camerasController = new CamerasController( __dirname + '/db/cam_db', '/Users/manuel/solink/nas/cameras');
 app.use(express.bodyParser()); // this must come before app.all 
+
+
+camerasController.on('new_chunk', function( data ) {
+   
+    io.sockets.emit( 'new_chunk', data );
+});
+
+camerasController.on('camera_disconnected', function( data ) {
+    io.sockets.emit( 'camera_disconnected', { cam_id: data.cam_id} );
+//    console.log("camera " + data.cam_id + " was disconnected!!!");
+});
 
 app.all('/*', function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -40,6 +62,15 @@ app.set('view engine', 'ejs');
 // 
 app.get('/', function (req, res) {    
     res.sendfile(__dirname + '/views/cameras.html');
+});
+// - - -
+
+
+// - -
+//
+app.get('/socket', function(req, res) {
+
+    res.sendfile(__dirname + '/views/socket.html');
 });
 // - - -
 
@@ -377,5 +408,4 @@ lifeline.setup( app, camerasController, mp4Handler, hlsHandler );
 ////////////////////
 
 
-app.listen(process.env.PORT || 8080);
 

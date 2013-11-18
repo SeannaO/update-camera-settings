@@ -186,18 +186,18 @@ function calcDuration(input, cb) {
 
     var Metalib = ffmpeg.Metadata;
 
-    fs.exists(input, function(exists) {
-        if(exists) {
+    //fs.exists(input, function(exists) {
+    //    if(exists) {
             var metaObject = new Metalib(input, function(metadata, err) {
                 
                 var duration = 1000 * parseFloat( metadata.durationraw.split(':')[2] );
                 cb( duration, input );
             });
-        } else {
-            cb( 0, input );
-        }
+     //   } else {
+     //       cb( 0, input );
+     //   }
 
-    });
+   // });
       
 }
 // - - end of calcDuration

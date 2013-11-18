@@ -1,7 +1,4 @@
-{"name":"axis #1","ip":"","rtsp":"rtsp://192.168.215.66/axis-media/media.amp","id":"id_0.08488385728560388","_id":"GNCJgMjCVBTYD6hi","status":0}
-{"name":"march #1","ip":"","rtsp":"rtsp://192.168.215.83/video1enc1","id":"id_0.7457910142838955","_id":"4bVNAHi1ICSKOCiD"}
-{"name":"march #1","ip":"","rtsp":"rtsp://192.168.215.83/video1enc1","id":"id_0.7457910142838955","_id":"4bVNAHi1ICSKOCiD","status":0}
-{"$$deleted":true,"_id":"4bVNAHi1ICSKOCiD"}
-{"name":"axis #2","ip":"","rtsp":"rtsp://192.168.215.66/axis-media/media.amp","id":"id_0.5507145172450691","_id":"k2vqCgjXsn9FwLhe"}
-{"name":"axis #2","ip":"","rtsp":"rtsp://192.168.215.66/axis-media/media.amp","id":"id_0.5507145172450691","_id":"k2vqCgjXsn9FwLhe","status":0}
-{"$$deleted":true,"_id":"k2vqCgjXsn9FwLhe"}
+{"name":"teste","ip":"","rtsp":"rtsp://192.1231.12.123","id":"id_0.5643631538841873","_id":"R45qKyMmZkEfDlUG","status":0}
+{"name":"vlc","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.13382884650491178","_id":"bET8dMrNOutc4NFi","status":0}
+{"name":"march","ip":"","rtsp":"rtsp://admin:admin@192.168.215.83/video1enc","id":"id_0.007298658834770322","_id":"p487Vouzd7TMbd18","status":0}
+{"name":"vlc","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.13382884650491178","_id":"bET8dMrNOutc4NFi","status":1}
