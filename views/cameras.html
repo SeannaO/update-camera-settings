@@ -17,7 +17,7 @@
         <script>
             var socket = io.connect();
 
-            socket.on('new_chunk', function (data) {
+            socket.on('newChunk', function (data) {
 				console.log(data);
                 $("#timeline-"+data.cam).animate({
 					backgroundColor: "none"
@@ -29,16 +29,20 @@
                 console.log(data);
             });
             */
-            socket.on('camera_disconnected', function(data) {
-                //console.log("camera disconnected");
-                console.log("#timeline-"+data.cam_id);
-//                $("#timeline-"+data.cam_id).css('background', '#ff0');
-				$("#timeline-"+data.cam_id).animate({
-					backgroundColor: "rgb(243, 255, 102)"
-				}, 1000);
-
-                //console.log(data);
-            });
+            socket.on('cameraStatus', function(data) {
+				if (data.status === 'offline' || data.status === 'disconnected') {
+					console.log("#timeline-"+data.cam_id);
+					if (data.status === 'disconnected') alert( data.cam_id + " disconnected");
+					$("#timeline-"+data.cam_id).animate({
+						backgroundColor: "rgb(243, 255, 102)"
+					}, 1000);
+					} else if (data.status === 'online' || data.status === 'connected') {
+						if (data.status === 'connected') alert( data.cam_id + " connected" );
+						$("#timeline-"+data.cam).animate({
+							backgroundColor: "none"
+						}, 1000);
+					}
+			});
             
         </script>
     </head>
@@ -61,7 +65,7 @@
         <br>
 
         <div id = "thumb" style = "display:none; position: absolute; z-index: 1000">
-            <img src = ""/>
+			<img src = ""/>
         </div>
 
         <div class="modal fade" id = "add-new-camera-dialog">
@@ -74,7 +78,7 @@
                     </div>
 
                     <div class="modal-body">
-                        <form role="form">
+						<form role="form">
                             <div class="form-group">
                                 <label for="camera-name">camera name</label>
                                 <input type="text" class="form-control" id="camera-name" placeholder="camera name">

@@ -12,6 +12,7 @@ $(document).ready(function(){
 });
 
 var cameras = [];
+var charts = [];
 
 function basename(path) {
     return path.replace(/\\/g,'/').replace( /.*\//, '' );
@@ -35,18 +36,19 @@ var timelineSetup = function( id, name ) {
 
     var startTime = Date.now() - 1*60*60*1000; // 1hour from now
 
+	var count = 0;
+
     $.getJSON( "/cameras/" + id + "/list_videos?start="+startTime+"&end="+Date.now(), function( data ) {
 
         var videos = data.videos;
 
-        for (var i = 0; i < videos.length; i++) {
-		if ( videos[i].file && videos[i].start && videos[i].end) {
- 			timelineData[0].times.push({ thumb: "/cameras/" + id + "/thumb/" + removeTsExt(videos[i].file), starting_time: (parseInt(videos[i].start)-1000), ending_time: (parseInt(videos[i].end) + 1000)}); 
-		} 
-	}
+		for (var i = 0; i < videos.length; i++) {
+			if ( videos[i].file && videos[i].start && videos[i].end) {
+				timelineData[0].times.push({ thumb: "/cameras/" + id + "/thumb/" + removeTsExt(videos[i].file), starting_time: (parseInt(videos[i].start)-1000), ending_time: (parseInt(videos[i].end) + 1000)}); 
+			} 
+		}
 
-
-        var chart = d3.timeline().width(800).rotateTicks(90).showToday().stack(true).tickFormat({
+        charts[count] = d3.timeline().width(800).rotateTicks(90).showToday().stack(true).tickFormat({
             format: d3.time.format("%H:%M"), 
             tickTime: d3.time.minute, 
             tickNumber: 1, 
@@ -63,10 +65,16 @@ var timelineSetup = function( id, name ) {
             });
         }
 
-        var svg = d3.select("#timeline-"+id).append("svg").attr("width", 800).datum(timelineData).call(chart);         
-    
+        var svg = d3.select("#timeline-"+id).append("svg").attr("width", 800).datum(timelineData).call(charts[count]);         
+		console.log("#timeline-"+id);
+		count++;
 	});
                
+};
+
+
+var addChunkToTimeline = function( data ) {
+	
 };
 
 var showThumb = function( thumb ) {

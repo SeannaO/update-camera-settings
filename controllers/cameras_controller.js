@@ -133,8 +133,8 @@ CamerasController.prototype.pushCamera = function( cam ) {
         self.emit('new_chunk', data );
     });
 
-    cam.on('camera_disconnected', function( data ) {
-        self.emit('camera_disconnected', {cam_id: data.cam_id});
+    cam.on('camera_status', function( data ) {
+        self.emit('camera_status', data);
     });
 };
 
@@ -173,11 +173,15 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
         return;
     }
     
+	console.log("*** updating camera:" );
+	console.log(cam);
+
     db.update({ _id: cam._id }, { 
         $set: { 
             name: cam.name, 
             rtsp: cam.rtsp, 
-            ip: cam.ip 
+            ip: cam.ip,
+			id: cam.id
         } 
     }, { multi: true }, function (err, numReplaced) {
         if (err) {
@@ -188,7 +192,7 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
             camera.cam.rtsp = cam.rtsp;
             camera.cam.ip = cam.ip;
             camera.cam.updateRecorder();
-
+			camera.cam.id = cam.id;
             cb(err);
         }
     });    

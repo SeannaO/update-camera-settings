@@ -10,9 +10,9 @@ var Stream = require('stream');
 var fs = require('fs');
 var path = require('path');
 var lifeline = require('./helpers/lifeline_api.js');
+var request = require('request');
 
 var io = require('socket.io');
-
 
 var CamHelper = require('./helpers/cameras_helper.js');
 
@@ -36,12 +36,12 @@ app.use(express.bodyParser()); // this must come before app.all
 
 camerasController.on('new_chunk', function( data ) {
    
-    io.sockets.emit( 'new_chunk', data );
+    io.sockets.emit( 'newChunk', data );
 });
 
-camerasController.on('camera_disconnected', function( data ) {
-    io.sockets.emit( 'camera_disconnected', { cam_id: data.cam_id} );
-//    console.log("camera " + data.cam_id + " was disconnected!!!");
+camerasController.on('camera_status', function( data ) {
+
+    io.sockets.emit( 'cameraStatus', data );
 });
 
 app.all('/*', function(req, res, next) {
@@ -147,10 +147,8 @@ app.get('/cameras/:id/thumb/:thumb', function(req, res) {
         if (err) {
             res.json( { error: err } );
         } else {
-            // console.log(cam.videosFolder + "/thumbs/"+thumb+".jpg");
 
             var file = cam.videosFolder + "/thumbs/"+thumb+".jpg";
-            //console.log(file);
 
             fs.exists( file, function(exists) {
                 if (exists) { 
@@ -300,6 +298,22 @@ var stopRecording = function( req, res ) {
 // - - -
 
 
+// - - 
+// 
+app.get('/multiview', function(req, res) {
+    
+	res.sendfile(__dirname + '/views/multi.html');
+    /*
+        if (err || cam.length === 0) {
+            res.end("couldn't find this camera");
+        } else {
+            res.render('camera', {id: cam._id, rtsp: cam.rtsp, name: cam.name});
+        }
+    });
+	*/
+});
+// - - -
+//
 
 // - - 
 // 
@@ -351,10 +365,30 @@ app.put('/cameras/:id', function(req, res) {
 //
 app.delete('/cameras/:id', function(req, res) {
 
+	var cam = camerasController.findCameraById( req.params.id ).cam;
+
     camerasController.removeCamera( req.params.id, function( err, numRemoved ) {
         if (err) {
             res.json({success: false, error: err});
-        } else {
+        } else if (cam) {
+			/*
+			try {
+				console.log("deleting camera: ");
+				console.log( cam.id );
+				var url = "https://admin:admin@192.168.215.153/cp/solink_delete_camera?v=2&id="+encodeURIComponent( cam.id );
+
+				request(url, {
+					strictSSL: false
+				},
+				function(err, r) {
+					if (err) {
+						console.log("error communicating with lifeline app: ");
+						console.log(err);
+					}
+				});
+			} catch (e) {
+
+			} */
             res.json({success: true, _id: req.params.id});
         }
     });
@@ -366,12 +400,41 @@ app.delete('/cameras/:id', function(req, res) {
 // - -
 //
 app.post('/cameras/new', function(req, res) {
-    
+
     camerasController.insertNewCamera( req.body, function( err, newDoc ) {
         if (err) {
             res.json({ sucess: false, error: err  });
         } else {
             res.json( newDoc );
+			
+			try {
+				var id = encodeURIComponent( newDoc.id );
+				var rtspurl = encodeURIComponent( newDoc.rtsp );
+				var name = encodeURIComponent( newDoc.name );
+				var ip = encodeURIComponent( newDoc.ip ); 
+
+				var url = "https://admin:admin@localhost/cp/solink_add_or_update_camera?v=2&camera:name="+name+"&camera:state="+1+"&camera:ipaddress=0.0.0.0&camera:rtspurl="+rtspurl;
+				request(url, {
+					strictSSL: false
+				},
+					function(err, r) {
+						
+						if (!err) {
+							var newCam = newDoc;
+							var newId = r.body;
+							newId = newId.replace(/"/g, "");
+							console.log(newId);
+							newCam.id = newId;
+							camerasController.updateCamera( newCam, function(err) {} );
+						} else {
+							console.log("error communicating with lifeline app: ");
+							console.log(err);
+						}
+					});
+			} catch( e ) {
+				console.log("error when connecting to lifeline");
+				console.log ( e );
+			}
         }
     });
 });

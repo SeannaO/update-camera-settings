@@ -1,4 +1,7 @@
-{"name":"teste","ip":"","rtsp":"rtsp://192.1231.12.123","id":"id_0.5643631538841873","_id":"R45qKyMmZkEfDlUG","status":0}
-{"name":"vlc","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.13382884650491178","_id":"bET8dMrNOutc4NFi","status":0}
-{"name":"march","ip":"","rtsp":"rtsp://admin:admin@192.168.215.83/video1enc","id":"id_0.007298658834770322","_id":"p487Vouzd7TMbd18","status":0}
-{"name":"vlc","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.13382884650491178","_id":"bET8dMrNOutc4NFi","status":1}
+{"name":"camera1","rtsp":"123","_id":"nRhgOadyqWMA556K","id":"3ea2ea9a-c87c-41ab-85e5-e7ca8513ba8f"}
+{"$$deleted":true,"_id":"nRhgOadyqWMA556K"}
+{"name":"camera1","rtsp":"123","_id":"x4ChoiSCtNbcr04R"}
+{"name":"camera1","rtsp":"123","_id":"x4ChoiSCtNbcr04R","id":"a108b853-3fea-48a4-a866-eeecc3c2c324"}
+{"$$deleted":true,"_id":"x4ChoiSCtNbcr04R"}
+{"name":"camera1","rtsp":"123","_id":"VNndAgOdDoD3iyws"}
+{"name":"camera1","rtsp":"123","_id":"VNndAgOdDoD3iyws","id":"fa6f4451-e604-4e3c-b720-57e8297f98e0"}

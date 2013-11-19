@@ -77,6 +77,8 @@ RecordModel.prototype.updateCameraInfo = function( camera ) {
 
 RecordModel.prototype.stopRecording = function() {
    
+	console.log("record model stop recording...");
+
     this.status = STOPPING;
 
     this.watcher.removeAllListeners('new_files');
@@ -118,6 +120,7 @@ RecordModel.prototype.indexPendingFiles = function() {
 
 RecordModel.prototype.startRecording = function() {    
 
+	console.log("record model start recording...");
     var self = this;
 
     this.status = RECORDING;
@@ -126,9 +129,36 @@ RecordModel.prototype.startRecording = function() {
     this.watcher.startWatching();
 	
     this.watcher.on("new_files", function( files ) {
-        this.lastChunkTime = Date.now();
+		if (self.status === ERROR) {
+			self.emit('camera_status', {status: 'connected'});
+		} else {
+			self.emit('camera_status', {status: 'online'});
+		}
+		self.status = RECORDING;
+        self.lastChunkTime = Date.now();
         self.addNewVideosToPendingList( files );
     });
+
+	this.isRecordingIntervalId = setInterval( function() {
+		
+		var dt = Date.now() - self.lastChunkTime;
+
+		if ( (dt > 20*1000 && self.status === RECORDING) 
+			|| (dt > 20*1000 && self.status === ERROR) ) 
+		{	
+			if ( self.status !== ERROR ) {
+				self.emit('camera_status', { status: 'disconnected' });
+				self.status = ERROR;
+			} else {
+				self.emit('camera_status', { status: 'offline' });
+			}
+			self.lastChunkTime = Date.now();
+			//self.stopRecording();
+			//setTimeout( function() {
+			//	self.startRecording();
+			//}, 1000);	
+		}
+	}, 5000);
     
     this.recordContinuously();
 };
@@ -187,12 +217,14 @@ RecordModel.prototype.checkForConnectionErrors = function() {
 	if (this.status === STOPPING) {
 		console.log("STOPPING");
 		this.status = STOPPED;
-		return;
-	} else if ( Date.now() - this.lastErrorTime > 10000 ) {
-		console.log("ERROR");
-		this.lastErrorTime = Date.now();
-		self.emit('camera_disconnected');
-		this.status = ERROR;
+	} else if ( Date.now() - this.lastErrorTime > 20000 ) {
+	//	self.lastErrorTime = Date.now();
+	//	if (self.status === ERROR) {
+//			self.emit('camera_status', {status: 'offline'});
+	//	} else if (self.status === RECORDING) {
+//			self.emit('camera_status', {status: 'disconnected'});
+	//	}
+	//	this.status = ERROR;
 	}	
 
 };

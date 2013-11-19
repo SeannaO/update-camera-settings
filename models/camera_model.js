@@ -25,7 +25,12 @@ function Camera( cam, videosFolder ) {
     this.status = this.NEW;
 	this.lastChunkTime = Date.now();
 
+	if ( !fs.existsSync( this.videosFolder) ){
+		fs.mkdirSync( this.videosFolder );
+	}
+
     this.db = new Dblite( this.videosFolder + "/db.sqlite" );
+	this.recordModel = new RecordModel( this.db, this );
 
     if (cam.id) {
         this.id = cam.id;
@@ -33,7 +38,6 @@ function Camera( cam, videosFolder ) {
         this.id = cam._id;
     }
     
-    this.recordModel = new RecordModel( this.db, this );
 	
 	this.setupEvents();
 
@@ -57,16 +61,9 @@ Camera.prototype.setupEvents = function( cb ) {
         self.emit( 'new_chunk', data);
     });
 
-    this.recordModel.on('camera_disconnected', function() {
-        self.emit('camera_disconnected', { cam_id: self._id } );
+    this.recordModel.on('camera_status', function(data) {
+        self.emit('camera_status', { cam_id: self._id, status: data.status } );
     });
-	
-	setInterval( function() {
-		if ( Date.now() - self.lastChunkTime >= 30000 && self.status === self.RECORDING ) {
-			self.lastChunkTime = Date.now();
-			//self.emit('camera_disconnected', {cam_id: self._id});
-		}
-	}, 1000);
 };
 
 
