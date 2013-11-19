@@ -1,7 +1,2 @@
-{"name":"camera1","rtsp":"123","_id":"nRhgOadyqWMA556K","id":"3ea2ea9a-c87c-41ab-85e5-e7ca8513ba8f"}
-{"$$deleted":true,"_id":"nRhgOadyqWMA556K"}
-{"name":"camera1","rtsp":"123","_id":"x4ChoiSCtNbcr04R"}
-{"name":"camera1","rtsp":"123","_id":"x4ChoiSCtNbcr04R","id":"a108b853-3fea-48a4-a866-eeecc3c2c324"}
-{"$$deleted":true,"_id":"x4ChoiSCtNbcr04R"}
-{"name":"camera1","rtsp":"123","_id":"VNndAgOdDoD3iyws"}
+{"name":"march","ip":"","rtsp":"rtsp://admin:admin@192.168.215.83/video1enc1","_id":"OxU3L5xLzbuBoQvr","status":0}
 {"name":"camera1","rtsp":"123","_id":"VNndAgOdDoD3iyws","id":"fa6f4451-e604-4e3c-b720-57e8297f98e0"}

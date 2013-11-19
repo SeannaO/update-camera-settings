@@ -153,10 +153,11 @@ RecordModel.prototype.startRecording = function() {
 				self.emit('camera_status', { status: 'offline' });
 			}
 			self.lastChunkTime = Date.now();
-			//self.stopRecording();
-			//setTimeout( function() {
-			//	self.startRecording();
-			//}, 1000);	
+			self.stopRecording();
+			setTimeout( function() {
+				self.startRecording();
+				self.status = ERROR;
+			}, 1000);	
 		}
 	}, 5000);
     
