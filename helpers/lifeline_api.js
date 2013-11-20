@@ -158,7 +158,7 @@ function setup( app, camerasController, mp4Handler, hlsHandler ) {
             if (err) {
                 res.json( { error: err } );
             } else {
-                mp4Handler.generateMp4Video( cam, begin, end, function( response ) {
+                mp4Handler.generateMp4Video( cam.db, cam, begin, end, function( response ) {
                     if(response.success) {
                         mp4Handler.sendMp4Video( response.file, req, res );
                     } else {
@@ -184,7 +184,7 @@ function setup( app, camerasController, mp4Handler, hlsHandler ) {
             if (err) {
                 res.json( { error: err } );
             } else {
-                mp4Handler.generateMp4Video( cam, begin, end, function( response ) {
+                mp4Handler.generateMp4Video( cam.db, cam, begin, end, function( response ) {
                     if(response.success) {
                         mp4Handler.sendMp4VideoForDownload( response.file, req, res );
                     } else {
@@ -210,7 +210,7 @@ function setup( app, camerasController, mp4Handler, hlsHandler ) {
             if (err) {
                 res.json( { error: err } );
             } else {
-                mp4Handler.generateMp4Video( cam, begin, end, function( response ) {
+                mp4Handler.generateMp4Video( cam.db, cam, begin, end, function( response ) {
                     res.json( response );
                 });
             }
@@ -231,7 +231,7 @@ function setup( app, camerasController, mp4Handler, hlsHandler ) {
             if (err) {
                 res.json( { error: err } );
             } else {
-                mp4Handler.takeSnapshot( cam, req, res );
+                mp4Handler.takeSnapshot( cam.db, cam, req, res );
             }
         });
     });

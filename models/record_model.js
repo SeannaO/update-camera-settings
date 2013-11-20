@@ -144,7 +144,7 @@ RecordModel.prototype.startRecording = function() {
 		var dt = Date.now() - self.lastChunkTime;
 
 		if ( (dt > 20*1000 && self.status === RECORDING) 
-			|| (dt > 20*1000 && self.status === ERROR) ) 
+			|| (dt > 10*1000 && self.status === ERROR) ) 
 		{	
 			if ( self.status !== ERROR ) {
 				self.emit('camera_status', { status: 'disconnected' });
