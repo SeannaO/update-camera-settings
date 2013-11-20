@@ -149,9 +149,10 @@ app.get('/cameras/:id/thumb/:thumb', function(req, res) {
         } else {
 
             var file = cam.videosFolder + "/thumbs/"+thumb+".jpg";
-
+			
             fs.exists( file, function(exists) {
                 if (exists) { 
+					res.setHeader("Content-Type", "image/jpeg"); 
                     res.sendfile(file);
                 } else {
                     res.end("no thumb " + thumb);

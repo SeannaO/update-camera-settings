@@ -5,6 +5,19 @@ $(document).ready(function(){
   $(document).mousemove(function(e){
            mouseX = e.pageX;
       mouseY = e.pageY;
+
+  
+	  if (mouseX < $(window).width()/2) { 
+		  $("#thumb").css('left', mouseX+'px');
+	  } else {
+		  $("#thumb").css('left', (mouseX-300)+'px');
+	  }
+	  if (mouseY < $(window).height()/2) {
+		  $("#thumb").css('top', (mouseY+15)+'px');
+	  } else {
+		  $("#thumb").css('top', (mouseY-250)+'px');
+	  }
+	  
   });
 
   $("#timelines").mouseleave( function() {
@@ -38,6 +51,21 @@ var timelineSetup = function( id, name ) {
 
 	var count = 0;
 
+	if (id) {
+		$("<div>", {
+			id: "timeline-"+id,
+			class: "timeline-container"
+		}).appendTo("#timelines").mouseleave( function() {
+			$("#thumb").fadeOut();
+		});
+		$("<div>", {
+			id: "thumb-" + id,
+			class: "thumb-container"
+		}).appendTo("#timeline-"+id);
+	}
+	
+	timelines[id] = new Timeline("#timeline-"+id);
+
     $.getJSON( "/cameras/" + id + "/list_videos?start="+startTime+"&end="+Date.now(), function( data ) {
 
         var videos = data.videos;
@@ -45,9 +73,26 @@ var timelineSetup = function( id, name ) {
 		for (var i = 0; i < videos.length; i++) {
 			if ( videos[i].file && videos[i].start && videos[i].end) {
 				timelineData[0].times.push({ thumb: "/cameras/" + id + "/thumb/" + removeTsExt(videos[i].file), starting_time: (parseInt(videos[i].start)-1000), ending_time: (parseInt(videos[i].end) + 1000)}); 
+				var start = videos[i].start;
+				/*
+				timeline.append({
+					start:	videos[i].start,
+					w: videos[i].end - videos[i].start,
+					thumb: "/cameras/"+id+"/thumb/"+videos[i].start,
+					mouseover: function(d) {
+						showThumb( d.attr("data-thumb") );
+						console.log(Date.now());					
+					}
+				});
+				*/
+				updateTimelines({
+					cam: id,
+					start: videos[i].start,
+					end: videos[i].end
+				});
 			} 
 		}
-
+		
         charts[count] = d3.timeline().width(800).rotateTicks(90).showToday().stack(true).tickFormat({
             format: d3.time.format("%H:%M"), 
             tickTime: d3.time.minute, 
@@ -56,26 +101,14 @@ var timelineSetup = function( id, name ) {
         }).hover(function (d, i, datum) { 
             showThumb(d.thumb);
         });
-
-        if (id) {
-            $("<div>", {
-                id: "timeline-"+id
-            }).appendTo("#timelines").mouseleave( function() {
-                $("#thumb").fadeOut();
-            });
-        }
-
-        var svg = d3.select("#timeline-"+id).append("svg").attr("width", 800).datum(timelineData).call(charts[count]);         
+		
+        //var svg = d3.select("#timeline-"+id).append("svg").attr("width", 800).datum(timelineData).call(charts[count]);         
 		console.log("#timeline-"+id);
 		count++;
 	});
                
 };
 
-
-var addChunkToTimeline = function( data ) {
-	
-};
 
 var showThumb = function( thumb ) {
     
@@ -84,26 +117,18 @@ var showThumb = function( thumb ) {
    if (mouseX < $(window).width()/2) { 
     	$("#thumb").css('left', mouseX+'px');
    } else {
-	$("#thumb").css('left', (mouseX-300)+'px');
+		$("#thumb").css('left', (mouseX-300)+'px');
    }
    if (mouseY < $(window).height()/2) {
-   	$("#thumb").css('top', (mouseY+15)+'px');
+   		$("#thumb").css('top', (mouseY+15)+'px');
    } else {
-	$("#thumb").css('top', (mouseY-250)+'px');
+		$("#thumb").css('top', (mouseY-250)+'px');
   }
     $("#thumb").fadeIn();
      if (currentThumb !== thumb) {
-       //var img = $("<img>");
-       //img.attr('src', thumb);
-       //img.ready(function() {
-       //    console.log("ready");
-           //$("#thumb").empty();
            $("#thumb img").attr('src', thumb);
-       //});
-       //$("#thumb").html("<img src='" + thumb + "'/>");
      } else {
      }
-
 };
 
 var list = function() {
@@ -127,8 +152,6 @@ var list = function() {
         else {
             $("#camera-list").html("no cameras have been added<br>");
         }
-
-       // console.log(data);
 
         for (var i = 0; i < data.length; i++) {
             if (data[i]) {

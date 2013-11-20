@@ -1,3 +1,18 @@
+.timeline-container {
+	padding-left: 200px;
+	margin-bottom: 50px;
+	position: relative;
+}
+
+.thumb-container {
+	width: 150px;
+	height: 110px;
+	position: absolute;
+	left: 10px;
+	background: yellow;
+}
+
+
 input.switch {
     display: none;
 }

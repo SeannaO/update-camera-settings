@@ -106,48 +106,48 @@
 			var timelines = [];
 
 			var updateTimelines = function( data, options ) {
-				//console.log("update timelines");
+				console.log("update timelines");
 				var timeline = timelines[data.cam];
 
 				if (!timeline) return;
 				
 				var thumb = "/cameras/"+data.cam+"/thumb/"+data.start;
 
-//				$("#thumb-"+data.cam).html('<img src="'+thumb+'" width="100%" height="100%"/>');
 				var img = new Image();
-			        // console.log(options);	
+
 				if (options && options.updateThumb) {
-				  //console.log("update thumb " + thumb + " " + data.cam);
-				  setTimeout( function() {
-				  	$(img).load(function(){
-						$("#thumb-"+data.cam).html( $(this) );
-				  	}).attr({
-						src: thumb,
-				  		width: "100%",
-				  		height: "100%"
-				  	}).error(function(){
-				  	});
-				   }, 1000);	
-				  			
-				}
 
-				timeline.append({
-					start:	data.start,
-					w: data.end - data.start,
-					thumb: thumb,
-					mouseover: function(d) {
+					  setTimeout( function() {
+							$(img).load(function(){
+								$("#thumb-"+data.cam).html( $(this) );
+							}).attr({
+								src: thumb,
+								width: "100%",
+								height: "100%"
+							}).error(function(){
+								//
+							});
+					   }, 1000);
 
-						showThumb(d.attr("data-thumb"));
 					}
-				});
-			}
+
+					timeline.append({
+						start:	data.start,
+						w: data.end - data.start,
+						thumb: thumb,
+						mouseover: function(d) {
+
+							showThumb(d.attr("data-thumb"));
+						}
+					});
+				}
 
             socket.on('newChunk', function (data) {
 				
                 $("#timeline-"+data.cam).animate({
 					backgroundColor: "none"
 				}, 1000);
-				updateTimelines(data, {updateThumb: true});
+				updateTimelines(data);
 			});
 
 			list();
