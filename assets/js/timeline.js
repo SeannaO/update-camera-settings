@@ -3,19 +3,20 @@ var Timeline = function( el ) {
 	var self = this;
 
 	this.width = 600;
-	this.totalTime = 5*60*1000;
+	this.totalTime = 30*60*1000;
 	this.dx = this.width / this.totalTime;
 
 	var chart = d3.select(el)
 		.append("svg")
 		.attr("width", self.width)
 		.attr("height", 80)
-		.attr("class", "chart");
+		.attr("class", "chart")
+		.style("background", "none");
 
 	this.timeline = chart.append("g")
 		.attr("width", self.width)
 		.attr("height", 80)
-		.attr("class", "mini");
+		.attr("class", "boxes");
 
 	this.timeline.append("g")
 		.append("line")
@@ -24,6 +25,17 @@ var Timeline = function( el ) {
 		.attr("x2", self.width)
 		.attr("y2", 10)
 		.attr("stroke", "lightgray");
+
+	
+	this.startTime = $("<div>", {
+		html: '',
+		class: 'timeline-start-time'
+	}).appendTo(el);
+
+	this.endTime = $("<div>", {
+		html: '',
+		class: 'timeline-end-time'
+	}).appendTo(el);
 
 	this.boxes = this.timeline.append("g");	
 
@@ -49,6 +61,13 @@ Timeline.prototype.refresh = function() {
 			r.attr("x", self.scaleX( d ));
 		}
 	}
+
+	var start = formattedTimeFromTimestamp( Date.now() - this.totalTime );
+	var end =  formattedTimeFromTimestamp( Date.now() -15000 );
+
+
+	$(this.startTime).html( start );
+	$(this.endTime).html( end );
 };
 
 
@@ -86,3 +105,15 @@ Timeline.prototype.append = function( data ) {
 		});
 };
 
+
+function formattedTimeFromTimestamp(timestamp)
+{
+    var
+        date = new Date(timestamp),
+        hours = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()),
+        minutes = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()),
+        seconds = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds()),
+        formattedTime = hours + ':' + minutes + ':' + seconds;
+
+    return formattedTime;
+}

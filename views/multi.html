@@ -23,41 +23,22 @@
   			var rtsp3 = "rtsp://192.168.215.66/axis-media/media.amp";
    			var rtsp4 = "rtsp://192.168.215.66/axis-media/media.amp";
         </script>
-
-        <style>
-            .shadow {
-                -moz-box-shadow:    inset 0 0 10px rgba(0,0,0,0.5);
-                -webkit-box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-                box-shadow:         inset 0 0 10px rgba(0,0,0,0.5);
-            }
-
-            .video-box {
-
-            }
-
-            .video-box-message {
-                position: relative;
-                top: 40%;
-                margin: 10px;
-            }
-            
-        </style>
     </head>
 
 
     <body style = "margin: 10px">
-        <h2 class = 'text-muted'> <a href ="/cameras">multiview</a> | <%= name %> </h2> 
+        <h2 class = 'text-muted'> <a href ="/cameras">cameras</a> | multiview </h2> 
         <hr>
 
-        <div id = "video1" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px" class = "shadow">
+        <div id = "video1" class = "video-box">
         </div>
-        <div id = "video2" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px" class = "shadow">
+ 		<div id = "video2" class = "video-box">
         </div>
-        <div id = "video3" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px" class = "shadow">
+		<div id = "video3" class = "video-box">
         </div>
-        <div id = "video4" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px" class = "shadow">
+ 		<div id = "video4" class = "video-box">
         </div>
-
+       
 
         <script>
             $(function() {

@@ -2,27 +2,28 @@ var mouseX = 0;
 var mouseY = 0;
 
 $(document).ready(function(){
-  $(document).mousemove(function(e){
-           mouseX = e.pageX;
-      mouseY = e.pageY;
 
-  
-	  if (mouseX < $(window).width()/2) { 
-		  $("#thumb").css('left', mouseX+'px');
-	  } else {
-		  $("#thumb").css('left', (mouseX-300)+'px');
-	  }
-	  if (mouseY < $(window).height()/2) {
-		  $("#thumb").css('top', (mouseY+15)+'px');
-	  } else {
-		  $("#thumb").css('top', (mouseY-250)+'px');
-	  }
-	  
-  });
+	$(document).mousemove(function(e){
 
-  $("#timelines").mouseleave( function() {
-        });
+		mouseX = e.pageX;
+		mouseY = e.pageY;
+
+		if (mouseX < $(window).width()/2) { 
+			$("#thumb").css('left', mouseX+'px');
+		} else {
+			$("#thumb").css('left', (mouseX-300)+'px');
+		}
+		if (mouseY < $(window).height()/2) {
+			$("#thumb").css('top', (mouseY+15)+'px');
+		} else {
+			$("#thumb").css('top', (mouseY-250)+'px');
+		}
+	});
+
+	$("#timelines").mouseleave( function() {
+	});
 });
+
 
 var cameras = [];
 var charts = [];
@@ -55,13 +56,13 @@ var timelineSetup = function( id, name ) {
 		$("<div>", {
 			id: "timeline-"+id,
 			class: "timeline-container"
-		}).appendTo("#timelines").mouseleave( function() {
+		}).appendTo("#camera-item-"+id).mouseleave( function() {
 			$("#thumb").fadeOut();
 		});
 		$("<div>", {
 			id: "thumb-" + id,
 			class: "thumb-container"
-		}).appendTo("#timeline-"+id);
+		}).appendTo("#camera-item-"+id);
 	}
 	
 	timelines[id] = new Timeline("#timeline-"+id);
@@ -74,17 +75,7 @@ var timelineSetup = function( id, name ) {
 			if ( videos[i].file && videos[i].start && videos[i].end) {
 				timelineData[0].times.push({ thumb: "/cameras/" + id + "/thumb/" + removeTsExt(videos[i].file), starting_time: (parseInt(videos[i].start)-1000), ending_time: (parseInt(videos[i].end) + 1000)}); 
 				var start = videos[i].start;
-				/*
-				timeline.append({
-					start:	videos[i].start,
-					w: videos[i].end - videos[i].start,
-					thumb: "/cameras/"+id+"/thumb/"+videos[i].start,
-					mouseover: function(d) {
-						showThumb( d.attr("data-thumb") );
-						console.log(Date.now());					
-					}
-				});
-				*/
+
 				updateTimelines({
 					cam: id,
 					start: videos[i].start,
@@ -93,17 +84,6 @@ var timelineSetup = function( id, name ) {
 			} 
 		}
 		
-        charts[count] = d3.timeline().width(800).rotateTicks(90).showToday().stack(true).tickFormat({
-            format: d3.time.format("%H:%M"), 
-            tickTime: d3.time.minute, 
-            tickNumber: 1, 
-            tickSize: 5 
-        }).hover(function (d, i, datum) { 
-            showThumb(d.thumb);
-        });
-		
-        //var svg = d3.select("#timeline-"+id).append("svg").attr("width", 800).datum(timelineData).call(charts[count]);         
-		console.log("#timeline-"+id);
 		count++;
 	});
                
@@ -112,24 +92,25 @@ var timelineSetup = function( id, name ) {
 
 var showThumb = function( thumb ) {
     
-    var currentThumb = $("#thumb img").attr('src');
-    
-   if (mouseX < $(window).width()/2) { 
-    	$("#thumb").css('left', mouseX+'px');
-   } else {
+	var currentThumb = $("#thumb img").attr('src');
+
+	if (mouseX < $(window).width()/2) { 
+		$("#thumb").css('left', mouseX+'px');
+	} else {
 		$("#thumb").css('left', (mouseX-300)+'px');
-   }
-   if (mouseY < $(window).height()/2) {
-   		$("#thumb").css('top', (mouseY+15)+'px');
-   } else {
+	}
+	if (mouseY < $(window).height()/2) {
+		$("#thumb").css('top', (mouseY+15)+'px');
+	} else {
 		$("#thumb").css('top', (mouseY-250)+'px');
-  }
-    $("#thumb").fadeIn();
-     if (currentThumb !== thumb) {
-           $("#thumb img").attr('src', thumb);
-     } else {
-     }
+	}
+	$("#thumb").fadeIn();
+	if (currentThumb !== thumb) {
+		$("#thumb img").attr('src', thumb);
+	} else {
+	}
 };
+
 
 var list = function() {
             
@@ -138,16 +119,7 @@ var list = function() {
         $("#camera-list").html("listing cameras...");
 
         if (data.length > 0) {
-            $("#camera-list").html("<table class='table table-hover'>");
-
-            $("#camera-list table").append("<thead>");
-            $("#camera-list table thead").append("<th></th>");
-            $("#camera-list table thead").append("<th> name </th>");
-            $("#camera-list table thead").append("<th> ip </th>");
-            $("#camera-list table thead").append("<th> rtsp url </th>");
-            $("#camera-list table thead").append("<th> status </th>");
-
-            $("#camera-list table").append("<tbody>");
+            $("#camera-list").html("");
         }
         else {
             $("#camera-list").html("no cameras have been added<br>");
@@ -160,74 +132,66 @@ var list = function() {
                 timelineSetup(data[i]._id, data[i].name);
             }
         }
-        
-        $("#camera-list table").append("</tbody></table>");
     });
     
-};
-
-
-var scan = function() {
-    
-    $.getJSON( "/scan", function( data ) {
-
-        $("#list").html("");
-
-        if (data.length > 0) {
-            $("#list").append("<b> found ONVIF cameras on the following ips: </b><br><br>");
-        }
-        else {
-            $("#list").html("<b>no ONVIF cameras found</b><br>");
-        }
-
-        for (var i = 0; i < data.length; i++) {
-            console.log("item");
-            $("#list").append("<span class = 'item'>"+data[i].ip+"</span>");
-            console.log(data[i]);
-        }
-    });
 };
 
 
 var addCameraItem = function( camera ) {
-    console.log(camera);
-    console.log(camera.name);
 
-    var row = "<tr id = '" + camera._id + "'>";
-        row += "<td>";
-        row += "<a href = \"javascript:deleteCamera('" + camera._id + "')\">[ - ]</a>";
-        row += " || <a href = \"javascript:editCamera('" + camera._id + "')\">[ edit ]</a>";
-        row += "</td>";
-        row += "<td><a href='/cameras/" + camera._id + "'>"+ camera.name+"</a></td>";
-        row += "<td>"+camera.ip+"</td>";
-        row += "<td>"+camera.rtsp+"</td>";
-        row += "<td>";
-        row += "<div>";
-        row += '<input type="checkbox" id="switch-'+camera._id+'" name="switch-'+camera._id+'" class="switch" />';
-        row += '<label for="switch-'+camera._id+'">on/off</label>';
-        row += '</div>';        
-        row += "</td>";
-        row += "</tr>";
-        $("#camera-list table tbody").append(row);
-            
+	var cameraItem = $("<div>", {
+		id: "camera-item-" + camera._id,
+		class: "camera-item"
+	}).prependTo("#camera-list");
 
-        if (camera.status === 0) {
-             $("#switch-"+camera._id).attr('checked', true);
-        } else {
-             $("#switch-"+camera._id).attr('checked', false);
-        }
+	var menuHtml = "" +
+				"<a href = \"javascript:editCamera('" + camera._id + "')\">[ edit ]</a> | " +
+				"<a href = \"javascript:deleteCamera('" + camera._id + "')\">[ remove ]</a>";
+   
+	$("<div>", {
+		class: "camera-item-menu",
+		html: menuHtml
+	}).appendTo(cameraItem);
 
-        $("#switch-"+camera._id).change( function() {
-            
-            if ( $("#switch-"+camera._id).is(':checked') ) {
-                startRecording(camera._id);
-            } else {
-                stopRecording(camera._id);
-            }
-        });
+	$("<div>", {
+		class: "camera-item-name",
+		html: '<a href = "/cameras/'+camera._id+'/">' + camera.name + '</a>'
+	}).appendTo("#camera-item-"+camera._id);
+
+	$("<div>", {
+		class: "camera-item-rtsp",
+		html: camera.rtsp
+	}).appendTo("#camera-item-"+camera._id);
+
+	switchHtml = '' +
+		'<input type="checkbox" id="switch-'+camera._id+'" name="switch-'+camera._id+'" class="switch" />' +
+		'<label for="switch-'+camera._id+'">on/off</label>';
+
+	$("<div>", {
+		class: "camera-item-switch",
+		html: switchHtml
+	}).appendTo("#camera-item-"+camera._id);
+
+           
+	if (camera.status === 0) {
+		$("#switch-"+camera._id).attr('checked', true);
+	} else {
+		$("#switch-"+camera._id).attr('checked', false);
+	}
+
+	$("#switch-"+camera._id).change( function() {
+
+		if ( $("#switch-"+camera._id).is(':checked') ) {
+			startRecording(camera._id);
+		} else {
+			stopRecording(camera._id);
+		}
+	});
 };
 
+
 var startRecording = function(camId) {
+
     $.ajax({
         url: "/cameras/"+camId+"/start_recording",
         success: function(data) {
@@ -240,7 +204,8 @@ var startRecording = function(camId) {
         error: function() {
             $("#switch-"+camId).attr('checked', false);
         }
-    });
+    
+	});
 };
 
 
@@ -288,7 +253,7 @@ var deleteCamera = function(id) {
         contentType: 'application/json',
         success: function(data) {
             if (data.success) {
-                $("#"+data._id).fadeOut();
+                $("#camera-item-"+data._id).fadeOut();
             } else {
                 alert("error: " + data.error);
             }

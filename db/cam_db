@@ -1,21 +1,39 @@
 {"name":"march ","ip":"","rtsp":"rtsp://admin:admin@192.168.215.83/video1enc1","_id":"RpespsvOPCDEHcgi","status":0}
 {"name":"Bosch","ip":"","rtsp":"rtsp://192.168.215.102/video.h264","_id":"cQCpJUnVfXps71rJ","status":0}
 {"name":"axis","ip":"","rtsp":"rtsp://192.168.215.66/axis-media/media.amp","id":"id_0.1255162979941815","_id":"tbk6aKWnScLgRrs1","status":0}
-{"name":"axis","ip":"","rtsp":"rtsp://192.168.215.66/axis-media/media.amp","id":"id_0.1255162979941815","_id":"tbk6aKWnScLgRrs1","status":1}
-{"name":"Bosch","ip":"","rtsp":"rtsp://192.168.215.102/video.h264","_id":"cQCpJUnVfXps71rJ","status":1}
 {"name":"march ","ip":"","rtsp":"rtsp://admin:admin@192.168.215.83/video1enc1","_id":"RpespsvOPCDEHcgi","status":1}
-{"name":"march ","ip":"","rtsp":"rtsp://admin:admin@192.168.215.83/video1enc1","_id":"RpespsvOPCDEHcgi","status":0}
-{"name":"Bosch","ip":"","rtsp":"rtsp://192.168.215.102/video.h264","_id":"cQCpJUnVfXps71rJ","status":0}
-{"name":"axis","ip":"","rtsp":"rtsp://192.168.215.66/axis-media/media.amp","id":"id_0.1255162979941815","_id":"tbk6aKWnScLgRrs1","status":0}
-{"name":"axis","ip":"","rtsp":"rtsp://192.168.215.66/axis-media/media.amp","id":"id_0.1255162979941815","_id":"tbk6aKWnScLgRrs1","status":1}
-{"name":"Bosch","ip":"","rtsp":"rtsp://192.168.215.102/video.h264","_id":"cQCpJUnVfXps71rJ","status":1}
-{"name":"march ","ip":"","rtsp":"rtsp://admin:admin@192.168.215.83/video1enc1","_id":"RpespsvOPCDEHcgi","status":1}
-{"name":"march ","ip":"","rtsp":"rtsp://admin:admin@192.168.215.83/video1enc1","_id":"RpespsvOPCDEHcgi","status":0}
-{"name":"Bosch","ip":"","rtsp":"rtsp://192.168.215.102/video.h264","_id":"cQCpJUnVfXps71rJ","status":0}
-{"name":"axis","ip":"","rtsp":"rtsp://192.168.215.66/axis-media/media.amp","id":"id_0.1255162979941815","_id":"tbk6aKWnScLgRrs1","status":0}
 {"name":"Bosch","ip":"","rtsp":"rtsp://192.168.215.102/video.h264","_id":"cQCpJUnVfXps71rJ","status":1}
 {"name":"axis","ip":"","rtsp":"rtsp://192.168.215.66/axis-media/media.amp","id":"id_0.1255162979941815","_id":"tbk6aKWnScLgRrs1","status":1}
-{"name":"march ","ip":"","rtsp":"rtsp://admin:admin@192.168.215.83/video1enc1","_id":"RpespsvOPCDEHcgi","status":1}
-{"name":"march ","ip":"","rtsp":"rtsp://admin:admin@192.168.215.83/video1enc1","_id":"RpespsvOPCDEHcgi","status":0}
+{"name":"vlc","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.3299696969334036","_id":"XADZi0wtNSTQGA43"}
+{"name":"vlc","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.3299696969334036","_id":"XADZi0wtNSTQGA43","status":0}
+{"name":"test","ip":"","rtsp":"","id":"id_0.045749306911602616","_id":"cKM1j0xsaf9cZuLD"}
+{"name":"testing","ip":"","rtsp":"","id":"id_0.019027394941076636","_id":"9DXrFdoFiMEh0W8B"}
+{"name":"ok","ip":"","rtsp":"asda","id":"id_0.035225099651142955","_id":"y4D2spUzweaM18Zm"}
+{"name":"vlc 2","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.5070514511317015","_id":"WDe4DAqLGCcGaQKI"}
+{"name":"vlc 2","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.5070514511317015","_id":"WDe4DAqLGCcGaQKI","status":0}
+{"$$deleted":true,"_id":"WDe4DAqLGCcGaQKI"}
+{"$$deleted":true,"_id":"y4D2spUzweaM18Zm"}
+{"$$deleted":true,"_id":"9DXrFdoFiMEh0W8B"}
+{"$$deleted":true,"_id":"cKM1j0xsaf9cZuLD"}
+{"$$deleted":true,"_id":"tbk6aKWnScLgRrs1"}
+{"name":"vlc 2","ip":"","rtsp":"http://192.168.1.134:125","id":"id_0.809155831579119","_id":"QslKOz81KTD74wKV"}
+{"name":"vlc 2","ip":"","rtsp":"http://192.168.1.134:125","id":"id_0.809155831579119","_id":"QslKOz81KTD74wKV","status":0}
 {"name":"Bosch","ip":"","rtsp":"rtsp://192.168.215.102/video.h264","_id":"cQCpJUnVfXps71rJ","status":0}
-{"name":"axis","ip":"","rtsp":"rtsp://192.168.215.66/axis-media/media.amp","id":"id_0.1255162979941815","_id":"tbk6aKWnScLgRrs1","status":0}
+{"name":"vlc 2","ip":"","rtsp":"http://192.168.1.134:1235","_id":"QslKOz81KTD74wKV","status":0}
+{"name":"Bosch","ip":"","rtsp":"rtsp://192.168.215.102/video.h264","_id":"cQCpJUnVfXps71rJ","status":1}
+{"name":"Bosch","ip":"","rtsp":"rtsp://192.168.215.102/video.h264","_id":"cQCpJUnVfXps71rJ","status":0}
+{"name":"Bosch","ip":"","rtsp":"rtsp://192.168.215.102/video.h264","_id":"cQCpJUnVfXps71rJ","status":1}
+{"name":"vlc 2","ip":"","rtsp":"http://192.168.1.134:1235","_id":"QslKOz81KTD74wKV","status":1}
+{"name":"vlc","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.3299696969334036","_id":"XADZi0wtNSTQGA43","status":1}
+{"name":"vlc 2","ip":"","rtsp":"http://192.168.1.134:1235","_id":"QslKOz81KTD74wKV","status":0}
+{"name":"vlc","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.3299696969334036","_id":"XADZi0wtNSTQGA43","status":0}
+{"name":"vlc 2","ip":"","rtsp":"http://192.168.1.134:1235","_id":"QslKOz81KTD74wKV","status":1}
+{"name":"vlc","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.3299696969334036","_id":"XADZi0wtNSTQGA43","status":1}
+{"name":"vlc","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.3299696969334036","_id":"XADZi0wtNSTQGA43","status":0}
+{"name":"Bosch","ip":"","rtsp":"rtsp://192.168.215.102/video.h264","_id":"cQCpJUnVfXps71rJ","status":0}
+{"name":"Bosch","ip":"","rtsp":"rtsp://192.168.215.102/video.h264","_id":"cQCpJUnVfXps71rJ","status":1}
+{"name":"vlc","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.3299696969334036","_id":"XADZi0wtNSTQGA43","status":1}
+{"name":"vlc","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.3299696969334036","_id":"XADZi0wtNSTQGA43","status":0}
+{"name":"vlc","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.3299696969334036","_id":"XADZi0wtNSTQGA43","status":1}
+{"name":"vlc","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.3299696969334036","_id":"XADZi0wtNSTQGA43","status":0}
+{"name":"vlc","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.3299696969334036","_id":"XADZi0wtNSTQGA43","status":1}
