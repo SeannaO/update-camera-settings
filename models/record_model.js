@@ -143,8 +143,7 @@ RecordModel.prototype.startRecording = function() {
 		
 		var dt = Date.now() - self.lastChunkTime;
 
-		if ( (dt > 20*1000 && self.status === RECORDING) 
-			|| (dt > 10*1000 && self.status === ERROR) ) 
+		if ( (dt > 20*1000 && self.status === RECORDING) || (dt > 10*1000 && self.status === ERROR) ) 
 		{	
 			if ( self.status !== ERROR ) {
 				self.emit('camera_status', { status: 'disconnected' });
@@ -154,14 +153,15 @@ RecordModel.prototype.startRecording = function() {
 			}
 			self.lastChunkTime = Date.now();
 			self.stopRecording();
+			
 			setTimeout( function() {
 				self.startRecording();
-				self.status = ERROR;
-			}, 1000);	
+			}, 100);
+			
 		}
 	}, 5000);
     
-    this.recordContinuously();
+	this.recordContinuously();
 };
 
 

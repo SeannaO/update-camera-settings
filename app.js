@@ -12,6 +12,14 @@ var path = require('path');
 var lifeline = require('./helpers/lifeline_api.js');
 var request = require('request');
 
+// - - -
+// health check modules
+var Iostat = require('./helpers/iostat.js');
+var iostat = new Iostat();
+iostat.launch();
+// - - -
+
+
 var io = require('socket.io');
 
 var CamHelper = require('./helpers/cameras_helper.js');
@@ -24,16 +32,21 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 
 var app = express();
 
-// for socket.io 
+// - - -
+// socket.io config 
 var server = require('http').createServer(app);
 io = io.listen(server);
-//
+io.set('log level', 1);
+// - - -
+
 server.listen(process.env.PORT || 8080);
 
 var camerasController = new CamerasController( __dirname + '/db/cam_db', '/Users/manuel/solink/nas/cameras');
 app.use(express.bodyParser()); // this must come before app.all 
 
 
+// - - -
+// socket.io broadcasts
 camerasController.on('new_chunk', function( data ) {
    
     io.sockets.emit( 'newChunk', data );
@@ -41,8 +54,16 @@ camerasController.on('new_chunk', function( data ) {
 
 camerasController.on('camera_status', function( data ) {
 
-    io.sockets.emit( 'cameraStatus', data );
+	if (data.status !== 'online') {
+		io.sockets.emit( 'cameraStatus', data );
+	}
 });
+
+iostat.on('cpu_load', function(data) {
+	io.sockets.emit('cpu_load', data);
+});
+// - - -
+
 
 app.all('/*', function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -68,9 +89,9 @@ app.get('/', function (req, res) {
 
 // - -
 //
-app.get('/socket', function(req, res) {
+app.get('/health', function(req, res) {
 
-    res.sendfile(__dirname + '/views/socket.html');
+    res.sendfile(__dirname + '/views/health.html');
 });
 // - - -
 
@@ -116,7 +137,6 @@ app.get('/cameras', function(req, res) {
     res.sendfile(__dirname + '/views/cameras.html');
 });
 // - - -
-
 
 
 // - - 
@@ -304,14 +324,6 @@ var stopRecording = function( req, res ) {
 app.get('/multiview', function(req, res) {
     
 	res.sendfile(__dirname + '/views/multi.html');
-    /*
-        if (err || cam.length === 0) {
-            res.end("couldn't find this camera");
-        } else {
-            res.render('camera', {id: cam._id, rtsp: cam.rtsp, name: cam.name});
-        }
-    });
-	*/
 });
 // - - -
 //
@@ -374,10 +386,7 @@ app.delete('/cameras/:id', function(req, res) {
         } else if (cam) {
 			/*
 			try {
-				console.log("deleting camera: ");
-				console.log( cam.id );
 				var url = "https://admin:admin@192.168.215.153/cp/solink_delete_camera?v=2&id="+encodeURIComponent( cam.id );
-
 				request(url, {
 					strictSSL: false
 				},

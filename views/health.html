@@ -1,0 +1,38 @@
+<html>
+	<head>
+		<script src = "/js/jquery.min.js"></script>        
+		<script src = "/js/jquery-ui.min.js"></script>
+
+		<link rel="stylesheet" href="/css/bootstrap.min.css">
+		<link rel="stylesheet" href="/css/bootstrap-theme.min.css">
+		<link rel="stylesheet" href="/css/camera.css">
+
+		<script src="/js/bootstrap.min.js"></script>
+		<script src="/js/socket.io.js"></script>
+
+		<style>
+			#cpu_bar {
+				position: absolute;
+				width: 1px;
+				height: 30px;
+				background: #afa;
+			}
+		</style>
+
+		<script>
+			var socket = io.connect();
+			socket.on('cpu_load', function(data) {
+				$("#cpu_load").html(data.usage);	
+				$("#cpu_bar").css("width", data.usage*2);
+				var color = 120 - data.usage*1.2
+				$("#cpu_bar").css("background", "hsl("+color+",100%,50%)");
+			});
+		</script>
+	</head>
+
+	<h2 class = "muted">system status</h2>
+
+	cpu load: <span id = "cpu_load"></span>%
+
+	<div id = "cpu_bar"></div>
+</html>
