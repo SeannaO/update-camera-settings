@@ -1,6 +1,5 @@
 //require('look').start();  -- profiler ( NOT for production )
 
-var onvif = require('./helpers/onvif');
 var express = require('express');
 var tsHandler = require('./helpers/ts');
 var hlsHandler = require('./controllers/hls_controller');
@@ -17,6 +16,14 @@ var request = require('request');
 var Iostat = require('./helpers/iostat.js');
 var iostat = new Iostat();
 iostat.launch();
+
+var Smart = require('./helpers/smart.js');
+var smart = new Smart({development: true});
+smart.start();
+
+var Diskstat = require('./helpers/diskstat');
+var diskstat = new Diskstat({development: true});
+diskstat.launch();
 // - - -
 
 
@@ -61,6 +68,14 @@ camerasController.on('camera_status', function( data ) {
 
 iostat.on('cpu_load', function(data) {
 	io.sockets.emit('cpu_load', data);
+});
+
+smart.on('smart', function(data) {
+	io.sockets.emit('smart', data);
+});
+
+diskstat.on('hdd_throughput', function(data) {
+	io.sockets.emit('hdd_throughput', data);
 });
 // - - -
 

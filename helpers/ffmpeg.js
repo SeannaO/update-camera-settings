@@ -122,8 +122,10 @@ var smartSnapshot = function( file, outFolder, offset, cb ) {
     //console.log("== smartSnapshot ==");
     //console.log("input: " + file);
     //console.log("output: " +  out);
-    
-    var child = exec("ffmpeg -y -i " + file + " -vcodec mjpeg -vframes 1 -an -f rawvideo -t 2 -ss " + offset + " -s 640x480 " + out,
+
+	//ffmpeg -i 1384512171420.ts -vframes 1 -ss 1 1.jpg
+	var child = exec("ffmpeg -i " + file + " -vframes 1 -ss " + offset + " " + out, 
+   // var child = exec("ffmpeg -y -i " + file + " -vcodec mjpeg -vframes 1 -an -f rawvideo -t 2 -ss " + offset + " -s 640x480 " + out,
             function( error, stdout, stderr ) {
                 cb( "", true );
                 if (error !== null) {

@@ -6,9 +6,11 @@
 		<link rel="stylesheet" href="/css/bootstrap.min.css">
 		<link rel="stylesheet" href="/css/bootstrap-theme.min.css">
 		<link rel="stylesheet" href="/css/camera.css">
-
+		
 		<script src="/js/bootstrap.min.js"></script>
 		<script src="/js/socket.io.js"></script>
+
+		<script src="/js/health.js"></script>
 
 		<style>
 			#cpu_bar {
@@ -17,17 +19,50 @@
 				height: 30px;
 				background: #afa;
 			}
+
+			.tp-bar-container {
+				position: relative;
+				width: auto;
+				height: auto;
+			}
+
+			.tp-bar-label {
+				position: absolute;
+				left: 5px;
+				color: #555;
+			}
+
+			.tp-bar {
+				left: 0px;
+				height: 20px;
+				width: 1px;
+				margin: 1px;
+			}
+
+			.ws-bar {
+				background: #0ae;
+			}
+
+			.kws-bar {
+				background: #0ae;
+			}
+
+			.rs-bar {
+				background: #aaf;
+			}
+			
+			.krs-bar {
+				background: #aaf;
+			}
+
 		</style>
 
 		<script>
-			var socket = io.connect();
-			socket.on('cpu_load', function(data) {
-				$("#cpu_load").html(data.usage);	
-				$("#cpu_bar").css("width", data.usage*2);
-				var color = 120 - data.usage*1.2
-				$("#cpu_bar").css("background", "hsl("+color+",100%,50%)");
-			});
+
+			setupHealth();
+
 		</script>
+
 	</head>
 
 	<h2 class = "muted">system status</h2>
@@ -35,4 +70,9 @@
 	cpu load: <span id = "cpu_load"></span>%
 
 	<div id = "cpu_bar"></div>
+
+	<br><br><br>
+
+	<div id ="smart-status">
+	</div>
 </html>
