@@ -1,23 +1,20 @@
+// disk throughput attributes
 var tpAttr = [
 	{
 		name: 'reads per second',
 		label: 'r/s',
 		id: 'rs'
 	},
-
-
 	{
 		name: 'kb per second (read)',
 		label: 'kr/s',
 		id: 'krs'
 	},
-	
 	{
 		name: 'writes per second',
 		label: 'w/s',
 		id: 'ws'
 	},
-
 	{
 		name: 'kb per second (write)',
 		label: 'kw/s',
@@ -105,6 +102,7 @@ var setupTpInfo = function( hdd ) {
 		
 };
 
+
 var updateSmartStatus = function( data ) {
 
 	var hdd = data.hdd.replace("/dev/", "");
@@ -132,11 +130,34 @@ var updateSmartStatus = function( data ) {
 	}
 
 	smartinfo.append("<h4>" + hdd + " SMART status</h4>");
+	
+	var smartTable = $("<table>", {
+		id:  hdd + '-smart-table'
+	}).appendTo( smartinfo );
+
+	var headerRow = $("<tr>").appendTo( smartTable );
+	var attrRow = $("<tr>").appendTo( smartTable );
+	
+	var isHeaderPopulated = false;
 
 	for (var attribute in data.status) {
-		smartinfo.append( "<b>" + attribute + "</b>" );
+		attrRow = $("<tr>").appendTo( smartTable );
+		
+		for (var type in data.status[0]) {
+			$("<td>").appendTo( attrRow )
+				.html( type );
+		}
+		
+		$("<td>").appendTo( attrRow ).html(attribute);
+		
 		for (var type in data.status[attribute]) {
-			smartinfo.append(" | " + type + ": " + data.status[attribute][type]);
+
+			if (headerRow.html() === "") {
+				$("<td>").appendTo( headerRow )
+					.html( type );
+			}
+			$("<td>").appendTo( attrRow )
+				.html( data.status[attribute][type] );
 		}
 	}
 };

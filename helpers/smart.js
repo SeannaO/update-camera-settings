@@ -12,6 +12,8 @@ function Smart( options ) {
 	this.hdds_list = [];
 	this.status = {};
 
+	this.lastCheck = Date.now();
+
 	this.scan( function() {
 	});
 }
@@ -64,11 +66,13 @@ Smart.prototype.check = function(hdd, cb) {
 			for (var i in output) {
 
 				var parsedOutput = output[i].split( separator );
+				if (parsedOutput[0] === '') parsedOutput.shift();
 
-				if (parsedOutput.length === 10) {
-
+				if (parsedOutput.length > 1) {
+				
 					var attribute_name = parsedOutput[1];
 					status[attribute_name] = {};
+
 					status[attribute_name].value = parsedOutput[3];
 					status[attribute_name].worst = parsedOutput[4];
 					status[attribute_name].thresh = parsedOutput[5];
