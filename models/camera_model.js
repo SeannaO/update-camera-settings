@@ -1,4 +1,5 @@
 var fs = require('fs');
+var WeeklySchedule = require('weekly-schedule');
 var RecordModel = require('./record_model');
 var Dblite = require('../db_layers/dblite.js');
 var util = require('util');
@@ -12,20 +13,19 @@ function Camera( cam, videosFolder ) {
 
     var self = this;
 
-	this.RECORDING = 0;
-	this.NOT_RECORDING = 1;
-	this.NEW = 2;
-
     this._id = cam._id;
     this.name = cam.name;
     this.ip = cam.ip;
     this.rtsp = cam.rtsp;
     this.videosFolder = videosFolder + "/" + this._id;
-    
-    this.status = this.NEW;
+    this.schedule = new WeeklySchedule(cam.schedule);
+
+    this.enabled = !cam.enabled;
+    this.scheduleEnabled = cam.scheduleEnabled;
 	this.lastChunkTime = Date.now();
 
 	if ( !fs.existsSync( this.videosFolder) ){
+        console.log(this.videosFolder);
 		fs.mkdirSync( this.videosFolder );
 	}
 
@@ -41,7 +41,7 @@ function Camera( cam, videosFolder ) {
 	
 	this.setupEvents();
 
-    if (cam.status === this.RECORDING) {
+    if (cam.enabled) {
 		console.log("starting camera " + this.name);
         this.startRecording();
     } else {
@@ -62,10 +62,13 @@ Camera.prototype.setupEvents = function( cb ) {
     });
 
     this.recordModel.on('camera_status', function(data) {
-        self.emit('camera_status', { cam_id: self._id, status: data.status } );
+        self.emit('camera_status', { cam_id: self._id, status: data.enabled } );
     });
 };
 
+Camera.prototype.isRecording = function() {
+    return this.enabled;
+}
 
 Camera.prototype.startRecording = function() {
     
@@ -73,28 +76,33 @@ Camera.prototype.startRecording = function() {
     
 	this.lastChunkTime = Date.now();
 
-    if (this.status === this.RECORDING) {
-
+    if (this.enabled) {
         console.log(this.name + " is already recording.");
     } else {
         console.log("* * * " + this.name + " will start recording...");
         this.recordModel.startRecording();
-        this.status = this.RECORDING;
+        this.enabled = true;
     }
 };
 
 
 Camera.prototype.stopRecording = function() {
 
-    if (this.status !== this.NOT_RECORDING) {
+    if (!this.enabled) {
         console.log(this.name + " will stop recording...");
-        this.status = this.NOT_RECORDING;
+        this.enabled = false;
         this.recordModel.stopRecording();
     } else {
         console.log( this.name + " is already stopped.");
     }
 };
 
+Camera.prototype.setRecordingSchedule = function(schedule) {
+    this.schedule = new WeeklySchedule(schedule);
+};
+
+
+    
 
 Camera.prototype.updateRecorder = function() {
     this.recordModel.updateCameraInfo( this );

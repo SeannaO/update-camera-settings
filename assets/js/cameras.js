@@ -173,7 +173,7 @@ var addCameraItem = function( camera ) {
 	}).appendTo("#camera-item-"+camera._id);
 
            
-	if (camera.status === 0) {
+	if (camera.enabled) {
 		$("#switch-"+camera._id).attr('checked', true);
 	} else {
 		$("#switch-"+camera._id).attr('checked', false);

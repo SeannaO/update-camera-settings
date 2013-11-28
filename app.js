@@ -27,6 +27,8 @@ diskstat.launch();
 // - - -
 
 
+
+
 var io = require('socket.io');
 
 var CamHelper = require('./helpers/cameras_helper.js');
@@ -48,8 +50,28 @@ io.set('log level', 1);
 
 server.listen(process.env.PORT || 8080);
 
-var camerasController = new CamerasController( __dirname + '/db/cam_db', '/Users/manuel/solink/nas/cameras');
+var Scheduler = require('./helpers/scheduler.js');
+var scheduler = new Scheduler(10000);
+
+
+
+var camerasController = new CamerasController( __dirname + '/db/cam_db', '/Users/WadBook/solink/nas/cameras');
 app.use(express.bodyParser()); // this must come before app.all 
+
+scheduler.launchForAllCameras(camerasController.getCameras());
+
+camerasController.on('create', function(camera) {
+    scheduler.launchForCamera(camera);
+});
+
+camerasController.on('delete', function(camera) {
+    scheduler.clearForCamera(camera);
+});
+
+camerasController.on('update', function(camera) {
+    scheduler.clearForCamera(camera);
+    scheduler.launchForCamera(camera);
+});
 
 
 // - - -

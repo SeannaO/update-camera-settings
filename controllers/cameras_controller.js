@@ -26,8 +26,8 @@ function cameraInfo(camera) {
     info.rtsp = camera.rtsp;
     info.ip = camera.ip;
     info._id = camera._id;
-    info.status = camera.status;
-
+    info.enabled = camera.enabled;
+    info.schedule = camera.schedule.toJSON()
     if (camera.id) {
         info.id = camera.id;
     } else {
@@ -76,6 +76,10 @@ CamerasController.prototype.listCameras = function( cb ) {
 };
 
 
+CamerasController.prototype.getCameras = function( ) {
+    return cameras;
+};
+
 CamerasController.prototype.indexFiles = function() {
 
     var k = 0;
@@ -109,7 +113,7 @@ CamerasController.prototype.getCamera = function(camId, cb) {
 CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
     var self = this;
-
+    cam.enableSchedule = false;
     db.insert( cam, function( err, newDoc ) {
         if (err) {
             console.log("error when inserting camera: " + err);
@@ -117,6 +121,7 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
         } else {
             var cam = new Camera(newDoc, self.videosFolder );
             self.pushCamera( cam );
+            self.emit("create", cam);
             cb( err, newDoc );            
         }
     });
@@ -155,6 +160,8 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 
             cam.stopRecording();
             cam.deleteAllFiles();
+            
+            self.emit("delete", cam);
 
             cameras.splice(i,1);            
             refresh( function() {
@@ -193,6 +200,37 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
             camera.cam.ip = cam.ip;
             camera.cam.updateRecorder();
 			camera.cam.id = cam.id;
+            self.emit("update", camera.cam);
+            cb(err);
+        }
+    });    
+};
+
+
+CamerasController.prototype.updateCameraSchedule = function(cam, cb) {
+
+    var camera = this.findCameraById( cam._id );
+    if (!camera) {
+        cb("{error: 'camera not found'}");
+        return;
+    }
+    
+    console.log("*** updating camera schedule:" );
+    console.log(cam);
+
+    db.update({ _id: cam._id }, { 
+        $set: {
+            schedule_enabled: cam.schedule_enabled,
+            schedule: cam.schedule
+        } 
+    }, { multi: true }, function (err, numReplaced) {
+        if (err) {
+            cb(err);
+        } else {
+            camera.cam.schedule_enabled = cam.schedule_enabled;
+            camera.cam.setRecordingSchedule(schedule);
+            camera.cam.updateRecorder();
+            self.emit("schedule_update", camera.cam);
             cb(err);
         }
     });    
@@ -213,7 +251,7 @@ CamerasController.prototype.startRecording = function (camId, cb) {
            
         if (cam) {
             cam.startRecording();  
-            db.update({ _id: cam._id }, { $set: { status: cam.status } }, { multi: true }, function (err, numReplaced) {
+            db.update({ _id: cam._id }, { $set: { enabled: cam.enabled } }, { multi: true }, function (err, numReplaced) {
                 if (err) {
                     cb(err);
                 } else {
@@ -241,7 +279,7 @@ CamerasController.prototype.stopRecording = function (camId, cb) {
         cam = self.findCameraById(camId).cam;
         if (cam) {
             cam.stopRecording();  
-            db.update({ _id: cam._id }, { $set: { status: cam.status } }, { multi: true }, function (err, numReplaced) {
+            db.update({ _id: cam._id }, { $set: { enabled: cam.enabled } }, { multi: true }, function (err, numReplaced) {
                 if (err) {
                     cb(err);
                 } else {
