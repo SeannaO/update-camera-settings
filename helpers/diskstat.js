@@ -10,6 +10,7 @@ function Diskstat( options ) {
 
 	this.iostatProcess = -1;
 
+	this.headers = [];
 	this.devices = {};
 }
 
@@ -33,12 +34,9 @@ Diskstat.prototype.launch = function() {
 	}
 
 	this.iostatProcess.stdout.on('data', function(data) {
-        
-		data = data.toString();
 
+		data = data.toString();
 		data = data.split('\n');
-		
-		var headers = [];
 
 		for (var line in data) {
 			
@@ -47,13 +45,13 @@ Diskstat.prototype.launch = function() {
 			if (line.indexOf('sd') >= 0) {
 				line = line.split(/\s+/);
 				if (line[0] === '') line.shift();
-				self.updateInfo( line, headers );
+				self.updateInfo( line );
 			}
 
 			else if (line.indexOf('device') >= 0) {
 				line = line.split(/\s+/);
-				headers = line;
-				if (headers[0] === '') headers.shift();
+				if (line[0] === '') line.shift();
+				self.headers = line;
 			}
 		}
 
@@ -62,15 +60,17 @@ Diskstat.prototype.launch = function() {
 };
 
 
-Diskstat.prototype.updateInfo = function( info, headers ) {
+Diskstat.prototype.updateInfo = function( info ) {
 	
+	var self = this;
+
 	this.devices[ info[0] ] = {};
 	
 	var device = this.devices[ info[0] ];
 
-	for (var i in headers) {
-		var attr = headers[i];
-		device[ attr ] = info[ i ];
+	for (var i in self.headers) {
+		var attr = self.headers[i];
+		device[ attr ] = info[i];
 	}
 };
 

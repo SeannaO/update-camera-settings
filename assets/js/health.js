@@ -129,13 +129,16 @@ var updateSmartStatus = function( data ) {
 		smartinfo.html("");
 	}
 
-	smartinfo.append("<h4>" + hdd + " SMART status</h4>");
+	smartinfo.append('<h4><a data-toggle="collapse" href="#'+ hdd + '-smart-table">' + hdd + ' SMART status</a></h4>');
 	
 	var smartTable = $("<table>", {
-		id:  hdd + '-smart-table'
+		id:  hdd + '-smart-table',
+		class: 'table table-striped table-hover table-condensed collapse in'
 	}).appendTo( smartinfo );
 
-	var headerRow = $("<tr>").appendTo( smartTable );
+	var tHead = $("<thead>").appendTo( smartTable );
+	var headerRow = $("<tr>").appendTo( tHead ).html("<td></td>");
+
 	var attrRow = $("<tr>").appendTo( smartTable );
 	
 	var isHeaderPopulated = false;
@@ -152,13 +155,14 @@ var updateSmartStatus = function( data ) {
 		
 		for (var type in data.status[attribute]) {
 
-			if (headerRow.html() === "") {
+			if (!isHeaderPopulated) {
 				$("<td>").appendTo( headerRow )
 					.html( type );
 			}
 			$("<td>").appendTo( attrRow )
 				.html( data.status[attribute][type] );
 		}
+		isHeaderPopulated = true;
 	}
 };
 

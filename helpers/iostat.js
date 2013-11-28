@@ -46,7 +46,7 @@ Iostat.prototype.launch = function() {
 			var cpuValuesIndex = 3 * cpuIndex;
 			var cpuValues = values.slice(cpuValuesIndex, cpuValuesIndex + 3);
 
-			var usage = 100 - parseFloat(cpuValues[2]);
+			var usage = parseFloat(cpuValues[0]) + parseFloat(cpuValues[1]);
 			if ( !isNaN( usage ) ) {
 				self.emit('cpu_load', {
 					usage: usage
