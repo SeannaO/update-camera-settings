@@ -18,11 +18,12 @@ var testIpForOnvifCamera = function( ip, cb ) {
             timeout: 5000
         }, function (error, response, body) {
             if ( !error ) {
-                if ( body.indexOf("SOAP-ENV") != -1) {
+                //if ( body.indexOf("SOAP-ENV") != -1) {
+					console.log( response.statusCode );
                     cb( error, true, ip );
-                } else {
-                    cb( error, false, ip );
-                }
+                //} else {
+                //    cb( error, false, ip );
+                //}
             } else {
                 cb( error, false, ip );
             }

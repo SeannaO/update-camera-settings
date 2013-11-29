@@ -79,8 +79,9 @@ var setupTpInfo = function( hdd ) {
 
 	var tpinfo = $('<div>', {
 		id: hdd + '-tp-info',
-		class: 'tp-info'
-	}).appendTo(hddinfo);
+		class: 'tp-info',
+		html: '<b>'+hdd+' throughput</b>'
+	}).appendTo("#tp-status");
 
 	for (var i in tpAttr) {
 
@@ -99,7 +100,6 @@ var setupTpInfo = function( hdd ) {
 			class: tpAttr[i].id + '-bar tp-bar'
 		}).appendTo(barContainer);
 	}
-		
 };
 
 
@@ -110,6 +110,8 @@ var updateSmartStatus = function( data ) {
 	var hddinfo =  $('#' +  hdd + '-info');
 	var smartinfo = $('#' +  hdd + '-smart-info');
 	var tpinfo = $('#' +  hdd + '-tp-info');
+
+	var smartTable = "";
 
 	if ( hddinfo.length === 0 ) {
 
@@ -124,18 +126,20 @@ var updateSmartStatus = function( data ) {
 		
 		setupTpInfo( hdd );
 
-		$("#smart-status").append("<br><br>");
+		$("#smart-status").append("<br>");
+
+		smartinfo.append('<br><h4><a data-toggle="collapse" href="#'+ hdd + '-smart-table">' + hdd + ' SMART status</a></h4>');
+
+		smartTable = $("<table>", {
+			id:  hdd + '-smart-table',
+			class: 'table table-striped table-hover table-condensed collapse in'
+		}).appendTo( smartinfo );
+
 	} else {
-		smartinfo.html("");
+		smartTable = $('#' + hdd + '-smart-table');
+		smartTable.html("");
 	}
-
-	smartinfo.append('<h4><a data-toggle="collapse" href="#'+ hdd + '-smart-table">' + hdd + ' SMART status</a></h4>');
 	
-	var smartTable = $("<table>", {
-		id:  hdd + '-smart-table',
-		class: 'table table-striped table-hover table-condensed collapse in'
-	}).appendTo( smartinfo );
-
 	var tHead = $("<thead>").appendTo( smartTable );
 	var headerRow = $("<tr>").appendTo( tHead ).html("<td></td>");
 
@@ -165,8 +169,6 @@ var updateSmartStatus = function( data ) {
 		isHeaderPopulated = true;
 	}
 };
-
-
 
 
 
