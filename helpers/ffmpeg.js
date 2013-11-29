@@ -115,26 +115,37 @@ var snapshot = function ( file, outFolder, offset, cb ) {
 // - - - - - - - - - - - - - - - - - - - -
 
 
-var smartSnapshot = function( file, outFolder, offset, cb ) {
+var smartSnapshot = function( file, outFolder, offset, options, cb ) {
+
+	if ( typeof options === "function" ) {
+		cb = options;
+		options = {};
+	}
+	
+	var size = "";
+
+	if (options.size) {
+		size = ' -s ' + options.size.width + 'x' + options.size.height;
+		console.log(size);
+
+	}
+
     var exec = require('child_process').exec;
 
     var out = outFolder + "/" + path.basename(file, '.ts') + "_" + offset + ".jpg"; 
-    //console.log("== smartSnapshot ==");
-    //console.log("input: " + file);
-    //console.log("output: " +  out);
-
-	//ffmpeg -i 1384512171420.ts -vframes 1 -ss 1 1.jpg
-	var child = exec("ffmpeg -i " + file + " -vframes 1 -ss " + offset + " " + out, 
+    
+	var child = exec('ffmpeg -i ' + file + ' -vframes 1 -ss ' + offset + ' ' + size + ' ' + out, 
    // var child = exec("ffmpeg -y -i " + file + " -vcodec mjpeg -vframes 1 -an -f rawvideo -t 2 -ss " + offset + " -s 640x480 " + out,
-            function( error, stdout, stderr ) {
-                cb( "", true );
-                if (error !== null) {
-                    error = true;
-                    console.error('FFmpeg\'s  exec error: ' + error);
-                    console.log(stderr);
-                }
-                cb( out, error );
-            });    
+		function( error, stdout, stderr ) {
+			cb( "", true );
+			if (error !== null) {
+				error = true;
+				console.error('FFmpeg\'s  exec error: ' + error);
+				console.log(stderr);
+			}
+			cb( out, error );
+		}
+	);    
 };
 
 

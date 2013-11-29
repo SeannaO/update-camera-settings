@@ -87,6 +87,23 @@ function generateMp4Video( db, cam, begin, end, cb ) {
 function takeSnapshot( db, cam, req, res ) {
     var time = parseInt(req.query.time, 10);
     
+	var width = parseInt(req.query.width, 10);
+	var height = parseInt(req.query.height, 10);
+	
+	var options = {};
+
+	if ( !isNaN(width) && !isNaN(height) ) {
+		options = {
+			size: {
+				width: width,
+				height: height
+			}
+		};
+	}
+
+	console.log(":::::::::::::::::::");
+	console.log( options );
+
     var camId = cam._id;
 
     if ( isNaN(time) ) {
@@ -101,7 +118,7 @@ function takeSnapshot( db, cam, req, res ) {
         
         fs.exists(file, function(exists) {
             if (exists) {
-                ffmpeg.smartSnapshot( file, cam.videosFolder + "/tmp", offset, function(fileName, error) {
+                ffmpeg.smartSnapshot( file, cam.videosFolder + "/tmp", offset, options, function(fileName, error) {
                     res.sendfile( fileName,
                         {},
                         function() {
