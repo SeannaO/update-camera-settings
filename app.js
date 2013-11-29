@@ -52,9 +52,13 @@ var Smart = require('./helpers/smart.js');
 var smart = new Smart({development: true});
 smart.start();
 
-var Diskstat = require('./helpers/diskstat');
+var Diskstat = require('./helpers/diskstat.js');
 var diskstat = new Diskstat({development: true});
 diskstat.launch();
+
+var SensorsInfo = require('./helpers/sensors.js');
+var sensorsInfo = new SensorsInfo({development: true});
+sensorsInfo.launch();
 // - - -
 
 // - - - -
@@ -81,6 +85,10 @@ smart.on('smart', function(data) {
 
 diskstat.on('hdd_throughput', function(data) {
 	io.sockets.emit('hdd_throughput', data);
+});
+
+sensorsInfo.on('sensors_data', function(data) {
+	io.sockets.emit('sensorsData', data);
 });
 // end of socket.io broadcasts setup
 // - - -

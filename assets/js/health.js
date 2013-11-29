@@ -38,6 +38,43 @@ var setupHealth = function() {
 	socket.on('hdd_throughput', function(data) {
 		updateHddThroughput( data );
 	});	
+
+	socket.on('sensorsData', function(data) {
+		updateSensors( data );
+	});		
+
+	setupSensorsInfo();
+};
+
+
+var updateSensors = function( data ) {
+	
+	//console.log( data );
+
+	var table = $('#sensors-table');
+	table.html('');
+
+	for (var sensor in data) {
+
+		for (var type in data[sensor]) {
+
+			var row = $('<tr>');
+			var column = $('<td>', {
+				html: sensor + ' (' + type + ')'
+			});
+
+			row.append( column );
+
+			column = $('<td>', {
+				html: data[sensor][type].value
+			});
+
+			row.append( column );
+
+			table.append(row);
+		}
+	}
+	
 };
 
 
@@ -70,6 +107,16 @@ var updateHddThroughput = function( data ) {
 			}
 		}
 	}
+};
+
+
+var setupSensorsInfo = function() {
+
+	var table = $("<table>", {
+		id: 'sensors-table',
+		class: 'table table-striped table-hover table-condensed'
+	}).appendTo('#sensors-info');
+
 };
 
 
@@ -169,6 +216,3 @@ var updateSmartStatus = function( data ) {
 		isHeaderPopulated = true;
 	}
 };
-
-
-
