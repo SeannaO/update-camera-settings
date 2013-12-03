@@ -29,7 +29,7 @@ function Camera( cam, videosFolder ) {
 	}
 
     this.db = new Dblite( this.videosFolder + "/db.sqlite" );
-	this.recordModel = new RecordModel( this.db, this );
+	this.recordModel = new RecordModel( this );
 
     if (cam.id) {
         this.id = cam.id;

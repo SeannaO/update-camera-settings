@@ -11,7 +11,7 @@ var RECORDING = 2,
     STOPPED = 0,
     ERROR = -1;
 
-function RecordModel( datastore, camera ) {
+function RecordModel( camera ) {
 
     var self = this;
 
@@ -23,7 +23,7 @@ function RecordModel( datastore, camera ) {
     this.status = ERROR;
 
     this.rtsp = camera.rtsp;
-    this.db = datastore;
+    this.db = camera.db;
     this.camId = camera._id;
     
     this.error = false;
@@ -230,7 +230,7 @@ RecordModel.prototype.checkForConnectionErrors = function() {
 
 };
 
-RecordModel.prototype.moveFile = function( video ) { 
+RecordModel.prototype.moveFile = function( video, cb ) { 
 
     var self = this;
 
@@ -241,12 +241,14 @@ RecordModel.prototype.moveFile = function( video ) {
         fs.rename( from, to, function(err) { 
             if (err) {
                 console.log("error when moving file: " + err);
+				if (cb) cb(err);
             }
             else {
                 video.file = to;
                 ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() { 
                 });
                 self.db.insertVideo( video );
+				if (cb) cb();
             }                        
         });
     });
@@ -258,9 +260,9 @@ RecordModel.prototype.addNewVideosToPendingList = function( files ) {
     var self = this;
 
     for ( var i in files ) {
-            var file = files[i];
-            self.pending.push(  self.folder + "/videos/tmp/" + file );
-        }
+		var file = files[i];
+		self.pending.push(  self.folder + "/videos/tmp/" + file );
+	}
 };
 
 // - -
