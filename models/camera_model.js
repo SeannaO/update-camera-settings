@@ -5,7 +5,6 @@ var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 
 
-
 function Camera( cam, videosFolder ) {
 
 	console.log("initializing camera... ?");
@@ -36,8 +35,7 @@ function Camera( cam, videosFolder ) {
         this.id = cam.id;
     } else {
         this.id = cam._id;
-    }
-    
+    } 
 	
 	this.setupEvents();
 
@@ -51,6 +49,61 @@ function Camera( cam, videosFolder ) {
 }
 
 util.inherits(Camera, EventEmitter);
+
+
+Camera.prototype.getOldestChunks = function( numberOfChunks, cb ) {
+	
+	var self = this;
+	self.db.getOldestChunks( numberOfChunks, function( data ) {
+		cb( data );
+	});
+};
+
+
+Camera.prototype.deleteChunk = function( chunk, cb ) {
+	
+	var self = this;
+
+	self.db.deleteVideo( chunk.id, function( err ) {
+		if (err && err !== "") {
+			console.log( "error removing indexes from db" );
+			console.log(err);
+			cb( chunk, err );
+		} else { /*
+			if( fs.exists(chunk.file), function(exists) {
+				if (exists) {
+					fs.unlink( chunk.file, function(err) {
+						if (!err) {
+							console.log("file " + chunk.file + " deleted");
+						} else {
+							console.log( err );
+						}
+						cb( chunk );
+					});
+				} else {
+					console.log("file doesnt exist");
+					cb( chunk, "file does not exist" );
+				}
+			});
+			*/
+			cb( chunk );
+		}
+	});	
+};
+
+
+Camera.prototype.deleteChunks = function( chunks, cb ) {
+	
+	var self = this;
+	
+	for (var c in chunks) {
+		self.deleteChunk( chunks[c], function( data ) {
+			console.log("deleted chunk");
+			console.log( chunk );
+		});
+	}
+};
+
 
 Camera.prototype.setupEvents = function( cb ) {
 

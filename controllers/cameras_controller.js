@@ -106,6 +106,61 @@ CamerasController.prototype.getCamera = function(camId, cb) {
 };
 
 
+CamerasController.prototype.deleteOldestChunks = function( cb ) {
+	
+	var deletedChunks = [];
+	var n = 0;
+
+	var self = this;
+
+	self.getOldestChunks( function(oldChunks) {
+		
+		for (var c in oldChunks) {
+			var chunk = oldChunks[c];
+			self.getCamera(chunk.cam_id, function( err, cam) {
+				cam.deleteChunk( chunk, function(data) {
+					n++;
+					deletedChunks.push( data );
+					if (n === oldChunks.length) {
+						console.log("done deleting chunks");
+						cb( deletedChunks );
+					}
+				});
+			});
+		}	
+	});
+};
+
+
+CamerasController.prototype.getOldestChunks = function( cb ) {
+
+	var n = 0;
+	var oldChunks = [];
+
+	for (var c in cameras) {
+		var cam = cameras[c];
+		cam.getOldestChunks( 5, function(data) {
+			
+			data = data.map( function(d) {
+				d.cam_id = cam.id;
+				return d;
+			});
+
+			oldChunks = oldChunks.concat( data );
+			n++;
+
+			if (n === cameras.length) {
+				oldChunks = oldChunks.sort( function(a, b) {
+					return a.start - b.start;
+				});
+
+				cb( oldChunks );
+			}
+		});
+	}
+};
+
+
 CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
     var self = this;
@@ -137,7 +192,6 @@ CamerasController.prototype.pushCamera = function( cam ) {
         self.emit('camera_status', data);
     });
 };
-
 
 
 CamerasController.prototype.removeCamera = function( camId, cb ) {

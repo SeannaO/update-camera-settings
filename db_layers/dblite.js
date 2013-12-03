@@ -16,6 +16,20 @@ var Dblite = function( db_path ) {
     this.db.query('.show');
 };
 
+
+Dblite.prototype.deleteVideo = function( id, cb ) {
+
+	var query = 'DELETE FROM videos WHERE id = ' + id;
+	console.log( query );
+
+	this.db.query( query,
+		function(err, rows) {
+			console.log("chunk " + id + " deleted");
+			cb( err );		
+		}
+	);
+};
+
 /**
  * insertVideo
  *
@@ -92,6 +106,23 @@ Dblite.prototype.searchVideosByInterval = function( start, end, cb ) {
 // - - end of searchVideosByInterval
 // - - - - - - - - - - - - - - - - - - - -
 
+
+Dblite.prototype.getOldestChunks = function( numberOfChunks, cb ) {
+
+	var query = 'SELECT id, file, start from videos where id in (select id from videos order by id asc limit ?)';
+
+    var fileList = this.db.query(query, 
+            [numberOfChunks], 
+            ['id', 'file', 'start'], 
+            function(err, data) {
+
+                if (!data || data.length === 0) {
+                     cb( [] );
+                } else {
+                    cb(data);
+                }
+            });
+};
 
 /**
  * searchVideoByTime

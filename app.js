@@ -94,8 +94,6 @@ sensorsInfo.on('sensors_data', function(data) {
 // - - -
 
 
-
-
 // allows x-origin requests
 app.all('/*', function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -130,6 +128,21 @@ app.get('/', function (req, res) {
 app.get('/health', function(req, res) {
 
     res.sendfile(__dirname + '/views/health.html');
+});
+// - - -
+
+// - - -
+//	motion
+app.post('/motion', function(req, res) {
+
+    console.log("motion");
+	res.end();
+});
+
+app.get('/motion', function(req, res) {
+
+    console.log("motion");
+	res.end();
 });
 // - - -
 
@@ -170,10 +183,19 @@ app.get('/cameras.json', function(req, res) {
 });
 // - - -
 
+app.get('/cleanup', function(req, res) {
+	camerasController.deleteOldestChunks( function(data) {
+		res.end( JSON.stringify(data) );
+	});
+});
+
 // - - -
 // renders main cameras page
 app.get('/cameras', function(req, res) {
     res.sendfile(__dirname + '/views/cameras.html');
+
+	//camerasController.deleteOldestChunks();
+
 });
 // - - -
 
@@ -346,12 +368,14 @@ app.get('/multiview', function(req, res) {
 // - - -
 // renders camera page
 app.get('/cameras/:id', function(req, res) {
-    var camId = req.params.id;
+
+	var camId = req.params.id;
     
     camerasController.getCamera( camId, function(err, cam) {
         if (err || cam.length === 0) {
             res.end("couldn't find this camera");
         } else {
+			// console.log( cam.deleteOldestChunks(10) );
             res.render('camera', {id: cam._id, rtsp: cam.rtsp, name: cam.name});
         }
     });
