@@ -58,21 +58,24 @@ describe('Camera', function(){
 	});
 
 	describe('stop recording', function() {
+		
+		var new_cam = new Camera( cam, videosFolder );
 
 		it('should call recordModel.stopRecording if recording', function() {
-			var new_cam = new Camera( cam, videosFolder );
 			sinon.spy(new_cam.recordModel, "stopRecording");
 			new_cam.startRecording();
 			new_cam.stopRecording();
 			assert(new_cam.recordModel.stopRecording.calledOnce);
+			new_cam.recordModel.stopRecording.restore();
 		});
+
 		it('should NOT call recordModel.startRecording again if already recording', function() {
-			var new_cam = new Camera( cam, videosFolder );
 			sinon.spy(new_cam.recordModel, "stopRecording");
 			new_cam.startRecording();
 			new_cam.stopRecording();
 			new_cam.stopRecording();
 			assert(new_cam.recordModel.stopRecording.calledOnce);
+			new_cam.recordModel.stopRecording.restore();
 		});
 	});
 	
@@ -88,22 +91,46 @@ describe('Camera', function(){
 	});
 
 	
+	describe('addChunk', function() {
+		
+		var new_cam = new Camera( cam, videosFolder );
+
+		it('should call db.insertVideo with correct param', function() {
+			sinon.spy( new_cam.db, 'insertVideo' );
+			var chunk = {
+				cam: 'id',
+				start: 0,
+				end: 10,
+				file: 'chunk_file'
+			};
+			new_cam.addChunk( chunk );
+			assert(new_cam.db.insertVideo.calledOnce);
+			
+			for (var d in chunk) {
+				console.log(chunk[d]);
+				assert.equal(new_cam.db.insertVideo.getCall(0).args[0][d], chunk[d]);
+			}
+		});
+	});
+
+	
 	describe('deleteChunk', function() {
+		
+		var fake_chunk = {id: 1};
 
 		it('should call db.deleteVideo', function() {
 			var new_cam = new Camera( cam, videosFolder );
-			var chunk = {id: 1};
 			sinon.spy( new_cam.db, "deleteVideo" );
-			new_cam.deleteChunk(chunk, function() {
+			new_cam.deleteChunk(fake_chunk, function() {
 			});
 			assert( new_cam.db.deleteVideo.calledOnce );
+			new_cam.db.deleteVideo.restore();
 		});
 
 		it('should callback deleted chunk', function( done ) {
 			var new_cam = new Camera( cam, videosFolder );
-			var fake_chunk = {id: 1};
-			
 			new_cam.deleteChunk(fake_chunk, function( chunk, err ) {
+				console.log("###### " + chunk.id);
 				assert.equal( chunk.id, fake_chunk.id );
 				done();
 			});
@@ -134,8 +161,9 @@ describe('Camera', function(){
 
 	describe('listeners', function() {
 
+		var new_cam = new Camera( cam, videosFolder );
+
 		it('sould emit new_chunk with correct data on recordModel new_chunk event', function(done) {
-			var new_cam = new Camera( cam, videosFolder );
 			this.timeout(500);
 			var fake_data = 'just a fake data';
 			new_cam.on('new_chunk', function( data ) {
@@ -146,7 +174,6 @@ describe('Camera', function(){
 		});
 
 		it('sould emit camera_status with correct status and id on recordModel camera_status event', function(done) {
-			var new_cam = new Camera( cam, videosFolder );
 			this.timeout(500);
 			var fake_data = { status: 'fake_status' };
 			new_cam.on('camera_status', function( data ) {

@@ -105,6 +105,23 @@ CamerasController.prototype.getCamera = function(camId, cb) {
     });
 };
 
+CamerasController.prototype.deleteChunk = function( chunk, cb ) {
+	
+	var self = this;
+
+	console.log(chunk);
+
+	self.getCamera(chunk.cam_id, function( err, cam ) {
+		if(!err && cam) {
+			cam.deleteChunk( chunk, function(data) {
+				console.log( "deleting chunk " + chunk.id + " from camera: " + cam._id );
+				if (cb) cb( data );
+			});
+		} else {
+			console.log( err );
+		}
+	});
+};
 
 CamerasController.prototype.deleteOldestChunks = function( cb ) {
 	
@@ -114,37 +131,42 @@ CamerasController.prototype.deleteOldestChunks = function( cb ) {
 	var self = this;
 
 	self.getOldestChunks( function(oldChunks) {
-		
+
 		for (var c in oldChunks) {
-			var chunk = oldChunks[c];
-			self.getCamera(chunk.cam_id, function( err, cam) {
-				cam.deleteChunk( chunk, function(data) {
-					n++;
-					deletedChunks.push( data );
-					if (n === oldChunks.length) {
-						console.log("done deleting chunks");
-						cb( deletedChunks );
-					}
-				});
+			self.deleteChunk( oldChunks[c], function( chunk ) {
+				deletedChunks.push( chunk );
+				n++;
+				if (n >= oldChunks.length) {
+					cb(deletedChunks);
+				}
 			});
 		}	
 	});
 };
 
+CamerasController.prototype.getOldestChunksFromCamera = function( camera, cb ) {
+
+	camera.getOldestChunks( 10, function( data ) {
+		
+		data = data.map( function(d) {
+			d.cam_id = camera._id;
+			return d;
+		});
+
+		cb( data );
+	});
+};
 
 CamerasController.prototype.getOldestChunks = function( cb ) {
 
+	var self = this;
+
 	var n = 0;
 	var oldChunks = [];
-
+	
 	for (var c in cameras) {
 		var cam = cameras[c];
-		cam.getOldestChunks( 5, function(data) {
-			
-			data = data.map( function(d) {
-				d.cam_id = cam.id;
-				return d;
-			});
+		self.getOldestChunksFromCamera( cam, function( data ) {
 
 			oldChunks = oldChunks.concat( data );
 			n++;

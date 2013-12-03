@@ -9,22 +9,27 @@ var format = require('util').format;
 var path = require('path');
 var fs = require('fs');
 
-var Dblite = function( db_path ) {
+var Dblite = function( db_path, cb ) {
+
+	var self = this;
     this.db = dblite( db_path );
 
-    this.db.query('CREATE TABLE IF NOT EXISTS videos (id INTEGER PRIMARY KEY, start INTEGER, end INTEGER, file TEXT)');
-    this.db.query('.show');
+    this.db.query('CREATE TABLE IF NOT EXISTS videos (id INTEGER PRIMARY KEY, start INTEGER, end INTEGER, file TEXT)', function() {
+		self.db.query('.show');
+		if (cb) cb();
+	});
+    //this.db.query('.show');
 };
 
 
 Dblite.prototype.deleteVideo = function( id, cb ) {
 
-	var query = 'DELETE FROM videos WHERE id = ' + id;
-	console.log( query );
+	var query = 'DELETE FROM videos WHERE id = ' + parseInt(id);
+	//console.log(query);
 
 	this.db.query( query,
 		function(err, rows) {
-			console.log("chunk " + id + " deleted");
+			//console.log("chunk " + id + " deleted");
 			cb( err );		
 		}
 	);
@@ -35,11 +40,12 @@ Dblite.prototype.deleteVideo = function( id, cb ) {
  *
  */
 Dblite.prototype.insertVideo = function( data ) {
+	
     if (!this.db) {
         console.log("db is not ready yet");
     }
 
-    if ( !data || !data.start || !data.end || !data.file ) {
+    if ( typeof data !== 'object' || !data.file ) {
         return;
     }
 
@@ -170,10 +176,5 @@ Dblite.prototype.listAll = function() {
 
 // exports
 module.exports = Dblite;
-//exports.searchVideosByInterval = searchVideosByInterval;
-//exports.listAll = listAll;
-//exports.insertVideo = insertVideo;
-//exports.searchVideoByTime = searchVideoByTime;
-
 
 

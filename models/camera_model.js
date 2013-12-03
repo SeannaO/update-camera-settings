@@ -7,7 +7,7 @@ var EventEmitter = require('events').EventEmitter;
 
 function Camera( cam, videosFolder ) {
 
-	console.log("initializing camera... ?");
+	console.log("initializing camera " + cam._id);
 
     var self = this;
 
@@ -60,33 +60,36 @@ Camera.prototype.getOldestChunks = function( numberOfChunks, cb ) {
 };
 
 
+Camera.prototype.addChunk = function( chunk ) {
+	this.db.insertVideo( chunk );
+};
+
+
 Camera.prototype.deleteChunk = function( chunk, cb ) {
 	
 	var self = this;
 
 	self.db.deleteVideo( chunk.id, function( err ) {
+
 		if (err && err !== "") {
 			console.log( "error removing indexes from db" );
 			console.log(err);
 			cb( chunk, err );
-		} else { /*
-			if( fs.exists(chunk.file), function(exists) {
+		} else { 
+			fs.exists(chunk.file, function(exists) {
 				if (exists) {
 					fs.unlink( chunk.file, function(err) {
 						if (!err) {
-							console.log("file " + chunk.file + " deleted");
 						} else {
 							console.log( err );
 						}
 						cb( chunk );
 					});
 				} else {
-					console.log("file doesnt exist");
-					cb( chunk, "file does not exist" );
+					cb( chunk );
 				}
+				
 			});
-			*/
-			cb( chunk );
 		}
 	});	
 };
@@ -98,8 +101,7 @@ Camera.prototype.deleteChunks = function( chunks, cb ) {
 	
 	for (var c in chunks) {
 		self.deleteChunk( chunks[c], function( data ) {
-			console.log("deleted chunk");
-			console.log( chunk );
+			if(cb) cb(data);
 		});
 	}
 };

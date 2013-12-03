@@ -183,11 +183,13 @@ app.get('/cameras.json', function(req, res) {
 });
 // - - -
 
+// !!!!! debug only !!!!!
 app.get('/cleanup', function(req, res) {
 	camerasController.deleteOldestChunks( function(data) {
 		res.end( JSON.stringify(data) );
 	});
 });
+
 
 // - - -
 // renders main cameras page

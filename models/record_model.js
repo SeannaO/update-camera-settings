@@ -22,6 +22,7 @@ function RecordModel( camera ) {
 
     this.status = ERROR;
 
+	this.camera = camera;
     this.rtsp = camera.rtsp;
     this.db = camera.db;
     this.camId = camera._id;
@@ -30,7 +31,7 @@ function RecordModel( camera ) {
 
     this.folder = "";
 
-    this.setupFolders( camera );
+    this.setupFolders();
 
     this.watcher = new Watcher( self.folder + '/videos/tmp', 'ts');
 
@@ -44,9 +45,9 @@ function RecordModel( camera ) {
 util.inherits(RecordModel, EventEmitter);
 
 
-RecordModel.prototype.setupFolders = function( camera ) {
+RecordModel.prototype.setupFolders = function() {
    
-    this.folder = camera.videosFolder;
+    this.folder = this.camera.videosFolder;
 
     this.setupFolderSync(this.folder);
     this.setupFolderSync(this.folder + "/tmp");
@@ -247,7 +248,7 @@ RecordModel.prototype.moveFile = function( video, cb ) {
                 video.file = to;
                 ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() { 
                 });
-                self.db.insertVideo( video );
+                self.camera.addChunk( video );
 				if (cb) cb();
             }                        
         });

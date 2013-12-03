@@ -2,5 +2,4 @@
 {"name":"march ","ip":"","rtsp":"rtsp://admin:admin@192.168.215.83/video1enc1","_id":"RpespsvOPCDEHcgi","status":1}
 {"name":"vlc","ip":"","rtsp":"http://192.168.1.134:1235","id":"id_0.3299696969334036","_id":"XADZi0wtNSTQGA43","status":1}
 {"name":"hik","ip":"","rtsp":"rtsp://admin:12345@192.168.215.77","id":"id_0.9032797317486256","_id":"bVo6ROVcs5EyQNxY","status":0}
-{"name":"Bosch","ip":"","rtsp":"rtsp://192.168.215.102","_id":"cQCpJUnVfXps71rJ","status":1}
-{"name":"hik","ip":"","rtsp":"rtsp://admin:12345@192.168.215.77","id":"id_0.9032797317486256","_id":"bVo6ROVcs5EyQNxY","status":1}
+{"name":"Bosch","ip":"","rtsp":"rtsp://192.168.215.102","_id":"cQCpJUnVfXps71rJ","status":0}

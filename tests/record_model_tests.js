@@ -15,7 +15,8 @@ describe('RecordModel', function() {
 		rtsp: "rtsp://hello.world",
 		db: {
 			insertVideo: function(v) {}
-		}
+		},
+		addChunk: function() {}
 	};
 	
 	var videosFolder =  "tests/videosFolder";
@@ -108,20 +109,20 @@ describe('RecordModel', function() {
 			});			
 		});
 
-		it('should call db.insertVideo passing destination file', function(done) {
+		it('should call camera.addChunk passing destination file', function(done) {
 			
 			var video = {file: 'fake_file'};
 			
 			var from = recordModel.folder + "/videos/tmp/" + path.basename( video.file );
 			var to =  recordModel.folder + "/videos/" + video.start + path.extname( video.file );
 	
-			sinon.spy( recordModel.db, "insertVideo" );
+			sinon.spy( recordModel.camera, "addChunk" );
 
 			fs.openSync(from, 'w');
 			recordModel.moveFile( video, function(err) {
-				assert( recordModel.db.insertVideo.calledOnce );
+				assert( recordModel.camera.addChunk.calledOnce );
 				//assert.equals( recordModel.db.insertVideo.getCall(0).args[0].file, to );
-				recordModel.db.insertVideo.restore();
+				recordModel.camera.addChunk.restore();
 				done();
 			});			
 		});
