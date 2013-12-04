@@ -10,6 +10,7 @@ var path = require('path');												// for parsing path urls
 var lifeline = require('./helpers/lifeline_api.js');					// api layer for lifeline app
 var request = require('request');										// for making requests to lifeline app
 var CamHelper = require('./helpers/cameras_helper.js');					// abstraction for start/stop recordings
+var DiskSpaceAgent = require('./helpers/diskSpaceAgent.js');			// agent that periodically checks disk space
 
 // - - -
 // stores machine ip
@@ -35,14 +36,33 @@ io.set('log level', 1);
 
 server.listen(process.env.PORT || 8080);
 
-var camerasController = new CamerasController( __dirname + '/db/cam_db', '/Users/manuel/solink/nas/cameras');
+var folder = '/Users/manuel/solink/nas/cameras';
+var camerasController = new CamerasController( __dirname + '/db/cam_db', folder);
+
 
 // middleware for parsing request body contents
 // this must come before app.all
 app.use(express.bodyParser());  
 
 
+// - - - - -
+// disk space agent
+var diskSpaceAgent = new DiskSpaceAgent( folder );
+diskSpaceAgent.launch();
+diskSpaceAgent.on('disk_usage', function(usage) {
+	var nCameras = camerasController.getAllCameras().length;
+	console.log( "usage: " + usage );
+	console.log("nCameras: " + nCameras);
+	if (usage > 200) {
+			camerasController.deleteOldestChunks( 10*nCameras, function(data) {
+			console.log( "done deleting files. is it enough?" );
+		});
+	}
+});
 // - - -
+
+
+// - - - - -
 // health check modules
 var Iostat = require('./helpers/iostat.js');
 var iostat = new Iostat();
@@ -131,21 +151,6 @@ app.get('/health', function(req, res) {
 });
 // - - -
 
-// - - -
-//	motion
-app.post('/motion', function(req, res) {
-
-    console.log("motion");
-	res.end();
-});
-
-app.get('/motion', function(req, res) {
-
-    console.log("motion");
-	res.end();
-});
-// - - -
-
 
 // - - -
 // gets ts segment
@@ -185,9 +190,11 @@ app.get('/cameras.json', function(req, res) {
 
 // !!!!! debug only !!!!!
 app.get('/cleanup', function(req, res) {
-	camerasController.deleteOldestChunks( function(data) {
-		res.end( JSON.stringify(data) );
-	});
+	res.end('debug only');
+//	var n = req.query.n || 10;	
+//	camerasController.deleteOldestChunks( n, function(data) {
+//		res.end( JSON.stringify(data) );
+//	});
 });
 
 
