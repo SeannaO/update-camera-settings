@@ -129,3 +129,11 @@ input.switch:checked ~ label:after
 {
 	margin-left: 2.1em;
 }
+
+#camera-schedule-dialog .modal-dialog {
+	width: 850px;
+}
+
+#camera-schedule-dialog table th,#camera-schedule-dialog table td{
+	text-align: center;
+}

@@ -2,19 +2,20 @@
     <head>
         <script src = "/js/jquery.min.js"></script>        
         <script src = "/js/jquery-ui.min.js"></script>
+        <script src="/js/jquery-serialize-object.js"></script>
         <script src = "/js/cameras.js"></script>
 		<script src = "/js/timeline.js"></script>
 
         <link rel="stylesheet" href="/css/bootstrap.min.css">
         <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
         <link rel="stylesheet" href="/css/camera.css">
-
+        <link rel="stylesheet" href="/css/bootstrap-timepicker.css">
         <script src="/js/bootstrap.min.js"></script>
         <script src="/js/d3.v3.min.js"></script>
         <script src="/js/d3-timeline.js"></script>
 
         <script src="/js/socket.io.js"></script>
-        
+        <script src="/js/bootstrap-timepicker.js"></script>
         <script>
 
 					
@@ -95,13 +96,159 @@
 
                 </div><!-- /.modal-content -->
             </div><!-- /.modal-dialog -->
-        </div><!-- /.modal -->        
+        </div><!-- /.modal -->
+
+
+
+        <div class="modal fade" id = "camera-schedule-dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">Camera Recording Schedule</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form id="camera-schedule" role="form">
+                            <div class="camera-schedule-switch"><input type="hidden" name="schedule_enabled" value="0" />
+<input type="checkbox" id="camera-schedule-enable" name="schedule_enabled" class="switch" value="1"><label for="camera-schedule-enable">on/off</label></div>
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th></th>
+                                    <th>Sunday</th>
+                                    <th>Monday</th>
+                                    <th>Tuesday</th>
+                                    <th>Wednesday</th>
+                                    <th>Thursday</th>
+                                    <th>Friday</th>
+                                    <th>Saturday</th>
+                                </tr>
+                                <tr>
+                                    <td>Start Time</td>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="input-append bootstrap-timepicker">
+                                                <input type="text" class="form-control input-small" id="schedule-sunday-open" name="schedule[sunday][open]">
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="input-append bootstrap-timepicker">
+                                                <input type="text" class="form-control input-small" id="schedule-monday-open" name="schedule[monday][open]">
+                                            </div>
+                                        </div>                                        
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="input-append bootstrap-timepicker">
+                                                <input type="text" class="form-control input-small" id="schedule-tuesday-open" name="schedule[tuesday][open]">
+                                            </div>                                            
+                                        </div>                                        
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="input-append bootstrap-timepicker">
+                                                <input type="text" class="form-control input-small" id="schedule-wednesday-open" name="schedule[wednesday][open]">
+                                            </div>
+                                        </div>                                        
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="input-append bootstrap-timepicker">
+                                                <input type="text" class="form-control input-small" id="schedule-thursday-open" name="schedule[thursday][open]">
+                                            </div>
+                                        </div>                                        
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="input-append bootstrap-timepicker">
+                                                <input type="text" class="form-control input-small" id="schedule-friday-open" name="schedule[friday][open]">
+                                            </div>
+                                        </div>                                        
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="input-append bootstrap-timepicker">
+                                                <input type="text" class="form-control input-small" id="schedule-saturday-open" name="schedule[saturday][open]">
+                                            </div>
+                                        </div>                                        
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>End Time</td>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="input-append bootstrap-timepicker">
+                                                <input type="text" class="form-control input-small" id="schedule-sunday-close" name="schedule[sunday][close]">
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="input-append bootstrap-timepicker">
+                                                <input type="text" class="form-control input-small" id="schedule-monday-close" name="schedule[monday][close]">
+                                            </div>
+                                        </div>                                        
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="input-append bootstrap-timepicker">
+                                                <input type="text" class="form-control input-small" id="schedule-tuesday-close" name="schedule[tuesday][close]">
+                                            </div>
+                                        </div>                                        
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="input-append bootstrap-timepicker">
+                                                <input type="text" class="form-control input-small" id="schedule-wednesday-close" name="schedule[wednesday][close]">
+                                            </div>
+                                        </div>                                        
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="input-append bootstrap-timepicker">
+                                                <input type="text" class="form-control input-small" id="schedule-thursday-close" name="schedule[thursday][close]">
+                                            </div>
+                                        </div>                                        
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="input-append bootstrap-timepicker">
+                                                <input type="text" class="form-control input-small" id="schedule-friday-close" name="schedule[friday][close]">
+                                            </div>
+                                        </div>                                        
+                                    </td>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="input-append bootstrap-timepicker">
+                                                <input type="text" class="form-control input-small" id="schedule-saturday-close" name="schedule[saturday][close]">
+                                            </div>
+                                        </div>                                        
+                                    </td>
+                                </tr>                                
+                            </table>
+                        </form>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
+                        <button type="button" class="btn btn-primary" id = "update-schedule">save</button>
+                    </div>
+
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->                
 
         <script>
             // - -
             //
 			//var timeline = new Timeline("body");
 			var timelines = [];
+            
+            $('#camera-schedule-dialog .form-control').timepicker({
+                showMeridian: false
+            });
 
 			var updateTimelines = function( data, options ) {
 				

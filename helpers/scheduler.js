@@ -11,15 +11,26 @@ function Scheduler( interval ) {
 
 
 Scheduler.prototype.launchForAllCameras = function( cameras ) {
-    for (var camera in cameras) {
-        this.launchForCamera(camera);
+    console.log("--------------launchForAllCameras-------------");
+    for (var i = 0; i < cameras.length; i++) {
+        this.launchForCamera(cameras[i]);
     }   
 }
 
 Scheduler.prototype.launchForCamera = function( camera ) {
-
-    if (!(camera.id in this.processes) && camera.scheduleEnabled){
-        this.processes[camera.id] = setInterval(this.checkSchedule(camera), 10000);        
+    if (!(camera._id in this.processes) && camera.schedule_enabled == "1"){
+        console.log("Launching Scheduler for camera:" + camera.name);
+        this.processes[camera._id] = setInterval(function(){
+            console.log("Checking Schedule for camera:" + camera.name);
+            // self.emit("recording", { cameraId: camera._id, scheduled: schedule.isOpen() }))
+            if (!camera.isRecording() && camera.shouldBeRecording()){
+                console.log("Starting camera:" + camera.name);
+                camera.startRecording();
+            }else if (camera.isRecording() && !camera.shouldBeRecording()){
+                console.log("Stopping camera:" + camera.name);
+                camera.stopRecording();
+            }
+        }, 10000);        
     }
 }
 
@@ -36,17 +47,9 @@ Scheduler.prototype.clearAll = function( ) {
 }
 
 Scheduler.prototype.clearForCamera = function( camera ) {
-    clearInterval(this.processes[camera.id]);
-}
-
-Scheduler.prototype.checkSchedule = function( camera ) {
-    var self = this;
-    // self.emit("recording", { cameraId: camera.id, scheduled: schedule.isOpen() }))
-    if (camera.isRecording() && camera.schedule.isClosed()){
-        camera.stopRecording();
-    }else if (!camera.isRecording() && camera.schedule.isOpened()){
-        camera.startRecording();
-    }
+    console.log("Clearing Scheduler for camera:" + camera.name);
+    clearInterval(this.processes[camera._id]);
+    delete this.processes[camera._id]
 }
 
 // - - -

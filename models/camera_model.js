@@ -19,9 +19,9 @@ function Camera( cam, videosFolder ) {
     this.rtsp = cam.rtsp;
     this.videosFolder = videosFolder + "/" + this._id;
     this.schedule = new WeeklySchedule(cam.schedule);
-
+    this.recording = false
     this.enabled = !cam.enabled;
-    this.scheduleEnabled = cam.scheduleEnabled;
+    this.schedule_enabled = cam.schedule_enabled;
 	this.lastChunkTime = Date.now();
 
 	if ( !fs.existsSync( this.videosFolder) ){
@@ -41,7 +41,7 @@ function Camera( cam, videosFolder ) {
 	
 	this.setupEvents();
 
-    if (cam.enabled) {
+    if (!this.recording && this.shouldBeRecording()) {
 		console.log("starting camera " + this.name);
         this.startRecording();
     } else {
@@ -51,6 +51,11 @@ function Camera( cam, videosFolder ) {
 }
 
 util.inherits(Camera, EventEmitter);
+
+
+Camera.prototype.shouldBeRecording = function() {
+    return ((this.schedule_enabled == "1" && this.schedule.isOpen()) || (this.schedule_enabled == "0" && this.enabled == "1"));
+};
 
 Camera.prototype.setupEvents = function( cb ) {
 
@@ -67,8 +72,8 @@ Camera.prototype.setupEvents = function( cb ) {
 };
 
 Camera.prototype.isRecording = function() {
-    return this.enabled;
-}
+    return this.recording;
+};
 
 Camera.prototype.startRecording = function() {
     
@@ -76,21 +81,21 @@ Camera.prototype.startRecording = function() {
     
 	this.lastChunkTime = Date.now();
 
-    if (this.enabled) {
+    if (this.recording) {
         console.log(this.name + " is already recording.");
     } else {
         console.log("* * * " + this.name + " will start recording...");
         this.recordModel.startRecording();
-        this.enabled = true;
+        this.recording = true;
     }
 };
 
 
 Camera.prototype.stopRecording = function() {
 
-    if (!this.enabled) {
+    if (this.recording) {
         console.log(this.name + " will stop recording...");
-        this.enabled = false;
+        this.recording = false;
         this.recordModel.stopRecording();
     } else {
         console.log( this.name + " is already stopped.");

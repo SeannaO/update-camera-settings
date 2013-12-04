@@ -50,28 +50,9 @@ io.set('log level', 1);
 
 server.listen(process.env.PORT || 8080);
 
-var Scheduler = require('./helpers/scheduler.js');
-var scheduler = new Scheduler(10000);
-
-
 
 var camerasController = new CamerasController( __dirname + '/db/cam_db', '/Users/WadBook/solink/nas/cameras');
 app.use(express.bodyParser()); // this must come before app.all 
-
-scheduler.launchForAllCameras(camerasController.getCameras());
-
-camerasController.on('create', function(camera) {
-    scheduler.launchForCamera(camera);
-});
-
-camerasController.on('delete', function(camera) {
-    scheduler.clearForCamera(camera);
-});
-
-camerasController.on('update', function(camera) {
-    scheduler.clearForCamera(camera);
-    scheduler.launchForCamera(camera);
-});
 
 
 // - - -
@@ -100,6 +81,31 @@ diskstat.on('hdd_throughput', function(data) {
 	io.sockets.emit('hdd_throughput', data);
 });
 // - - -
+
+
+
+var Scheduler = require('./helpers/scheduler.js');
+var scheduler = new Scheduler(10000);
+setTimeout(function(){
+    scheduler.launchForAllCameras(camerasController.getCameras());
+}, 10000);
+
+
+camerasController.on('create', function(camera) {
+    console.log("camera created calling launchForCamera on scheduler");
+    scheduler.launchForCamera(camera);
+});
+
+camerasController.on('delete', function(camera) {
+    console.log("camera deleted, removing scheduler");
+    scheduler.clearForCamera(camera);
+});
+
+camerasController.on('schedule_update', function(camera) {
+    console.log("camera scheduler updated, relaunching scheduler");
+    scheduler.clearForCamera(camera);
+    scheduler.launchForCamera(camera);
+});
 
 
 app.all('/*', function(req, res, next) {
@@ -396,12 +402,40 @@ app.get('/cameras/:id/json', function(req, res) {
 });
 // - - -
 
+// - - 
+// 
+app.get('/cameras/:id/schedule/json', function(req, res) {
+    var camId = req.params.id;
+    
+    camerasController.getCamera( camId, function(err, cam) {
+        if (err || !cam || cam.length === 0) {
+            res.json({ success: false, error: err });
+        } else {
+            console.log(cam);
+            res.json({ success: true, schedule_enabled: cam.schedule_enabled, schedule: cam.schedule.toJSON() });
+        }
+    });
+});
+// - - -
+
 
 app.put('/cameras/:id', function(req, res) {
     var cam = req.body;
     cam._id = req.params.id;
 
     camerasController.updateCamera( cam, function(err) {
+        if (err) {
+            res.json({success: false, error: err});
+        } else {
+            res.json({success: true});
+        }
+    });
+});
+
+app.put('/cameras/:id/schedule', function(req, res) {
+    var params = req.body;
+    params._id = req.params.id;
+    camerasController.updateCameraSchedule(params, function(err) {
         if (err) {
             res.json({success: false, error: err});
         } else {

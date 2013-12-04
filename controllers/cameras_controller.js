@@ -27,7 +27,7 @@ function cameraInfo(camera) {
     info.ip = camera.ip;
     info._id = camera._id;
     info.enabled = camera.enabled;
-    info.schedule = camera.schedule.toJSON()
+    // info.schedule = camera.schedule.toJSON()
     if (camera.id) {
         info.id = camera.id;
     } else {
@@ -114,6 +114,7 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
     var self = this;
     cam.enableSchedule = false;
+    cam.schedule = {"sunday":{"open":0,"close":"23:59"},"monday":{"open":0,"close":"23:59"},"tuesday":{"open":0,"close":"23:59"},"wednesday":{"open":0,"close":"23:59"},"thursday":{"open":0,"close":"23:59"},"friday":{"open":0,"close":"23:59"},"saturday":{"open":0,"close":"23:59"}}
     db.insert( cam, function( err, newDoc ) {
         if (err) {
             console.log("error when inserting camera: " + err);
@@ -173,7 +174,7 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 
 
 CamerasController.prototype.updateCamera = function(cam, cb) {
-
+    var self = this;
     var camera = this.findCameraById( cam._id );
     if (!camera) {
         cb("{error: 'camera not found'}");
@@ -207,28 +208,27 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 };
 
 
-CamerasController.prototype.updateCameraSchedule = function(cam, cb) {
-
-    var camera = this.findCameraById( cam._id );
+CamerasController.prototype.updateCameraSchedule = function(params, cb) {
+    console.log("*** updating camera schedule:" );
+    console.log(params);
+    var self = this;
+    var camera = this.findCameraById( params._id );
     if (!camera) {
         cb("{error: 'camera not found'}");
         return;
     }
-    
-    console.log("*** updating camera schedule:" );
-    console.log(cam);
 
-    db.update({ _id: cam._id }, { 
+    db.update({ _id: params._id }, { 
         $set: {
-            schedule_enabled: cam.schedule_enabled,
-            schedule: cam.schedule
+            schedule_enabled: params.schedule_enabled,
+            schedule: params.schedule
         } 
     }, { multi: true }, function (err, numReplaced) {
         if (err) {
             cb(err);
         } else {
-            camera.cam.schedule_enabled = cam.schedule_enabled;
-            camera.cam.setRecordingSchedule(schedule);
+            camera.cam.schedule_enabled = params.schedule_enabled;
+            camera.cam.setRecordingSchedule(params.schedule);
             camera.cam.updateRecorder();
             self.emit("schedule_update", camera.cam);
             cb(err);
