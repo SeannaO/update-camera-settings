@@ -276,7 +276,7 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
             ip: cam.ip,
 			id: cam.id
         } 
-    }, { multi: true }, function (err, numReplaced) {
+    }, { multi: false }, function (err, numReplaced) {
         if (err) {
             cb(err);
         } else {

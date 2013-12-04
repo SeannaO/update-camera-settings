@@ -80,6 +80,10 @@ Camera.prototype.deleteChunk = function( chunk, cb ) {
 				if (exists) {
 					fs.unlink( chunk.file, function(err) {
 						if (!err) {
+							// attempts to delete the corresponding thumb
+							var thumb = chunk.file.replace('/videos', '/thumbs');
+							thumb = thumb.replace('.ts','.jpg');
+							fs.unlink(thumb);
 						} else {
 							console.log( err );
 						}

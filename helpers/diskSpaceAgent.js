@@ -29,15 +29,37 @@ DiskSpaceAgent.prototype.check = function() {
 
 	var self = this;
 	
+	/*
 	// !!! du -c is for development only
-	// !!! on production, use du -s
-	var df = exec('du -cm ' + self.folder + ' |grep total' , function(error, stdout, stderr) {
+	var df = exec('du -cm ' + self.folder + ' |grep total' , function(error, stdout, stderr) {	
 		if (!error) {
 			stdout = stdout.split(/\s+/);
 			var total = parseInt( stdout );
 			self.emit('disk_usage', total);
 		}
 	});
+	*/
+	
+	var df = exec('df -h ' + self.folder + ' |grep /', function(error, stdout, stderr) {	
+		console.log( 'df -h ' + self.folder + ' |grep ' + self.folder );
+		if (!error) {
+			stdout = stdout.split(/\s+/);
+			var usage;
+			for (var i in stdout) {
+				if ( stdout[i].indexOf('%') > -1 ) {
+					usage = parseFloat( stdout[i] );
+				}
+			}
+			if( usage ) {
+				self.emit('disk_usage', usage);
+			}
+		} else {
+
+			console.log( error );
+		}
+	});
+
+
 };
 
 

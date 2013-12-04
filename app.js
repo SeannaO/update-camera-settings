@@ -34,10 +34,30 @@ io.set('log level', 1);
 // end of socket.io config
 // - - -
 
-server.listen(process.env.PORT || 8080);
 
-var folder = '/Users/manuel/solink/nas/cameras';
-var camerasController = new CamerasController( __dirname + '/db/cam_db', folder);
+// - - - - -
+// sets base folder from the command line
+// usage:  node app.js /my/folder
+var baseFolder;
+
+if ( process.argv.length > 2 ) {
+	baseFolder = process.argv[2];
+	if ( !fs.existsSync( baseFolder ) ) {
+		console.log('the folder ' + baseFolder + ' doesn\'t exist; create that folder before starting the server');
+		process.exit();
+	}
+} else {
+	console.log('you need to provide a base folder where the files are going to be stored');
+	process.exit();
+}
+// - - -
+
+
+// server.listen(process.env.PORT || 8080);
+server.listen( 8080 );
+
+//var folder = '/Users/manuel/solink/nas/cameras';
+var camerasController = new CamerasController( __dirname + '/db/cam_db', baseFolder);
 
 
 // middleware for parsing request body contents
@@ -47,13 +67,13 @@ app.use(express.bodyParser());
 
 // - - - - -
 // disk space agent
-var diskSpaceAgent = new DiskSpaceAgent( folder );
+var diskSpaceAgent = new DiskSpaceAgent( baseFolder );
 diskSpaceAgent.launch();
 diskSpaceAgent.on('disk_usage', function(usage) {
 	var nCameras = camerasController.getAllCameras().length;
-	console.log( "usage: " + usage );
+	console.log( "usage: " + usage + "%");
 	console.log("nCameras: " + nCameras);
-	if (usage > 200) {
+	if (usage > 90) {	// usage in MB
 			camerasController.deleteOldestChunks( 10*nCameras, function(data) {
 			console.log( "done deleting files. is it enough?" );
 		});
@@ -188,15 +208,16 @@ app.get('/cameras.json', function(req, res) {
 });
 // - - -
 
+/*
 // !!!!! debug only !!!!!
 app.get('/cleanup', function(req, res) {
 	res.end('debug only');
-//	var n = req.query.n || 10;	
-//	camerasController.deleteOldestChunks( n, function(data) {
-//		res.end( JSON.stringify(data) );
-//	});
+	var n = req.query.n || 5;	
+	camerasController.deleteOldestChunks( n, function(data) {
+		res.end( JSON.stringify(data) );
+	});
 });
-
+*/
 
 // - - -
 // renders main cameras page
