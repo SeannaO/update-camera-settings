@@ -38,6 +38,10 @@ function cameraInfo(camera) {
 }
 
 
+CamerasController.prototype.getAllCameras = function() {
+	return cameras;
+};
+
 CamerasController.prototype.listVideosByCamera = function( camId, start, end, cb ) {
     
     var self = this;
@@ -110,6 +114,96 @@ CamerasController.prototype.getCamera = function(camId, cb) {
 };
 
 
+CamerasController.prototype.deleteChunksSequentially = function( chunks, cb ) {
+
+	var self = this;
+
+	if (chunks.length === 0) {
+		cb();
+	} else {
+		var chunk = chunks.shift();
+		self.deleteChunk( chunk, function(data) {
+			setTimeout( 
+				function() {
+					self.deleteChunksSequentially( chunks, cb );
+				}, 50
+			);
+		});
+	}	
+};
+
+CamerasController.prototype.deleteChunk = function( chunk, cb ) {
+	
+	var self = this;
+
+	self.getCamera(chunk.cam_id, function( err, cam ) {
+		if(!err && cam) {
+			cam.deleteChunk( chunk, function(data) {
+				console.log( "deleting chunk " + chunk.id + " from camera: " + cam._id );
+				if (cb) cb( data );
+			});
+		} else {
+			console.log( err );
+		}
+	});
+};
+
+CamerasController.prototype.deleteOldestChunks = function( numChunks, cb ) {
+	
+	var deletedChunks = [];
+	var n = 0;
+
+	var self = this;
+
+	self.getOldestChunks( numChunks, function(oldChunks) {
+		self.deleteChunksSequentially( oldChunks, function() {
+			cb( oldChunks );
+		});
+	});
+};
+
+
+CamerasController.prototype.getOldestChunksFromCamera = function( numChunks, camera, cb ) {
+
+	camera.getOldestChunks( numChunks, function( data ) {
+		
+		data = data.map( function(d) {
+			d.cam_id = camera._id;
+			return d;
+		});
+
+		cb( data );
+	});
+};
+
+
+CamerasController.prototype.getOldestChunks = function( numChunks, cb ) {
+
+	var self = this;
+
+	var n = 0;
+	var oldChunks = [];
+	
+	console.log( numChunks );
+	for (var c in cameras) {
+		var cam = cameras[c];
+		self.getOldestChunksFromCamera( numChunks, cam, function( data ) {
+
+			oldChunks = oldChunks.concat( data );
+			n++;
+
+			if (n === cameras.length) {
+				oldChunks = oldChunks.sort( function(a, b) {
+					return a.start - b.start;
+				});
+
+				cb( oldChunks.slice(0, numChunks) );
+			}
+		});
+	}
+};
+
+
 CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
     var self = this;
@@ -143,7 +237,6 @@ CamerasController.prototype.pushCamera = function( cam ) {
         self.emit('camera_status', data);
     });
 };
-
 
 
 CamerasController.prototype.removeCamera = function( camId, cb ) {
@@ -191,7 +284,7 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
             ip: cam.ip,
 			id: cam.id
         } 
-    }, { multi: true }, function (err, numReplaced) {
+    }, { multi: false }, function (err, numReplaced) {
         if (err) {
             cb(err);
         } else {

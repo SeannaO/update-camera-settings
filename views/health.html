@@ -13,11 +13,22 @@
 		<script src="/js/health.js"></script>
 
 		<style>
+
+			#tp-status {
+				margin: 10px;
+				width: 100%;
+				height: auto;
+				overflow: auto;
+				position: relative;
+
+			}
+
 			#cpu_bar {
 				position: absolute;
 				width: 1px;
 				height: 30px;
 				background: #afa;
+				margin: 10px;
 			}
 
 			.tp-bar-container {
@@ -38,6 +49,14 @@
 				width: 1px;
 				margin: 1px;
 			}
+			
+			.tp-info {
+				margin: 15px;
+				padding: 5px;
+				float: left;
+				width: 250px;
+				overflow: hidden;
+			}
 
 			.ws-bar {
 				background: #0ae;
@@ -54,25 +73,41 @@
 			.krs-bar {
 				background: #aaf;
 			}
-
+			
+			#sensors-info {
+				
+			}
 		</style>
-
-		<script>
-
-			setupHealth();
-
-		</script>
-
 	</head>
 
-	<h2 class = "muted">system status</h2>
+	<h2 class = "muted"><a href="/cameras">cameras</a> <span style="color:#aaa"> | system status</span></h2>
 
 	cpu load: <span id = "cpu_load"></span>%
 
 	<div id = "cpu_bar"></div>
 
 	<br><br><br>
+	
+	<hr>
+	
+	<div id = "sensors-info">
+		
+	</div>
+
+	<hr>
+
+	<div id = "tp-status">
+	</div>
+
+	<hr>
 
 	<div id ="smart-status">
 	</div>
+
+		<script>
+
+			setupHealth();
+
+		</script>
+	
 </html>

@@ -1,17 +1,88 @@
 //require('look').start();  -- profiler ( NOT for production )
 
-var express = require('express');
-var tsHandler = require('./helpers/ts');
-var hlsHandler = require('./controllers/hls_controller');
-var mp4Handler = require('./controllers/mp4_controller');
-var CamerasController = require('./controllers/cameras_controller');
-var Stream = require('stream');
-var fs = require('fs');
-var path = require('path');
-var lifeline = require('./helpers/lifeline_api.js');
-var request = require('request');
+var express = require('express');										// express 
+var tsHandler = require('./helpers/ts');								// ts abstraction
+var hlsHandler = require('./controllers/hls_controller');				// hls abstraction
+var mp4Handler = require('./controllers/mp4_controller');				// mp4 abstraction
+var CamerasController = require('./controllers/cameras_controller');	// cameras controller								
+var fs = require('fs');													// for sending files
+var path = require('path');												// for parsing path urls
+var lifeline = require('./helpers/lifeline_api.js');					// api layer for lifeline app
+var request = require('request');										// for making requests to lifeline app
+var CamHelper = require('./helpers/cameras_helper.js');					// abstraction for start/stop recordings
+var DiskSpaceAgent = require('./helpers/diskSpaceAgent.js');			// agent that periodically checks disk space
 
 // - - -
+// stores machine ip
+var localIp = "";
+
+require('dns').lookup(require('os').hostname(), function (err, add, fam) {
+    localIp = add;
+});
+// - - -
+
+// starts express
+var app = express();
+
+// - - -
+// socket.io config 
+var io = require('socket.io');
+
+var server = require('http').createServer(app);
+io = io.listen(server);
+io.set('log level', 1);
+// end of socket.io config
+// - - -
+
+
+// - - - - -
+// sets base folder from the command line
+// usage:  node app.js /my/folder
+var baseFolder;
+
+if ( process.argv.length > 2 ) {
+	baseFolder = process.argv[2];
+	if ( !fs.existsSync( baseFolder ) ) {
+		console.log('the folder ' + baseFolder + ' doesn\'t exist; create that folder before starting the server');
+		process.exit();
+	}
+} else {
+	console.log('you need to provide a base folder where the files are going to be stored');
+	process.exit();
+}
+// - - -
+
+
+// server.listen(process.env.PORT || 8080);
+server.listen( 8080 );
+
+//var folder = '/Users/manuel/solink/nas/cameras';
+var camerasController = new CamerasController( __dirname + '/db/cam_db', baseFolder);
+
+
+// middleware for parsing request body contents
+// this must come before app.all
+app.use(express.bodyParser());  
+
+
+// - - - - -
+// disk space agent
+var diskSpaceAgent = new DiskSpaceAgent( baseFolder );
+diskSpaceAgent.launch();
+diskSpaceAgent.on('disk_usage', function(usage) {
+	var nCameras = camerasController.getAllCameras().length;
+	console.log( "usage: " + usage + "%");
+	console.log("nCameras: " + nCameras);
+	if (usage > 90) {	// usage in MB
+			camerasController.deleteOldestChunks( 10*nCameras, function(data) {
+			console.log( "done deleting files. is it enough?" );
+		});
+	}
+});
+// - - -
+
+
+// - - - - -
 // health check modules
 var Iostat = require('./helpers/iostat.js');
 var iostat = new Iostat();
@@ -21,42 +92,17 @@ var Smart = require('./helpers/smart.js');
 var smart = new Smart({development: true});
 smart.start();
 
-var Diskstat = require('./helpers/diskstat');
+var Diskstat = require('./helpers/diskstat.js');
 var diskstat = new Diskstat({development: true});
 diskstat.launch();
+
+var SensorsInfo = require('./helpers/sensors.js');
+var sensorsInfo = new SensorsInfo({development: true});
+sensorsInfo.launch();
 // - - -
 
-
-
-
-var io = require('socket.io');
-
-var CamHelper = require('./helpers/cameras_helper.js');
-
-var localIp = "";
-
-require('dns').lookup(require('os').hostname(), function (err, add, fam) {
-    localIp = add;
-});
-
-var app = express();
-
-// - - -
-// socket.io config 
-var server = require('http').createServer(app);
-io = io.listen(server);
-io.set('log level', 1);
-// - - -
-
-server.listen(process.env.PORT || 8080);
-
-
-var camerasController = new CamerasController( __dirname + '/db/cam_db', '/Users/WadBook/solink/nas/cameras');
-app.use(express.bodyParser()); // this must come before app.all 
-
-
-// - - -
-// socket.io broadcasts
+// - - - -
+// socket.io broadcasts setup
 camerasController.on('new_chunk', function( data ) {
    
     io.sockets.emit( 'newChunk', data );
@@ -80,6 +126,11 @@ smart.on('smart', function(data) {
 diskstat.on('hdd_throughput', function(data) {
 	io.sockets.emit('hdd_throughput', data);
 });
+
+sensorsInfo.on('sensors_data', function(data) {
+	io.sockets.emit('sensorsData', data);
+});
+// end of socket.io broadcasts setup
 // - - -
 
 
@@ -113,25 +164,31 @@ app.all('/*', function(req, res, next) {
   res.header("Access-Control-Allow-Headers", "X-Requested-With");
   next();
 });
+//
 
-app.use(express.cookieParser());
-app.use(express.session({secret: 'solink'}));
+app.use(express.cookieParser());				// cookies middleware
+app.use(express.session({secret: 'solink'}));	// for session storage
 
-app.use('/css', express.static(__dirname + '/assets/css'));
+// - - -
+// static files
+app.use('/css', express.static(__dirname + '/assets/css'));		
 app.use('/js', express.static(__dirname + '/assets/js'));
+// end of static files
+// - - -
 
-app.set('view engine', 'ejs');
+app.set('view engine', 'ejs');	// rendering engine (like erb)
 
-// - -
-// 
+
+// - - -
+// main page
 app.get('/', function (req, res) {    
     res.sendfile(__dirname + '/views/cameras.html');
 });
 // - - -
 
 
-// - -
-//
+// - - -
+//	health stats
 app.get('/health', function(req, res) {
 
     res.sendfile(__dirname + '/views/health.html');
@@ -139,8 +196,8 @@ app.get('/health', function(req, res) {
 // - - -
 
 
-// - -
-//
+// - - -
+// gets ts segment
 app.get('/ts/:id/:file', function(req, res) {
     
     var camId = req.params.id;
@@ -151,16 +208,17 @@ app.get('/ts/:id/:file', function(req, res) {
 // - - -
 
 
-// - -
-//
+// - - -
+//	gets hls live stream
+//	TODO: not yet implemented
 app.get('/live', function(req, res) {
 
     hlsHandler.generateLivePlaylist( db, req, res );       
 });
 // - - -
 
-// - - 
-// 
+// - - -
+// gets json list of cameras
 app.get('/cameras.json', function(req, res) {
 
     camerasController.listCameras( function(err, list) {
@@ -174,16 +232,30 @@ app.get('/cameras.json', function(req, res) {
 });
 // - - -
 
-// - - 
-// 
+/*
+// !!!!! debug only !!!!!
+app.get('/cleanup', function(req, res) {
+	res.end('debug only');
+	var n = req.query.n || 5;	
+	camerasController.deleteOldestChunks( n, function(data) {
+		res.end( JSON.stringify(data) );
+	});
+});
+*/
+
+// - - -
+// renders main cameras page
 app.get('/cameras', function(req, res) {
     res.sendfile(__dirname + '/views/cameras.html');
+
+	//camerasController.deleteOldestChunks();
+
 });
 // - - -
 
 
-// - - 
-// 
+// - - -
+// lists all videos
 app.get('/cameras/:id/list_videos', function(req, res) {
     var camId = req.params.id;
     
@@ -198,8 +270,8 @@ app.get('/cameras/:id/list_videos', function(req, res) {
 // - - -
 
 
-// - - 
-// 
+// - - -
+// gets thumbnail
 app.get('/cameras/:id/thumb/:thumb', function(req, res) {
 
     var camId = req.params.id;
@@ -227,8 +299,8 @@ app.get('/cameras/:id/thumb/:thumb', function(req, res) {
 // - - -
 
 
-// - - 
-// 
+// - - -
+// requests snapshot, returns jpeg
 app.get('/cameras/:id/snapshot', function(req, res) {
     
     var camId = req.params.id;
@@ -245,8 +317,8 @@ app.get('/cameras/:id/snapshot', function(req, res) {
 // - - -
 
 
-// - - 
-// 
+// - - -
+// requests mp4video, returns json when ready
 app.get('/cameras/:id/video.json', function(req, res) {
 
     var camId = req.params.id;
@@ -266,8 +338,8 @@ app.get('/cameras/:id/video.json', function(req, res) {
 // - - -
 
 
-// - - 
-// 
+// - - -
+// gets mp4 video
 app.get('/cameras/:id/video', function(req, res) {
 
     var camId = req.params.id;
@@ -292,8 +364,8 @@ app.get('/cameras/:id/video', function(req, res) {
 // - - -
 
 
-// - - 
-// 
+// - - -
+// gets hls stream for finite length video
 app.get('/cameras/:id/video.hls', function(req, res) {
 
     var camId = req.params.id;
@@ -313,8 +385,9 @@ app.get('/cameras/:id/video.hls', function(req, res) {
 // - - -
 
 
-// - - 
-// 
+// - - -
+// starts recording
+// TODO: should be only via post
 app.get('/cameras/:id/start_recording', function(req, res) {
     startRecording(req, res);
 });
@@ -324,8 +397,9 @@ app.post('/cameras/:id/start_recording', function(req, res) {
 // - - -
 //
 
-// - - 
-// 
+// - - -
+// stops recording
+// TODO: should be only via post
 app.post('/cameras/:id/stop_recording', function(req, res) {
     stopRecording( req, res );
 });
@@ -336,59 +410,36 @@ app.get('/cameras/:id/stop_recording', function(req, res) {
 
 
 // - - -
-var startRecording = function(req, res) {
-    var camId = req.params.id;
-    
-    camerasController.startRecording( camId, function(err) {
-        if ( err ) {
-            res.json({ success: false, error: err });
-        } else {
-            res.json({ success: true });
-        }
-    });
-};
-
-var stopRecording = function( req, res ) {
-    var camId = req.params.id;
-
-    camerasController.stopRecording( camId, function(err) {
-        if (err || cam.length === 0) {
-            res.json({ success: false, error: err });
-        } else {
-            res.json({ success: true });
-        }
-    });
-};
-// - - -
-
-
-// - - 
-// 
+// multicam mockup 
+// TODO: create a real multicam page
 app.get('/multiview', function(req, res) {
     
 	res.sendfile(__dirname + '/views/multi.html');
 });
 // - - -
-//
 
-// - - 
-// 
+
+// - - -
+// renders camera page
 app.get('/cameras/:id', function(req, res) {
-    var camId = req.params.id;
+
+	var camId = req.params.id;
     
     camerasController.getCamera( camId, function(err, cam) {
         if (err || cam.length === 0) {
             res.end("couldn't find this camera");
         } else {
+			// console.log( cam.deleteOldestChunks(10) );
             res.render('camera', {id: cam._id, rtsp: cam.rtsp, name: cam.name});
         }
     });
 });
+// end of camera page
 // - - -
 
 
-// - - 
-// 
+// - - -
+// returns camera info (json)
 app.get('/cameras/:id/json', function(req, res) {
     var camId = req.params.id;
     
@@ -418,7 +469,8 @@ app.get('/cameras/:id/schedule/json', function(req, res) {
 });
 // - - -
 
-
+// - - -
+// update camera
 app.put('/cameras/:id', function(req, res) {
     var cam = req.body;
     cam._id = req.params.id;
@@ -431,22 +483,12 @@ app.put('/cameras/:id', function(req, res) {
         }
     });
 });
+// end of update camera
+// - - 
 
-app.put('/cameras/:id/schedule', function(req, res) {
-    var params = req.body;
-    params._id = req.params.id;
-    camerasController.updateCameraSchedule(params, function(err) {
-        if (err) {
-            res.json({success: false, error: err});
-        } else {
-            res.json({success: true});
-        }
-    });
-});
-
-
-// - -
-//
+// - - -
+// delete camera
+// TODO: delete camera on lifeline app
 app.delete('/cameras/:id', function(req, res) {
 
 	var cam = camerasController.findCameraById( req.params.id ).cam;
@@ -455,7 +497,8 @@ app.delete('/cameras/:id', function(req, res) {
         if (err) {
             res.json({success: false, error: err});
         } else if (cam) {
-			/*
+			/*  
+			// delete camera on lifeline app
 			try {
 				var url = "https://admin:admin@192.168.215.153/cp/solink_delete_camera?v=2&id="+encodeURIComponent( cam.id );
 				request(url, {
@@ -475,11 +518,12 @@ app.delete('/cameras/:id', function(req, res) {
     });
     
 });
+// end of delete camera
 // - - -
 
 
-// - -
-//
+// - - -
+// posts new camera
 app.post('/cameras/new', function(req, res) {
 
     camerasController.insertNewCamera( req.body, function( err, newDoc ) {
@@ -519,32 +563,45 @@ app.post('/cameras/new', function(req, res) {
         }
     });
 });
-// - -
-
-
-
-// - -
-// 
-app.get('/scan', function(req, res) {
-    var prefix = localIp.substr(0,11);
-    console.log("scanning for ONVIF cameras...");
-    onvif.scan(prefix, function(ipList) {
-        res.header("Content-Type", "application/json");
-        res.write('[');
-        for (var i = 0; i < ipList.length; i++) {
-            console.log("found ONVIF camera on ip: " + ipList[i]);      
-            res.write('{ "ip": "' + ipList[i]+ '" }');
-        }
-        res.end(']');
-    });    
-});
+// end of post new camera
 // - - -
 
 
 
+// - - -
+// end recording abstraction
+var startRecording = function(req, res) {
+    var camId = req.params.id;
+    
+    camerasController.startRecording( camId, function(err) {
+        if ( err ) {
+            res.json({ success: false, error: err });
+        } else {
+            res.json({ success: true });
+        }
+    });
+};
+
+
+// - - -
+// stop recording abstraction
+var stopRecording = function( req, res ) {
+    var camId = req.params.id;
+
+    camerasController.stopRecording( camId, function(err) {
+        if (err || cam.length === 0) {
+            res.json({ success: false, error: err });
+        } else {
+            res.json({ success: true });
+        }
+    });
+};
+// end of stopRecording
+// - - -
+
 
 /////////////////////
-/// lifeline     ///
+/// lifeline  api ///
 ////////////////////
 
 lifeline.setup( app, camerasController, mp4Handler, hlsHandler );

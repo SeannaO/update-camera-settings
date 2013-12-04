@@ -38,6 +38,43 @@ var setupHealth = function() {
 	socket.on('hdd_throughput', function(data) {
 		updateHddThroughput( data );
 	});	
+
+	socket.on('sensorsData', function(data) {
+		updateSensors( data );
+	});		
+
+	setupSensorsInfo();
+};
+
+
+var updateSensors = function( data ) {
+	
+	//console.log( data );
+
+	var table = $('#sensors-table');
+	table.html('');
+
+	for (var sensor in data) {
+
+		for (var type in data[sensor]) {
+
+			var row = $('<tr>');
+			var column = $('<td>', {
+				html: sensor + ' (' + type + ')'
+			});
+
+			row.append( column );
+
+			column = $('<td>', {
+				html: data[sensor][type].value
+			});
+
+			row.append( column );
+
+			table.append(row);
+		}
+	}
+	
 };
 
 
@@ -73,14 +110,25 @@ var updateHddThroughput = function( data ) {
 };
 
 
+var setupSensorsInfo = function() {
+
+	var table = $("<table>", {
+		id: 'sensors-table',
+		class: 'table table-striped table-hover table-condensed'
+	}).appendTo('#sensors-info');
+
+};
+
+
 var setupTpInfo = function( hdd ) {
 	
 	var hddinfo =  $('#' +  hdd + '-info');
 
 	var tpinfo = $('<div>', {
 		id: hdd + '-tp-info',
-		class: 'tp-info'
-	}).appendTo(hddinfo);
+		class: 'tp-info',
+		html: '<b>'+hdd+' throughput</b>'
+	}).appendTo("#tp-status");
 
 	for (var i in tpAttr) {
 
@@ -99,7 +147,6 @@ var setupTpInfo = function( hdd ) {
 			class: tpAttr[i].id + '-bar tp-bar'
 		}).appendTo(barContainer);
 	}
-		
 };
 
 
@@ -110,6 +157,8 @@ var updateSmartStatus = function( data ) {
 	var hddinfo =  $('#' +  hdd + '-info');
 	var smartinfo = $('#' +  hdd + '-smart-info');
 	var tpinfo = $('#' +  hdd + '-tp-info');
+
+	var smartTable = "";
 
 	if ( hddinfo.length === 0 ) {
 
@@ -124,18 +173,23 @@ var updateSmartStatus = function( data ) {
 		
 		setupTpInfo( hdd );
 
-		$("#smart-status").append("<br><br>");
+		$("#smart-status").append("<br>");
+
+		smartinfo.append('<br><h4><a data-toggle="collapse" href="#'+ hdd + '-smart-table">' + hdd + ' SMART status</a></h4>');
+
+		smartTable = $("<table>", {
+			id:  hdd + '-smart-table',
+			class: 'table table-striped table-hover table-condensed collapse in'
+		}).appendTo( smartinfo );
+
 	} else {
-		smartinfo.html("");
+		smartTable = $('#' + hdd + '-smart-table');
+		smartTable.html("");
 	}
-
-	smartinfo.append("<h4>" + hdd + " SMART status</h4>");
 	
-	var smartTable = $("<table>", {
-		id:  hdd + '-smart-table'
-	}).appendTo( smartinfo );
+	var tHead = $("<thead>").appendTo( smartTable );
+	var headerRow = $("<tr>").appendTo( tHead ).html("<td></td>");
 
-	var headerRow = $("<tr>").appendTo( smartTable );
 	var attrRow = $("<tr>").appendTo( smartTable );
 	
 	var isHeaderPopulated = false;
@@ -152,17 +206,13 @@ var updateSmartStatus = function( data ) {
 		
 		for (var type in data.status[attribute]) {
 
-			if (headerRow.html() === "") {
+			if (!isHeaderPopulated) {
 				$("<td>").appendTo( headerRow )
 					.html( type );
 			}
 			$("<td>").appendTo( attrRow )
 				.html( data.status[attribute][type] );
 		}
+		isHeaderPopulated = true;
 	}
 };
-
-
-
-
-

@@ -1,0 +1,76 @@
+var request = require('request');
+var EventEmitter = require('events').EventEmitter;
+var util = require('util');
+
+var SensorsInfo = function( options ) {
+
+	options = options || {};
+
+	if (options.development) this.developmentMode = true;
+
+	console.log("sensorsInfo module");
+	console.log(options);
+
+	this.sensors = {};
+};
+
+util.inherits(SensorsInfo, EventEmitter);
+
+SensorsInfo.prototype.launch = function() {
+	
+	var self = this;
+	this.process = setInterval( function() {
+		self.requestNewData();
+	}, 2000 );
+
+};
+
+
+SensorsInfo.prototype.stop = function() {
+
+	clearInterval( this.process );
+};
+
+
+SensorsInfo.prototype.requestNewData = function() {
+	
+	var self = this;
+
+	var url = 'https://admin:admin@localhost/cp/Sensors?v=2';
+
+	if (self.developmentMode) {
+		url = 'https://admin:admin@192.168.215.153/cp/Sensors?v=2';
+	}
+
+	request( url, {
+				strictSSL: false
+			}, 
+			function (error, response, body) {
+				if (!error && response.statusCode == 200) {
+					var data = JSON.parse( body );
+
+					self.update( data );
+				}
+			}
+	);
+};
+
+
+SensorsInfo.prototype.update = function( data ) {
+
+	var self = this;
+
+	for ( var i in data ) {	
+		var sensorData = data[i];
+		this.sensors[sensorData.name] = this.sensors[sensorData.name] || {};
+		this.sensors[sensorData.name][sensorData.type] = this.sensors[sensorData.name][sensorData.type] || {};
+		this.sensors[sensorData.name][sensorData.type].value = sensorData.value;
+	}
+
+	self.emit( 'sensors_data', this.sensors );
+};
+
+
+module.exports = SensorsInfo;
+
+

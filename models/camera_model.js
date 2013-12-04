@@ -6,10 +6,9 @@ var util = require('util');
 var EventEmitter = require('events').EventEmitter;
 
 
-
 function Camera( cam, videosFolder ) {
 
-	console.log("initializing camera... ?");
+	console.log("initializing camera " + cam._id);
 
     var self = this;
 
@@ -30,14 +29,13 @@ function Camera( cam, videosFolder ) {
 	}
 
     this.db = new Dblite( this.videosFolder + "/db.sqlite" );
-	this.recordModel = new RecordModel( this.db, this );
+	this.recordModel = new RecordModel( this );
 
     if (cam.id) {
         this.id = cam.id;
     } else {
         this.id = cam._id;
-    }
-    
+    } 
 	
 	this.setupEvents();
 
@@ -56,6 +54,67 @@ util.inherits(Camera, EventEmitter);
 Camera.prototype.shouldBeRecording = function() {
     return ((this.schedule_enabled == "1" && this.schedule.isOpen()) || (this.schedule_enabled == "0" && this.enabled == "1"));
 };
+
+
+Camera.prototype.getOldestChunks = function( numberOfChunks, cb ) {
+	
+	var self = this;
+	self.db.getOldestChunks( numberOfChunks, function( data ) {
+		cb( data );
+	});
+};
+
+
+Camera.prototype.addChunk = function( chunk ) {
+	this.db.insertVideo( chunk );
+};
+
+
+Camera.prototype.deleteChunk = function( chunk, cb ) {
+	
+	var self = this;
+
+	self.db.deleteVideo( chunk.id, function( err ) {
+
+		if (err && err !== "") {
+			console.log( "error removing indexes from db" );
+			console.log(err);
+			cb( chunk, err );
+		} else { 
+			fs.exists(chunk.file, function(exists) {
+				if (exists) {
+					fs.unlink( chunk.file, function(err) {
+						if (!err) {
+							// attempts to delete the corresponding thumb
+							var thumb = chunk.file.replace('/videos', '/thumbs');
+							thumb = thumb.replace('.ts','.jpg');
+							fs.unlink(thumb);
+						} else {
+							console.log( err );
+						}
+						cb( chunk );
+					});
+				} else {
+					cb( chunk );
+				}
+				
+			});
+		}
+	});	
+};
+
+
+Camera.prototype.deleteChunks = function( chunks, cb ) {
+	
+	var self = this;
+	
+	for (var c in chunks) {
+		self.deleteChunk( chunks[c], function( data ) {
+			if(cb) cb(data);
+		});
+	}
+};
+
 
 Camera.prototype.setupEvents = function( cb ) {
 

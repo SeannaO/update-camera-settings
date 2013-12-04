@@ -6,23 +6,28 @@
 
 var request = require('request');
 
-
+var dummySoapMsg = "<?xml version='1.0' encoding='utf-8'?>" +
+					"<soapenv:Envelope xmlns:soapenv=\"http://www.w3.org/2003/05/soap-envelope\">" +
+					"  <soapenv:Body>" +
+					"    <ns0:some_operation xmlns:ns0=\"http://some_ns_uri\"/>" +
+					"  </soapenv:Body>" +
+					"</soapenv:Envelope>";
 /**
  * testIpForOnvifCamera
  *
  */
 var testIpForOnvifCamera = function( ip, cb ) {
-    request({ 
-            method: 'GET', 
+    var post = request({ 
+            method: 'POST', 
+			body: dummySoapMsg,
+			headers: {
+				'Content-Type': "text/soap+xml; charset=utf-8"
+			},
             uri: 'http://' + ip + '/onvif/device_service',
             timeout: 5000
         }, function (error, response, body) {
-            if ( !error ) {
-                if ( body.indexOf("SOAP-ENV") != -1) {
-                    cb( error, true, ip );
-                } else {
-                    cb( error, false, ip );
-                }
+            if ( !error &&  body.indexOf("www.onvif.org") != -1 ) {
+                cb( error, true, ip );
             } else {
                 cb( error, false, ip );
             }
@@ -65,7 +70,8 @@ var findOnvifCamera = function( ipPrefix, cb ) {
 // - - end of findOnvifCamera
 // - - - - - - - - - - - - - - - - - - - -
 
-
 // exports
 exports.scan = findOnvifCamera;
+
+
 
