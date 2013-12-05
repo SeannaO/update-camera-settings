@@ -1,6 +1,34 @@
 var ffmpeg = require('./../helpers/ffmpeg');
 var fs = require('fs');
 
+var spawn = require('child_process').spawn;
+
+function inMemorySnapshot( file, req, res ) {
+	
+	console.log("-- in-memory snapshot --");
+
+	var child = spawn('ffmpeg', ['-y', '-i', '1.ts', '-vframes', '1', '-ss', '1', '-f', 'image2', '-loglevel', 'quiet', '-']);
+
+	child.stderr.on('data', function (data) {
+		console.log('stderr: ' + data);
+		res.end( data );
+	});
+	
+	res.writeHead(200, {'Content-Type': 'image/jpeg'});
+	child.stdout.pipe( res );
+	
+	child.on('close', function(code) {
+		console.log( code );
+	});
+	
+	res.on('close', function() {
+		if( child ) {
+			child.kill();
+		}
+		console.log("connection closed");
+	});
+}	
+
 
 function sendMp4Video( file, req, res ) {
      fs.exists( file, function(exists) {
@@ -118,6 +146,7 @@ function takeSnapshot( db, cam, req, res ) {
         
         fs.exists(file, function(exists) {
             if (exists) {
+				/*
                 ffmpeg.smartSnapshot( file, cam.videosFolder + "/tmp", offset, options, function(fileName, error) {
                     res.sendfile( fileName,
                         {},
@@ -125,6 +154,8 @@ function takeSnapshot( db, cam, req, res ) {
                             fs.unlink( fileName );
                         });
                 });
+				*/
+					inMemorySnapshot(file, req, res);
                 } else {
                     res.end( "sorry, no videos were recorded at " + (new Date(time)) );
                 }
@@ -140,3 +171,4 @@ exports.generateMp4Video = generateMp4Video;
 exports.takeSnapshot = takeSnapshot;
 exports.sendMp4Video = sendMp4Video;
 exports.sendMp4VideoForDownload = sendMp4VideoForDownload;
+exports.inMemorySnapshot = inMemorySnapshot;
