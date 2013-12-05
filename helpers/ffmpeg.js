@@ -143,6 +143,62 @@ var smartSnapshot = function( file, outFolder, offset, options, cb ) {
 
 
 /**
+ * inMemoryStitch
+ *
+ */
+var inMemoryStitch = function( files, offset, req, res ) {
+    
+    console.log("- - - in mem stitch - - -");
+    console.log("offset: " + offset);
+    console.log("- - -");
+
+    var spawn = require('child_process').spawn;
+
+    var fileList = files.join('|');
+    fileList = "concat:" + fileList;
+
+	var child = spawn('ffmpeg', [
+			'-y', 
+			'-i', fileList, 
+			'-ss', offset.begin/1000, 
+			'-t', offset.duration/1000, 
+			'-c', 'copy', 
+			'-f', 'mp4',
+			'-frag_duration', '10', 
+			'hello.mp4']);
+
+	res.writeHead(200, {'Content-Type': 'video/mp4'});
+	child.stdout.pipe( res );
+	
+	child.stderr.on('data', function(data) {
+		//console.log(data.toString());
+		//console.log("error");
+	});
+
+		
+	child.stdout.on('data', function(data) {
+		//console.log(data.toString());
+		//console.log("success");
+	});
+
+	child.on('close', function(code) {
+		console.log( 'ffmpeg stitch process closed with code: ' + code );
+	});
+	
+	req.on('close', function() {
+		console.log('connection closed');
+		if( child ) {
+			console.log('killing ffmpeg stitch process');
+			child.kill();
+		}
+	});
+};
+// - - end of inMemStitch
+// - - - - - - - - - - - - - - - - - - - -
+
+
+
+/**
  * stitch
  *
  */
@@ -362,3 +418,4 @@ exports.calcDuration = calcDuration;
 exports.makeThumb = makeThumb;
 exports.smartSnapshot = smartSnapshot;
 exports.sendMp4File = sendMp4File;
+exports.inMemoryStitch = inMemoryStitch;

@@ -3,15 +3,16 @@ var fs = require('fs');
 
 var spawn = require('child_process').spawn;
 
+
 function inMemorySnapshot( file, req, res ) {
 	
 	console.log("-- in-memory snapshot --");
 
-	var child = spawn('ffmpeg', ['-y', '-i', '1.ts', '-vframes', '1', '-ss', '1', '-f', 'image2', '-loglevel', 'quiet', '-']);
+	var child = spawn('ffmpeg', ['-y', '-i', file, '-vframes', '1', '-ss', '1', '-f', 'image2', '-loglevel', 'quiet', '-']);
 
 	child.stderr.on('data', function (data) {
 		console.log('stderr: ' + data);
-		res.end( data );
+		//res.end( data );
 	});
 	
 	res.writeHead(200, {'Content-Type': 'image/jpeg'});
@@ -28,6 +29,46 @@ function inMemorySnapshot( file, req, res ) {
 		console.log("connection closed");
 	});
 }	
+
+
+
+function inMemoryMp4Video( db, cam, begin, end, req, res ) {
+    var camId = cam._id;
+    
+    console.log("-- in-memory mp4 video --");
+    console.log("camId: " + camId);
+
+    begin = parseInt( begin, 10 );
+    end = parseInt( end, 10 );
+
+    if ( isNaN(begin) || isNaN(end) ) {
+        var response = { success: false, error: "invalid interval" };
+        res.end( response );
+        return;
+    }
+
+	db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
+		
+		console.log("** offset **");
+		console.log(offset);
+
+		if (videoList.length === 0) {
+			
+			var formatedBegin = new Date(begin);
+			var formatedEnd = new Date(end);
+			
+			res.end('no videos found');
+		}
+		else {
+			var fileList = videoList.map( function(video) {
+				return video.file;
+			});
+
+			ffmpeg.inMemoryStitch( fileList, offset, req, res );
+		}
+	});    
+}
+
 
 
 function sendMp4Video( file, req, res ) {
@@ -172,3 +213,4 @@ exports.takeSnapshot = takeSnapshot;
 exports.sendMp4Video = sendMp4Video;
 exports.sendMp4VideoForDownload = sendMp4VideoForDownload;
 exports.inMemorySnapshot = inMemorySnapshot;
+exports.inMemoryMp4Video = inMemoryMp4Video;

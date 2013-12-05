@@ -346,7 +346,26 @@ app.get('/cameras/:id/video', function(req, res) {
             });
         }
     });
-    
+});
+// - - -
+
+// - - -
+// gets inMem mp4 video
+app.get('/cameras/:id/memvideo', function(req, res) {
+	res.end('feature under construction');
+/*
+    var camId = req.params.id;
+    var begin = parseInt( req.query.begin, 10 );
+    var end = parseInt( req.query.end, 10 );
+
+    camerasController.getCamera( camId, function(err, cam) {
+        if (err) {
+            res.json( { error: err } );
+        } else {
+            mp4Handler.inMemoryMp4Video( cam.db, cam, begin, end, req, res );
+        }
+    });
+	*/
 });
 // - - -
 
