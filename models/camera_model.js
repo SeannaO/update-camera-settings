@@ -20,7 +20,7 @@ function Camera( cam, videosFolder ) {
 	this.videosFolder = videosFolder + "/" + this._id;
     
 	this.recording = false;
-    this.enabled = !cam.enabled;
+    this.enabled = cam.enabled;
 
     this.schedule = new WeeklySchedule(cam.schedule);
 	this.schedule_enabled = cam.enableSchedule;
@@ -61,7 +61,7 @@ Camera.prototype.shouldBeRecording = function() {
 	console.log("this.schedule_enabled: " + this.schedule_enabled);
 	console.log("this.enabled: " + this.enabled );
 
-    return ((this.schedule_enabled === "1" && this.schedule.isOpen()) || (this.schedule_enabled == "0" && this.enabled == "1"));
+    return ( ( this.schedule_enabled && this.schedule.isOpen() ) || ( !this.schedule_enabled && this.enabled ) );
 };
 
 

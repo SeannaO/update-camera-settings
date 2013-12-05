@@ -318,7 +318,7 @@ CamerasController.prototype.updateCameraSchedule = function(params, cb) {
 
     db.update({ _id: params._id }, { 
         $set: {
-            schedule_enabled: params.schedule_enabled,
+            schedule_enabled: ( params.schedule_enabled === 1),
             schedule: params.schedule
         } 
     }, { multi: true }, function (err, numReplaced) {
