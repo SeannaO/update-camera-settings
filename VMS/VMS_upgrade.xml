@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- This is a sample upgrade.xml. Please update it according to your own needs -->
+<upgrade Type="applicationset">
+	<Version ApplicationSet="VMS" ApplyMin="1.0" Id="@@UPGRADE_PLATFORMS@@" Version="@@VERSION@@" />
+	<copyright>solink</copyright>
+	<vendor>solink</vendor>
+	<File Name="solink_VMS_@@VERSION@@_@@DPKG_ARCH@@.tgz" Url="ftp://a.b.c.d/public/@@TARGET@@/"/>
+</upgrade>

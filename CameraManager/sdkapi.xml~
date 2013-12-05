@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<APIDoc>
+<Subsection vendor="solink" app="CameraManager">
+	<Function Id="launch_server">
+		<Description>Launches the server if it is not already running.</Description>
+		<Return Type="boolean"/>
+	</Function>
+</Subsection>
+</APIDoc>
