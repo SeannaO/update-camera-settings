@@ -106,14 +106,14 @@ RecordModel.prototype.setStatus = function( status ) {
     this.status = status;
 };
 
-RecordModel.prototype.indexPendingFiles = function() {
+RecordModel.prototype.indexPendingFiles = function( cb ) {
 
     var self = this;
 
     while (self.pending.length > 1)  {
         var file = self.pending.shift();   
 		console.log(file);
-        self.moveAndIndexFile( file );
+        self.moveAndIndexFile( file, cb );
     }
 };
 
@@ -176,13 +176,16 @@ RecordModel.prototype.setupFolderSync = function(folder) {
 };
 
 
-RecordModel.prototype.moveAndIndexFile = function( file ) {
+RecordModel.prototype.moveAndIndexFile = function( file, cb ) {
 
     var self = this;
 
     self.calcDuration( file, function( video ) {
         self.moveFile( video );
         self.emit('new_chunk', video );
+		if ( cb ) {
+			cb();
+		}
     });
 };
 
@@ -249,7 +252,9 @@ RecordModel.prototype.moveFile = function( video, cb ) {
                 ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() { 
                 });
                 self.camera.addChunk( video );
-				if (cb) cb();
+				if (cb) {
+					cb();
+				}
             }                        
         });
     });

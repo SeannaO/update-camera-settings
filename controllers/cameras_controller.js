@@ -87,9 +87,13 @@ CamerasController.prototype.listCameras = function( cb ) {
     });
 };
 
+
 CamerasController.prototype.indexFiles = function() {
 
+	var self = this;
+
     var k = 0;
+
     setInterval( 
         function() {
             k = (k + 1) % cameras.length;
@@ -135,6 +139,7 @@ CamerasController.prototype.deleteChunksSequentially = function( chunks, cb ) {
 	}	
 };
 
+
 CamerasController.prototype.deleteChunk = function( chunk, cb ) {
 	
 	var self = this;
@@ -150,6 +155,7 @@ CamerasController.prototype.deleteChunk = function( chunk, cb ) {
 		}
 	});
 };
+
 
 CamerasController.prototype.deleteOldestChunks = function( numChunks, cb ) {
 	

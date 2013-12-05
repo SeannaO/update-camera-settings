@@ -190,9 +190,13 @@ Camera.prototype.deleteAllFiles = function() {
 };
 
 
-Camera.prototype.indexPendingFiles = function() {
+Camera.prototype.indexPendingFiles = function( cb ) {
  
-    this.recordModel.indexPendingFiles();
+    this.recordModel.indexPendingFiles( function() {
+		if (cb) {
+			cb();
+		}
+	});
 };
 
 

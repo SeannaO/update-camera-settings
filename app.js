@@ -110,7 +110,6 @@ camerasController.on('new_chunk', function( data ) {
 
 camerasController.on('camera_status', function( data ) {
 
-	console.log("camera status: " + data.status);
 	io.sockets.emit( 'cameraStatus', data );
 });
 
