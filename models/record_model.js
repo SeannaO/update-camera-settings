@@ -192,23 +192,26 @@ RecordModel.prototype.calcDuration = function( file, cb ) {
 
     var self = this;
 
-    var fileInfo = fs.statSync( file );
-    var lastModified = ( new Date(fileInfo.mtime) ).getTime();
+    fs.statSync( file, function( err, fileInfo ) {
+		var lastModified = ( new Date(fileInfo.mtime) ).getTime();
+
+		ffmpeg.calcDuration( file, function(duration) {
+
+			var start =  lastModified - duration;
+			var end = lastModified;
+
+			video = {
+				cam: self.camId,
+			start: start,
+			end: end,
+			file: file
+			};
+
+			cb( video );
+		});
+	});
+
     
-    ffmpeg.calcDuration( file, function(duration) {
-
-        var start =  lastModified - duration;
-        var end = lastModified;
-
-        video = {
-            cam: self.camId,
-            start: start,
-            end: end,
-            file: file
-        };
-
-        cb( video );
-    });    
 };
 
 

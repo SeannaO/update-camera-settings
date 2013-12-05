@@ -27,7 +27,7 @@ function cameraInfo(camera) {
     info.ip = camera.ip;
     info._id = camera._id;
     info.enabled = camera.enabled;
-    // info.schedule = camera.schedule.toJSON()
+    
     if (camera.id) {
         info.id = camera.id;
     } else {
@@ -37,10 +37,18 @@ function cameraInfo(camera) {
     return info;
 }
 
-
+//
+// remove one of the methods later
+//
 CamerasController.prototype.getAllCameras = function() {
 	return cameras;
 };
+
+CamerasController.prototype.getCameras = function() {
+    return cameras;
+};
+//
+//
 
 CamerasController.prototype.listVideosByCamera = function( camId, start, end, cb ) {
     
@@ -77,11 +85,6 @@ CamerasController.prototype.listCameras = function( cb ) {
             cb( err, cameras.map(cameraInfo) );                        
         }
     });
-};
-
-
-CamerasController.prototype.getCameras = function( ) {
-    return cameras;
 };
 
 CamerasController.prototype.indexFiles = function() {
@@ -207,8 +210,10 @@ CamerasController.prototype.getOldestChunks = function( numChunks, cb ) {
 CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
     var self = this;
+
     cam.enableSchedule = false;
-    cam.schedule = {"sunday":{"open":0,"close":"23:59"},"monday":{"open":0,"close":"23:59"},"tuesday":{"open":0,"close":"23:59"},"wednesday":{"open":0,"close":"23:59"},"thursday":{"open":0,"close":"23:59"},"friday":{"open":0,"close":"23:59"},"saturday":{"open":0,"close":"23:59"}}
+    cam.schedule = {"sunday":{"open":0,"close":"23:59"},"monday":{"open":0,"close":"23:59"},"tuesday":{"open":0,"close":"23:59"},"wednesday":{"open":0,"close":"23:59"},"thursday":{"open":0,"close":"23:59"},"friday":{"open":0,"close":"23:59"},"saturday":{"open":0,"close":"23:59"}};
+
     db.insert( cam, function( err, newDoc ) {
         if (err) {
             console.log("error when inserting camera: " + err);

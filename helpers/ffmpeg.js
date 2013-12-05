@@ -42,8 +42,6 @@ var convertFromTsToMp4 = function( tsFile, cb ) {
  *
  */
 var makeThumb = function ( file, folder, resolution, cb ) { 
-
-    // console.log("making thumb of " + file + " : " + out);
     
     var exec = require('child_process').exec;
 
@@ -69,11 +67,6 @@ var makeThumb = function ( file, folder, resolution, cb ) {
  */
 var snapshot = function ( file, outFolder, offset, cb ) { 
 
-    //console.log("- - - snapshot - - -");
-    //console.log("file: " + file);
-    //console.log("offset: " + offset);
-    //console.log("- - -");
-    
     var ext = path.extname(file);
 
     if (ext == ".ts") {
@@ -282,14 +275,15 @@ var sendMp4File = function(file, offset, req, res) {
         }
         else {
 
-            var stat = fs.statSync(file+"");
-            var total = parseInt( stat.size, 10 );
+            var stat = fs.stat(file+"", function(err, stat) { 
+				var total = parseInt( stat.size, 10 );
 
-            console.log('ALL: ' + total);
-            //res.writeHead(200, { 'Content-Length': total, 'Content-Type': 'video/mp4' });
-            //fs.createReadStream(file).pipe(res);
-            res.sendfile(file);
-        }
+				console.log('ALL: ' + total);
+				//res.writeHead(200, { 'Content-Length': total, 'Content-Type': 'video/mp4' });
+				//fs.createReadStream(file).pipe(res);
+				res.sendfile(file);
+			});
+		}
     });
 };
 // - - end of sendMp4File

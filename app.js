@@ -73,7 +73,7 @@ diskSpaceAgent.on('disk_usage', function(usage) {
 	var nCameras = camerasController.getAllCameras().length;
 	console.log( "usage: " + usage + "%");
 	console.log("nCameras: " + nCameras);
-	if (usage > 90) {	// usage in MB
+	if (usage > 90) {	// usage in %
 			camerasController.deleteOldestChunks( 10*nCameras, function(data) {
 			console.log( "done deleting files. is it enough?" );
 		});
@@ -232,16 +232,6 @@ app.get('/cameras.json', function(req, res) {
 });
 // - - -
 
-/*
-// !!!!! debug only !!!!!
-app.get('/cleanup', function(req, res) {
-	res.end('debug only');
-	var n = req.query.n || 5;	
-	camerasController.deleteOldestChunks( n, function(data) {
-		res.end( JSON.stringify(data) );
-	});
-});
-*/
 
 // - - -
 // renders main cameras page

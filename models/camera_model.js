@@ -16,11 +16,15 @@ function Camera( cam, videosFolder ) {
     this.name = cam.name;
     this.ip = cam.ip;
     this.rtsp = cam.rtsp;
-    this.videosFolder = videosFolder + "/" + this._id;
-    this.schedule = new WeeklySchedule(cam.schedule);
-    this.recording = false
+    
+	this.videosFolder = videosFolder + "/" + this._id;
+    
+	this.recording = false;
     this.enabled = !cam.enabled;
-    this.schedule_enabled = cam.schedule_enabled;
+
+    this.schedule = new WeeklySchedule(cam.schedule);
+	this.schedule_enabled = cam.enableSchedule;
+	
 	this.lastChunkTime = Date.now();
 
 	if ( !fs.existsSync( this.videosFolder) ){
@@ -39,6 +43,8 @@ function Camera( cam, videosFolder ) {
 	
 	this.setupEvents();
 
+	console.log("should be recording? " + this.shouldBeRecording() );
+
     if (!this.recording && this.shouldBeRecording()) {
 		console.log("starting camera " + this.name);
         this.startRecording();
@@ -52,7 +58,10 @@ util.inherits(Camera, EventEmitter);
 
 
 Camera.prototype.shouldBeRecording = function() {
-    return ((this.schedule_enabled == "1" && this.schedule.isOpen()) || (this.schedule_enabled == "0" && this.enabled == "1"));
+	console.log("this.schedule_enabled: " + this.schedule_enabled);
+	console.log("this.enabled: " + this.enabled );
+
+    return ((this.schedule_enabled === "1" && this.schedule.isOpen()) || (this.schedule_enabled == "0" && this.enabled == "1"));
 };
 
 
@@ -126,7 +135,7 @@ Camera.prototype.setupEvents = function( cb ) {
     });
 
     this.recordModel.on('camera_status', function(data) {
-        self.emit('camera_status', { cam_id: self._id, status: data.enabled } );
+        self.emit('camera_status', { cam_id: self._id, status: data.status } );
     });
 };
 
@@ -146,6 +155,7 @@ Camera.prototype.startRecording = function() {
         console.log("* * * " + this.name + " will start recording...");
         this.recordModel.startRecording();
         this.recording = true;
+		this.enabled = true;
     }
 };
 
@@ -155,6 +165,7 @@ Camera.prototype.stopRecording = function() {
     if (this.recording) {
         console.log(this.name + " will stop recording...");
         this.recording = false;
+		this.enabled = false;
         this.recordModel.stopRecording();
     } else {
         console.log( this.name + " is already stopped.");
