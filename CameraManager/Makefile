@@ -1,35 +1,3 @@
-###########################################################################
-# Copyright (c) 2013 LenovoEMC Limited Permission is hereby granted, free 
-# of charge, to any person obtaining a copy of the LenovoEMC-created 
-# portions of the software included within the "LifeLine(tm) SDK" software 
-# (the "Software"), to deal in the Software without restriction, including 
-# without limitation the rights to use, copy, modify, merge, publish, 
-# distribute, sublicense, and/or sell copies of the Software, and to 
-# permit persons to whom the Software is furnished to do so, subject to 
-# the following conditions: The Software is licensed solely for assisting 
-# with use of, or developing applications that facilitate legal activities 
-# working with, network storage devices from LenovoEMC Limited; if you 
-# wish to distribute or use the Software solely with products of companies 
-# other than LenovoEMC Limited and not to promote any functionality 
-# associated with products of LenovoEMC, you are not licensed to copy or 
-# to exercise any rights in connection with the Software. If You institute 
-# patent litigation against any entity (including a cross-claim or 
-# counterclaim in a lawsuit) alleging that the Software constitutes direct 
-# or contributory copyright or patent infringement, then any patent and 
-# copyright licenses granted to You under this license shall terminate as 
-# of the date such litigation is filed. "You" (or "Your") shall mean an 
-# individual or entity exercising permissions granted by this license. The 
-# above copyright notice and this permission notice shall be included in 
-# all copies or substantial portions of the Software. THE SOFTWARE IS 
-# PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS 
-# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
-# DEALINGS IN THE SOFTWARE.
-###########################################################################
-
 ##
 ## Include LifeLine Makefile
 ##
@@ -39,7 +7,7 @@ include $(LLSDK_HOME)/Makefile.in
 ## For Debian Package System
 ##
 APP_ID = CameraManager
-APP_VERSION = 1.0
+APP_VERSION = 0.1
 APP_VENDOR = solink
 
 APP_BACKUP_SCRIPT = backup.sh
@@ -63,7 +31,7 @@ SDKAPI_TEMPLATE=$(LLSDK_HOME)/bin/scripts/sdkRpcTable.xml.template
 ## Files or directories to copy to 
 ## application bundle
 ##
-TARGET_BINARY_FILES= bin/$(LINUX_ARCH)/ffmpeg bin/$(LINUX_ARCH)/node bin/$(LINUX_ARCH)/forever
+TARGET_BINARY_FILES= bin/$(LINUX_ARCH)/ffmpeg bin/$(LINUX_ARCH)/node
 NODEAPP_TARGET_FILES= $(NODE_APP_PATH)/assets $(NODE_APP_PATH)/controllers $(NODE_APP_PATH)/helpers  $(NODE_APP_PATH)/models $(NODE_APP_PATH)/views $(NODE_APP_PATH)/node_modules $(NODE_APP_PATH)/app.js
 CAMERAMANAGER_TARGET_FILES=$(TARGET_BUILD_PATH)/$(target)/CameraManager $(APP_BACKUP_SCRIPT) $(APP_ROLLBACK_SCRIPT) $(APP_REMOVE_SCRIPT)
 
@@ -109,7 +77,7 @@ $(TARGET_BUILD_PATH)/$(target)/CameraManager: $(OBJS) $(TARGET_BUILD_PATH)/$(tar
 
 $(TARGET_BUILD_PATH)/$(target):
 	mkdir -p $(TARGET_BUILD_PATH)/$(target)
-	
+
 sdkapibld:
 	if test -f sdkapi.xml ;\
 	then $(SDKAPI) -a sdkapi.xml -p $(SDKAPI_TEMPLATE) -o $(PKG_DIR)/$(APP_API_TABLE); \
@@ -130,10 +98,12 @@ sdkapibld:
 # Place here any copies to the package
 # 
 $(eval $(call CREATE_PACKAGE_TARGETS, CameraManager, package))
-package: deb_control $(TARGET_BUILD_PATH)/$(target)/CameraManager 
+package: deb_control $(TARGET_BUILD_PATH)/$(target)/CameraManager
 	cp -rf $(CAMERAMANAGER_TARGET_FILES) $(PKG_DIR)
 	cp -rf $(TARGET_BINARY_FILES) $(PKG_DIR)
 	cp -rf $(NODEAPP_TARGET_FILES) $(PKG_DIR)
+	cp -rf bin/$(LINUX_ARCH)/forever $(PKG_DIR)/node_modules
+	ln -f $(PKG_DIR)/node_modules/forever/bin/forever $(PKG_DIR)
 	cp -rf $(CAMERAMANAGER_TARGET_WWW) $(PKG_DIR)
 	chmod -R 0775 $(PKG_DIR)/$(CAMERAMANAGER_TARGET_CGI)
 	if [ -d $(CAMERAMANAGER_TARGET_CONTROL) ]; then cp -rf $(CAMERAMANAGER_TARGET_CONTROL)/ $(PKG_DIR_ROOT); fi

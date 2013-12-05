@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <syslog.h>
-
+#include <signal.h>
 #include <string.h>
 #include <unistd.h>
 #include <libgen.h>
@@ -15,25 +15,40 @@
 #include <libsoup/soup-value-utils.h>
 
 
+pid_t getNodePId()
+{
+	char line[LEN];
+	FILE *cmd = popen("pidof node", "r");
+	fgets(line, LEN, cmd);
+	syslog(LOG_DEBUG, "Node pid: %s", line);
+	pid_t pid = strtoul(line, NULL, 10);
+	syslog(LOG_DEBUG, "Node pid after strtoul: %llu", (long long unsigned int)pid);
+	pclose(cmd);	
+	return pid;
+}
+
 gboolean isServerRunning()
 {
-	//char line[LEN];
-	//FILE *cmd = popen("pidof node", "r");
-
-	//fgets(line, LEN, cmd);
-	//pid_t pid = strtoul(line, NULL, 10);
-
-	//pclose(cmd);
-	return TRUE;
+	pid_t pid = getNodePId();
+	if (pid > 0){
+		return TRUE;
+	}else{
+		return FALSE;
+	}
 }
 
 int launchServer(const char* share_path)
 {
-	return system("bin/forever ../app.js");
+	char buf[256];
+	snprintf(buf, sizeof buf, "forever app.js %s", share_path);
+	syslog(LOG_DEBUG, "system call: %s", buf);
+	return system(buf);
 }
 
 void applicationUninstall()
 {
+	pid_t pid = getNodePId();
+	kill(pid, SIGKILL);
 	return;
 }
 
