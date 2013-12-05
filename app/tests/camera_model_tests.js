@@ -116,7 +116,7 @@ describe('Camera', function(){
 	
 	describe('deleteChunk', function() {
 		
-		var fake_chunk = {id: 1};
+		var fake_chunk = {id: 1, file: "fake_file"};
 
 		it('should call db.deleteVideo', function() {
 			var new_cam = new Camera( cam, videosFolder );

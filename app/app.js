@@ -73,14 +73,13 @@ diskSpaceAgent.on('disk_usage', function(usage) {
 	var nCameras = camerasController.getAllCameras().length;
 	console.log( "usage: " + usage + "%");
 	console.log("nCameras: " + nCameras);
-	if (usage > 90) {	// usage in MB
+	if (usage > 90) {	// usage in %
 			camerasController.deleteOldestChunks( 10*nCameras, function(data) {
 			console.log( "done deleting files. is it enough?" );
 		});
 	}
 });
 // - - -
-
 
 // - - - - -
 // health check modules
@@ -110,9 +109,7 @@ camerasController.on('new_chunk', function( data ) {
 
 camerasController.on('camera_status', function( data ) {
 
-	if (data.status !== 'online') {
-		io.sockets.emit( 'cameraStatus', data );
-	}
+	io.sockets.emit( 'cameraStatus', data );
 });
 
 iostat.on('cpu_load', function(data) {
@@ -232,16 +229,6 @@ app.get('/cameras.json', function(req, res) {
 });
 // - - -
 
-/*
-// !!!!! debug only !!!!!
-app.get('/cleanup', function(req, res) {
-	res.end('debug only');
-	var n = req.query.n || 5;	
-	camerasController.deleteOldestChunks( n, function(data) {
-		res.end( JSON.stringify(data) );
-	});
-});
-*/
 
 // - - -
 // renders main cameras page
@@ -359,7 +346,26 @@ app.get('/cameras/:id/video', function(req, res) {
             });
         }
     });
-    
+});
+// - - -
+
+// - - -
+// gets inMem mp4 video
+app.get('/cameras/:id/memvideo', function(req, res) {
+	res.end('feature under construction');
+/*
+    var camId = req.params.id;
+    var begin = parseInt( req.query.begin, 10 );
+    var end = parseInt( req.query.end, 10 );
+
+    camerasController.getCamera( camId, function(err, cam) {
+        if (err) {
+            res.json( { error: err } );
+        } else {
+            mp4Handler.inMemoryMp4Video( cam.db, cam, begin, end, req, res );
+        }
+    });
+	*/
 });
 // - - -
 

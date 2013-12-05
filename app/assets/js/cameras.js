@@ -174,6 +174,8 @@ var addCameraItem = function( camera ) {
 	}).appendTo("#camera-item-"+camera._id);
 
            
+	console.log( camera );
+
 	if (camera.enabled == "1") {
 		$("#switch-"+camera._id).attr('checked', true);
 	} else {

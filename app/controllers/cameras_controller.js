@@ -27,7 +27,7 @@ function cameraInfo(camera) {
     info.ip = camera.ip;
     info._id = camera._id;
     info.enabled = camera.enabled;
-    // info.schedule = camera.schedule.toJSON()
+    
     if (camera.id) {
         info.id = camera.id;
     } else {
@@ -37,10 +37,18 @@ function cameraInfo(camera) {
     return info;
 }
 
-
+//
+// remove one of the methods later
+//
 CamerasController.prototype.getAllCameras = function() {
 	return cameras;
 };
+
+CamerasController.prototype.getCameras = function() {
+    return cameras;
+};
+//
+//
 
 CamerasController.prototype.listVideosByCamera = function( camId, start, end, cb ) {
     
@@ -80,13 +88,12 @@ CamerasController.prototype.listCameras = function( cb ) {
 };
 
 
-CamerasController.prototype.getCameras = function( ) {
-    return cameras;
-};
-
 CamerasController.prototype.indexFiles = function() {
 
+	var self = this;
+
     var k = 0;
+
     setInterval( 
         function() {
             k = (k + 1) % cameras.length;
@@ -132,6 +139,7 @@ CamerasController.prototype.deleteChunksSequentially = function( chunks, cb ) {
 	}	
 };
 
+
 CamerasController.prototype.deleteChunk = function( chunk, cb ) {
 	
 	var self = this;
@@ -147,6 +155,7 @@ CamerasController.prototype.deleteChunk = function( chunk, cb ) {
 		}
 	});
 };
+
 
 CamerasController.prototype.deleteOldestChunks = function( numChunks, cb ) {
 	
@@ -207,8 +216,10 @@ CamerasController.prototype.getOldestChunks = function( numChunks, cb ) {
 CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
     var self = this;
+
     cam.enableSchedule = false;
-    cam.schedule = {"sunday":{"open":0,"close":"23:59"},"monday":{"open":0,"close":"23:59"},"tuesday":{"open":0,"close":"23:59"},"wednesday":{"open":0,"close":"23:59"},"thursday":{"open":0,"close":"23:59"},"friday":{"open":0,"close":"23:59"},"saturday":{"open":0,"close":"23:59"}}
+    cam.schedule = {"sunday":{"open":0,"close":"23:59"},"monday":{"open":0,"close":"23:59"},"tuesday":{"open":0,"close":"23:59"},"wednesday":{"open":0,"close":"23:59"},"thursday":{"open":0,"close":"23:59"},"friday":{"open":0,"close":"23:59"},"saturday":{"open":0,"close":"23:59"}};
+
     db.insert( cam, function( err, newDoc ) {
         if (err) {
             console.log("error when inserting camera: " + err);
@@ -313,7 +324,7 @@ CamerasController.prototype.updateCameraSchedule = function(params, cb) {
 
     db.update({ _id: params._id }, { 
         $set: {
-            schedule_enabled: params.schedule_enabled,
+            schedule_enabled: ( params.schedule_enabled === 1),
             schedule: params.schedule
         } 
     }, { multi: true }, function (err, numReplaced) {

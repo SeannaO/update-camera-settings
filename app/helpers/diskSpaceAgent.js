@@ -41,7 +41,7 @@ DiskSpaceAgent.prototype.check = function() {
 	*/
 	
 	var df = exec('df -h ' + self.folder + ' |grep /', function(error, stdout, stderr) {	
-		console.log( 'df -h ' + self.folder + ' |grep ' + self.folder );
+		
 		if (!error) {
 			stdout = stdout.split(/\s+/);
 			var usage;
@@ -58,8 +58,6 @@ DiskSpaceAgent.prototype.check = function() {
 			console.log( error );
 		}
 	});
-
-
 };
 
 
