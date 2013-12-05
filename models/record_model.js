@@ -77,8 +77,6 @@ RecordModel.prototype.updateCameraInfo = function( camera ) {
 
 
 RecordModel.prototype.stopRecording = function() {
-   
-	console.log("record model stop recording...");
 
     this.status = STOPPING;
 
@@ -113,7 +111,8 @@ RecordModel.prototype.indexPendingFiles = function() {
     var self = this;
 
     while (self.pending.length > 1)  {
-        var file = self.pending.shift();        
+        var file = self.pending.shift();   
+		console.log(file);
         self.moveAndIndexFile( file );
     }
 };
@@ -121,7 +120,6 @@ RecordModel.prototype.indexPendingFiles = function() {
 
 RecordModel.prototype.startRecording = function() {    
 
-	console.log("record model start recording...");
     var self = this;
 
     this.status = RECORDING;
@@ -130,6 +128,7 @@ RecordModel.prototype.startRecording = function() {
     this.watcher.startWatching();
 	
     this.watcher.on("new_files", function( files ) {
+		
 		if (self.status === ERROR) {
 			self.emit('camera_status', {status: 'connected'});
 		} else {
@@ -190,9 +189,9 @@ RecordModel.prototype.moveAndIndexFile = function( file ) {
 
 RecordModel.prototype.calcDuration = function( file, cb ) {
 
-    var self = this;
+	var self = this;
 
-    fs.statSync( file, function( err, fileInfo ) {
+    fs.stat( file, function( err, fileInfo ) {
 		var lastModified = ( new Date(fileInfo.mtime) ).getTime();
 
 		ffmpeg.calcDuration( file, function(duration) {
@@ -210,8 +209,6 @@ RecordModel.prototype.calcDuration = function( file, cb ) {
 			cb( video );
 		});
 	});
-
-    
 };
 
 
@@ -297,14 +294,19 @@ RecordModel.prototype.recordContinuously = function() {
                 function (error, stdout, stderr) {
 
                     if (error !== null && error.signal !== 'SIGKILL') {
-						self.checkForConnectionErrors();
-					}
+						setTimeout( function() {
+							console.log( error );
+							self.checkForConnectionErrors();
+						}, 500 );
+					} 
 				}); 
 
         this.ffmpegProcess.on('exit', function() {
 			
-			self.checkForConnectionErrors();
-			self.recordContinuously();
+			setTimeout( function() {
+				self.checkForConnectionErrors();
+				self.recordContinuously();
+			}, 500 );
 		});   
     }
 };

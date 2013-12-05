@@ -110,9 +110,8 @@ camerasController.on('new_chunk', function( data ) {
 
 camerasController.on('camera_status', function( data ) {
 
-	if (data.status !== 'online') {
-		io.sockets.emit( 'cameraStatus', data );
-	}
+	console.log("camera status: " + data.status);
+	io.sockets.emit( 'cameraStatus', data );
 });
 
 iostat.on('cpu_load', function(data) {
