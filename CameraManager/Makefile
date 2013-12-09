@@ -7,7 +7,7 @@ include $(LLSDK_HOME)/Makefile.in
 ## For Debian Package System
 ##
 APP_ID = CameraManager
-APP_VERSION = 0.1
+APP_VERSION = 1.0
 APP_VENDOR = solink
 
 APP_BACKUP_SCRIPT = backup.sh
@@ -32,7 +32,7 @@ SDKAPI_TEMPLATE=$(LLSDK_HOME)/bin/scripts/sdkRpcTable.xml.template
 ## application bundle
 ##
 TARGET_BINARY_FILES= bin/$(LINUX_ARCH)/ffmpeg bin/$(LINUX_ARCH)/node
-NODEAPP_TARGET_FILES= $(NODE_APP_PATH)/assets $(NODE_APP_PATH)/controllers $(NODE_APP_PATH)/helpers  $(NODE_APP_PATH)/models $(NODE_APP_PATH)/views $(NODE_APP_PATH)/node_modules $(NODE_APP_PATH)/app.js
+NODEAPP_TARGET_FILES= $(NODE_APP_PATH)/assets $(NODE_APP_PATH)/controllers $(NODE_APP_PATH)/helpers $(NODE_APP_PATH)/db_layers  $(NODE_APP_PATH)/models $(NODE_APP_PATH)/views $(NODE_APP_PATH)/node_modules $(NODE_APP_PATH)/app.js
 CAMERAMANAGER_TARGET_FILES=$(TARGET_BUILD_PATH)/$(target)/CameraManager $(APP_BACKUP_SCRIPT) $(APP_ROLLBACK_SCRIPT) $(APP_REMOVE_SCRIPT)
 
 CAMERAMANAGER_TARGET_WWW=CameraManager-www
@@ -103,7 +103,6 @@ package: deb_control $(TARGET_BUILD_PATH)/$(target)/CameraManager
 	cp -rf $(TARGET_BINARY_FILES) $(PKG_DIR)
 	cp -rf $(NODEAPP_TARGET_FILES) $(PKG_DIR)
 	cp -rf bin/$(LINUX_ARCH)/forever $(PKG_DIR)/node_modules
-	ln -f $(PKG_DIR)/node_modules/forever/bin/forever $(PKG_DIR)
 	cp -rf $(CAMERAMANAGER_TARGET_WWW) $(PKG_DIR)
 	chmod -R 0775 $(PKG_DIR)/$(CAMERAMANAGER_TARGET_CGI)
 	if [ -d $(CAMERAMANAGER_TARGET_CONTROL) ]; then cp -rf $(CAMERAMANAGER_TARGET_CONTROL)/ $(PKG_DIR_ROOT); fi

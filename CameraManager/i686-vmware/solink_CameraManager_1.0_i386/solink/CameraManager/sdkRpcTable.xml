@@ -1,0 +1,4 @@
+<SDKAPI>
+	<API Name="launch_server" Flags="REST_FLAGS_NONE" ArgCnt="0">
+			</API>
+</SDKAPI>

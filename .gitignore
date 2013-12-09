@@ -29,3 +29,25 @@ nohup.out
 
 
 db_layers/dblite.js
+CameraManager/targets
+CameraManager/i686-vmware
+VMS/i686-vmware
+CameraManager/arm-ix2-ng
+VMS/arm-ix2-ng
+CameraManager/arm-hm3
+VMS/arm-hm3
+CameraManager/h4c
+VMS/h4c
+CameraManager/x86_64-px
+VMS/x86_64-px
+CameraManager/b2a
+VMS/b2a
+CameraManager/x86_64-ix
+VMS/x86_64-ix
+CameraManager/px4-300r
+VMS/px4-300r
+CameraManager/px12-450r
+VMS/px12-450r
+CameraManager/r12b
+VMS/r12b
+VMS/*.lst

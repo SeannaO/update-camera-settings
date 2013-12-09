@@ -39,8 +39,10 @@ gboolean isServerRunning()
 
 int launchServer(const char* share_path)
 {
-	char buf[256];
-	snprintf(buf, sizeof buf, "forever app.js %s", share_path);
+	char buf[400];
+	char cwd[100];
+	getcwd(cwd, sizeof cwd);
+	snprintf(buf, sizeof buf, "sh cd %s; PATH=$PATH:%s ./node_modules/forever/bin/forever app.js %s&", cwd, cwd, share_path);
 	syslog(LOG_DEBUG, "system call: %s", buf);
 	return system(buf);
 }

@@ -1,0 +1,113 @@
+<html>
+	<head>
+		<script src = "/js/jquery.min.js"></script>        
+		<script src = "/js/jquery-ui.min.js"></script>
+
+		<link rel="stylesheet" href="/css/bootstrap.min.css">
+		<link rel="stylesheet" href="/css/bootstrap-theme.min.css">
+		<link rel="stylesheet" href="/css/camera.css">
+		
+		<script src="/js/bootstrap.min.js"></script>
+		<script src="/js/socket.io.js"></script>
+
+		<script src="/js/health.js"></script>
+
+		<style>
+
+			#tp-status {
+				margin: 10px;
+				width: 100%;
+				height: auto;
+				overflow: auto;
+				position: relative;
+
+			}
+
+			#cpu_bar {
+				position: absolute;
+				width: 1px;
+				height: 30px;
+				background: #afa;
+				margin: 10px;
+			}
+
+			.tp-bar-container {
+				position: relative;
+				width: auto;
+				height: auto;
+			}
+
+			.tp-bar-label {
+				position: absolute;
+				left: 5px;
+				color: #555;
+			}
+
+			.tp-bar {
+				left: 0px;
+				height: 20px;
+				width: 1px;
+				margin: 1px;
+			}
+			
+			.tp-info {
+				margin: 15px;
+				padding: 5px;
+				float: left;
+				width: 250px;
+				overflow: hidden;
+			}
+
+			.ws-bar {
+				background: #0ae;
+			}
+
+			.kws-bar {
+				background: #0ae;
+			}
+
+			.rs-bar {
+				background: #aaf;
+			}
+			
+			.krs-bar {
+				background: #aaf;
+			}
+			
+			#sensors-info {
+				
+			}
+		</style>
+	</head>
+
+	<h2 class = "muted"><a href="/cameras">cameras</a> <span style="color:#aaa"> | system status</span></h2>
+
+	cpu load: <span id = "cpu_load"></span>%
+
+	<div id = "cpu_bar"></div>
+
+	<br><br><br>
+	
+	<hr>
+	
+	<div id = "sensors-info">
+		
+	</div>
+
+	<hr>
+
+	<div id = "tp-status">
+	</div>
+
+	<hr>
+
+	<div id ="smart-status">
+	</div>
+
+		<script>
+
+			setupHealth();
+
+		</script>
+	
+</html>

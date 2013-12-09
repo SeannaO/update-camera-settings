@@ -1,0 +1,7 @@
+<script src="/js/socket.io.js"></script>
+<script>
+  var socket = io.connect();
+  socket.on('new_chunk', function (data) {
+    console.log(data);
+  });
+</script>

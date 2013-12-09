@@ -1,0 +1,69 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="/css/jquery-ui.css">
+
+        <link rel="stylesheet" href="/css/cam.css">
+
+        <script src = "/js/jquery.min.js"></script>        
+        <script src = "/js/jquery-ui.min.js"></script>
+        <script src = "/js/cam.js"></script>
+
+        <script src="/js/timepicker.js"></script>
+        <script src="/js/moment.min.js"></script>
+
+        <script src="/js/bootstrap.min.js"></script>
+        <script src="/js/d3.v3.min.js"></script>
+        <script src="/js/d3-timeline.js"></script>        
+        <script>
+            var camId = "rtsp://192.168.215.66/axis-media/media.amp";
+            var rtsp1 = "rtsp://192.168.215.66/axis-media/media.amp";
+ 			var rtsp2 = "rtsp://192.168.215.66/axis-media/media.amp";
+  			var rtsp3 = "rtsp://192.168.215.66/axis-media/media.amp";
+   			var rtsp4 = "rtsp://192.168.215.66/axis-media/media.amp";
+        </script>
+    </head>
+
+
+    <body style = "margin: 10px">
+        <h2 class = 'text-muted'> <a href ="/cameras">cameras</a> | multiview </h2> 
+        <hr>
+
+        <div id = "video1" class = "video-box">
+        </div>
+ 		<div id = "video2" class = "video-box">
+        </div>
+		<div id = "video3" class = "video-box">
+        </div>
+ 		<div id = "video4" class = "video-box">
+        </div>
+       
+
+        <script>
+            $(function() {
+					showLiveStream("#video1", rtsp1); 
+					showLiveStream("#video2", rtsp2); 
+					showLiveStream("#video3", rtsp3); 
+					showLiveStream("#video4", rtsp4); 
+            });
+		</script>
+
+
+        <script>
+
+            var showLiveStream = function(eId, rtsp) {
+
+                var html = '<object type="application/x-vlc-plugin" data="'+rtsp+'" width="640" height="480" id="video1">';
+                    html += '<param name="movie" value="'+rtsp+'"/>';
+                    html += '<embed type="application/x-vlc-plugin" name="video1"';
+                    html += 'autoplay="no" loop="no" width="640" height="480"';
+                    html += 'target="'+rtsp+'" /> </object>';
+
+                    $(eId).html( html );
+            }
+        </script>
+
+    </body>
+</html>
+

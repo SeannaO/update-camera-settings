@@ -18,6 +18,59 @@
 #include "app_keep_alive.h"
 #include "api_callbacks.h"
 
+
+gboolean getCurrentUser(CPSessionUser_t ** user){
+	CPResult_t res;
+	CPStatus_t status = cpSessionUser(&res, user);
+	if (status != ME_OK){
+		syslog(LOG_DEBUG, "Error when calling isAdminSession on field [%s]: %s", res.field, res.description);
+		cpSessionUserFree(*user);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean loginAdmin(const gchar * login, const gchar* password){
+	CPResult_t res;
+	CPStatus_t status = cpSessionLogin(&res, login, password, TRUE);
+	if (status != ME_OK){
+		syslog(LOG_DEBUG, "Error when calling loginAdmin on field [%s]: %s", res.field, res.description);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean isSecurityEnabled(){
+	CPResult_t res;
+	gboolean enabled = FALSE;
+	CPSecurityInfo_t *security;
+	CPStatus_t status = cpSecurityInfo(&res, &security);
+	if (status != ME_OK){
+		syslog(LOG_DEBUG, "Error when calling isSecurityEnabled on field [%s]: %s", res.field, res.description);
+		cpSecurityInfoFree(security);
+		return FALSE;
+	}
+	enabled = security->enabled;
+	cpSecurityInfoFree(security);
+	return enabled;
+}
+
+gboolean enableSecurity(){
+	CPSecurityEnable_t security;
+	security.login = "Administrator";
+	security.password = "password";
+	security.fullname = "Administrator";
+	security.encryptlocal = CP_SECENC_ALWAYS;
+	security.encryptremote = CP_SECENC_ALWAYS;
+	CPResult_t res;
+	CPStatus_t status = cpSecurityEnable(&res, &security);
+	if (status != ME_OK){
+		syslog(LOG_DEBUG, "Error when calling enableSecurity on field [%s]: %s", res.field, res.description);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 gboolean userCreate(){
 	CPUser_t user;
 	user.login = APPUSERLOGIN;
@@ -46,14 +99,25 @@ gboolean userExists(){
 
 gboolean shareCreate(){
 	CPResult_t res;
+	syslog(LOG_DEBUG, "Allocating share");
 	CPShareModify_t share;
+	syslog(LOG_DEBUG, "Setting share name");
 	share.name = APPSHARE;
+	syslog(LOG_DEBUG, "Setting volume to NULL");
+	share.volume = NULL;
+	syslog(LOG_DEBUG, "Setting flag CP_FLDR_MEDIASERVER");
 	share.flags = CP_FLDR_MEDIASERVER;
+	syslog(LOG_DEBUG, "Share secruity");
+	share.security = AT_READONLY;
+	syslog(LOG_DEBUG, "Calling Create Share");
 	CPStatus_t status = cpShareCreate(&res, &share);
+	syslog(LOG_DEBUG, "Freeing Share");
+	//cpShareModifyFree(share);
 	if (status != ME_OK){
 		syslog(LOG_DEBUG, "Error when calling shareCreate on field [%s]: %s", res.field, res.description);
 		return FALSE;
 	}
+	syslog(LOG_DEBUG, "returning True");
 	return TRUE;
 }
 
@@ -77,7 +141,8 @@ gboolean getSharePath(gchar ** share_path){
 	}
 	int len = strlen(ret->path);
 	*share_path = (gchar*)malloc(len+1);
-	strncpy(*share_path, ret->path, len);
+	strcpy(*share_path, ret->path);
+	share_path[len+1] = (char)'\0';
 	cpShareFree(ret);
 	return TRUE;
 }
@@ -147,18 +212,51 @@ void ApplicationUninstallCallback(const char *contextin, const char *xmlin, char
 }
 
 void setupAndLaunchServer(){
-	syslog(LOG_DEBUG, "Checking for solink user...");
-	if (!userExists()){
-		syslog(LOG_DEBUG, "User doesn't exist. Creating user...");
-		if (userCreate()){
-			syslog(LOG_DEBUG, "User successfully created.");
+	syslog(LOG_DEBUG, "Checking if security is enabled...");
+	if (!isSecurityEnabled()){
+		syslog(LOG_DEBUG, "Security is not enabled. Enabling security and Creating Administrator Account...");
+		if (enableSecurity()){
+			syslog(LOG_DEBUG, "Security successfully enabled. Logging in Administrator...");
+			if (loginAdmin("Administrator", "password")){
+				syslog(LOG_DEBUG, "Successfully logged in Administrator.");
+			}else{
+				syslog(LOG_DEBUG, "Unable to log in Administrator.");
+			}
 		}else{
-			syslog(LOG_DEBUG, "Unable to create user.");
+			syslog(LOG_DEBUG, "Unable to enable security.");
 		}
 	}else{
-		syslog(LOG_DEBUG, "User already exists.");
+		syslog(LOG_DEBUG, "Security has already been enabled.");
 	}
 	
+	CPSessionUser_t * user = NULL;
+	syslog(LOG_DEBUG, "Checking if admin is logged in...");
+	if(getCurrentUser(&user) ){//&& (user->flags & CP_LOGIN_ISADMIN)){
+		//cpSessionUserFree(user);
+		syslog(LOG_DEBUG, "Administrator is logged in!");
+	}else{
+		if (user != NULL){
+			cpSessionUserFree(user);
+		}
+		syslog(LOG_DEBUG, "Checking for solink user...");
+		if (!userExists()){
+			syslog(LOG_DEBUG, "User doesn't exist. Creating user...");
+			if (userCreate()){
+				syslog(LOG_DEBUG, "User successfully created. Logging in user...");
+				if (loginAdmin(APPUSERLOGIN, APPUSERPASSWORD)){
+					syslog(LOG_DEBUG, "User successfully logged in.");
+				}else{
+					syslog(LOG_DEBUG, "Unable to log in User.");
+				}
+			}else{
+				syslog(LOG_DEBUG, "Unable to create user.");
+			}
+		}else{
+			syslog(LOG_DEBUG, "User already exists.");
+		}
+	}
+	loginAdmin("Administrator", "password");
+	cpIpcSetThreadUser("Administrator");
 	syslog(LOG_DEBUG, "Checking drive share...");
 	if (!shareExists()){
 		syslog(LOG_DEBUG, "Share doesn't exist. Creating share...");
@@ -175,7 +273,7 @@ void setupAndLaunchServer(){
 	if (!isServerRunning()){
 		syslog(LOG_DEBUG, "Server is not running. Attempting to launching server...");
 		gchar * share_path;
-		if (!getSharePath(&share_path) && share_path != NULL){
+		if (getSharePath(&share_path) && share_path != NULL){
 			syslog(LOG_DEBUG, "Launching Server with path:%s.", share_path);
 			launchServer(share_path);
 			if (isServerRunning()){
@@ -185,6 +283,7 @@ void setupAndLaunchServer(){
 			}
 			g_free(share_path);
 		}else{
+			syslog(LOG_DEBUG, "Share path:%s.", share_path);
 			syslog(LOG_DEBUG, "Could not launch server. Unable to retrieve share path.");
 		}
 	}else{

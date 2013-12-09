@@ -22,7 +22,7 @@ pid_t getNodePId()
 	fgets(line, LEN, cmd);
 	syslog(LOG_DEBUG, "Node pid: %s", line);
 	pid_t pid = strtoul(line, NULL, 10);
-	syslog(LOG_DEBUG, "Node pid after strtoul: %llu", pid);
+	syslog(LOG_DEBUG, "Node pid after strtoul: %llu", (long long unsigned int)pid);
 	pclose(cmd);	
 	return pid;
 }
@@ -39,8 +39,10 @@ gboolean isServerRunning()
 
 int launchServer(const char* share_path)
 {
-	char buf[256];
-	snprintf(buf, sizeof buf, "forever app.js %s", share_path);
+	char buf[400];
+	//char cwd[100];
+	//getcwd(cwd, sizeof cwd);
+	snprintf(buf, sizeof buf, "sh PATH=$PATH:/opt/apps/solink/CameraManager ./node_modules/forever/bin/forever app.js %s&", share_path);
 	syslog(LOG_DEBUG, "system call: %s", buf);
 	return system(buf);
 }
