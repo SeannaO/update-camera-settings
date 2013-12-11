@@ -16,6 +16,41 @@ module.exports = function( app, prefix ) {
 			res.json( camlist );
 		});
 	});
+
+	app.get('/rtsp_url', function( req, res ) {
+		
+		var manufacturer = req.query.manufacturer;
+
+		var ip = req.query.ip;
+		var user = req.query.user;
+		var pass = req.query.pass;
+		
+		var resolution = req.query.res || '1280x960';
+		var framerate = req.query.fps || '30';
+		var quality = req.query.q || '5';
+		
+		if ( camList.indexOf( manufacturer ) > -1 ) {
+
+			var rtspUrl = require('./cam_api/'+api[manufacturer]).getRtspUrl({
+				ip: ip,
+				user: user,
+				password: pass
+			}, {
+				name: 'solink',
+				description: 'profile for solink vms',
+				resolution: resolution,
+				framerate: framerate
+			});
+
+			res.json( {
+				url: rtspUrl 
+			});
+		} else {
+			res.json({
+				error: 'unknown manufacturer'
+			});
+		}
+	});
 };
 
 
