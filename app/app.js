@@ -171,7 +171,8 @@ app.get('/health', function(req, res) {
 
 // - - -
 // camera scanner
-require('./helpers/camera_scanner/scanner.js')( app );
+// usage: append subnet prefix in the form xxx.xxx.xxx
+require('./helpers/camera_scanner/scanner.js')( app, '192.168.215' );
 // - - -
 
 
