@@ -45,12 +45,13 @@ Dblite.prototype.insertVideo = function( data ) {
         console.log("db is not ready yet");
     }
 
-    if ( typeof data !== 'object' || !data.file ) {
+    if ( !data || (typeof data !== 'object') || !data.file || !data.start || !data.end ) {
+		console.log("!!! attempt to insert invalid data to database !!!");
+		console.log( data );
+		console.log("!!!");
         return;
     }
 
-    // console.log("* * * inserting video");
-    // console.log(data);
     this.db.query('INSERT INTO videos(start, end, file) VALUES(?, ?, ?)', [data.start, data.end, data.file]);
 };
 // - - end of insertVideo

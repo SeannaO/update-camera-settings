@@ -164,27 +164,61 @@ var inMemoryStitch = function( files, offset, req, res ) {
 			'-t', offset.duration/1000, 
 			'-c', 'copy', 
 			'-f', 'mp4',
-			'-frag_duration', '10', 
-			'hello.mp4']);
+			'-frag_duration', '3600', 
+			'-']);
 
-	res.writeHead(200, {'Content-Type': 'video/mp4'});
-	child.stdout.pipe( res );
+	res.writeHead(200, {'Content-Type': ''});
 	
+	var vData = new Buffer(50000000);
+	var l = 0;
+
+	//child.stdout.pipe( vData );
+
 	child.stderr.on('data', function(data) {
-		//console.log(data.toString());
+		
+
+		/// vData = Buffer.concat( [vData, data] );
+			//console.log(data.toString());
 		//console.log("error");
 	});
 
 		
 	child.stdout.on('data', function(data) {
-		//console.log(data.toString());
-		//console.log("success");
+		//vData = Buffer.concat( [ vData, data ] );
+		
+		//var newBuffer = Buffer.concat([vData, data]);
+		//vData = newBuffer;
+			data.copy( vData, l );
+			l += data.length;
+
+		//console.log(data.length);
+		//vData.push(data.toString());
+		//vData = vData + data.toString();
+		//vData = Buffer.concat( [vData, data] );
 	});
 
+	child.stdout.on('end', function(data) {
+//			vData = Buffer.concat( [vData, data] );
+		//res.end("ok");
+	});
+
+	
 	child.on('close', function(code) {
 		console.log( 'ffmpeg stitch process closed with code: ' + code );
+//		res.end( vData );
+//		res.end();
 	});
-	
+
+		
+	child.on('exit', function(code) {
+		console.log( 'ffmpeg stitch process exited with code: ' + code );
+//		console.log( l );
+		res.end(vData);
+		res.end();
+
+//		res.end( vData );
+	});
+
 	req.on('close', function() {
 		console.log('connection closed');
 		if( child ) {

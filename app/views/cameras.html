@@ -87,10 +87,15 @@
                                 <p class="help-block">rtsp url</p>
                             </div>
                         </form>
+
+						<div id = 'scan-list'>
+							
+						</div>
                     </div>
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
+						<button type="button" class="btn btn-info" id = "scan-cameras">scan</button>
                         <button type="button" class="btn btn-primary" id = "add-new-camera">add</button>
                         <button type="button" class="btn btn-primary" id = "update-camera">save</button>
                     </div>
@@ -301,7 +306,8 @@
             $("#add-new-camera").click(function() {
 
                 var camera = {};
-                
+                $('#scan-list').html();
+
                 camera.name = $("#camera-name").val();
                 camera.ip = $("#camera-ip").val();
                 camera.rtsp = $("#rtsp-stream").val();
@@ -319,6 +325,7 @@
             // - - -
             var openAddCameraDialog = function() {
                 $("#update-camera").hide();
+				$("#scan-cameras").show();
                 $("#add-new-camera").show();
                 $("#add-new-camera-dialog").modal('show');
             }
@@ -330,6 +337,56 @@
                 $("#add-new-camera").show();
             });
             // - - -
+
+			$('#scan-cameras').click(function() {
+						
+				$("#scan-list").html('scanning for cameras...');
+
+				$.ajax({
+					type: "GET",
+					url: "/scan.json",
+					contentType: 'application/json',
+					success: function(data) {
+
+						var json = JSON.parse(data);
+						if (json) {
+							$('#scan-list').html('found ' + json.length + ' cameras:');
+
+							for (var i in json) {
+								addCamToScanList( json[i] );
+							}
+
+						} else {
+							
+						}
+					}
+				});    
+				
+			});
+
+			var addCamToScanList = function( cam ) {
+
+				console.log( cam );
+
+				var html = '';
+				html += '<b>ip:</b> ' + cam.ip;
+				html += ' | <b>type:</b> ' + cam.type;
+				
+				if (cam.status === 'needs_authentication') {
+					html += ' | <i>needs authentication</i>';
+				} else if (cam.status === 'not_supported') {
+					html += ' | <i>doesn\'t support basic onvif actions';
+				}
+
+				var camItem = $('<div>', {
+					id: 'cam_' +cam.ip,
+					html: html ,
+					class: 'scan-list-item'
+				}).appendTo('#scan-list');
+			};
+
+			var selectScanListCam = function( ip ) {
+			};
 
         </script>
     </body>
