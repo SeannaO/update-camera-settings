@@ -159,11 +159,6 @@ var addCameraItem = function( camera ) {
 		html: '<a href = "/cameras/'+camera._id+'/">' + camera.name + '</a>'
 	}).appendTo("#camera-item-"+camera._id);
 
-	$("<div>", {
-		class: "camera-item-rtsp",
-		html: camera.rtsp
-	}).appendTo("#camera-item-"+camera._id);
-
 	switchHtml = '' +
 		'<input type="checkbox" id="switch-'+camera._id+'" name="switch-'+camera._id+'" class="switch" value="1"/>' +
 		'<label for="switch-'+camera._id+'">on/off</label>';
@@ -266,17 +261,13 @@ var deleteCamera = function(id) {
 
 
 var updateCamera = function(id, cb) {
-
-    var camera = {};
-
-    camera.name = $("#camera-name").val();
-    camera.ip = $("#camera-ip").val();
-    camera.rtsp = $("#rtsp-stream").val();
+    
+    var params = $('#camera-form').serializeObject();
     
     $.ajax({
         type: "PUT",
         url: "/cameras/" + id,
-        data: JSON.stringify( camera ),
+        data: JSON.stringify( params["camera"] ),
         contentType: 'application/json',
         success: function(data) {
             cb( data );
@@ -335,6 +326,13 @@ var editCamera = function(camId) {
     });    
 };
 
+var meridian = function(hour){
+ return (Math.round(hour / 12) > 0) ? " PM" : " AM"
+};
+var to12HourTime = function(hours){
+ return ((hours + 11) % 12 + 1)
+};
+
 
 var cameraSchedule = function(camId) {
 
@@ -353,21 +351,21 @@ var cameraSchedule = function(camId) {
                         $('#camera-schedule-dialog .form-control').prop('disabled', true);
                     }
                 });
-                $("#schedule-sunday-open").timepicker('setTime',data.schedule[0].open.hour + ":" + data.schedule[0].open.minutes);
-                $("#schedule-monday-open").timepicker('setTime',data.schedule[1].open.hour + ":" + data.schedule[1].open.minutes);
-                $("#schedule-tuesday-open").timepicker('setTime',data.schedule[2].open.hour + ":" + data.schedule[2].open.minutes);
-                $("#schedule-wednesday-open").timepicker('setTime',data.schedule[3].open.hour + ":" + data.schedule[3].open.minutes);
-                $("#schedule-thursday-open").timepicker('setTime',data.schedule[4].open.hour + ":" + data.schedule[4].open.minutes);
-                $("#schedule-friday-open").timepicker('setTime',data.schedule[5].open.hour + ":" + data.schedule[5].open.minutes);
-                $("#schedule-saturday-open").timepicker('setTime',data.schedule[6].open.hour + ":" + data.schedule[6].open.minutes);
+                $("#schedule-sunday-open").timepicker('setTime',   to12HourTime(data.schedule[0].open.hour)    + ":" + data.schedule[0].open.minutes + meridian(data.schedule[0].open.hour));
+                $("#schedule-monday-open").timepicker('setTime',   to12HourTime(data.schedule[1].open.hour)    + ":" + data.schedule[1].open.minutes + meridian(data.schedule[1].open.hour));
+                $("#schedule-tuesday-open").timepicker('setTime',  to12HourTime(data.schedule[2].open.hour)    + ":" + data.schedule[2].open.minutes + meridian(data.schedule[2].open.hour));
+                $("#schedule-wednesday-open").timepicker('setTime',to12HourTime(data.schedule[3].open.hour)    + ":" + data.schedule[3].open.minutes + meridian(data.schedule[3].open.hour));
+                $("#schedule-thursday-open").timepicker('setTime', to12HourTime(data.schedule[4].open.hour)    + ":" + data.schedule[4].open.minutes + meridian(data.schedule[4].open.hour));
+                $("#schedule-friday-open").timepicker('setTime',   to12HourTime(data.schedule[5].open.hour)    + ":" + data.schedule[5].open.minutes + meridian(data.schedule[5].open.hour));
+                $("#schedule-saturday-open").timepicker('setTime', to12HourTime(data.schedule[6].open.hour)    + ":" + data.schedule[6].open.minutes + meridian(data.schedule[6].open.hour));
 
-                $("#schedule-sunday-close").timepicker('setTime',data.schedule[0].close.hour + ":" + data.schedule[0].close.minutes);
-                $("#schedule-monday-close").timepicker('setTime',data.schedule[1].close.hour + ":" + data.schedule[1].close.minutes);
-                $("#schedule-tuesday-close").timepicker('setTime',data.schedule[2].close.hour + ":" + data.schedule[2].close.minutes);
-                $("#schedule-wednesday-close").timepicker('setTime',data.schedule[3].close.hour + ":" + data.schedule[3].close.minutes);
-                $("#schedule-thursday-close").timepicker('setTime',data.schedule[4].close.hour + ":" + data.schedule[4].close.minutes);
-                $("#schedule-friday-close").timepicker('setTime',data.schedule[5].close.hour + ":" + data.schedule[5].close.minutes);
-                $("#schedule-saturday-close").timepicker('setTime',data.schedule[6].close.hour + ":" + data.schedule[6].close.minutes);
+                $("#schedule-sunday-close").timepicker('setTime',   to12HourTime(data.schedule[0].close.hour)   + ":" + data.schedule[0].close.minutes + meridian(data.schedule[0].close.hour));
+                $("#schedule-monday-close").timepicker('setTime',   to12HourTime(data.schedule[1].close.hour)   + ":" + data.schedule[1].close.minutes + meridian(data.schedule[1].close.hour));
+                $("#schedule-tuesday-close").timepicker('setTime',  to12HourTime(data.schedule[2].close.hour)   + ":" + data.schedule[2].close.minutes + meridian(data.schedule[2].close.hour));
+                $("#schedule-wednesday-close").timepicker('setTime',to12HourTime(data.schedule[3].close.hour)  + ":" + data.schedule[3].close.minutes + meridian(data.schedule[3].close.hour));
+                $("#schedule-thursday-close").timepicker('setTime', to12HourTime(data.schedule[4].close.hour)   + ":" + data.schedule[4].close.minutes + meridian(data.schedule[4].close.hour));
+                $("#schedule-friday-close").timepicker('setTime',   to12HourTime(data.schedule[5].close.hour)   + ":" + data.schedule[5].close.minutes + meridian(data.schedule[5].close.hour));
+                $("#schedule-saturday-close").timepicker('setTime', to12HourTime(data.schedule[6].close.hour)   + ":" + data.schedule[6].close.minutes + meridian(data.schedule[6].close.hour));
                 if (data.schedule_enabled == "0"){
                     $('#camera-schedule-dialog .form-control').prop('disabled', true);
                 }else{

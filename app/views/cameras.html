@@ -72,20 +72,35 @@
                     </div>
 
                     <div class="modal-body">
-						<form role="form">
+						<form id="camera-form" role="form">
+                            <input name="camera[ip_address]" type="hidden" id="camera-ip">
+                            <input name="camera[manufacturer]" type="hidden" id="camera-manufacturer">
                             <div class="form-group">
                                 <label for="camera-name">camera name</label>
-                                <input type="text" class="form-control" id="camera-name" placeholder="camera name">
+                                <input type="text" class="form-control" id="camera-name" placeholder="camera name" name="camera[name]">
                             </div>
                             <div class="form-group">
-                                <label for="camera-ip">camera ip</label>
-                                <input type="text" class="form-control" id="camera-ip" placeholder="camera ip">
+                                <label for="camera-username">username</label>
+                                <input name="camera[username]" type="text" id="camera-username" class="form-control" placeholder="username">
                             </div>
                             <div class="form-group">
-                                <label for="rtsp-stream">rtsp url for h264 stream</label>
-                                <input type="text" id="rtsp-stream" class = "form-control" placeholder="rtsp url">
-                                <p class="help-block">rtsp url</p>
+                                <label for="camera-password">password</label>
+                                <input name="camera[password]" type="password" id="camera-password" class="form-control">
                             </div>
+                            <fieldset class="recording-profile-fields" style="display:none">
+                                <div class="form-group">
+                                    <label for="camera-stream-resolution">camera name</label>
+                                    <select class="form-control" id="camera-stream-resolution" name="camera[streams][][resolution]">
+                                </div>
+                                <div class="form-group">
+                                    <label for="camera-username">username</label>
+                                    <input name="camera[username]" type="text" id="camera-username" class="form-control" placeholder="username">
+                                </div>
+                                <div class="form-group">
+                                    <label for="camera-password">password</label>
+                                    <input name="camera[password]" type="password" id="camera-password" class="form-control">
+                                </div>
+                            </fieldset>
                         </form>
                     </div>
 
@@ -248,7 +263,7 @@
 			var timelines = [];
             
             $('#camera-schedule-dialog .form-control').timepicker({
-                showMeridian: false
+                showMeridian: true
             });
 
 			var updateTimelines = function( data, options ) {
@@ -301,10 +316,11 @@
             $("#add-new-camera").click(function() {
 
                 var camera = {};
-                
-                camera.name = $("#camera-name").val();
-                camera.ip = $("#camera-ip").val();
-                camera.rtsp = $("#rtsp-stream").val();
+
+                // clear the form                
+                // camera.name = $("#camera-name").val();
+                // camera.ip = $("#camera-ip").val();
+                // camera.rtsp = $("#rtsp-stream").val();
 
                 $("#update-camera").hide();
                 $("#add-new-camera").show();
@@ -316,6 +332,16 @@
 					timelineSetup(data._id, data.name);
                 });
             });
+
+            $("#camera-username, #camera-password").on( "blur", function(){
+
+                //get the values of the username and password
+
+                //get the supported parameters of the camera
+            });
+
+
+
             // - - -
             var openAddCameraDialog = function() {
                 $("#update-camera").hide();
