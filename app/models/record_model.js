@@ -78,6 +78,8 @@ RecordModel.prototype.updateCameraInfo = function( camera ) {
 
 RecordModel.prototype.stopRecording = function() {
 
+	console.log(" - - - record model stop recording - - - ");
+
     this.status = STOPPING;
 
     this.watcher.removeAllListeners('new_files');
@@ -92,7 +94,7 @@ RecordModel.prototype.stopRecording = function() {
         this.ffmpegProcess.removeAllListeners('exit');
         this.ffmpegProcess.kill();
         var exec = require('child_process').exec;
-        exec("kill -s 9 " + this.ffmpegProcess.pid, function(err) {console.log(err);});
+        exec("kill -s 9 " + this.ffmpegProcess.pid, function(err) {});
         this.status = STOPPED;
     }
 };
@@ -120,6 +122,8 @@ RecordModel.prototype.indexPendingFiles = function( cb ) {
 
 RecordModel.prototype.startRecording = function() {    
 
+	console.log(" - - - record model start recording - - - ");
+	
     var self = this;
 
     this.status = RECORDING;
@@ -220,7 +224,6 @@ RecordModel.prototype.checkForConnectionErrors = function() {
 	var self = this;
 
 	if (this.status === STOPPING) {
-		console.log("STOPPING");
 		this.status = STOPPED;
 	} else if ( Date.now() - this.lastErrorTime > 20000 ) {
 	//	self.lastErrorTime = Date.now();
@@ -279,28 +282,35 @@ RecordModel.prototype.recordContinuously = function() {
 
     if (self.rtsp.indexOf("rtsp") >= 0) {
 
-         this.ffmpegProcess = exec( "ffmpeg -rtsp_transport tcp -fflags +igndts -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
+         this.ffmpegProcess = exec( "nice -n 20 ffmpeg -rtsp_transport tcp -fflags +igndts -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
 
                 function (error, stdout, stderr) {
+
                     if (error !== null  && error.signal != 'SIGKILL' ) {
-						self.checkForConnectionErrors();
+						console.log("ffmpeg record error");
+						setTimeout( function() {
+							self.checkForConnectionErrors();
+						}, 500 );
                     }
                 }); 
 
         this.ffmpegProcess.on('exit', function() {
-
-			self.checkForConnectionErrors();
-			self.recordContinuously();
+			
+			setTimeout( function() {
+				if (self.status !== STOPPING && self.status !== STOPPED) {
+					self.recordContinuously();
+					self.checkForConnectionErrors();
+				}
+			}, 500 );
 		});
  
     } else if (self.rtsp.indexOf("http") >= 0) {
         this.ffmpegProcess = exec( "ffmpeg -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
 
                 function (error, stdout, stderr) {
-
+					console.log("ffmpeg record error");
                     if (error !== null && error.signal !== 'SIGKILL') {
 						setTimeout( function() {
-							console.log( error );
 							self.checkForConnectionErrors();
 						}, 500 );
 					} 
@@ -309,8 +319,10 @@ RecordModel.prototype.recordContinuously = function() {
         this.ffmpegProcess.on('exit', function() {
 			
 			setTimeout( function() {
-				self.checkForConnectionErrors();
-				self.recordContinuously();
+				//if (self.status !== STOPPING && self.status !== STOPPED) {
+					self.recordContinuously();
+					self.checkForConnectionErrors();
+				//}
 			}, 500 );
 		});   
     }

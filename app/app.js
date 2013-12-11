@@ -12,6 +12,15 @@ var request = require('request');										// for making requests to lifeline ap
 var CamHelper = require('./helpers/cameras_helper.js');					// abstraction for start/stop recordings
 var DiskSpaceAgent = require('./helpers/diskSpaceAgent.js');			// agent that periodically checks disk space
 
+
+// - - -
+// kills any ffmpeg, iostat and smartctl processes that might be already running
+var exec = require('child_process').exec;
+exec('killall ffmpeg', function( error, stdout, stderr) {});
+exec('killall iostat', function( error, stdout, stderr) {});
+exec('killall smartctl', function( error, stdout, stderr) {});
+// - - 
+
 // - - -
 // stores machine ip
 var localIp = "";
@@ -33,7 +42,6 @@ io = io.listen(server);
 io.set('log level', 1);
 // end of socket.io config
 // - - -
-
 
 // - - - - -
 // sets base folder from the command line
@@ -57,7 +65,7 @@ if ( process.argv.length > 2 ) {
 server.listen( 8080 );
 
 //var folder = '/Users/manuel/solink/nas/cameras';
-var camerasController = new CamerasController( __dirname + '/db/cam_db', baseFolder);
+var camerasController = new CamerasController( mp4Handler, __dirname + '/db/cam_db', baseFolder);
 
 
 // middleware for parsing request body contents
@@ -83,49 +91,17 @@ diskSpaceAgent.on('disk_usage', function(usage) {
 
 // - - - - -
 // health check modules
-var Iostat = require('./helpers/iostat.js');
-var iostat = new Iostat();
-iostat.launch();
-
-var Smart = require('./helpers/smart.js');
-var smart = new Smart({development: true});
-smart.start();
-
-var Diskstat = require('./helpers/diskstat.js');
-var diskstat = new Diskstat({development: true});
-diskstat.launch();
-
-var SensorsInfo = require('./helpers/sensors.js');
-var sensorsInfo = new SensorsInfo({development: true});
-sensorsInfo.launch();
+require('./controllers/health.js')( io );
 // - - -
 
 // - - - -
 // socket.io broadcasts setup
 camerasController.on('new_chunk', function( data ) {
-   
     io.sockets.emit( 'newChunk', data );
 });
 
 camerasController.on('camera_status', function( data ) {
-
 	io.sockets.emit( 'cameraStatus', data );
-});
-
-iostat.on('cpu_load', function(data) {
-	io.sockets.emit('cpu_load', data);
-});
-
-smart.on('smart', function(data) {
-	io.sockets.emit('smart', data);
-});
-
-diskstat.on('hdd_throughput', function(data) {
-	io.sockets.emit('hdd_throughput', data);
-});
-
-sensorsInfo.on('sensors_data', function(data) {
-	io.sockets.emit('sensorsData', data);
 });
 // end of socket.io broadcasts setup
 // - - -
@@ -190,6 +166,13 @@ app.get('/health', function(req, res) {
 
     res.sendfile(__dirname + '/views/health.html');
 });
+// - - -
+
+
+// - - -
+// camera scanner
+// usage: append subnet prefix in the form xxx.xxx.xxx
+require('./helpers/camera_scanner/scanner.js')( app, '192.168.215' );
 // - - -
 
 
@@ -291,15 +274,7 @@ app.get('/cameras/:id/thumb/:thumb', function(req, res) {
 app.get('/cameras/:id/snapshot', function(req, res) {
     
     var camId = req.params.id;
-
-    camerasController.getCamera( camId, function(err, cam) {
-
-        if (err) {
-            res.json( { error: err } );
-        } else {
-            mp4Handler.takeSnapshot( cam.db, cam, req, res );
-        }
-    });
+	camerasController.requestSnapshot( camId, req, res );
 });
 // - - -
 
@@ -352,8 +327,8 @@ app.get('/cameras/:id/video', function(req, res) {
 // - - -
 // gets inMem mp4 video
 app.get('/cameras/:id/memvideo', function(req, res) {
-	res.end('feature under construction');
-/*
+//	res.end('feature under construction');
+
     var camId = req.params.id;
     var begin = parseInt( req.query.begin, 10 );
     var end = parseInt( req.query.end, 10 );
@@ -365,7 +340,7 @@ app.get('/cameras/:id/memvideo', function(req, res) {
             mp4Handler.inMemoryMp4Video( cam.db, cam, begin, end, req, res );
         }
     });
-	*/
+	
 });
 // - - -
 

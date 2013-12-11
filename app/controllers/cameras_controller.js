@@ -6,15 +6,26 @@ var util = require('util');
 var db;
 var cameras = [];
 
-function CamerasController( filename, videosFolder ) {
+function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 
-    db = new Datastore({ filename: filename, autoload: true });
+    var self = this;
+
+	this.snapshotQ = [];
+
+    db = new Datastore({ filename: filename});
+
+    db.loadDatabase( function(err) {
+		self.setup( function(err) {} );
+		self.indexFiles();
+		if (cb) {
+			cb();
+		}
+		self.checkSnapshotQ();
+    });
 
     this.videosFolder = videosFolder;
 
-    this.setup( function(err) {} );
-
-    this.indexFiles();
+	this.mp4Handler = mp4Handler;
 }
 
 util.inherits(CamerasController, EventEmitter);
@@ -49,6 +60,60 @@ CamerasController.prototype.getCameras = function() {
 };
 //
 //
+
+
+CamerasController.prototype.requestSnapshot = function( camId, req, res ) {
+
+	var snapshot = {};
+	snapshot.camId = camId;
+	snapshot.req = req;
+	snapshot.res = res;
+	snapshot.cancelled = false;
+
+	res.on('close', function() {
+		snapshot.cancelled = true;
+	});
+
+	this.snapshotQ.push( snapshot );
+};
+
+
+CamerasController.prototype.checkSnapshotQ = function() {
+	
+	var self = this;
+	var snapshot = self.snapshotQ.shift();
+
+	if ( snapshot && !snapshot.cancelled ) {
+		self.takeSnapshot( snapshot.camId, snapshot.req, snapshot.res, function() {
+			self.checkSnapshotQ();
+		});
+	} else {
+		
+		setTimeout( function() {
+			self.checkSnapshotQ();
+		}, 500 );
+	}
+};
+
+
+CamerasController.prototype.takeSnapshot = function( camId, req, res, cb ) {
+
+	var self = this;
+
+    this.getCamera( camId, function(err, cam) {
+
+        if (err) {
+            res.json( { error: err } );
+        } else {
+            self.mp4Handler.takeSnapshot( cam.db, cam, req, res, function() {
+				if (cb) {
+					cb();
+				}
+			});
+        }
+    });	
+};
+
 
 CamerasController.prototype.listVideosByCamera = function( camId, start, end, cb ) {
     
@@ -93,7 +158,7 @@ CamerasController.prototype.indexFiles = function() {
 	var self = this;
 
     var k = 0;
-
+	
     setInterval( 
         function() {
             k = (k + 1) % cameras.length;
@@ -419,21 +484,22 @@ CamerasController.prototype.setup = function( cb ) {
     
     var self = this;
 
-    db.loadDatabase();
-    
-    db.find( {}, function( err, docs ) {
-        if (err) {
-            console.log(err);
-            cb( err );
-        } else {
-            for ( var k = 0; k < docs.length; k++ ) {
-                var cam = docs[k];
-                var newCam = new Camera(cam, self.videosFolder );
-                self.pushCamera( newCam );
-            }
-            cb( false );
-        }
+    db.loadDatabase( function( err ) {
+    	db.find( {}, function( err, docs ) {
+        	if (err) {
+            		console.log(err);
+            		cb( err );
+        	} else {
+            	for ( var k = 0; k < docs.length; k++ ) {
+                	var cam = docs[k];
+                	var newCam = new Camera(cam, self.videosFolder );
+               	 	self.pushCamera( newCam );
+           	 }
+            	cb( false );
+        	}
+	});    
     });
+    
 };
 
 
