@@ -18,7 +18,7 @@ function Camera( cam, videosFolder ) {
     this.status = cam.status;
     this.manufacturer = cam.manufacturer;
     this.type = cam.type;
-    console.log('manufacturer: ' + this.manufacturer);
+    
 	this.username = cam.username;
     this.password = cam.password;
 
@@ -249,7 +249,9 @@ Camera.prototype.setRecordingSchedule = function(schedule) {
 };
 
 Camera.prototype.updateRecorder = function() {
-    this.recordModel.updateCameraInfo( this );
+	for (var i in this.streams) {
+		this.streams[i].recordModel.updateCameraInfo( this, this.streams[i] );
+	}
 };
 
 
