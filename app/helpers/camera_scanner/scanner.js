@@ -95,8 +95,8 @@ var addCam = function( cam, response, cb ) {
 		response = '';
 	}
 
-	detectCamByHttpResponse( cam.ip, response, function( name ) {
-		cam.name = name;
+	detectCamByHttpResponse( cam.ip, response, function( manufacturer ) {
+		cam.manufacturer = manufacturer;
 		if (cb) cb( cam );
 	});
 };
@@ -117,7 +117,7 @@ var onvifScan = function( prefix, cb ) {
 				if (response.indexOf('upported') !== -1) {
 					status = 'not_supported';
 				} else if (response.indexOf('uthorized') !== -1) {
-					status = 'auth';
+					status = 'unauthorized';
 				} else {
 					status = 'ok';
 				}

@@ -30,24 +30,6 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 
 util.inherits(CamerasController, EventEmitter);
 
-function cameraInfo(camera) {
-    var info = {};
-    
-    info.name = camera.name;
-    info.rtsp = camera.rtsp;
-    info.ip = camera.ip;
-    info._id = camera._id;
-    info.enabled = camera.enabled;
-    
-    if (camera.id) {
-        info.id = camera.id;
-    } else {
-        info.id = camera._id;
-    }
-
-    return info;
-}
-
 //
 // remove one of the methods later
 //
@@ -147,7 +129,7 @@ CamerasController.prototype.listCameras = function( cb ) {
         if (err) {
             cb( err, [] );
         } else {
-            cb( err, cameras.map(cameraInfo) );                        
+            cb( err, cameras );                        
         }
     });
 };

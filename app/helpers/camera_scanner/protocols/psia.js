@@ -14,7 +14,7 @@ var testIpForPsiaCamera = function( ip, cb ) {
         }, function (error, response, body) {
             if ( !error && body.length === 0 && response.statusCode !== 404 ) {
 
-                cb( error, 'auth', ip );
+                cb( error, 'unauthorized', ip );
             } else if ( !error && body.indexOf("psialliance-org") > -1 ) {
 				cb( error, 'psia', ip );
 			} else {

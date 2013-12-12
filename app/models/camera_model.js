@@ -15,8 +15,9 @@ function Camera( cam, videosFolder ) {
     this._id = cam._id;
     this.name = cam.name;
     this.ip = cam.ip;
-    this.rtsp = cam.rtsp;
-    
+    this.status = cam.status;
+    this.manufacturer = cam.manufacturer;
+    this.type = cam.type;
 	this.videosFolder = videosFolder + "/" + this._id;
     
 	this.recording = false;
@@ -197,6 +198,35 @@ Camera.prototype.indexPendingFiles = function( cb ) {
 			cb();
 		}
 	});
+};
+
+Camera.prototype.indexPendingFiles = function( cb ) {
+ 
+    this.recordModel.indexPendingFiles( function() {
+		if (cb) {
+			cb();
+		}
+	});
+};
+
+Camera.prototype.toJSON = function() {
+    var info = {};
+    
+    info.name = this.name;
+    info.ip = this.ip;
+    info._id = this._id;
+    info.enabled = this.enabled;
+    info.status = this.status;
+    info.type = this.type;
+    info.manufacturer = this.manufacturer
+    
+    if (this.id) {
+        info.id = this.id;
+    } else {
+        info.id = this._id;
+    }
+
+    return info;
 };
 
 

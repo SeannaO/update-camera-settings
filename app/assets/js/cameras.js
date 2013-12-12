@@ -156,8 +156,13 @@ var addCameraItem = function( camera ) {
 
 	$("<div>", {
 		class: "camera-item-name",
-		html: '<a href = "/cameras/'+camera._id+'/">' + camera.name + '</a>'
+		html: '<a href = "/cameras/'+camera._id+'/">' + (camera.name || (camera.ip + " | " + camera.manufacturer)) + '</a>'
 	}).appendTo("#camera-item-"+camera._id);
+
+        $("<div>", {
+        class: "camera-item-status",
+        html: '<div class="camera-item-rtsp">' + camera.status + '</div>'
+    }).appendTo("#camera-item-"+camera._id);
 
 	switchHtml = '' +
 		'<input type="checkbox" id="switch-'+camera._id+'" name="switch-'+camera._id+'" class="switch" value="1"/>' +
@@ -331,6 +336,33 @@ var meridian = function(hour){
 };
 var to12HourTime = function(hours){
  return ((hours + 11) % 12 + 1)
+};
+
+scanForCameras = function() {
+            
+    $("#scan-status").html('scanning for cameras...');
+    $.ajax({
+        type: "GET",
+        url: "/scan.json",
+        contentType: 'application/json',
+        success: function(data) {
+            var ip_addresses = $.map(cameras, function(n,i){
+               return [ n.ip ];
+            });
+            for (var idx in data) {
+                if ($.inArray(data[idx].ip, ip_addresses) === -1){
+                    addCamera( data[idx], function(result) {
+                        if (result._id){
+                            addCameraItem( result );
+                            console.log(result);
+                            timelineSetup(result._id, result.name);
+                        }
+                    });                                
+                }
+            }
+        }
+    });    
+    
 };
 
 

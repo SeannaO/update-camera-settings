@@ -202,7 +202,11 @@ app.get('/live', function(req, res) {
 app.get('/cameras.json', function(req, res) {
 
     camerasController.listCameras( function(err, list) {
-        console.log(list);
+        list.map(function(item){
+            console.log(item);
+            return [item.toJSON()];
+        });
+        
         if (err) {
             res.end("{ 'error': '" + JSON.stringify(err) + "'}");
         } else {
@@ -411,7 +415,7 @@ app.get('/cameras/:id', function(req, res) {
             res.end("couldn't find this camera");
         } else {
 			// console.log( cam.deleteOldestChunks(10) );
-            res.render('camera', {id: cam._id, rtsp: cam.rtsp, name: cam.name});
+            res.render('camera', cam.toJSON());
         }
     });
 });
@@ -439,7 +443,7 @@ app.get('/cameras/:id/json', function(req, res) {
         if (err || !cam || cam.length === 0) {
             res.json({ success: false, error: err });
         } else {
-            res.json({ success: true, camera: {_id: cam._id, name: cam.name, ip: cam.ip, rtsp: cam.rtsp } });
+            res.json({ success: true, camera: cam.toJSON() });
         }
     });
 });

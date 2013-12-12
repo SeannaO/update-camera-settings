@@ -50,11 +50,14 @@
         <h1>cameras</h1>
 		<p>
 			<a href="javascript:openAddCameraDialog()">[ add new camera ]</a> 
+            | <a href="javascript:scanForCameras()">[ scan for cameras ]</a>
 			| <a href="/multiview">[ multiview ]</a>
 			| <a href="/health">[ system health status ]</a>
 		</p>
 
-        <div id = "camera-list"></div>
+        <div id = "camera-list">
+            <div id = "scan-status"></div>
+        </div>
         
         <br>
 
@@ -89,28 +92,27 @@
                             </div>
                             <fieldset class="recording-profile-fields" style="display:none">
                                 <div class="form-group">
-                                    <label for="camera-stream-resolution">camera name</label>
+                                    <label for="camera-stream-resolution">resolution</label>
                                     <select class="form-control" id="camera-stream-resolution" name="camera[streams][][resolution]">
+                                    </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="camera-username">username</label>
-                                    <input name="camera[username]" type="text" id="camera-username" class="form-control" placeholder="username">
-                                </div>
+                                    <label for="camera-stream-framerate">framerate</label>
+                                    <select class="form-control" id="camera-stream-framerate" name="camera[streams][][framerate]">
+                                    </select>
+                                </div>      
                                 <div class="form-group">
-                                    <label for="camera-password">password</label>
-                                    <input name="camera[password]" type="password" id="camera-password" class="form-control">
-                                </div>
+                                    <label for="camera-stream-quality">quality</label>
+                                    <select class="form-control" id="camera-stream-quality" name="camera[streams][][quality]">
+                                    </select>
+                                </div>      
                             </fieldset>
                         </form>
 
-						<div id = 'scan-list'>
-							
-						</div>
                     </div>
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
-						<button type="button" class="btn btn-info" id = "scan-cameras">scan</button>
                         <button type="button" class="btn btn-primary" id = "add-new-camera">add</button>
                         <button type="button" class="btn btn-primary" id = "update-camera">save</button>
                     </div>
@@ -321,19 +323,11 @@
             $("#add-new-camera").click(function() {
 
                 var camera = {};
-<<<<<<< HEAD
-
                 // clear the form                
+
                 // camera.name = $("#camera-name").val();
                 // camera.ip = $("#camera-ip").val();
                 // camera.rtsp = $("#rtsp-stream").val();
-=======
-                $('#scan-list').html();
-
-                camera.name = $("#camera-name").val();
-                camera.ip = $("#camera-ip").val();
-                camera.rtsp = $("#rtsp-stream").val();
->>>>>>> a519f263f403f3f627a1da22377c9acbafb90429
 
                 $("#update-camera").hide();
                 $("#add-new-camera").show();
@@ -347,7 +341,7 @@
             });
 
             $("#camera-username, #camera-password").on( "blur", function(){
-
+            
                 //get the values of the username and password
 
                 //get the supported parameters of the camera
@@ -358,7 +352,6 @@
             // - - -
             var openAddCameraDialog = function() {
                 $("#update-camera").hide();
-				$("#scan-cameras").show();
                 $("#add-new-camera").show();
                 $("#add-new-camera-dialog").modal('show');
             }
@@ -371,55 +364,26 @@
             });
             // - - -
 
-			$('#scan-cameras').click(function() {
-						
-				$("#scan-list").html('scanning for cameras...');
+			// var addCamToScanList = function( cam ) {
 
-				$.ajax({
-					type: "GET",
-					url: "/scan.json",
-					contentType: 'application/json',
-					success: function(data) {
+			// 	console.log( cam );
 
-						var json = JSON.parse(data);
-						if (json) {
-							$('#scan-list').html('found ' + json.length + ' cameras:');
-
-							for (var i in json) {
-								addCamToScanList( json[i] );
-							}
-
-						} else {
-							
-						}
-					}
-				});    
+			// 	var html = '';
+			// 	html += '<b>ip:</b> ' + cam.ip;
+			// 	html += ' | <b>type:</b> ' + cam.type;
 				
-			});
+			// 	if (cam.status === 'needs_authentication') {
+			// 		html += ' | <i>needs authentication</i>';
+			// 	} else if (cam.status === 'not_supported') {
+			// 		html += ' | <i>doesn\'t support basic onvif actions';
+			// 	}
 
-			var addCamToScanList = function( cam ) {
-
-				console.log( cam );
-
-				var html = '';
-				html += '<b>ip:</b> ' + cam.ip;
-				html += ' | <b>type:</b> ' + cam.type;
-				
-				if (cam.status === 'needs_authentication') {
-					html += ' | <i>needs authentication</i>';
-				} else if (cam.status === 'not_supported') {
-					html += ' | <i>doesn\'t support basic onvif actions';
-				}
-
-				var camItem = $('<div>', {
-					id: 'cam_' +cam.ip,
-					html: html ,
-					class: 'scan-list-item'
-				}).appendTo('#scan-list');
-			};
-
-			var selectScanListCam = function( ip ) {
-			};
+			// 	var camItem = $('<div>', {
+			// 		id: 'cam_' +cam.ip,
+			// 		html: html ,
+			// 		class: 'scan-list-item'
+			// 	}).appendTo('#scan-list');
+			// };
 
         </script>
     </body>
