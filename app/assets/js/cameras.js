@@ -283,6 +283,7 @@ var updateCamera = function(id, cb) {
 var updateSchedule = function(id, cb) {
 
     var params = $('#camera-schedule').serializeObject();
+	console.log( params );
     $.ajax({
         type: "PUT",
         url: "/cameras/" + id + "/schedule",
@@ -384,8 +385,59 @@ scanForCameras = function() {
     
 };
 
+var generateScheduleTable = function() {
+	var days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+	var header = '<tr>';
+	header += '<th></th>';
+	for (var d in days) {
+		var day = days[d];
+		header += '<th>' + day + '</th>';
+	}
+	header += '</tr>';
+	
+	var startTime = '<tr>';
+	startTime += '<td>Start Time</td>';
+	
+	for (var d in days) {
+		var day = days[d];
+		startTime += '<td>';
+		startTime += '<div class="form-group">';
+		startTime += '<div class="input-append bootstrap-timepicker">';
+		startTime += '<input type="text" class="form-control input-small" id="schedule-'+day+'-open" name="schedule['+day+'][open]">';
+		startTime += '</div>';
+		startTime += '</div>';
+		startTime += '</td>';
+	}
+	startTime += '</tr>';
+
+
+	var endTime = '<tr>';
+	endTime += '<td>End Time</td>';
+	
+	for (var d in days) {
+		var day = days[d];
+		endTime += '<td>';
+		endTime += '<div class="form-group">';
+		endTime += '<div class="input-append bootstrap-timepicker">';
+		endTime += '<input type="text" class="form-control input-small" id="schedule-'+day+'-close" name="schedule['+day+'][close]">';
+		endTime += '</div>';
+		endTime += '</div>';
+		endTime += '</td>';
+	}
+	endTime += '</tr>';
+
+	var table = '<table class="table table-bordered">';
+	table += header;
+	table += startTime;
+	table += endTime;
+	table += '</table>';
+	return table;
+};
+
 
 var addStreamFieldSet = function(cb) {
+
     var $fieldset = $("<fieldset class=\"recording-profile-fields\">" +
                     "<input type=\"hidden\" id=\"camera-streams-" + current_number_of_streams + "-id\" name=\"camera[streams][" + current_number_of_streams + "][id]\">" +
                     "<div class=\"form-group\">" +
@@ -434,21 +486,15 @@ var cameraSchedule = function(camId) {
                         $('#camera-schedule-dialog .form-control').prop('disabled', true);
                     }
                 });
-                $("#schedule-sunday-open").timepicker('setTime',   to12HourTime(data.schedule[0].open.hour)    + ":" + data.schedule[0].open.minutes + meridian(data.schedule[0].open.hour));
-                $("#schedule-monday-open").timepicker('setTime',   to12HourTime(data.schedule[1].open.hour)    + ":" + data.schedule[1].open.minutes + meridian(data.schedule[1].open.hour));
-                $("#schedule-tuesday-open").timepicker('setTime',  to12HourTime(data.schedule[2].open.hour)    + ":" + data.schedule[2].open.minutes + meridian(data.schedule[2].open.hour));
-                $("#schedule-wednesday-open").timepicker('setTime',to12HourTime(data.schedule[3].open.hour)    + ":" + data.schedule[3].open.minutes + meridian(data.schedule[3].open.hour));
-                $("#schedule-thursday-open").timepicker('setTime', to12HourTime(data.schedule[4].open.hour)    + ":" + data.schedule[4].open.minutes + meridian(data.schedule[4].open.hour));
-                $("#schedule-friday-open").timepicker('setTime',   to12HourTime(data.schedule[5].open.hour)    + ":" + data.schedule[5].open.minutes + meridian(data.schedule[5].open.hour));
-                $("#schedule-saturday-open").timepicker('setTime', to12HourTime(data.schedule[6].open.hour)    + ":" + data.schedule[6].open.minutes + meridian(data.schedule[6].open.hour));
 
-                $("#schedule-sunday-close").timepicker('setTime',   to12HourTime(data.schedule[0].close.hour)   + ":" + data.schedule[0].close.minutes + meridian(data.schedule[0].close.hour));
-                $("#schedule-monday-close").timepicker('setTime',   to12HourTime(data.schedule[1].close.hour)   + ":" + data.schedule[1].close.minutes + meridian(data.schedule[1].close.hour));
-                $("#schedule-tuesday-close").timepicker('setTime',  to12HourTime(data.schedule[2].close.hour)   + ":" + data.schedule[2].close.minutes + meridian(data.schedule[2].close.hour));
-                $("#schedule-wednesday-close").timepicker('setTime',to12HourTime(data.schedule[3].close.hour)  + ":" + data.schedule[3].close.minutes + meridian(data.schedule[3].close.hour));
-                $("#schedule-thursday-close").timepicker('setTime', to12HourTime(data.schedule[4].close.hour)   + ":" + data.schedule[4].close.minutes + meridian(data.schedule[4].close.hour));
-                $("#schedule-friday-close").timepicker('setTime',   to12HourTime(data.schedule[5].close.hour)   + ":" + data.schedule[5].close.minutes + meridian(data.schedule[5].close.hour));
-                $("#schedule-saturday-close").timepicker('setTime', to12HourTime(data.schedule[6].close.hour)   + ":" + data.schedule[6].close.minutes + meridian(data.schedule[6].close.hour));
+				var days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+				
+				for (var d in days) {
+					var day = days[d];
+ 					$('#schedule-'+day+'-open').timepicker('setTime',   to12HourTime(data.schedule[d].open.hour) + ":" + data.schedule[d].open.minutes + meridian(data.schedule[0].open.hour));
+					$('#schedule-'+day+'-close').timepicker('setTime',   to12HourTime(data.schedule[d].close.hour)   + ":" + data.schedule[d].close.minutes + meridian(data.schedule[0].close.hour));
+				}
+
                 if (data.schedule_enabled == "0"){
                     $('#camera-schedule-dialog .form-control').prop('disabled', true);
                 }else{
