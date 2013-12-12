@@ -321,6 +321,7 @@ var editCamera = function(camId) {
                         $streamsFieldsetContainer.append(fieldset);
                     });
                     for (var idx in data.camera.streams){
+                        $("#add-new-camera-dialog #camera-streams-" + idx + "-id").val(data.camera.streams[idx].id);
                         $("#add-new-camera-dialog #camera-streams-" + idx + "-resolution").val(data.camera.streams[idx].resolution);
                         $("#add-new-camera-dialog #camera-streams-" + idx + "-framerate").val(data.camera.streams[idx].framerate);
                         $("#add-new-camera-dialog #camera-streams-" + idx + "-quality").val(data.camera.streams[idx].quality);
@@ -386,6 +387,7 @@ scanForCameras = function() {
 
 var addStreamFieldSet = function(cb) {
     var $fieldset = $("<fieldset class=\"recording-profile-fields\">" +
+                    "<input type=\"hidden\" id=\"camera-streams-" + current_number_of_streams + "-id\" name=\"camera[streams][" + current_number_of_streams + "][id]\">" +
                     "<div class=\"form-group\">" +
                         "<label for=\"camera-stream-resolution\">resolution</label>" +
                         "<select class=\"form-control\" id=\"camera-streams-" + current_number_of_streams + "-resolution\" name=\"camera[streams][" + current_number_of_streams +"][resolution]\">" +
