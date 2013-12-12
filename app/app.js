@@ -227,6 +227,13 @@ app.get('/cameras', function(req, res) {
 });
 // - - -
 
+// - - -
+// lists all profiles
+app.get('/cameras/:id/streams', function(req, res) {
+    var camId = req.params.id;
+    res.end( camerasController.getStreamsJSON() );
+});
+// - - -
 
 // - - -
 // lists all videos

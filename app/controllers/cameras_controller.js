@@ -332,6 +332,8 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
         return;
     }
     
+	camera.cam.updateAllStreams( cam.streams );
+
 	console.log("*** updating camera:" );
 	console.log(cam);
 

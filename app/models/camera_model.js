@@ -74,8 +74,7 @@ Camera.prototype.addStream = function( stream ) {
 		stream.id = generateUUID();
 	}
 	stream.db = new Dblite( this.videosFolder + '/db_'+stream.id+'.sqlite' );
-	stream.recordModel = new RecordModel( this, stream );
-
+	
 	stream.url = rtspUrl({
 		manufacturer: self.manufacturer,
 		ip: self.ip,
@@ -85,6 +84,8 @@ Camera.prototype.addStream = function( stream ) {
 		framerate: stream.framerate,
 		quality: stream.quality
 	});
+
+	stream.recordModel = new RecordModel( this, stream );
 
 	self.streams[stream.id] = stream;
 	
@@ -96,22 +97,104 @@ Camera.prototype.addStream = function( stream ) {
 };
 
 
+Camera.prototype.updateAllStreams = function( new_streams ) {
+
+	var self = this;
+
+	console.log( new_streams );
+
+	for ( var s in new_streams ) {
+		var stream = new_streams[s];
+
+		if ( !stream.id || !self.streams[ stream.id ] ) {
+			self.addStream( stream );
+		} else {
+			self.updateStream( stream );
+		}
+	}
+
+	var ids = new_streams.map( function(s) {
+		return s.id;
+	});
+
+	for ( var streamId in self.streams ) {
+		if (ids.indexOf( streamId ) === -1) {
+			self.removeStream( streamId );
+		}
+	}
+};
+
+
+Camera.prototype.removeStream  = function( streamId ) {
+
+	var self = this;
+
+	if ( !self.streams[streamId] ) return;
+
+	self.streams[streamId].recordModel.stopRecording();
+	delete self.streams[streamId].recordModel;
+	delete self.streams[streamId];
+
+	//TODO: delete stream files
+
+};
+
 
 Camera.prototype.updateStream = function( stream ) {
+
+	var need_restart = false;
 
 	for (var i in streams) {
 		
 		if (streams[i].id === stream.id) {
 
 			streams[i].name = stream.name;
-			streams[i].url = stream.url;
-			streams[i].resolution = stream.resolution;
-			streams[i].framerate = stream.framerate;
+			
+			if ( streams[i].resolution !== stream.resolution ) {
+				streams[i].resolution = stream.resolution;
+				need_restart = true;
+			}
+			if ( streams[i].framerate !== stream.framerate ) {
+				streams[i].framerate = stream.framerate;
+				need_restart = true;
+			}
+			if ( streams[i].quality !== stream.quality ) {
+				streams[i].quality = stream.quality;
+				need_restart = true;
+			}
 		}
 	}
 
-	// TODO: restart recording with new params
-	// TODO: check rtsp url
+	if (need_restart) {
+		self.restartStream( stream.id );
+	}
+};
+
+
+Camera.prototype.restartStream = function( streamId ) {
+
+	var self = this;
+
+	if ( !self.streams[streamId] ) return;
+	var stream = self.streams[ streamId ];
+
+	self.streams[streamId].recordModel.stopRecording();
+	delete self.streams[streamId].recordModel;
+	
+	stream.url = rtspUrl({
+		manufacturer: self.manufacturer,
+		ip: self.ip,
+		user: self.username,
+		password: self.password,
+		resolution: stream.resolution,
+		framerate: stream.framerate,
+		quality: stream.quality
+	});
+	
+	self.streams[streamId].recordModel = new RecordModel( self, stream );
+	if ( self.shouldBeRecording ) {
+		self.streams[streamId].recordModel.startRecording();
+	}
 };
 
 
@@ -130,13 +213,12 @@ Camera.prototype.getOldestChunks = function( streamId, numberOfChunks, cb ) {
 	}
 	
 	var self = this;
-	self.db.getOldestChunks( numberOfChunks, function( data ) {
+	self.streams[streamId].db.getOldestChunks( numberOfChunks, function( data ) {
 		cb( data );
 	});
 };
 
 
-//TODO: refactor recordModel to specify streamId
 Camera.prototype.addChunk = function( streamId, chunk ) {
 	
 	if ( !this.streams[streamId] ) {
@@ -257,7 +339,7 @@ Camera.prototype.updateRecorder = function() {
 
 Camera.prototype.deleteAllFiles = function() {
 
-    deleteFolderRecursive( this.videosFolder );
+    // deleteFolderRecursive( this.videosFolder );
 };
 
 
