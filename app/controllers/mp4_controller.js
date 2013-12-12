@@ -29,7 +29,7 @@ function inMemorySnapshot( file, offset, res, options, cb) {
 				['-y',
                 '-i', file,
                 '-vframes', '1',
-                '-ss', offset,
+                // '-ss', offset,
                 '-f', 'image2',
                 '-vcodec', 'mjpeg',
                 '-an',

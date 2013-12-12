@@ -112,10 +112,13 @@ RecordModel.prototype.indexPendingFiles = function( cb ) {
 
     var self = this;
 
-    while (self.pending.length > 1)  {
-        var file = self.pending.shift();   
-		console.log(file);
-        self.moveAndIndexFile( file, cb );
+	if (self.pending.length <= 1) {
+		if (cb) cb();
+	} else {
+        var file = self.pending.shift();
+        self.moveAndIndexFile( file, function() {
+			self.indexPendingFiles( cb );
+		});
     }
 };
 
@@ -185,12 +188,13 @@ RecordModel.prototype.moveAndIndexFile = function( file, cb ) {
     var self = this;
 
     self.calcDuration( file, function( video ) {
-        self.moveFile( video );
-        self.emit('new_chunk', video );
-		if ( cb ) {
-			cb();
-		}
-    });
+        self.moveFile( video, function() {
+			self.emit('new_chunk', video );
+			if ( cb ) {
+				cb();
+			}
+		});
+	});
 };
 
 
@@ -208,9 +212,9 @@ RecordModel.prototype.calcDuration = function( file, cb ) {
 
 			video = {
 				cam: self.camId,
-			start: start,
-			end: end,
-			file: file
+				start: start,
+				end: end,
+				file: file
 			};
 
 			cb( video );
@@ -253,11 +257,11 @@ RecordModel.prototype.moveFile = function( video, cb ) {
             else {
                 video.file = to;
                 ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() { 
+					self.camera.addChunk( video );
+					if (cb) {
+						cb();
+					}
                 });
-                self.camera.addChunk( video );
-				if (cb) {
-					cb();
-				}
             }                        
         });
     });
@@ -282,7 +286,7 @@ RecordModel.prototype.recordContinuously = function() {
 
     if (self.rtsp.indexOf("rtsp") >= 0) {
 
-         this.ffmpegProcess = exec( "nice -n 20 ffmpeg -rtsp_transport tcp -fflags +igndts -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
+         this.ffmpegProcess = exec( "nice -n -20 ffmpeg -rtsp_transport tcp -fflags +igndts -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
 
                 function (error, stdout, stderr) {
 
