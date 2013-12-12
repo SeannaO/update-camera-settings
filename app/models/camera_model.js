@@ -19,7 +19,9 @@ function Camera( cam, videosFolder ) {
     this.manufacturer = cam.manufacturer;
     this.type = cam.type;
 	this.videosFolder = videosFolder + "/" + this._id;
-    
+    this.username = cam.username,
+    this.password = cam.password,
+    this.streams = cam.streams
 	this.recording = false;
     this.enabled = cam.enabled;
 
@@ -219,7 +221,9 @@ Camera.prototype.toJSON = function() {
     info.status = this.status;
     info.type = this.type;
     info.manufacturer = this.manufacturer
-    
+    info.username = this.username,
+    info.password = this.password,
+    info.streams = this.streams
     if (this.id) {
         info.id = this.id;
     } else {

@@ -338,9 +338,12 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
     db.update({ _id: cam._id }, { 
         $set: { 
             name: cam.name, 
-            rtsp: cam.rtsp, 
-            ip: cam.ip,
-			id: cam.id
+            manufacturer: cam.manufacturer, 
+            ip_address: cam.ip_address,
+			id: cam.id,
+            username: cam.username,
+            password: cam.password,
+            streams: cam.streams
         } 
     }, { multi: false }, function (err, numReplaced) {
         if (err) {
@@ -348,10 +351,13 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
         } else {
             
             camera.cam.name = cam.name;
-            camera.cam.rtsp = cam.rtsp;
-            camera.cam.ip = cam.ip;
+            camera.cam.manufacturer = cam.manufacturer;
+            camera.cam.ip_address = cam.ip_address;
             camera.cam.updateRecorder();
 			camera.cam.id = cam.id;
+            camera.cam.username = cam.username,
+            camera.cam.password = cam.password,
+            camera.cam.streams = cam.streams
             self.emit("update", camera.cam);
             cb(err);
         }

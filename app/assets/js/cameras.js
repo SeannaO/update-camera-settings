@@ -309,7 +309,17 @@ var editCamera = function(camId) {
             if (data.success) {
                 $("#add-new-camera-dialog #camera-name").val(data.camera.name);
                 $("#add-new-camera-dialog #camera-ip").val(data.camera.ip);
-                $("#add-new-camera-dialog #rtsp-stream").val(data.camera.rtsp);             
+                $("#add-new-camera-dialog #camera-manufacturer").val(data.camera.manufacturer);
+                $("#add-new-camera-dialog #camera-username").val(data.camera.username);
+                $("#add-new-camera-dialog #camera-password").val(data.camera.password);
+
+                for (var idx in data.camera.streams){
+                    $("#add-new-camera-dialog #camera-streams-" + idx + "-resolution").val(data.camera.streams[idx].resolution);
+                    $("#add-new-camera-dialog #camera-streams-" + idx + "-framerate").val(data.camera.streams[idx].framerate);
+                    $("#add-new-camera-dialog #camera-streams-" + idx + "-quality").val(data.camera.streams[idx].quality);
+                    $("#add-new-camera-dialog #camera-streams-" + idx + "-retention-period").val(data.camera.streams[idx].retention_period);                    
+                }
+                
 
                 $("#update-camera").unbind();
                 $("#update-camera").click( function() {
