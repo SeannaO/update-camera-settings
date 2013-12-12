@@ -112,10 +112,11 @@ RecordModel.prototype.indexPendingFiles = function( cb ) {
 
     var self = this;
 
-	if (self.pending.length <= 1) {
+	if ( self.pending.length === 0 ) {
 		if (cb) cb();
+		return;
 	} else {
-        var file = self.pending.shift();
+		var file = self.pending.shift();   
         self.moveAndIndexFile( file, function() {
 			self.indexPendingFiles( cb );
 		});
@@ -189,12 +190,12 @@ RecordModel.prototype.moveAndIndexFile = function( file, cb ) {
 
     self.calcDuration( file, function( video ) {
         self.moveFile( video, function() {
-			self.emit('new_chunk', video );
 			if ( cb ) {
 				cb();
 			}
 		});
-	});
+        self.emit('new_chunk', video );
+    });
 };
 
 
@@ -212,9 +213,9 @@ RecordModel.prototype.calcDuration = function( file, cb ) {
 
 			video = {
 				cam: self.camId,
-				start: start,
-				end: end,
-				file: file
+			start: start,
+			end: end,
+			file: file
 			};
 
 			cb( video );
