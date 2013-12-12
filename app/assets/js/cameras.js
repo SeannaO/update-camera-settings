@@ -1,6 +1,6 @@
 var mouseX = 0;
 var mouseY = 0;
-
+var current_number_of_streams = 0;
 $(document).ready(function(){
 
 	$(document).mousemove(function(e){
@@ -312,12 +312,20 @@ var editCamera = function(camId) {
                 $("#add-new-camera-dialog #camera-manufacturer").val(data.camera.manufacturer);
                 $("#add-new-camera-dialog #camera-username").val(data.camera.username);
                 $("#add-new-camera-dialog #camera-password").val(data.camera.password);
-
-                for (var idx in data.camera.streams){
-                    $("#add-new-camera-dialog #camera-streams-" + idx + "-resolution").val(data.camera.streams[idx].resolution);
-                    $("#add-new-camera-dialog #camera-streams-" + idx + "-framerate").val(data.camera.streams[idx].framerate);
-                    $("#add-new-camera-dialog #camera-streams-" + idx + "-quality").val(data.camera.streams[idx].quality);
-                    $("#add-new-camera-dialog #camera-streams-" + idx + "-retention-period").val(data.camera.streams[idx].retention_period);                    
+                if (typeof data.camera.streams !== 'undefined'){
+                    var $streamsFieldsetContainer = $("#streams-fieldset-container");
+                    $("#streams-fieldset-container").html("");
+                    current_number_of_streams = 0;
+                    for (var i = 0; i < data.camera.streams.length; i++)
+                    addStreamFieldSet(function(fieldset){
+                        $streamsFieldsetContainer.append(fieldset);
+                    });
+                    for (var idx in data.camera.streams){
+                        $("#add-new-camera-dialog #camera-streams-" + idx + "-resolution").val(data.camera.streams[idx].resolution);
+                        $("#add-new-camera-dialog #camera-streams-" + idx + "-framerate").val(data.camera.streams[idx].framerate);
+                        $("#add-new-camera-dialog #camera-streams-" + idx + "-quality").val(data.camera.streams[idx].quality);
+                        $("#add-new-camera-dialog #camera-streams-" + idx + "-retention-period").val(data.camera.streams[idx].retention_period);                    
+                    }
                 }
                 
 
@@ -373,6 +381,37 @@ scanForCameras = function() {
         }
     });    
     
+};
+
+
+var addStreamFieldSet = function(cb) {
+    var $fieldset = $("<fieldset class=\"recording-profile-fields\">" +
+                    "<div class=\"form-group\">" +
+                        "<label for=\"camera-stream-resolution\">resolution</label>" +
+                        "<select class=\"form-control\" id=\"camera-streams-" + current_number_of_streams + "-resolution\" name=\"camera[streams][" + current_number_of_streams +"][resolution]\">" +
+                            "<option value=\"half\">Half</option>" +
+                            "<option value=\"full\">Full</option>" +
+                        "</select>" +
+                    "</div>" +
+                    "<div class=\"form-group\">" +
+                        "<label for=\"camera-stream-framerate\">framerate</label>" +
+                        "<input type=\"number\" min=\"1\" max=\"30\" class=\"form-control\" id=\"camera-streams-" + current_number_of_streams + "-framerate\" name=\"camera[streams][" + current_number_of_streams + "][framerate]\">" +
+                    "</div>" +
+                    "<div class=\"form-group\">" +
+                        "<label for=\"camera-stream-quality\">quality</label>" +
+                        "<input type=\"number\" min=\"16\" max=\"36\" class=\"form-control\" id=\"camera-streams-" + current_number_of_streams + "-quality\" name=\"camera[streams][" + current_number_of_streams + "][quality]\">" +
+                    "</div>" +
+                    "<div class=\"form-group\">" +
+                        "<label for=\"camera-stream-retention-period\">Retention Period (days)</label>" +
+                        "<input type=\"number\" min=\"1\" value=\"90\" class=\"form-control\" id=\"camera-streams-" + current_number_of_streams + "-retention-period\" name=\"camera[streams][" + current_number_of_streams + "][retention_period]\">" +
+                    "</div>" +
+                    "<button type=\"button\" class=\"btn btn-default\" id=\"remove-stream-" + current_number_of_streams + "\">Remove</button>" +
+                "</fieldset>");
+    $fieldset.find("#remove-stream-" + current_number_of_streams).click(function(){
+        $(this).parent().remove();
+    });
+    current_number_of_streams++;
+    cb($fieldset);
 };
 
 
