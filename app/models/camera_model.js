@@ -4,7 +4,7 @@ var RecordModel = require('./record_model');
 var Dblite = require('../db_layers/dblite.js');
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
-
+var rtspUrl = require('../helpers/camera_scanner/rtsp.js');
 
 function Camera( cam, videosFolder ) {
 
@@ -18,7 +18,7 @@ function Camera( cam, videosFolder ) {
     this.status = cam.status;
     this.manufacturer = cam.manufacturer;
     this.type = cam.type;
-    
+    console.log('manufacturer: ' + this.manufacturer);
 	this.username = cam.username;
     this.password = cam.password;
 
@@ -76,7 +76,19 @@ Camera.prototype.addStream = function( stream ) {
 	stream.db = new Dblite( this.videosFolder + '/db_'+stream.id+'.sqlite' );
 	stream.recordModel = new RecordModel( this, stream );
 
+	stream.url = rtspUrl({
+		manufacturer: self.manufacturer,
+		ip: self.ip,
+		user: self.username,
+		password: self.password,
+		resolution: stream.resolution,
+		framerate: stream.framerate,
+		quality: stream.quality
+	});
+
 	self.streams[stream.id] = stream;
+	
+	console.log( stream.url );
 
 	if ( this.shouldBeRecording() ) {
 		stream.recordModel.startRecording();
