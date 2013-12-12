@@ -91,28 +91,9 @@
                                 <input name="camera[password]" type="password" id="camera-password" class="form-control">
                             </div>
                             <div>
-                            <fieldset class="recording-profile-fields">
-                                <div class="form-group">
-                                    <label for="camera-stream-resolution">resolution</label>
-                                    <select class="form-control" id="camera-streams-0-resolution" name="camera[streams][0][resolution]">
-                                        <option value="half">Half</option>
-                                        <option value="full">Full</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="camera-stream-framerate">framerate</label>
-                                    <input type="number" min="1" max="30" class="form-control" id="camera-streams-0-framerate" name="camera[streams][0][framerate]">
-                                    
-                                </div>      
-                                <div class="form-group">
-                                    <label for="camera-stream-quality">quality</label>
-                                    <input type="number" min="16" max="36" class="form-control" id="camera-streams-0-quality" name="camera[streams][0][quality]">
-                                </div>
-                                <div class="form-group">
-                                    <label for="camera-stream-retention-period">Retention Period (days)</label>
-                                    <input type="number" min="1" value="90" class="form-control" id="camera-streams-0-retention-period" name="camera[streams][0][retention_period]">
-                                </div> 
-                            </fieldset>
+                            <div id="streams-fieldset-container">
+                            </div>
+                            <button type="button" class="btn btn-default" id="add-stream">Add</button>
                             </div>
                         </form>
 
@@ -271,6 +252,12 @@
         </div><!-- /.modal -->                
 
         <script>
+            $("#add-stream").click(function(){
+                var streamsFieldsetContainer = $(this).siblings("#streams-fieldset-container");
+                addStreamFieldSet(function(fieldset){
+                    streamsFieldsetContainer.append(fieldset);
+                });
+            });
             // - -
             //
 			//var timeline = new Timeline("body");
