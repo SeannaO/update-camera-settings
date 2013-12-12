@@ -355,9 +355,10 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
             camera.cam.ip_address = cam.ip_address;
             camera.cam.updateRecorder();
 			camera.cam.id = cam.id;
-            camera.cam.username = cam.username,
-            camera.cam.password = cam.password,
-            camera.cam.streams = cam.streams
+            camera.cam.username = cam.username;
+            camera.cam.password = cam.password;
+            camera.cam.streams = cam.streams;
+
             self.emit("update", camera.cam);
             cb(err);
         }
@@ -470,23 +471,23 @@ function refresh( cb ) {
 
 CamerasController.prototype.setup = function( cb ) {
     
-    var self = this;
+	var self = this;
 
-    db.loadDatabase( function( err ) {
-    	db.find( {}, function( err, docs ) {
-        	if (err) {
-            		console.log(err);
-            		cb( err );
-        	} else {
-            	for ( var k = 0; k < docs.length; k++ ) {
-                	var cam = docs[k];
-                	var newCam = new Camera(cam, self.videosFolder );
-               	 	self.pushCamera( newCam );
-           	 }
-            	cb( false );
-        	}
-	});    
-    });
+	db.loadDatabase( function( err ) {
+		db.find( {}, function( err, docs ) {
+			if (err) {
+				console.log(err);
+				cb( err );
+			} else {
+				for ( var k = 0; k < docs.length; k++ ) {
+					var cam = docs[k];
+					var newCam = new Camera(cam, self.videosFolder );
+					self.pushCamera( newCam );
+				}
+				cb( false );
+			}
+		});    
+	});
     
 };
 

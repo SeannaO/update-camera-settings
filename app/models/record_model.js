@@ -11,7 +11,7 @@ var RECORDING = 2,
     STOPPED = 0,
     ERROR = -1;
 
-function RecordModel( camera ) {
+function RecordModel( camera, stream ) {
 
     var self = this;
 
@@ -23,9 +23,10 @@ function RecordModel( camera ) {
     this.status = ERROR;
 
 	this.camera = camera;
-    this.rtsp = camera.rtsp;
-    this.db = camera.db;
     this.camId = camera._id;
+    this.rtsp = stream.rtsp || stream.url;
+	this.stream = stream;
+    this.db = stream.db;
     
     this.error = false;
 
@@ -47,8 +48,9 @@ util.inherits(RecordModel, EventEmitter);
 
 RecordModel.prototype.setupFolders = function() {
    
-    this.folder = this.camera.videosFolder;
+    this.folder = this.camera.videosFolder + '/' + this.stream.id ;
 
+	this.setupFolderSync( this.camera.videosFolder );
     this.setupFolderSync(this.folder);
     this.setupFolderSync(this.folder + "/tmp");
     this.setupFolderSync(this.folder + "/videos");
@@ -70,8 +72,8 @@ RecordModel.prototype.setupFolders = function() {
 };
 
 
-RecordModel.prototype.updateCameraInfo = function( camera ) {
-    this.rtsp = camera.rtsp;
+RecordModel.prototype.updateCameraInfo = function( camera, stream ) {
+    this.rtsp = stream.url || stream.rtsp;
     this.camId = camera._id;
 };
 
@@ -212,6 +214,7 @@ RecordModel.prototype.calcDuration = function( file, cb ) {
 
 			video = {
 				cam: self.camId,
+				stream: self.stream.id,
 				start: start,
 				end: end,
 				file: file
@@ -257,7 +260,7 @@ RecordModel.prototype.moveFile = function( video, cb ) {
             else {
                 video.file = to;
                 ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() { 
-					self.camera.addChunk( video );
+					self.camera.addChunk( self.stream.id, video );
 					if (cb) {
 						cb();
 					}
