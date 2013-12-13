@@ -333,14 +333,14 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
     }
     
 	console.log('*** update camera');
-	console.log(cam.streams);
+	console.log(cam);
 	console.log('* * *');
 
     db.update({ _id: cam._id }, { 
         $set: { 
             name: cam.name, 
             manufacturer: cam.manufacturer, 
-            ip_address: cam.ip_address,
+            ip_address: cam.ip_address || cam.ip,
 			id: cam.id,
             username: cam.username,
             password: cam.password,
@@ -355,7 +355,8 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
             
             camera.cam.name = cam.name;
             camera.cam.manufacturer = cam.manufacturer;
-            camera.cam.ip_address = cam.ip_address;
+            camera.cam.ip_address = camera.cam.ip = cam.ip_address || cam.ip;
+
 			camera.cam.id = cam.id;
             camera.cam.username = cam.username;
             camera.cam.password = cam.password;

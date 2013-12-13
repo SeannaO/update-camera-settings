@@ -77,12 +77,34 @@
 
                     <div class="modal-body">
 						<form id="camera-form" role="form">
-                            <input name="camera[ip_address]" type="hidden" id="camera-ip">
-                            <input name="camera[manufacturer]" type="hidden" id="camera-manufacturer">
+                            
+
                             <div class="form-group">
                                 <label for="camera-name">camera name</label>
                                 <input type="text" class="form-control" id="camera-name" placeholder="camera name" name="camera[name]">
                             </div>
+
+
+							<!--input name="camera[ip_address]" type="hidden" id="camera-ip">
+                            <input name="camera[manufacturer]" type="hidden" id="camera-manufacturer"-->
+							<!-- TEMPORARY, DEVELOPMENT ONLY -->
+							<div class="form-group">
+                                <label for="camera-manufacturer">manufacturer (tests only)</label>
+								<select name="camera[manufacturer]" class="form-control" >
+									<option value="axis">Axis</option> 
+									<option value="arecont" selected>Arecont</option>
+									<option value="bosch">Bosch</option>
+									<option value="unknown">just another manufacturer</option>
+								</select>
+							</div>
+
+                            <div class="form-group">
+                                <label for="camera-ip">camera ip (tests only)</label>
+                                <input type="text" class="form-control" id="camera-ip" placeholder="camera ip" name="camera[ip]">
+                            </div>
+							<!-- end of TEMPORARY, DEVELOPMENT ONLY -->
+
+
                             <div class="form-group">
                                 <label for="camera-username">username</label>
                                 <input name="camera[username]" type="text" id="camera-username" class="form-control" placeholder="username">
