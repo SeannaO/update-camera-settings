@@ -366,7 +366,7 @@ var to12HourTime = function(hours){
 
 scanForCameras = function() {
             
-    $("#scan-status").html('scanning for cameras...');
+    $("#scan-spinner").show();
     $.ajax({
         type: "GET",
         url: "/scan.json",
@@ -379,16 +379,16 @@ scanForCameras = function() {
                 if ($.inArray(data[idx].ip, ip_addresses) === -1){
                     addCamera( data[idx], function(result) {
                         if (result._id){
-                            // addCameraItem( result );
-                            // console.log(result);
-                            // for (var j in result.streams) {
-                            //     timelineSetup(result._id, data[i].streams[j].id, data[i].streams[j].name);
-                            // }
-                            // timelineSetup(, result.name);
+                            addCameraItem( result );
+                            console.log(result);
+                            for (var j in result.streams) {
+                                timelineSetup(result._id, result.streams[j].id, result.streams[j].name);
+                            }
                         }
                     });                                
                 }
             }
+            $("#scan-spinner").hide();
         }
     });    
     

@@ -81,7 +81,7 @@ diskSpaceAgent.on('disk_usage', function(usage) {
 	var nCameras = camerasController.getAllCameras().length;
 	console.log( "usage: " + usage + "%");
 	console.log("nCameras: " + nCameras);
-	if (usage > 17) {	// usage in %
+	if (usage > 90) {	// usage in %
 		
 		console.log('freeing disk space...');
 		camerasController.deleteOldestChunks( 10*nCameras, function(data) {
@@ -148,6 +148,7 @@ app.use(express.session({secret: 'solink'}));	// for session storage
 // static files
 app.use('/css', express.static(__dirname + '/assets/css'));		
 app.use('/js', express.static(__dirname + '/assets/js'));
+app.use('/img', express.static(__dirname + '/assets/img'));
 // end of static files
 // - - -
 

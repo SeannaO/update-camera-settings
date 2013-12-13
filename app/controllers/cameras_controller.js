@@ -262,8 +262,9 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
     var self = this;
 
-    cam.enableSchedule = false;
-    cam.schedule = {"sunday":{"open":0,"close":"23:59"},"monday":{"open":0,"close":"23:59"},"tuesday":{"open":0,"close":"23:59"},"wednesday":{"open":0,"close":"23:59"},"thursday":{"open":0,"close":"23:59"},"friday":{"open":0,"close":"23:59"},"saturday":{"open":0,"close":"23:59"}};
+    cam.schedule_enabled = false;
+    cam.enabled = false
+    cam.schedule = {"sunday":{"open":0,"close":"12:00 PM"},"monday":{"open":0,"close":"12:00 PM"},"tuesday":{"open":0,"close":"12:00 PM"},"wednesday":{"open":0,"close":"12:00 PM"},"thursday":{"open":0,"close":"12:00 PM"},"friday":{"open":0,"close":"12:00 PM"},"saturday":{"open":0,"close":"12:00 PM"}};
 
     self.db.insert( cam, function( err, newDoc ) {
         if (err) {
@@ -429,7 +430,7 @@ CamerasController.prototype.startRecording = function (camId, cb) {
            
         if (cam) {
             cam.startRecording();  
-            db.update({ _id: cam._id }, { $set: { enabled: cam.enabled } }, { multi: true }, function (err, numReplaced) {
+            self.db.update({ _id: cam._id }, { $set: { enabled: cam.enabled } }, { multi: true }, function (err, numReplaced) {
                 if (err) {
                     cb(err);
                 } else {
@@ -457,7 +458,7 @@ CamerasController.prototype.stopRecording = function (camId, cb) {
         cam = self.findCameraById(camId).cam;
         if (cam) {
             cam.stopRecording();  
-            db.update({ _id: cam._id }, { $set: { enabled: cam.enabled } }, { multi: true }, function (err, numReplaced) {
+            self.db.update({ _id: cam._id }, { $set: { enabled: cam.enabled } }, { multi: true }, function (err, numReplaced) {
                 if (err) {
                     cb(err);
                 } else {

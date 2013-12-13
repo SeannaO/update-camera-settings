@@ -205,6 +205,7 @@ RecordModel.prototype.calcDuration = function( file, cb ) {
 	var self = this;
 
     fs.stat( file, function( err, fileInfo ) {
+    	console.log("Fileinfo" + fileInfo);
 		var lastModified = ( new Date(fileInfo.mtime) ).getTime();
 
 		ffmpeg.calcDuration( file, function(duration) {
