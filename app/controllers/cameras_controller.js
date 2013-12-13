@@ -3,7 +3,7 @@ var Camera = require('./../models/camera_model');
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 
-var db;
+//var db;
 var cameras = [];
 
 function CamerasController( mp4Handler, filename, videosFolder, cb ) {
@@ -12,9 +12,9 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 
 	this.snapshotQ = [];
 
-    db = new Datastore({ filename: filename});
+    this.db = new Datastore({ filename: filename });
 
-    db.loadDatabase( function(err) {
+    this.db.loadDatabase( function(err) {
 		self.setup( function(err) {} );
 		self.indexFiles();
 		if (cb) {
@@ -265,7 +265,7 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
     cam.enableSchedule = false;
     cam.schedule = {"sunday":{"open":0,"close":"23:59"},"monday":{"open":0,"close":"23:59"},"tuesday":{"open":0,"close":"23:59"},"wednesday":{"open":0,"close":"23:59"},"thursday":{"open":0,"close":"23:59"},"friday":{"open":0,"close":"23:59"},"saturday":{"open":0,"close":"23:59"}};
 
-    db.insert( cam, function( err, newDoc ) {
+    self.db.insert( cam, function( err, newDoc ) {
         if (err) {
             console.log("error when inserting camera: " + err);
             cb( err, "{ success: false }" );
@@ -299,7 +299,7 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 
     var self = this;
 
-    db.remove({ _id: camId }, {}, function (err, numRemoved) {
+    self.db.remove({ _id: camId }, {}, function (err, numRemoved) {
         if( err ) {
             cb( err, numRemoved );
         } else {
@@ -323,8 +323,10 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 
 
 CamerasController.prototype.updateCamera = function(cam, cb) {
-    var self = this;
+
+	var self = this;
     var camera = this.findCameraById( cam._id );
+
     if (!camera) {
         cb( "{error: 'camera not found'}" );
         return;
@@ -334,15 +336,24 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 	console.log(cam);
 	console.log('* * *');
 
-    db.update({ _id: cam._id }, { 
+	var streamsHash = {};
+
+	for (var s in cam.streams) {
+		if (!cam.streams[s].id) {
+			cam.streams[s].id = generateUUID();
+		}
+		streamsHash[ cam.streams[s].id ] = cam.streams[s];
+	}
+
+    self.db.update({ _id: cam._id }, { 
         $set: { 
-            name: cam.name, 
-            manufacturer: cam.manufacturer, 
-            ip_address: cam.ip_address || cam.ip,
-			id: cam.id,
-            username: cam.username,
-            password: cam.password,
-            streams: cam.streams
+            name: cam.name					|| camera.name, 
+            manufacturer: cam.manufacturer	|| camera.manufacturer, 
+            ip_address: cam.ip_address		|| cam.ip || camera.ip,
+			id: cam.id 						|| camera.id,
+            username: cam.username			|| camera.username,
+            password: cam.password			|| camera.password,
+            streams: streamsHash
         } 
     }, { multi: true }, function (err, numReplaced) {
         if (err) {
@@ -350,7 +361,9 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 			console.log(err);
             cb(err);
         } else {
-            
+
+            self.db.loadDatabase();
+
             camera.cam.name = cam.name;
             camera.cam.manufacturer = cam.manufacturer;
             camera.cam.ip_address = camera.cam.ip = cam.ip_address || cam.ip;
@@ -369,31 +382,36 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 
 
 CamerasController.prototype.updateCameraSchedule = function(params, cb) {
+
     console.log("*** updating camera schedule:" );
     console.log(params);
     var self = this;
     var camera = this.findCameraById( params._id );
-    if (!camera) {
+    
+	if (!camera) {
         cb("{error: 'camera not found'}");
         return;
     }
+	
 
-    db.update({ _id: params._id }, { 
+    self.db.update({ _id: params._id }, { 
         $set: {
             schedule_enabled: ( params.schedule_enabled === 1),
-            schedule: params.schedule
+            "schedule": params.schedule
         } 
-    }, { multi: true }, function (err, numReplaced) {
+    }, { multi: false }, function (err, numReplaced) {
         if (err) {
             cb(err);
         } else {
+			self.db.loadDatabase();
             camera.cam.schedule_enabled = params.schedule_enabled;
             camera.cam.setRecordingSchedule(params.schedule);
             camera.cam.updateRecorder();
             self.emit("schedule_update", camera.cam);
             cb(err);
         }
-    });    
+    });   
+
 };
 
 
@@ -475,8 +493,8 @@ CamerasController.prototype.setup = function( cb ) {
     
 	var self = this;
 
-	db.loadDatabase( function( err ) {
-		db.find( {}, function( err, docs ) {
+	self.db.loadDatabase( function( err ) {
+		self.db.find( {}, function( err, docs ) {
 			if (err) {
 				console.log(err);
 				cb( err );
@@ -507,4 +525,14 @@ CamerasController.prototype.findCameraById = function( id ) {
 
 module.exports = CamerasController;
 
+
+function generateUUID() {
+    var d = new Date().getTime();
+    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = (d + Math.random()*16)%16 | 0;
+        d = Math.floor(d/16);
+        return (c=='x' ? r : (r&0x7|0x8)).toString(16);
+    });
+    return uuid;
+}
 

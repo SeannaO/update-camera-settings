@@ -438,6 +438,7 @@ app.put('/cameras/:id/schedule', function(req, res) {
     params._id = req.params.id;
     camerasController.updateCameraSchedule(params, function(err) {
         if (err) {
+			console.log( err ) ;
             res.json({success: false, error: err});
         } else {
             res.json({success: true});

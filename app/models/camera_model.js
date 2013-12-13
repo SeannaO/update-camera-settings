@@ -49,7 +49,6 @@ function Camera( cam, videosFolder ) {
         this.id = cam.id;
     } else {
         this.id = cam._id;
-
     } 
 	
 	this.setupEvents();
@@ -74,9 +73,6 @@ Camera.prototype.addStream = function( stream ) {
 
 	var self = this;
 
-	if (!stream.id) {
-		stream.id = generateUUID();
-	}
 	stream.db = new Dblite( this.videosFolder + '/db_'+stream.id+'.sqlite' );
 	
 	stream.url = rtspUrl({
