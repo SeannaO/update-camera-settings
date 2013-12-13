@@ -41,7 +41,7 @@ function removeTsExt(fileName) {
     return fileName.replace('.ts', '');
 }
 
-var timelineSetup = function( id, name ) {
+var timelineSetup = function( cam_id, id, name ) {
 
     var label = name ? name : id;
 
@@ -56,28 +56,29 @@ var timelineSetup = function( id, name ) {
 		$("<div>", {
 			id: "timeline-"+id,
 			class: "timeline-container"
-		}).appendTo("#camera-item-"+id).mouseleave( function() {
+		}).appendTo("#camera-item-"+cam_id).mouseleave( function() {
 			$("#thumb").fadeOut();
 		});
 		$("<div>", {
-			id: "thumb-" + id,
+			id: "thumb-" + cam_id,
 			class: "thumb-container"
-		}).appendTo("#camera-item-"+id);
+		}).appendTo("#camera-item-"+cam_id);
 	}
 	
 	timelines[id] = new Timeline("#timeline-"+id);
 
-    $.getJSON( "/cameras/" + id + "/list_videos?start="+startTime+"&end="+Date.now(), function( data ) {
+    $.getJSON( "/cameras/" + cam_id + "/streams/" + id + "/list_videos?start="+startTime+"&end="+Date.now(), function( data ) {
 
         var videos = data.videos;
 
 		for (var i = 0; i < videos.length; i++) {
 			if ( videos[i].file && videos[i].start && videos[i].end) {
-				timelineData[0].times.push({ thumb: "/cameras/" + id + "/thumb/" + removeTsExt(videos[i].file), starting_time: (parseInt(videos[i].start)-1000), ending_time: (parseInt(videos[i].end) + 1000)}); 
+				timelineData[0].times.push({ thumb: "/cameras/" + cam_id + "/streams/" + id + "/thumb/" + removeTsExt(videos[i].file), starting_time: (parseInt(videos[i].start)-1000), ending_time: (parseInt(videos[i].end) + 1000)}); 
 				var start = videos[i].start;
 
 				updateTimelines({
-					cam: id,
+					cam: cam_id,
+                    stream: id,
 					start: videos[i].start,
 					end: videos[i].end
 				});
@@ -129,7 +130,9 @@ var list = function() {
             if (data[i]) {
                 cameras.push( data[i] );
                 addCameraItem(data[i]);
-                timelineSetup(data[i]._id, data[i].name);
+                for (var j in data[i].streams) {
+                    timelineSetup(data[i]._id, data[i].streams[j].id, data[i].streams[j].name);
+                }
             }
         }
     });
@@ -376,9 +379,12 @@ scanForCameras = function() {
                 if ($.inArray(data[idx].ip, ip_addresses) === -1){
                     addCamera( data[idx], function(result) {
                         if (result._id){
-                            addCameraItem( result );
-                            console.log(result);
-                            timelineSetup(result._id, result.name);
+                            // addCameraItem( result );
+                            // console.log(result);
+                            // for (var j in result.streams) {
+                            //     timelineSetup(result._id, data[i].streams[j].id, data[i].streams[j].name);
+                            // }
+                            // timelineSetup(, result.name);
                         }
                     });                                
                 }

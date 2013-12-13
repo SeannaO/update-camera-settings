@@ -97,7 +97,7 @@ CamerasController.prototype.takeSnapshot = function( camId, req, res, cb ) {
 };
 
 
-CamerasController.prototype.listVideosByCamera = function( camId, start, end, cb ) {
+CamerasController.prototype.listVideosByCamera = function( camId, streamId, start, end, cb ) {
     
     var self = this;
 
@@ -112,7 +112,7 @@ CamerasController.prototype.listVideosByCamera = function( camId, start, end, cb
     start = parseInt( start, 10 );
     end = parseInt( end, 10 );
 
-    cam.db.searchVideosByInterval( start, end, function(err, fileList, offset) {
+    cam.streams[streamId].db.searchVideosByInterval( start, end, function(err, fileList, offset) {
         if (err) {
             console.log("error while trying to list videos by camera: " + err);
             cb(err);

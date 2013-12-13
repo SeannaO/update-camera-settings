@@ -237,10 +237,11 @@ app.get('/cameras/:id/streams', function(req, res) {
 
 // - - -
 // lists all videos
-app.get('/cameras/:id/list_videos', function(req, res) {
-    var camId = req.params.id;
+app.get('/cameras/:cam_id/streams/:id/list_videos', function(req, res) {
+    var camId = req.params.cam_id;
+    var streamId = req.params.id;
     
-    camerasController.listVideosByCamera( camId, req.query.start, req.query.end, function(err, fileList, offset) {
+    camerasController.listVideosByCamera( camId, streamId, req.query.start, req.query.end, function(err, fileList, offset) {
         if (err) {
             res.json({error: err, success: false});
         } else {
@@ -253,9 +254,10 @@ app.get('/cameras/:id/list_videos', function(req, res) {
 
 // - - -
 // gets thumbnail
-app.get('/cameras/:id/thumb/:thumb', function(req, res) {
+app.get('/cameras/:cam_id/streams/:id/thumb/:thumb', function(req, res) {
 
-    var camId = req.params.id;
+    var camId = req.params.cam_id;
+    var streamId = req.params.id;
     var thumb = req.params.thumb;
     thumb = path.basename(thumb);
 
@@ -264,7 +266,7 @@ app.get('/cameras/:id/thumb/:thumb', function(req, res) {
             res.json( { error: err } );
         } else {
 
-            var file = cam.videosFolder + "/thumbs/"+thumb+".jpg";
+            var file = cam.videosFolder + "/" + streamId + "/thumbs/"+thumb+".jpg";
 			
             fs.exists( file, function(exists) {
                 if (exists) { 

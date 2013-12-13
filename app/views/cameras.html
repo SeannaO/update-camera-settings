@@ -202,26 +202,27 @@
 
 			var updateTimelines = function( data, options ) {
 				
-				var timeline = timelines[data.cam];
+				var timeline = timelines[data.stream];
 
 				if (!timeline) return;
 				
-				var thumb = "/cameras/"+data.cam+"/thumb/"+data.start;
+				var thumb = "/cameras/" + data.cam + "/streams/" + data.stream + "/thumb/"+data.start;
 
 				var img = new Image();
 			        
 				if (options && options.updateThumb) {
-				  
-				  setTimeout( function() {
-				  	$(img).load(function(){
-						$("#thumb-"+data.cam).html( $(this) );
-				  	}).attr({
-						src: thumb,
-				  		width: "100%",
-				  		height: "100%"
-				  	}).error(function(){
-				  	});
-				   }, 1000);	
+				  $(img).attr({
+                        src: thumb,
+                        width: "100%",
+                        height: "100%"
+                    }).load(function(){
+                        $("#thumb-"+data.cam).html( $(this) );
+                    }).error(function(){
+                        console.log("unable to load image")
+                    });
+				  // setTimeout( function() {
+				  // 	$img
+				  //  }, 1000);	
 				  			
 				}
 
@@ -230,7 +231,6 @@
 					w: data.end - data.start,
 					thumb: thumb,
 					mouseover: function(d) {
-
 						showThumb(d.attr("data-thumb"));
 					}
 				});
@@ -238,7 +238,7 @@
 
             socket.on('newChunk', function (data) {
 				console.log(data);
-                $("#timeline-"+data.cam).animate({
+                $("#timeline-"+data.stream).animate({
 					backgroundColor: "none"
 				}, 1000);
 				updateTimelines(data, {updateThumb: true});
@@ -265,7 +265,10 @@
                     $("#add-new-camera-dialog").modal('hide');
                     addCameraItem( data );
 					console.log(data);
-					timelineSetup(data._id, data.name);
+                    for (var i in data.streams) {
+                        
+                        timelineSetup(data._id, data.streams[i].id, data.streams[i].name);
+                    }
                 });
             });
 

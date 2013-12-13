@@ -288,8 +288,7 @@ RecordModel.prototype.recordContinuously = function() {
     var self = this;
 
     if (self.rtsp.indexOf("rtsp") >= 0) {
-
-         this.ffmpegProcess = exec( "nice -n -20 ffmpeg -rtsp_transport tcp -fflags +igndts -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
+         this.ffmpegProcess = exec( "ffmpeg -rtsp_transport tcp -fflags +igndts -i '" + self.rtsp + "' -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
 
                 function (error, stdout, stderr) {
 
@@ -312,7 +311,7 @@ RecordModel.prototype.recordContinuously = function() {
 		});
  
     } else if (self.rtsp.indexOf("http") >= 0) {
-        this.ffmpegProcess = exec( "ffmpeg -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
+        this.ffmpegProcess = exec( "ffmpeg -i '" + self.rtsp + "' -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
 
                 function (error, stdout, stderr) {
 					console.log("ffmpeg record error");
