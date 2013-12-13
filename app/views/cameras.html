@@ -237,7 +237,7 @@
 			}
 
             socket.on('newChunk', function (data) {
-				
+				console.log(data);
                 $("#timeline-"+data.cam).animate({
 					backgroundColor: "none"
 				}, 1000);

@@ -281,17 +281,15 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 Camera.prototype.setupEvents = function( cb ) {
 
     var self = this;
-
-	/*
-    this.recordModel.on( 'new_chunk', function(data) {
-		this.lastChunkTime = Date.now();
-        self.emit( 'new_chunk', data);
-    });
-
-    this.recordModel.on('camera_status', function(data) {
-        self.emit('camera_status', { cam_id: self._id, status: data.status } );
-    });
-	*/
+    for (var i in self.streams) {
+        this.streams[i].recordModel.on( 'new_chunk', function(data) {
+            self.emit( 'new_chunk', data);
+        });
+        this.streams[i].recordModel.on('camera_status', function(data) {
+            self.emit('camera_status', { cam_id: self._id, status: data.status } );
+        });
+    }
+	
 };
 
 
