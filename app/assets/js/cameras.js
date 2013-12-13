@@ -476,6 +476,24 @@ var addStreamFieldset = function( cb ) {
 	//
 	
 	//
+	// name field
+	var camera_stream_name_group = $('<div>', {
+		class: 'form-group',
+		html: '<label for="camera-stream-name">name</label>'
+	});
+
+	var camera_stream_name = $('<input>', {
+		type: 'string',
+		class: 'form-control',
+		id: 'camera-streams-' + current_number_of_streams + '-name',
+		name: 'camera[streams][' + current_number_of_streams + '][name]'
+	});
+	
+	camera_stream_name_group.append( camera_stream_name );
+	// end of name field
+	//
+	
+	//
 	// resolution field
 	var camera_stream_resolution_group = $('<div>', {
 		class: 'form-group',
@@ -553,6 +571,7 @@ var addStreamFieldset = function( cb ) {
 	//
 
 	fieldset.append(camera_stream_rtsp_group);
+	fieldset.append(camera_stream_name_group);
 	fieldset.append(camera_stream_resolution_group);
 	fieldset.append(camera_stream_framerate_group);
 	fieldset.append(camera_stream_quality_group);
@@ -575,14 +594,17 @@ var addStream = function( stream ) {
 		var idx = current_number_of_streams-1;
 		console.log("idx: " + idx);
 
+		var stream_name = stream.name || 'new stream';
+
 		var new_stream_tab_id = 'new-stream-' + current_number_of_streams;
-		$('#stream-tabs').append('<li><a href="#' + new_stream_tab_id + '" data-toggle="tab">new stream</a></li>');
+		$('#stream-tabs').append('<li><a href="#' + new_stream_tab_id + '" data-toggle="tab">' + stream_name + '</a></li>');
 		$('#stream-panes').append('<div class="tab-pane" id="' + new_stream_tab_id + '"></div>');
 		$('#'+new_stream_tab_id).append(fieldset);
 		$('#stream-tabs a:last').tab('show'); 
 
-		if (stream) {	
+		if (stream) {
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-id").val(				stream.id			);
+			$("#add-new-camera-dialog #camera-streams-" + idx + "-name").val(			stream.name			);
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-resolution").val(		stream.resolution	);
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-framerate").val(		stream.framerate	);
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-quality").val(		stream.quality		);
