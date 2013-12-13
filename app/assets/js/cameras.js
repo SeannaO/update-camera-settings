@@ -602,6 +602,7 @@ var addStream = function( stream ) {
 		$('#'+new_stream_tab_id).append(fieldset);
 		$('#stream-tabs a:last').tab('show'); 
 
+		console.log( attr + ' : ' + stream[attr] );
 		for (var attr in stream) {
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).val( stream[attr] );
 		}
