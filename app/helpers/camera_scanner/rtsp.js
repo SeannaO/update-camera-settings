@@ -27,12 +27,8 @@ module.exports = function( options ) {
 				framerate: framerate
 			});
 
-			return {
-				url: rtspUrl 
-			};
+			return rtspUrl;
 		} else {
-			return {
-				error: 'unknown manufacturer'
-			};
+			return '';
 		}
 };

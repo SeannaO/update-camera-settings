@@ -40,7 +40,7 @@ function Camera( cam, videosFolder ) {
 		fs.mkdirSync( this.videosFolder );
 	}
 
-	// instantiates profiles
+	// instantiates streams
 	for (var i in cam.streams) {
 		self.addStream( cam.streams[i] );
 	}
@@ -68,6 +68,10 @@ util.inherits(Camera, EventEmitter);
 
 Camera.prototype.addStream = function( stream ) {
 
+	console.log('*** addStream');
+	console.log(stream);
+	console.log('* * *');
+
 	var self = this;
 
 	if (!stream.id) {
@@ -85,11 +89,11 @@ Camera.prototype.addStream = function( stream ) {
 		quality: stream.quality
 	});
 
+	console.log('stream.url: ' + stream.url);
+
 	stream.recordModel = new RecordModel( this, stream );
 
 	self.streams[stream.id] = stream;
-	
-	console.log( stream.url );
 
 	if ( this.shouldBeRecording() ) {
 		stream.recordModel.startRecording();
@@ -101,7 +105,9 @@ Camera.prototype.updateAllStreams = function( new_streams ) {
 
 	var self = this;
 
+	console.log('*** update all streams');
 	console.log( new_streams );
+	console.log('* * *');
 
 	for ( var s in new_streams ) {
 		var stream = new_streams[s];
@@ -113,9 +119,12 @@ Camera.prototype.updateAllStreams = function( new_streams ) {
 		}
 	}
 
-	var ids = new_streams.map( function(s) {
-		return s.id;
-	});
+	var ids = [];
+	if (new_streams) {
+		ids = new_streams.map( function(s) {
+			return s.id;
+		});
+	}
 
 	for ( var streamId in self.streams ) {
 		if (ids.indexOf( streamId ) === -1) {
@@ -142,31 +151,30 @@ Camera.prototype.removeStream  = function( streamId ) {
 
 Camera.prototype.updateStream = function( stream ) {
 
+	if ( !self.streams[stream.id] ) return;
+
+	var id = stream.id;
+
 	var need_restart = false;
 
-	for (var i in streams) {
-		
-		if (streams[i].id === stream.id) {
+	self.streams[id].name = stream.name;
+	self.streams[id].retention = stream.retention;
 
-			streams[i].name = stream.name;
-			
-			if ( streams[i].resolution !== stream.resolution ) {
-				streams[i].resolution = stream.resolution;
-				need_restart = true;
-			}
-			if ( streams[i].framerate !== stream.framerate ) {
-				streams[i].framerate = stream.framerate;
-				need_restart = true;
-			}
-			if ( streams[i].quality !== stream.quality ) {
-				streams[i].quality = stream.quality;
-				need_restart = true;
-			}
-		}
+	if ( self.streams[id].resolution !== stream.resolution ) {
+		self.streams[id].resolution = stream.resolution;
+		need_restart = true;
+	}
+	if ( self.streams[id].framerate !== stream.framerate ) {
+		self.streams[id].framerate = stream.framerate;
+		need_restart = true;
+	}
+	if ( self.streams[id].quality !== stream.quality ) {
+		self.streams[id].quality = stream.quality;
+		need_restart = true;
 	}
 
 	if (need_restart) {
-		self.restartStream( stream.id );
+		self.restartStream( id );
 	}
 };
 
@@ -364,21 +372,31 @@ Camera.prototype.indexPendingFiles = function( streamList, cb ) {
 
 
 Camera.prototype.getStreamsJSON = function() {
-
+	
+	console.log( '*** get streams json' );
 	var self = this;
-	var keys = Object.keys(this.streams);
-	var json = keys.map(function(s) { 
-		return {
+	
+	var streamIds = Object.keys(self.streams);
+
+	var streams = [];
+
+	for (var id in self.streams) {
+		var s = self.streams[id];
+		streams.push({
+			retention: s.retention,
 			url: s.url,
 			resolution: s.resolution,
 			quality: s.quality,
 			framerate: s.framerate,
 			name: s.name,
-			id: s.id
-		}; 
-	});
+			id: id
+		}); 
+	}
 
-	return json;
+	console.log(streams);
+	console.log( '* * *');
+
+	return streams;
 
 };
 
@@ -402,6 +420,8 @@ Camera.prototype.toJSON = function() {
     } else {
         info.id = this._id;
     }
+
+	console.log( info );
 
     return info;
 };

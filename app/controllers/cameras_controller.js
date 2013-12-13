@@ -328,14 +328,13 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
     var self = this;
     var camera = this.findCameraById( cam._id );
     if (!camera) {
-        cb("{error: 'camera not found'}");
+        cb( "{error: 'camera not found'}" );
         return;
     }
     
-	camera.cam.updateAllStreams( cam.streams );
-
-	console.log("*** updating camera:" );
-	console.log(cam);
+	console.log('*** update camera');
+	console.log(cam.streams);
+	console.log('* * *');
 
     db.update({ _id: cam._id }, { 
         $set: { 
@@ -347,19 +346,22 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
             password: cam.password,
             streams: cam.streams
         } 
-    }, { multi: false }, function (err, numReplaced) {
+    }, { multi: true }, function (err, numReplaced) {
         if (err) {
+			console.log('*** update camera db error: ');
+			console.log(err);
             cb(err);
         } else {
             
             camera.cam.name = cam.name;
             camera.cam.manufacturer = cam.manufacturer;
             camera.cam.ip_address = cam.ip_address;
-            camera.cam.updateRecorder();
 			camera.cam.id = cam.id;
             camera.cam.username = cam.username;
             camera.cam.password = cam.password;
-            camera.cam.streams = cam.streams;
+            //camera.cam.streams = cam.streams || {};
+			camera.cam.updateAllStreams( cam.streams );
+            //camera.cam.updateRecorder();
 
             self.emit("update", camera.cam);
             cb(err);

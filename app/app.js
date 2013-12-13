@@ -479,6 +479,9 @@ app.put('/cameras/:id', function(req, res) {
 
     camerasController.updateCamera( cam, function(err) {
         if (err) {
+			console.log("*** updateCamera error: ");
+			console.log( err );
+			console.log("* * *");
             res.json({success: false, error: err});
         } else {
             res.json({success: true});

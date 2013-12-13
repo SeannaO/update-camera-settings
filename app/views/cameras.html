@@ -58,7 +58,8 @@
         <div id = "camera-list">
             <div id = "scan-status"></div>
         </div>
-        
+
+
         <br>
 
         <div id = "thumb" style = "display:none; position: absolute; z-index: 1000">
@@ -91,20 +92,20 @@
                                 <input name="camera[password]" type="password" id="camera-password" class="form-control">
                             </div>
                             <div>
-                            <div id="streams-fieldset-container">
 
+								<button type="button" class="btn btn-default" id="add-stream">Add</button>
+	
 								<!-- stream tabs -->
-								<ul id = 'stream-tabs' class="nav nav-tabs">
-			 		 				<!--li><a href="#home" data-toggle="tab">Home</a></li-->
+								<ul id = 'stream-tabs' class="nav nav-tabs" data-tabs='tabs'>
 								</ul>
 
 								<!-- stream panes -->
 								<div id = 'stream-panes' class="tab-content">
-									<!--div class="tab-pane active" id="home">...</div!-->
 								</div>
-
-                            </div>
-                            <button type="button" class="btn btn-default" id="add-stream">Add</button>
+								
+                            	<div id="streams-fieldset-container">
+                            	</div>
+                            
                             </div>
                         </form>
 
@@ -155,11 +156,20 @@
         <script>
             $("#add-stream").click(function(){
                 var streamsFieldsetContainer = $(this).siblings("#streams-fieldset-container");
-                addStreamFieldSet(function(fieldset){
-                    streamsFieldsetContainer.append(fieldset);
+                addStreamFieldset(function(fieldset) {
+					
+					$('div.active').removeClass('active').removeClass('in');
+					$('li.active').removeClass('active');
+
+					var new_stream_tab_id = 'new-stream-' + current_number_of_streams;
+					$('#stream-tabs').append('<li><a href="#' + new_stream_tab_id + '" data-toggle="tab">new stream</a></li>');
+					$('#stream-panes').append('<div class="tab-pane" id="' + new_stream_tab_id + '"></div>');
+					$('#'+new_stream_tab_id).append(fieldset);
+					$('#stream-tabs a:last').tab('show'); 
                 });
             });
             // - -
+			
             //
 			//var timeline = new Timeline("body");
 			var timelines = [];
