@@ -608,14 +608,8 @@ var addStream = function( stream ) {
 		$('#'+new_stream_tab_id).append(fieldset);
 		$('#stream-tabs a:last').tab('show'); 
 
-		if (stream) {
-			$("#add-new-camera-dialog #camera-streams-" + idx + "-id").val(				stream.id			);
-			$("#add-new-camera-dialog #camera-streams-" + idx + "-name").val(			stream.name			);
-			$("#add-new-camera-dialog #camera-streams-" + idx + "-resolution").val(		stream.resolution	);
-			$("#add-new-camera-dialog #camera-streams-" + idx + "-framerate").val(		stream.framerate	);
-			$("#add-new-camera-dialog #camera-streams-" + idx + "-quality").val(		stream.quality		);
-			$("#add-new-camera-dialog #camera-streams-" + idx + "-retention").val(		stream.retention	);  
-			$("#add-new-camera-dialog #camera-streams-" + idx + "-rtsp").val(			stream.url	); 
+		for (var attr in stream) {
+			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).val( stream[attr] );
 		}
 	});
 };
