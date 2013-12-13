@@ -193,7 +193,7 @@ CamerasController.prototype.deleteChunk = function( chunk, cb ) {
 
 	self.getCamera(chunk.cam_id, function( err, cam ) {
 		if(!err && cam) {
-			cam.deleteChunk( chunk, function(data) {
+			cam.deleteChunk( chunk.stream_id, chunk, function(data) {
 				console.log( "deleting chunk " + chunk.id + " from camera: " + cam._id );
 				if (cb) cb( data );
 			});
@@ -237,22 +237,20 @@ CamerasController.prototype.getOldestChunks = function( numChunks, cb ) {
 
 	var self = this;
 
-	var n = 0;
 	var oldChunks = [];
-	
-	console.log( numChunks );
+	var n = 0;
+
 	for (var c in cameras) {
 		var cam = cameras[c];
 		self.getOldestChunksFromCamera( numChunks, cam, function( data ) {
-
+			
 			oldChunks = oldChunks.concat( data );
 			n++;
-
 			if (n === cameras.length) {
 				oldChunks = oldChunks.sort( function(a, b) {
 					return a.start - b.start;
 				});
-
+				
 				cb( oldChunks.slice(0, numChunks) );
 			}
 		});
@@ -360,9 +358,8 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 			camera.cam.id = cam.id;
             camera.cam.username = cam.username;
             camera.cam.password = cam.password;
-            //camera.cam.streams = cam.streams || {};
 			camera.cam.updateAllStreams( cam.streams );
-            //camera.cam.updateRecorder();
+            camera.cam.updateRecorder();
 
             self.emit("update", camera.cam);
             cb(err);

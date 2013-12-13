@@ -81,8 +81,10 @@ diskSpaceAgent.on('disk_usage', function(usage) {
 	var nCameras = camerasController.getAllCameras().length;
 	console.log( "usage: " + usage + "%");
 	console.log("nCameras: " + nCameras);
-	if (usage > 90) {	// usage in %
-			camerasController.deleteOldestChunks( 10*nCameras, function(data) {
+	if (usage > 17) {	// usage in %
+		
+		console.log('freeing disk space...');
+		camerasController.deleteOldestChunks( 10*nCameras, function(data) {
 			console.log( "done deleting files. is it enough?" );
 		});
 	}

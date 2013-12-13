@@ -212,8 +212,35 @@ Camera.prototype.shouldBeRecording = function() {
 };
 
 
+Camera.prototype.getOldestChunks = function( chunks, streamList, numberOfChunks, cb ) {
+
+	var self = this;
+
+	if ( !Array.isArray( streamList ) ) {
+		
+		numberOfChunks = chunks;
+		cb = streamList;
+		streamList = Object.keys( self.streams );
+		chunks = [];
+	}
+	
+	if (streamList.length === 0) {
+		cb( chunks );
+	} else {
+		var streamId = streamList.shift();
+		self.getOldestChunksFromStream( streamId, numberOfChunks, function( data ) {
+			data = data.map( function(d) {
+				d.stream_id = streamId;
+				return d;
+			});
+			self.getOldestChunks( chunks.concat(data), streamList, numberOfChunks, cb );
+		});		
+	}
+};
+
+
 // TODO: specify stream
-Camera.prototype.getOldestChunks = function( streamId, numberOfChunks, cb ) {
+Camera.prototype.getOldestChunksFromStream = function( streamId, numberOfChunks, cb ) {
 
 	if ( !this.streams[streamId] ) {
 		console.log('[error] cameraModel.getOldestChunks: no stream with id ' + streamId);
@@ -239,7 +266,7 @@ Camera.prototype.addChunk = function( streamId, chunk ) {
 
 
 Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
-	
+
 	if ( !this.streams[streamId] ) {
 		console.log('[error] cameraModel.deleteChunk: no stream with id ' + streamId);
 		return;
@@ -397,6 +424,7 @@ Camera.prototype.getStreamsJSON = function() {
 	return streams;
 
 };
+
 
 Camera.prototype.toJSON = function() {
     var info = {};
