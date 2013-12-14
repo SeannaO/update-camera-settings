@@ -73,7 +73,7 @@ CamerasController.prototype.checkSnapshotQ = function() {
 		
 		setTimeout( function() {
 			self.checkSnapshotQ();
-		}, 500 );
+		}, 1000 );
 	}
 };
 
@@ -148,7 +148,7 @@ CamerasController.prototype.indexFiles = function() {
             if (cam) {
                 cam.indexPendingFiles();
             }
-        }, 1000
+        }, 100
     );
 };
 

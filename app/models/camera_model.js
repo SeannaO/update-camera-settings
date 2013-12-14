@@ -18,7 +18,7 @@ function Camera( cam, videosFolder ) {
     this.status = cam.status;
     this.manufacturer = cam.manufacturer;
     this.type = cam.type;
-    
+    this.indexing = false;
 	this.username = cam.username;
     this.password = cam.password;
 
@@ -373,18 +373,26 @@ Camera.prototype.deleteAllFiles = function() {
 
 
 Camera.prototype.indexPendingFiles = function( streamList, cb ) {
- 
-	var self = this;
 
+	var self = this;
+	
 	if ( !streamList || typeof streamList === 'function' ) {
+		if (self.indexing) {
+			console.log('*** this camera is already indexing');
+			return;
+		}
 		if ( typeof streamList === 'function') cb = streamList;
 		streamList = Object.keys( self.streams );
+		self.indexing = true;
 	}
 
-	if ( streamList.length === 0) {
+	if ( streamList.length === 0 ) {
 		if (cb) cb();
+		self.indexing = false;
 	} else {
+		self.indexing = true;
 		var streamId = streamList.shift();
+		
 		this.streams[streamId].recordModel.indexPendingFiles( function() {
 			self.indexPendingFiles( streamList, cb );
 		});

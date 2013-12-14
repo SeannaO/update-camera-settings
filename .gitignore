@@ -25,7 +25,7 @@ nohup.out
 .DS_Store
 *.js~
 *.xml~
-db_layers/dblite.js
+app/db/*
 CameraManager/targets
 CameraManager/i686-vmware
 VMS/i686-vmware

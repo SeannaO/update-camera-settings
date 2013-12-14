@@ -152,7 +152,7 @@ RecordModel.prototype.startRecording = function() {
 		
 		var dt = Date.now() - self.lastChunkTime;
 
-		if ( (dt > 20*1000 && self.status === RECORDING) || (dt > 10*1000 && self.status === ERROR) ) 
+		if ( (dt > 30*1000 && self.status === RECORDING) || (dt > 10*1000 && self.status === ERROR) ) 
 		{	
 			if ( self.status !== ERROR ) {
 				self.emit('camera_status', { status: 'disconnected' });
@@ -188,7 +188,7 @@ RecordModel.prototype.setupFolderSync = function(folder) {
 RecordModel.prototype.moveAndIndexFile = function( file, cb ) {
 
     var self = this;
-
+	console.log( '***moveAndIndexFile ' + file );
     self.calcDuration( file, function( video ) {
         self.moveFile( video, function() {
 			self.emit('new_chunk', video );
@@ -205,7 +205,11 @@ RecordModel.prototype.calcDuration = function( file, cb ) {
 	var self = this;
 
     fs.stat( file, function( err, fileInfo ) {
-    	console.log("Fileinfo" + fileInfo);
+		
+		console.log("Fileinfo" + fileInfo);
+		console.log( file );
+		if (err ) console.log( err );
+
 		var lastModified = ( new Date(fileInfo.mtime) ).getTime();
 
 		ffmpeg.calcDuration( file, function(duration) {
@@ -295,6 +299,7 @@ RecordModel.prototype.recordContinuously = function() {
 
                     if (error !== null  && error.signal != 'SIGKILL' ) {
 						console.log("ffmpeg record error");
+						console.log( error );
 						setTimeout( function() {
 							self.checkForConnectionErrors();
 						}, 500 );
@@ -304,10 +309,10 @@ RecordModel.prototype.recordContinuously = function() {
         this.ffmpegProcess.on('exit', function() {
 			
 			setTimeout( function() {
-				if (self.status !== STOPPING && self.status !== STOPPED) {
+				// if (self.status !== STOPPING && self.status !== STOPPED) {
 					self.recordContinuously();
 					self.checkForConnectionErrors();
-				}
+				// }
 			}, 500 );
 		});
  
