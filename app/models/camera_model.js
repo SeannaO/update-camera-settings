@@ -252,7 +252,6 @@ Camera.prototype.getOldestChunks = function( chunks, streamList, numberOfChunks,
 };
 
 
-// TODO: specify stream
 Camera.prototype.getOldestChunksFromStream = function( streamId, numberOfChunks, cb ) {
 
 	if ( !this.streams[streamId] ) {
@@ -276,6 +275,7 @@ Camera.prototype.addChunk = function( streamId, chunk ) {
 
 	this.streams[ streamId ].db.insertVideo( chunk );
 };
+
 
 
 Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
@@ -317,7 +317,7 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 };
 
 
-// TODO: setup new_chunk listener for each stream
+
 Camera.prototype.setupEvents = function( cb ) {
 
     var self = this;

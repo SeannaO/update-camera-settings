@@ -26,6 +26,9 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
     this.videosFolder = videosFolder;
 
 	this.mp4Handler = mp4Handler;
+
+	self.deletionQueue = [];
+	self.deleteChunksOnQueue();
 }
 
 util.inherits(CamerasController, EventEmitter);
@@ -168,6 +171,7 @@ CamerasController.prototype.getCamera = function(camId, cb) {
 };
 
 
+/*
 CamerasController.prototype.deleteChunksSequentially = function( chunks, cb ) {
 
 	var self = this;
@@ -185,6 +189,43 @@ CamerasController.prototype.deleteChunksSequentially = function( chunks, cb ) {
 		});
 	}	
 };
+*/
+
+CamerasController.prototype.addChunksToDeletionQueue = function( chunk_list ) {
+
+	var self = this;
+
+	for (var c in chunk_list) {
+		self.deletionQueue.push( chunk_list[c] );
+	}
+
+};
+
+CamerasController.prototype.deleteChunksOnQueue = function() {
+	
+	var self = this;
+
+	var chunk = self.deletionQueue.shift();
+	
+	if (!chunk) {
+		setTimeout( function() {
+			self.deleteChunksOnQueue();
+		}, 5000);
+	} else {
+		console.log('- deleting chunk on queue');
+		self.deleteChunk( chunk, function(data) {
+
+			if (chunk.cb) {
+				chunk.cb();
+			}
+			setTimeout( 
+				function() {
+					self.deleteChunksOnQueue();
+				}, 50
+			);
+		});
+	}
+};
 
 
 CamerasController.prototype.deleteChunk = function( chunk, cb ) {
@@ -194,7 +235,7 @@ CamerasController.prototype.deleteChunk = function( chunk, cb ) {
 	self.getCamera(chunk.cam_id, function( err, cam ) {
 		if(!err && cam) {
 			cam.deleteChunk( chunk.stream_id, chunk, function(data) {
-				console.log( "deleting chunk " + chunk.id + " from camera: " + cam._id );
+				console.log( "- deleting chunk " + chunk.id + " from camera: " + cam._id );
 				if (cb) cb( data );
 			});
 		} else {
@@ -212,9 +253,11 @@ CamerasController.prototype.deleteOldestChunks = function( numChunks, cb ) {
 	var self = this;
 
 	self.getOldestChunks( numChunks, function(oldChunks) {
-		self.deleteChunksSequentially( oldChunks, function() {
-			cb( oldChunks );
-		});
+		self.addChunksToDeletionQueue( oldChunks );
+		cb( oldChunks );
+		//self.deleteChunksSequentially( oldChunks, function() {
+		//	cb( oldChunks );
+		//});
 	});
 };
 

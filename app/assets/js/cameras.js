@@ -313,18 +313,17 @@ var editCamera = function(camId) {
         url: "/cameras/" + camId + "/json",
         contentType: 'application/json',
         success: function(data) {
-            console.log(data.camera.streams);
+            console.log(data.camera);
             if (data.success) {
                 $("#add-new-camera-dialog #camera-name").val(data.camera.name);
                 $("#add-new-camera-dialog #camera-ip").val(data.camera.ip);
-                $("#add-new-camera-dialog #camera-manufacturer").val(data.camera.manufacturer);
+                $("#add-new-camera-dialog #camera-manufacturer").attr("selected", data.camera.manufacturer);
                 $("#add-new-camera-dialog #camera-username").val(data.camera.username);
                 $("#add-new-camera-dialog #camera-password").val(data.camera.password);
                 $("#add-new-camera-dialog #camera-manufacturer").val(data.camera.manufacturer);
                 
 				if ( data.camera.streams ){
-                    
-					var $streamsFieldsetContainer = $("#streams-fieldset-container");
+
 					current_number_of_streams = 0;
                     
 					for (var i in data.camera.streams) {
