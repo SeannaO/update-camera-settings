@@ -348,12 +348,12 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 
     self.db.update({ _id: cam._id }, { 
         $set: { 
-            name: cam.name					|| camera.name, 
-            manufacturer: cam.manufacturer	|| camera.manufacturer, 
-            ip_address: cam.ip_address		|| cam.ip || camera.ip,
-			id: cam.id 						|| camera.id,
-            username: cam.username			|| camera.username,
-            password: cam.password			|| camera.password,
+            name: cam.name							|| camera.name, 
+            manufacturer: cam.manufacturer			|| camera.manufacturer, 
+            ip_address: cam.ip_address || cam.ip	|| camera.ip,
+			id:cam.id								|| camera.id,
+            username: cam.username					|| camera.username,
+            password: cam.password					|| camera.password,
             streams: streamsHash
         } 
     }, { multi: true }, function (err, numReplaced) {
@@ -366,12 +366,18 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
             self.db.loadDatabase();
 
             camera.cam.name = cam.name;
-            camera.cam.manufacturer = cam.manufacturer;
-            camera.cam.ip_address = camera.cam.ip = cam.ip_address || cam.ip;
+ 
+			if (camera.cam.manufacturer !== cam.manufacturer) {
+				camera.cam.manufacturer = cam.manufacturer;
+				camera.cam.restartAllStreams();
+			}
+			
+			camera.cam.ip_address = camera.cam.ip = cam.ip_address || cam.ip;
 
 			camera.cam.id = cam.id;
             camera.cam.username = cam.username;
             camera.cam.password = cam.password;
+			
 			camera.cam.updateAllStreams( cam.streams );
             camera.cam.updateRecorder();
 

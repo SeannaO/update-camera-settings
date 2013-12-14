@@ -320,7 +320,6 @@ var editCamera = function(camId) {
                 $("#add-new-camera-dialog #camera-manufacturer").val(data.camera.manufacturer);
                 $("#add-new-camera-dialog #camera-username").val(data.camera.username);
                 $("#add-new-camera-dialog #camera-password").val(data.camera.password);
-                $("#add-new-camera-dialog #camera-ip").val(data.camera.ip);
                 $("#add-new-camera-dialog #camera-manufacturer").val(data.camera.manufacturer);
                 
 				if ( data.camera.streams ){
@@ -474,7 +473,7 @@ var addStreamFieldset = function( cb ) {
 		type: 'text',
 		disabled: 'disabled',
 		class: 'form-control',
-		id: 'camera-streams-' + current_number_of_streams + '-rtsp',
+		id: 'camera-streams-' + current_number_of_streams + '-url',
 		name: 'camera[streams][' + current_number_of_streams + '][rtsp]'
 	});	
 	camera_stream_rtsp_group.append( camera_stream_rtsp );
@@ -575,13 +574,14 @@ var addStreamFieldset = function( cb ) {
 	camera_stream_retention_group.append( camera_stream_retention );
 	// end of retention field
 	//
-
-	fieldset.append(camera_stream_rtsp_group);
-	fieldset.append(camera_stream_name_group);
-	fieldset.append(camera_stream_resolution_group);
-	fieldset.append(camera_stream_framerate_group);
-	fieldset.append(camera_stream_quality_group);
-	fieldset.append(camera_stream_retention_group);
+	
+	fieldset.append( camera_stream_id );
+	fieldset.append( camera_stream_rtsp_group );
+	fieldset.append( camera_stream_name_group );
+	fieldset.append( camera_stream_resolution_group );
+	fieldset.append( camera_stream_framerate_group );
+	fieldset.append( camera_stream_quality_group );
+	fieldset.append( camera_stream_retention_group );
 
     fieldset.find("#remove-stream-" + current_number_of_streams).click(function(){
         $(this).parent().remove();

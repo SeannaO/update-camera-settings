@@ -50,6 +50,10 @@ var baseFolder;
 
 if ( process.argv.length > 2 ) {
 	baseFolder = process.argv[2];
+	if ( baseFolder.slice(-1) === '/' ) {
+		baseFolder = baseFolder.substr(0, baseFolder.length-1);
+	}
+	console.log('* * * baseFolder: ' + baseFolder);
 	if ( !fs.existsSync( baseFolder ) ) {
 		console.log('the folder ' + baseFolder + ' doesn\'t exist; create that folder before starting the server');
 		process.exit();
@@ -205,8 +209,7 @@ app.get('/live', function(req, res) {
 app.get('/cameras.json', function(req, res) {
 
     camerasController.listCameras( function(err, list) {
-        list.map(function(item){
-            console.log(item);
+        list.map(function(item) {
             return [item.toJSON()];
         });
         
@@ -224,9 +227,6 @@ app.get('/cameras.json', function(req, res) {
 // renders main cameras page
 app.get('/cameras', function(req, res) {
     res.sendfile(__dirname + '/views/cameras.html');
-
-	//camerasController.deleteOldestChunks();
-
 });
 // - - -
 
@@ -339,6 +339,7 @@ app.get('/cameras/:id/video', function(req, res) {
     });
 });
 // - - -
+
 
 // - - -
 // gets inMem mp4 video
@@ -508,22 +509,6 @@ app.delete('/cameras/:id', function(req, res) {
         if (err) {
             res.json({success: false, error: err});
         } else if (cam) {
-			/*  
-			// delete camera on lifeline app
-			try {
-				var url = "https://admin:admin@192.168.215.153/cp/solink_delete_camera?v=2&id="+encodeURIComponent( cam.id );
-				request(url, {
-					strictSSL: false
-				},
-				function(err, r) {
-					if (err) {
-						console.log("error communicating with lifeline app: ");
-						console.log(err);
-					}
-				});
-			} catch (e) {
-
-			} */
             res.json({success: true, _id: req.params.id});
         }
     });
