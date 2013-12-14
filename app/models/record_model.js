@@ -114,6 +114,8 @@ RecordModel.prototype.indexPendingFiles = function( cb ) {
 
     var self = this;
 
+	//console.log(self.pending);
+
 	if (self.pending.length <= 1) {
 		if (cb) cb();
 	} else {
@@ -130,6 +132,10 @@ RecordModel.prototype.startRecording = function() {
 	console.log(" - - - record model start recording - - - ");
 	
     var self = this;
+	if (this.status === RECORDING) {
+		console.log('-- already recording! --');
+		return;
+	}
 
     this.status = RECORDING;
     this.lastChunkTime = Date.now();
@@ -137,7 +143,8 @@ RecordModel.prototype.startRecording = function() {
     this.watcher.startWatching();
 	
     this.watcher.on("new_files", function( files ) {
-		
+		console.log("new file");
+		console.log(files);
 		if (self.status === ERROR) {
 			self.emit('camera_status', {status: 'connected'});
 		} else {
@@ -152,7 +159,7 @@ RecordModel.prototype.startRecording = function() {
 		
 		var dt = Date.now() - self.lastChunkTime;
 
-		if ( (dt > 30*1000 && self.status === RECORDING) || (dt > 10*1000 && self.status === ERROR) ) 
+		if ( (dt > 30*1000 && self.status === RECORDING) || (dt > 20*1000 && self.status === ERROR) ) 
 		{	
 			if ( self.status !== ERROR ) {
 				self.emit('camera_status', { status: 'disconnected' });
@@ -206,8 +213,8 @@ RecordModel.prototype.calcDuration = function( file, cb ) {
 
     fs.stat( file, function( err, fileInfo ) {
 		
-		console.log("Fileinfo" + fileInfo);
-		console.log( file );
+		//console.log("Fileinfo" + fileInfo);
+		//console.log( file );
 		if (err ) console.log( err );
 
 		var lastModified = ( new Date(fileInfo.mtime) ).getTime();
@@ -309,10 +316,10 @@ RecordModel.prototype.recordContinuously = function() {
         this.ffmpegProcess.on('exit', function() {
 			
 			setTimeout( function() {
-				// if (self.status !== STOPPING && self.status !== STOPPED) {
+				if (self.status !== STOPPING && self.status !== STOPPED) {
 					self.recordContinuously();
 					self.checkForConnectionErrors();
-				// }
+				}
 			}, 500 );
 		});
  
