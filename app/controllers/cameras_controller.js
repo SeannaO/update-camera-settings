@@ -28,7 +28,8 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 	this.mp4Handler = mp4Handler;
 
 	self.deletionQueue = [];
-	self.deleteChunksOnQueue();
+	self.periodicallyDeleteChunksOnQueue();
+	self.periodicallyCheckForExpiredChunks();
 }
 
 util.inherits(CamerasController, EventEmitter);
@@ -171,37 +172,80 @@ CamerasController.prototype.getCamera = function(camId, cb) {
 };
 
 
-/*
-CamerasController.prototype.deleteChunksSequentially = function( chunks, cb ) {
+CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_ids_list ) {
+	
+	console.log('*** checking for expired chunks...');
+
+	var maxChunksPerCamera = 100;			// limits query to 100 chunks per camera
+											// to avoid having a large array in memory
+
+	var millisPeriodicity = 1000 * 60 * 15; // checks each 15 minutes
+	//var millisPeriodicity = 1000 * 10 * 1;		// !! checks each 10s - debug only !!
 
 	var self = this;
 
-	if (chunks.length === 0) {
-		cb();
-	} else {
-		var chunk = chunks.shift();
-		self.deleteChunk( chunk, function(data) {
-			setTimeout( 
-				function() {
-					self.deleteChunksSequentially( chunks, cb );
-				}, 50
+	if (!cam_ids_list) {
+		var ids = cameras.map( 
+			function(c) {
+				return( c._id );
+			}
+		);
+		
+		self.periodicallyCheckForExpiredChunks( ids );
+
+		return;
+	}
+	
+	if (cam_ids_list.length === 0) {
+		setTimeout( 
+			function() {
+				self.periodicallyCheckForExpiredChunks();
+			},
+			millisPeriodicity
+		);
+
+		return;
+	}
+	
+	var camId = cam_ids_list.shift();
+	
+	self.getCamera( camId, function(err, cam) {
+
+		if (cam && !err) {
+
+			cam.getExpiredChunks( maxChunksPerCamera, 
+				function( chunks ) {
+
+					chunks = chunks.map( function(d) {
+						d.cam_id = cam._id;
+						return d;
+					});
+
+					self.addChunksToDeletionQueue( chunks );
+					self.periodicallyCheckForExpiredChunks( cam_ids_list );
+				}
 			);
-		});
-	}	
+		} else {
+			self.periodicallyCheckForExpiredChunks( cam_ids_list );
+		}
+	});
 };
-*/
+
 
 CamerasController.prototype.addChunksToDeletionQueue = function( chunk_list ) {
 
 	var self = this;
 
+	console.log( 'new chunks to be deleted: ' );
+	console.log( chunk_list );
+
 	for (var c in chunk_list) {
 		self.deletionQueue.push( chunk_list[c] );
 	}
-
 };
 
-CamerasController.prototype.deleteChunksOnQueue = function() {
+
+CamerasController.prototype.periodicallyDeleteChunksOnQueue = function() {
 	
 	var self = this;
 
@@ -209,10 +253,10 @@ CamerasController.prototype.deleteChunksOnQueue = function() {
 	
 	if (!chunk) {
 		setTimeout( function() {
-			self.deleteChunksOnQueue();
+			self.periodicallyDeleteChunksOnQueue();
 		}, 5000);
 	} else {
-		console.log('- deleting chunk on queue');
+
 		self.deleteChunk( chunk, function(data) {
 
 			if (chunk.cb) {
@@ -220,8 +264,8 @@ CamerasController.prototype.deleteChunksOnQueue = function() {
 			}
 			setTimeout( 
 				function() {
-					self.deleteChunksOnQueue();
-				}, 50
+					self.periodicallyDeleteChunksOnQueue();
+				}, 50 
 			);
 		});
 	}
@@ -246,18 +290,18 @@ CamerasController.prototype.deleteChunk = function( chunk, cb ) {
 
 
 CamerasController.prototype.deleteOldestChunks = function( numChunks, cb ) {
-	
-	var deletedChunks = [];
-	var n = 0;
 
 	var self = this;
 
+	if ( self.deletionQueue.length > 0 ) {
+		console.log('- deleteOldestChunks: the deletion queue is not empty; i will wait before deleting old chunks');
+		return;
+	}
+
 	self.getOldestChunks( numChunks, function(oldChunks) {
+			
 		self.addChunksToDeletionQueue( oldChunks );
 		cb( oldChunks );
-		//self.deleteChunksSequentially( oldChunks, function() {
-		//	cb( oldChunks );
-		//});
 	});
 };
 
@@ -353,7 +397,10 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
             var i = whichCam.index;
 
             cam.stopRecording();
-            cam.deleteAllFiles();
+
+			//
+			// set camera.delete = true
+			//
             
             self.emit("delete", cam);
 

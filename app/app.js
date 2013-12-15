@@ -79,17 +79,19 @@ app.use(express.bodyParser());
 
 // - - - - -
 // disk space agent
+//
+var usageThreshold = 90; // usage threshold (%)
+
 var diskSpaceAgent = new DiskSpaceAgent( baseFolder );
 diskSpaceAgent.launch();
 diskSpaceAgent.on('disk_usage', function(usage) {
 	var nCameras = camerasController.getAllCameras().length;
 	console.log( "usage: " + usage + "%");
-	console.log("nCameras: " + nCameras);
-	if (usage > 17) {	// usage in %
+	if (usage > usageThreshold) {	// usage in %
 		
 		console.log('freeing disk space...');
-		camerasController.deleteOldestChunks( 1*nCameras, function(data) {
-			console.log( "done deleting files. is it enough?" );
+		camerasController.deleteOldestChunks( 10 * nCameras, function(data) {
+			console.log( "added old files to deletion queue" );
 		});
 	}
 });

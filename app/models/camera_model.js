@@ -13,6 +13,13 @@ function Camera( cam, videosFolder ) {
     var self = this;
 
     this._id = cam._id;
+
+	if (cam.id) {
+        this.id = cam.id;
+    } else {
+        this.id = cam._id;
+    } 
+
     this.name = cam.name;
     this.ip = cam.ip;
     this.status = cam.status;
@@ -24,46 +31,45 @@ function Camera( cam, videosFolder ) {
 
 	this.videosFolder = videosFolder + "/" + this._id;
 
-	//    this.streams = cam.streams;
 	this.streams = {};
 
 	this.recording = false;
     this.enabled = cam.enabled;
-
-    this.schedule = new WeeklySchedule(cam.schedule);
-	this.schedule_enabled = cam.enableSchedule;
 	
 	this.lastChunkTime = Date.now();
 
-	if ( !fs.existsSync( this.videosFolder) ){
-        console.log(this.videosFolder);
-		fs.mkdirSync( this.videosFolder );
+	// //
+	if ( !cam.deleted ) {
+		this.schedule = new WeeklySchedule(cam.schedule);
+		this.schedule_enabled = cam.enableSchedule;
+		
+		if ( !fs.existsSync( this.videosFolder) ){
+			console.log(this.videosFolder);
+			fs.mkdirSync( this.videosFolder );
+		}
+
+		// instantiates streams
+		for (var i in cam.streams) {
+			self.addStream( cam.streams[i] );
+		}
+		
+		this.setupEvents();
+
+		if (!this.recording && this.shouldBeRecording()) {
+			console.log("starting camera " + this.name);
+			this.startRecording();
+		} else {
+			console.log("stopping camera " + this.name);
+			this.stopRecording();
+		}
+	} else {
+		
 	}
-
-	// instantiates streams
-	for (var i in cam.streams) {
-		self.addStream( cam.streams[i] );
-	}
-
-    if (cam.id) {
-        this.id = cam.id;
-    } else {
-        this.id = cam._id;
-    } 
-	
-	this.setupEvents();
-
-    if (!this.recording && this.shouldBeRecording()) {
-		console.log("starting camera " + this.name);
-        this.startRecording();
-    } else {
-		console.log("stopping camera " + this.name);
-        this.stopRecording();
-    }
+	// //
 }
 
-util.inherits(Camera, EventEmitter);
 
+util.inherits(Camera, EventEmitter);
 
 Camera.prototype.addStream = function( stream ) {
 
@@ -223,6 +229,75 @@ Camera.prototype.shouldBeRecording = function() {
 
     return ( ( this.schedule_enabled && this.schedule.isOpen() ) || ( !this.schedule_enabled && this.enabled ) );
 };
+
+
+Camera.prototype.daysToMillis = function(days) {
+	
+	//return days * 24 * 60 * 60 * 1000;
+	
+	return days * 1000; // debug: seconds
+};
+
+
+Camera.prototype.getExpiredChunksFromStream = function( streamId, nChunks, cb ) {
+	
+	var self = this;
+
+	if ( !this.streams[streamId] ) {
+		console.log('[error] cameraModel.getExpiredChunksFromStream: no stream with id ' + streamId);
+		return;
+	}
+	var stream = self.streams[streamId];
+	
+	if ( !stream.retention || stream.retention <= 0) {
+		cb([]);
+		return;
+	}
+
+	var retentionToMillis = self.daysToMillis( stream.retention );
+	var expirationDate = Date.now() - retentionToMillis;
+
+	// TODO: check if this condition is indeed working
+	if ( stream.oldestChunkDate && ( Date.now() - stream.oldestChunkDate < retentionToMillis ) ) {
+		console.log('- no expired chunks');
+		cb([]);
+	} else {
+		stream.db.getExpiredChunks( expirationDate, nChunks, function( data ) {
+			if ( data.length === 0 ) {
+				stream.oldestChunkDate = Date.now() - retentionToMillis;
+			}
+			cb( data );
+		});
+	}
+};
+
+
+Camera.prototype.getExpiredChunks = function(  chunks, streamList, nChunks, cb ) {
+	
+	var self = this;
+	
+	if ( !Array.isArray( streamList ) ) {
+		
+		nChunks = chunks;
+		cb = streamList;
+		streamList = Object.keys( self.streams );
+		chunks = [];
+	}
+	
+	if (streamList.length === 0) {
+		cb( chunks );
+	} else {
+		var streamId = streamList.shift();
+		self.getExpiredChunksFromStream( streamId, nChunks, function( data ) {
+			data = data.map( function(d) {
+				d.stream_id = streamId;
+				return d;
+			});
+			self.getExpiredChunks( chunks.concat(data), streamList, nChunks, cb );
+		});		
+	}
+};
+
 
 
 Camera.prototype.getOldestChunks = function( chunks, streamList, numberOfChunks, cb ) {
