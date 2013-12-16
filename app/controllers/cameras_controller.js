@@ -82,16 +82,20 @@ CamerasController.prototype.checkSnapshotQ = function() {
 };
 
 
+// TODO: specify a stream
 CamerasController.prototype.takeSnapshot = function( camId, req, res, cb ) {
 
 	var self = this;
 
     this.getCamera( camId, function(err, cam) {
 
-        if (err) {
+        if ( err || !cam || !cam.streams || !cam.streams[0]) {
             res.json( { error: err } );
         } else {
-            self.mp4Handler.takeSnapshot( cam.db, cam, req, res, function() {
+			// TODO: specify a stream
+			// for now, just select one of the streams
+			
+            self.mp4Handler.takeSnapshot( cam.streams[0].db, cam, req, res, function() {
 				if (cb) {
 					cb();
 				}
@@ -179,8 +183,8 @@ CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_id
 	var maxChunksPerCamera = 100;			// limits query to 100 chunks per camera
 											// to avoid having a large array in memory
 
-	var millisPeriodicity = 1000 * 60 * 15; // checks each 15 minutes
-	//var millisPeriodicity = 1000 * 10 * 1;		// !! checks each 10s - debug only !!
+	//var millisPeriodicity = 1000 * 60 * 15; // checks each 15 minutes
+	var millisPeriodicity = 1000 * 10 * 1;		// !! checks each 10s - debug only !!
 
 	var self = this;
 

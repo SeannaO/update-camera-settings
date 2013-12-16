@@ -1,11 +1,12 @@
-var ffmpeg = require('./../helpers/ffmpeg.js');
-var fs = require('fs');
-var path = require('path');
-var Watcher = require('./../helpers/watcher.js');
-var exec = require('child_process').exec;
-var EventEmitter = require('events').EventEmitter;
-var util = require('util');
+var ffmpeg = require('./../helpers/ffmpeg.js');		// ffmpeg helper
+var fs = require('fs');								// file system utils
+var path = require('path');							// path manipulation utils
+var Watcher = require('./../helpers/watcher.js');	// watches folder for new chunks
+var exec = require('child_process').exec;			// for executing system commands
+var EventEmitter = require('events').EventEmitter;	// for events
+var util = require('util');							// for inheritin events class
 
+// record statuses
 var RECORDING = 2,
     STOPPING = 1,
     STOPPED = 0,
@@ -15,25 +16,27 @@ function RecordModel( camera, stream ) {
 
     var self = this;
 
-    this.pending = [];
+    this.pending = [];		// array of pending chunks on tmp folder
 
-    this.lastChunkTime = 0;
-	this.lastErrorTime = 0;
+    this.lastChunkTime = 0;	//	last time a new chunk was recorded
+	this.lastErrorTime = 0;	//	last time ffmpeg threw an error
 
-    this.status = ERROR;
+    this.status = ERROR;	// starts as an error until we actually have a chunk
 
-	this.camera = camera;
+	this.camera = camera;	
     this.camId = camera._id;
-    this.rtsp = stream.rtsp || stream.url;
-	this.stream = stream;
-    this.db = stream.db;
+    this.rtsp = stream.rtsp || stream.url;	// supports different attribute names for rtsp 
+											// (we might want to change that)
+	this.stream = stream;	// corresponding stream
+    this.db = stream.db;	// corresponding stream.db - for indexing
     
-    this.error = false;
+	//    this.error = false;		// 
 
-    this.folder = "";
+    this.folder = "";		// stream folder - it's empty until we setup the folders
 
-    this.setupFolders();
+    this.setupFolders();	// creates folders if necessary
 
+	// watcher will watch for new chunks on tmp folder
     this.watcher = new Watcher( self.folder + '/videos/tmp', 'ts');
 
     console.log("record constructor");    
@@ -41,11 +44,24 @@ function RecordModel( camera, stream ) {
     console.log("folder: " + this.folder);
     console.log("rtsp: " + this.rtsp);  
 }
+// end of constructor
+//
 
 
 util.inherits(RecordModel, EventEmitter);
 
 
+/**
+ * Sets up folders.
+ *	Creates folders if non-existent,
+ *	cleans up tmp folder.
+ *
+ *  folders structure:	[base folder]/:camera_id/:stream_id				
+ *						[base folder]/:camera_id/:stream_id/tmp			- temp mp4 files
+ *						[base folder]/:camera_id/:stream_id/videos		- indexed chunks
+ *						[base folder]/:camera_id/:stream_id/videos/tmp	- new chunks
+ *						[base folder]/:camera_id/:stream_id/thumbs		- thumbs
+ */
 RecordModel.prototype.setupFolders = function() {
    
     this.folder = this.camera.videosFolder + '/' + this.stream.id ;
@@ -59,6 +75,7 @@ RecordModel.prototype.setupFolders = function() {
  
     var tmpFolder = this.folder + "/videos/tmp";
 
+	// cleans up tmp folder
     fs.readdirSync(tmpFolder).forEach(function(file, index){
 
         var curPath = tmpFolder + "/" + file;
@@ -70,12 +87,26 @@ RecordModel.prototype.setupFolders = function() {
         }
     });
 };
+// end of setupFolders
+//
 
 
+/**
+ * Updates rtsp and camera id
+ *  
+ * @param { camera } obj 
+ *     camera should contain: { _id }
+ * @param { stream } obj 
+ *     stream should contain: { url || rtsp }
+ */
 RecordModel.prototype.updateCameraInfo = function( camera, stream ) {
-    this.rtsp = stream.url || stream.rtsp;
+
+    this.rtsp = stream.url || stream.rtsp;	// supporting both attributes name
+											// we might want to change that
     this.camId = camera._id;
 };
+// end of updateCameraInfo
+// 
 
 
 RecordModel.prototype.stopRecording = function() {
