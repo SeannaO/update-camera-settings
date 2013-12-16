@@ -500,7 +500,7 @@ var addStreamFieldset = function( cb ) {
 	//
 	// resolution field
 	var camera_stream_resolution_group = $('<div>', {
-		class: 'form-group',
+		class: 'form-group col-xs-3',
 		html: '<label for="camera-stream-resolution">resolution</label>'
 	});
 
@@ -518,7 +518,7 @@ var addStreamFieldset = function( cb ) {
 	//
 	// framerate field
 	var camera_stream_framerate_group = $('<div>', {
-		class: 'form-group',
+		class: 'form-group  col-xs-2',
 		html: '<label for="camera-stream-framerate">framerate</label>'
 	});
 
@@ -538,7 +538,7 @@ var addStreamFieldset = function( cb ) {
 	//
 	// quality field
 	var camera_stream_quality_group = $('<div>', {
-		class: 'form-group',
+		class: 'form-group  col-xs-2',
 		html: '<label for="camera-stream-quality">quality</label>'
 	});
 
@@ -558,7 +558,7 @@ var addStreamFieldset = function( cb ) {
 	//
 	// retention field
 	var camera_stream_retention_group = $('<div>', {
-		class: 'form-group',
+		class: 'form-group  col-xs-4',
 		html: '<label for="camera-stream-retention">retention period</label>'
 	});
 
