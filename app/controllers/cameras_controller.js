@@ -3,39 +3,36 @@ var Camera = require('./../models/camera_model');
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 
-var db;
+//var db;
 var cameras = [];
 
-function CamerasController( filename, videosFolder ) {
+function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 
-    db = new Datastore({ filename: filename, autoload: true });
+    var self = this;
+
+	this.snapshotQ = [];
+
+    this.db = new Datastore({ filename: filename });
+
+    this.db.loadDatabase( function(err) {
+		self.setup( function(err) {} );
+		self.indexFiles();
+		if (cb) {
+			cb();
+		}
+		self.checkSnapshotQ();
+    });
 
     this.videosFolder = videosFolder;
 
-    this.setup( function(err) {} );
+	this.mp4Handler = mp4Handler;
 
-    this.indexFiles();
+	self.deletionQueue = [];
+	self.periodicallyDeleteChunksOnQueue();
+	self.periodicallyCheckForExpiredChunks();
 }
 
 util.inherits(CamerasController, EventEmitter);
-
-function cameraInfo(camera) {
-    var info = {};
-    
-    info.name = camera.name;
-    info.rtsp = camera.rtsp;
-    info.ip = camera.ip;
-    info._id = camera._id;
-    info.enabled = camera.enabled;
-    
-    if (camera.id) {
-        info.id = camera.id;
-    } else {
-        info.id = camera._id;
-    }
-
-    return info;
-}
 
 //
 // remove one of the methods later
@@ -50,7 +47,61 @@ CamerasController.prototype.getCameras = function() {
 //
 //
 
-CamerasController.prototype.listVideosByCamera = function( camId, start, end, cb ) {
+
+CamerasController.prototype.requestSnapshot = function( camId, req, res ) {
+
+	var snapshot = {};
+	snapshot.camId = camId;
+	snapshot.req = req;
+	snapshot.res = res;
+	snapshot.cancelled = false;
+
+	res.on('close', function() {
+		snapshot.cancelled = true;
+	});
+
+	this.snapshotQ.push( snapshot );
+};
+
+
+CamerasController.prototype.checkSnapshotQ = function() {
+	
+	var self = this;
+	var snapshot = self.snapshotQ.shift();
+
+	if ( snapshot && !snapshot.cancelled ) {
+		self.takeSnapshot( snapshot.camId, snapshot.req, snapshot.res, function() {
+			self.checkSnapshotQ();
+		});
+	} else {
+		
+		setTimeout( function() {
+			self.checkSnapshotQ();
+		}, 1000 );
+	}
+};
+
+
+CamerasController.prototype.takeSnapshot = function( camId, req, res, cb ) {
+
+	var self = this;
+
+    this.getCamera( camId, function(err, cam) {
+
+        if (err) {
+            res.json( { error: err } );
+        } else {
+            self.mp4Handler.takeSnapshot( cam.db, cam, req, res, function() {
+				if (cb) {
+					cb();
+				}
+			});
+        }
+    });	
+};
+
+
+CamerasController.prototype.listVideosByCamera = function( camId, streamId, start, end, cb ) {
     
     var self = this;
 
@@ -65,7 +116,7 @@ CamerasController.prototype.listVideosByCamera = function( camId, start, end, cb
     start = parseInt( start, 10 );
     end = parseInt( end, 10 );
 
-    cam.db.searchVideosByInterval( start, end, function(err, fileList, offset) {
+    cam.streams[streamId].db.searchVideosByInterval( start, end, function(err, fileList, offset) {
         if (err) {
             console.log("error while trying to list videos by camera: " + err);
             cb(err);
@@ -82,7 +133,7 @@ CamerasController.prototype.listCameras = function( cb ) {
         if (err) {
             cb( err, [] );
         } else {
-            cb( err, cameras.map(cameraInfo) );                        
+            cb( err, cameras );                        
         }
     });
 };
@@ -93,7 +144,7 @@ CamerasController.prototype.indexFiles = function() {
 	var self = this;
 
     var k = 0;
-
+	
     setInterval( 
         function() {
             k = (k + 1) % cameras.length;
@@ -101,7 +152,7 @@ CamerasController.prototype.indexFiles = function() {
             if (cam) {
                 cam.indexPendingFiles();
             }
-        }, 1000
+        }, 100
     );
 };
 
@@ -121,22 +172,103 @@ CamerasController.prototype.getCamera = function(camId, cb) {
 };
 
 
-CamerasController.prototype.deleteChunksSequentially = function( chunks, cb ) {
+CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_ids_list ) {
+	
+	console.log('*** checking for expired chunks...');
+
+	var maxChunksPerCamera = 100;			// limits query to 100 chunks per camera
+											// to avoid having a large array in memory
+
+	var millisPeriodicity = 1000 * 60 * 15; // checks each 15 minutes
+	//var millisPeriodicity = 1000 * 10 * 1;		// !! checks each 10s - debug only !!
 
 	var self = this;
 
-	if (chunks.length === 0) {
-		cb();
+	if (!cam_ids_list) {
+		var ids = cameras.map( 
+			function(c) {
+				return( c._id );
+			}
+		);
+		
+		self.periodicallyCheckForExpiredChunks( ids );
+
+		return;
+	}
+	
+	if (cam_ids_list.length === 0) {
+		setTimeout( 
+			function() {
+				self.periodicallyCheckForExpiredChunks();
+			},
+			millisPeriodicity
+		);
+
+		return;
+	}
+	
+	var camId = cam_ids_list.shift();
+	
+	self.getCamera( camId, function(err, cam) {
+
+		if (cam && !err) {
+
+			cam.getExpiredChunks( maxChunksPerCamera, 
+				function( chunks ) {
+
+					chunks = chunks.map( function(d) {
+						d.cam_id = cam._id;
+						return d;
+					});
+
+					self.addChunksToDeletionQueue( chunks );
+					self.periodicallyCheckForExpiredChunks( cam_ids_list );
+				}
+			);
+		} else {
+			self.periodicallyCheckForExpiredChunks( cam_ids_list );
+		}
+	});
+};
+
+
+CamerasController.prototype.addChunksToDeletionQueue = function( chunk_list ) {
+
+	var self = this;
+
+	console.log( 'new chunks to be deleted: ' );
+	console.log( chunk_list );
+
+	for (var c in chunk_list) {
+		self.deletionQueue.push( chunk_list[c] );
+	}
+};
+
+
+CamerasController.prototype.periodicallyDeleteChunksOnQueue = function() {
+	
+	var self = this;
+
+	var chunk = self.deletionQueue.shift();
+	
+	if (!chunk) {
+		setTimeout( function() {
+			self.periodicallyDeleteChunksOnQueue();
+		}, 5000);
 	} else {
-		var chunk = chunks.shift();
+
 		self.deleteChunk( chunk, function(data) {
+
+			if (chunk.cb) {
+				chunk.cb();
+			}
 			setTimeout( 
 				function() {
-					self.deleteChunksSequentially( chunks, cb );
-				}, 50
+					self.periodicallyDeleteChunksOnQueue();
+				}, 50 
 			);
 		});
-	}	
+	}
 };
 
 
@@ -146,8 +278,8 @@ CamerasController.prototype.deleteChunk = function( chunk, cb ) {
 
 	self.getCamera(chunk.cam_id, function( err, cam ) {
 		if(!err && cam) {
-			cam.deleteChunk( chunk, function(data) {
-				console.log( "deleting chunk " + chunk.id + " from camera: " + cam._id );
+			cam.deleteChunk( chunk.stream_id, chunk, function(data) {
+				console.log( "- deleting chunk " + chunk.id + " from camera: " + cam._id );
 				if (cb) cb( data );
 			});
 		} else {
@@ -158,16 +290,18 @@ CamerasController.prototype.deleteChunk = function( chunk, cb ) {
 
 
 CamerasController.prototype.deleteOldestChunks = function( numChunks, cb ) {
-	
-	var deletedChunks = [];
-	var n = 0;
 
 	var self = this;
 
+	if ( self.deletionQueue.length > 0 ) {
+		console.log('- deleteOldestChunks: the deletion queue is not empty; i will wait before deleting old chunks');
+		return;
+	}
+
 	self.getOldestChunks( numChunks, function(oldChunks) {
-		self.deleteChunksSequentially( oldChunks, function() {
-			cb( oldChunks );
-		});
+			
+		self.addChunksToDeletionQueue( oldChunks );
+		cb( oldChunks );
 	});
 };
 
@@ -190,22 +324,20 @@ CamerasController.prototype.getOldestChunks = function( numChunks, cb ) {
 
 	var self = this;
 
-	var n = 0;
 	var oldChunks = [];
-	
-	console.log( numChunks );
+	var n = 0;
+
 	for (var c in cameras) {
 		var cam = cameras[c];
 		self.getOldestChunksFromCamera( numChunks, cam, function( data ) {
-
+			
 			oldChunks = oldChunks.concat( data );
 			n++;
-
 			if (n === cameras.length) {
 				oldChunks = oldChunks.sort( function(a, b) {
 					return a.start - b.start;
 				});
-
+				
 				cb( oldChunks.slice(0, numChunks) );
 			}
 		});
@@ -217,10 +349,11 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
     var self = this;
 
-    cam.enableSchedule = false;
-    cam.schedule = {"sunday":{"open":0,"close":"23:59"},"monday":{"open":0,"close":"23:59"},"tuesday":{"open":0,"close":"23:59"},"wednesday":{"open":0,"close":"23:59"},"thursday":{"open":0,"close":"23:59"},"friday":{"open":0,"close":"23:59"},"saturday":{"open":0,"close":"23:59"}};
+    cam.schedule_enabled = false;
+    cam.enabled = false
+    cam.schedule = {"sunday":{"open":0,"close":"12:00 PM"},"monday":{"open":0,"close":"12:00 PM"},"tuesday":{"open":0,"close":"12:00 PM"},"wednesday":{"open":0,"close":"12:00 PM"},"thursday":{"open":0,"close":"12:00 PM"},"friday":{"open":0,"close":"12:00 PM"},"saturday":{"open":0,"close":"12:00 PM"}};
 
-    db.insert( cam, function( err, newDoc ) {
+    self.db.insert( cam, function( err, newDoc ) {
         if (err) {
             console.log("error when inserting camera: " + err);
             cb( err, "{ success: false }" );
@@ -254,7 +387,7 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 
     var self = this;
 
-    db.remove({ _id: camId }, {}, function (err, numRemoved) {
+    self.db.remove({ _id: camId }, {}, function (err, numRemoved) {
         if( err ) {
             cb( err, numRemoved );
         } else {
@@ -264,7 +397,10 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
             var i = whichCam.index;
 
             cam.stopRecording();
-            cam.deleteAllFiles();
+
+			//
+			// set camera.delete = true
+			//
             
             self.emit("delete", cam);
 
@@ -278,33 +414,63 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 
 
 CamerasController.prototype.updateCamera = function(cam, cb) {
-    var self = this;
+
+	var self = this;
     var camera = this.findCameraById( cam._id );
+
     if (!camera) {
-        cb("{error: 'camera not found'}");
+        cb( "{error: 'camera not found'}" );
         return;
     }
     
-	console.log("*** updating camera:" );
+	console.log('*** update camera');
 	console.log(cam);
+	console.log('* * *');
 
-    db.update({ _id: cam._id }, { 
+	var streamsHash = {};
+
+	for (var s in cam.streams) {
+		if (!cam.streams[s].id) {
+			cam.streams[s].id = generateUUID();
+		}
+		streamsHash[ cam.streams[s].id ] = cam.streams[s];
+	}
+
+    self.db.update({ _id: cam._id }, { 
         $set: { 
-            name: cam.name, 
-            rtsp: cam.rtsp, 
-            ip: cam.ip,
-			id: cam.id
+            name: cam.name							|| camera.name, 
+            manufacturer: cam.manufacturer			|| camera.manufacturer, 
+            ip_address: cam.ip_address || cam.ip	|| camera.ip,
+			id:cam.id								|| camera.id,
+            username: cam.username					|| camera.username,
+            password: cam.password					|| camera.password,
+            streams: streamsHash
         } 
-    }, { multi: false }, function (err, numReplaced) {
+    }, { multi: true }, function (err, numReplaced) {
         if (err) {
+			console.log('*** update camera db error: ');
+			console.log(err);
             cb(err);
         } else {
-            
+
+            self.db.loadDatabase();
+
             camera.cam.name = cam.name;
-            camera.cam.rtsp = cam.rtsp;
-            camera.cam.ip = cam.ip;
-            camera.cam.updateRecorder();
+ 
+			if (camera.cam.manufacturer !== cam.manufacturer) {
+				camera.cam.manufacturer = cam.manufacturer;
+				camera.cam.restartAllStreams();
+			}
+			
+			camera.cam.ip_address = camera.cam.ip = cam.ip_address || cam.ip;
+
 			camera.cam.id = cam.id;
+            camera.cam.username = cam.username;
+            camera.cam.password = cam.password;
+			
+			camera.cam.updateAllStreams( cam.streams );
+            camera.cam.updateRecorder();
+
             self.emit("update", camera.cam);
             cb(err);
         }
@@ -313,31 +479,36 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 
 
 CamerasController.prototype.updateCameraSchedule = function(params, cb) {
+
     console.log("*** updating camera schedule:" );
     console.log(params);
     var self = this;
     var camera = this.findCameraById( params._id );
-    if (!camera) {
+    
+	if (!camera) {
         cb("{error: 'camera not found'}");
         return;
     }
+	
 
-    db.update({ _id: params._id }, { 
+    self.db.update({ _id: params._id }, { 
         $set: {
             schedule_enabled: ( params.schedule_enabled === 1),
-            schedule: params.schedule
+            "schedule": params.schedule
         } 
-    }, { multi: true }, function (err, numReplaced) {
+    }, { multi: false }, function (err, numReplaced) {
         if (err) {
             cb(err);
         } else {
+			self.db.loadDatabase();
             camera.cam.schedule_enabled = params.schedule_enabled;
             camera.cam.setRecordingSchedule(params.schedule);
             camera.cam.updateRecorder();
             self.emit("schedule_update", camera.cam);
             cb(err);
         }
-    });    
+    });   
+
 };
 
 
@@ -355,7 +526,7 @@ CamerasController.prototype.startRecording = function (camId, cb) {
            
         if (cam) {
             cam.startRecording();  
-            db.update({ _id: cam._id }, { $set: { enabled: cam.enabled } }, { multi: true }, function (err, numReplaced) {
+            self.db.update({ _id: cam._id }, { $set: { enabled: cam.enabled } }, { multi: true }, function (err, numReplaced) {
                 if (err) {
                     cb(err);
                 } else {
@@ -383,7 +554,7 @@ CamerasController.prototype.stopRecording = function (camId, cb) {
         cam = self.findCameraById(camId).cam;
         if (cam) {
             cam.stopRecording();  
-            db.update({ _id: cam._id }, { $set: { enabled: cam.enabled } }, { multi: true }, function (err, numReplaced) {
+            self.db.update({ _id: cam._id }, { $set: { enabled: cam.enabled } }, { multi: true }, function (err, numReplaced) {
                 if (err) {
                     cb(err);
                 } else {
@@ -417,23 +588,24 @@ function refresh( cb ) {
 
 CamerasController.prototype.setup = function( cb ) {
     
-    var self = this;
+	var self = this;
 
-    db.loadDatabase();
+	self.db.loadDatabase( function( err ) {
+		self.db.find( {}, function( err, docs ) {
+			if (err) {
+				console.log(err);
+				cb( err );
+			} else {
+				for ( var k = 0; k < docs.length; k++ ) {
+					var cam = docs[k];
+					var newCam = new Camera(cam, self.videosFolder );
+					self.pushCamera( newCam );
+				}
+				cb( false );
+			}
+		});    
+	});
     
-    db.find( {}, function( err, docs ) {
-        if (err) {
-            console.log(err);
-            cb( err );
-        } else {
-            for ( var k = 0; k < docs.length; k++ ) {
-                var cam = docs[k];
-                var newCam = new Camera(cam, self.videosFolder );
-                self.pushCamera( newCam );
-            }
-            cb( false );
-        }
-    });
 };
 
 
@@ -450,4 +622,14 @@ CamerasController.prototype.findCameraById = function( id ) {
 
 module.exports = CamerasController;
 
+
+function generateUUID() {
+    var d = new Date().getTime();
+    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = (d + Math.random()*16)%16 | 0;
+        d = Math.floor(d/16);
+        return (c=='x' ? r : (r&0x7|0x8)).toString(16);
+    });
+    return uuid;
+}
 

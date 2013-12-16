@@ -50,12 +50,16 @@
         <h1>cameras</h1>
 		<p>
 			<a href="javascript:openAddCameraDialog()">[ add new camera ]</a> 
+            | <a href="javascript:scanForCameras()">[ scan for cameras ]</a> <img style="display:none" height="20" width="20" id= "scan-spinner" src="/img/spinner.gif"/>
 			| <a href="/multiview">[ multiview ]</a>
 			| <a href="/health">[ system health status ]</a>
 		</p>
 
-        <div id = "camera-list"></div>
-        
+        <div id = "camera-list">
+            
+        </div>
+
+
         <br>
 
         <div id = "thumb" style = "display:none; position: absolute; z-index: 1000">
@@ -72,21 +76,66 @@
                     </div>
 
                     <div class="modal-body">
-						<form role="form">
-                            <div class="form-group">
-                                <label for="camera-name">camera name</label>
-                                <input type="text" class="form-control" id="camera-name" placeholder="camera name">
-                            </div>
-                            <div class="form-group">
-                                <label for="camera-ip">camera ip</label>
-                                <input type="text" class="form-control" id="camera-ip" placeholder="camera ip">
-                            </div>
-                            <div class="form-group">
-                                <label for="rtsp-stream">rtsp url for h264 stream</label>
-                                <input type="text" id="rtsp-stream" class = "form-control" placeholder="rtsp url">
-                                <p class="help-block">rtsp url</p>
+						<form id="camera-form" role="form">
+                            
+							<div style = "height: auto; overflow: auto"> 
+
+								<div class="form-group">
+									<label for="camera-name">camera name</label>
+									<input type="text" class="form-control" id="camera-name" placeholder="camera name" name="camera[name]">
+								</div>
+
+								<!--input name="camera[ip_address]" type="hidden" id="camera-ip">
+								<input name="camera[manufacturer]" type="hidden" id="camera-manufacturer"-->
+								<!-- TEMPORARY, DEVELOPMENT ONLY -->
+								<div class="form-group  col-xs-6">
+									<label for="camera-manufacturer">manufacturer (tests only)</label>
+									<select id = 'camera-manufacturer' name="camera[manufacturer]" class="form-control" >
+										<option value="axis">Axis</option> 
+										<option value="arecont" selected>Arecont</option>
+										<option value="bosch">Bosch</option>
+										<option value="unknown">just another manufacturer</option>
+									</select>
+								</div>
+
+								<div class="form-group  col-xs-4">
+									<label for="camera-ip">camera ip (tests only)</label>
+									<input type="text" class="form-control" id="camera-ip" placeholder="camera ip" name="camera[ip]">
+								</div>
+								<!-- end of TEMPORARY, DEVELOPMENT ONLY -->
+
+
+								<div class="form-group  col-xs-4">
+									<label for="camera-username">username</label>
+									<input name="camera[username]" type="text" id="camera-username" class="form-control" placeholder="username">
+								</div>
+								<div class="form-group  col-xs-4">
+									<label for="camera-password">password</label>
+									<input name="camera[password]" type="password" id="camera-password" class="form-control">
+								</div>
+								<br>
+							</div>
+							
+							<hr>
+
+                            <div style = 'width: 100%;'>
+								
+								<button type="button" class="btn btn-default btn-sm" id="add-stream">add stream</button>
+								<br><br>
+								<!-- stream tabs -->
+								<ul id = 'stream-tabs' class="nav nav-tabs" data-tabs='tabs'>
+								</ul>
+
+								<!-- stream panes -->
+								<div id = 'stream-panes' class="tab-content">
+								</div>
+								
+                            	<div id="streams-fieldset-container">
+                            	</div>
+                            
                             </div>
                         </form>
+
                     </div>
 
                     <div class="modal-footer">
@@ -113,123 +162,13 @@
                         <form id="camera-schedule" role="form">
                             <div class="camera-schedule-switch"><input type="hidden" name="schedule_enabled" value="0" />
 <input type="checkbox" id="camera-schedule-enable" name="schedule_enabled" class="switch" value="1"><label for="camera-schedule-enable">on/off</label></div>
-                            <table class="table table-bordered">
-                                <tr>
-                                    <th></th>
-                                    <th>Sunday</th>
-                                    <th>Monday</th>
-                                    <th>Tuesday</th>
-                                    <th>Wednesday</th>
-                                    <th>Thursday</th>
-                                    <th>Friday</th>
-                                    <th>Saturday</th>
-                                </tr>
-                                <tr>
-                                    <td>Start Time</td>
-                                    <td>
-                                        <div class="form-group">
-                                            <div class="input-append bootstrap-timepicker">
-                                                <input type="text" class="form-control input-small" id="schedule-sunday-open" name="schedule[sunday][open]">
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="form-group">
-                                            <div class="input-append bootstrap-timepicker">
-                                                <input type="text" class="form-control input-small" id="schedule-monday-open" name="schedule[monday][open]">
-                                            </div>
-                                        </div>                                        
-                                    </td>
-                                    <td>
-                                        <div class="form-group">
-                                            <div class="input-append bootstrap-timepicker">
-                                                <input type="text" class="form-control input-small" id="schedule-tuesday-open" name="schedule[tuesday][open]">
-                                            </div>                                            
-                                        </div>                                        
-                                    </td>
-                                    <td>
-                                        <div class="form-group">
-                                            <div class="input-append bootstrap-timepicker">
-                                                <input type="text" class="form-control input-small" id="schedule-wednesday-open" name="schedule[wednesday][open]">
-                                            </div>
-                                        </div>                                        
-                                    </td>
-                                    <td>
-                                        <div class="form-group">
-                                            <div class="input-append bootstrap-timepicker">
-                                                <input type="text" class="form-control input-small" id="schedule-thursday-open" name="schedule[thursday][open]">
-                                            </div>
-                                        </div>                                        
-                                    </td>
-                                    <td>
-                                        <div class="form-group">
-                                            <div class="input-append bootstrap-timepicker">
-                                                <input type="text" class="form-control input-small" id="schedule-friday-open" name="schedule[friday][open]">
-                                            </div>
-                                        </div>                                        
-                                    </td>
-                                    <td>
-                                        <div class="form-group">
-                                            <div class="input-append bootstrap-timepicker">
-                                                <input type="text" class="form-control input-small" id="schedule-saturday-open" name="schedule[saturday][open]">
-                                            </div>
-                                        </div>                                        
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>End Time</td>
-                                    <td>
-                                        <div class="form-group">
-                                            <div class="input-append bootstrap-timepicker">
-                                                <input type="text" class="form-control input-small" id="schedule-sunday-close" name="schedule[sunday][close]">
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="form-group">
-                                            <div class="input-append bootstrap-timepicker">
-                                                <input type="text" class="form-control input-small" id="schedule-monday-close" name="schedule[monday][close]">
-                                            </div>
-                                        </div>                                        
-                                    </td>
-                                    <td>
-                                        <div class="form-group">
-                                            <div class="input-append bootstrap-timepicker">
-                                                <input type="text" class="form-control input-small" id="schedule-tuesday-close" name="schedule[tuesday][close]">
-                                            </div>
-                                        </div>                                        
-                                    </td>
-                                    <td>
-                                        <div class="form-group">
-                                            <div class="input-append bootstrap-timepicker">
-                                                <input type="text" class="form-control input-small" id="schedule-wednesday-close" name="schedule[wednesday][close]">
-                                            </div>
-                                        </div>                                        
-                                    </td>
-                                    <td>
-                                        <div class="form-group">
-                                            <div class="input-append bootstrap-timepicker">
-                                                <input type="text" class="form-control input-small" id="schedule-thursday-close" name="schedule[thursday][close]">
-                                            </div>
-                                        </div>                                        
-                                    </td>
-                                    <td>
-                                        <div class="form-group">
-                                            <div class="input-append bootstrap-timepicker">
-                                                <input type="text" class="form-control input-small" id="schedule-friday-close" name="schedule[friday][close]">
-                                            </div>
-                                        </div>                                        
-                                    </td>
-                                    <td>
-                                        <div class="form-group">
-                                            <div class="input-append bootstrap-timepicker">
-                                                <input type="text" class="form-control input-small" id="schedule-saturday-close" name="schedule[saturday][close]">
-                                            </div>
-                                        </div>                                        
-                                    </td>
-                                </tr>                                
-                            </table>
-                        </form>
+							<div id = 'schedule-table'>
+							</div>
+							<script>
+								$('#schedule-table').html(generateScheduleTable());
+							</script>
+							
+						</form>
                     </div>
 
                     <div class="modal-footer">
@@ -242,37 +181,53 @@
         </div><!-- /.modal -->                
 
         <script>
+            $("#add-stream").click(function(){
+                var streamsFieldsetContainer = $(this).siblings("#streams-fieldset-container");
+                addStreamFieldset(function(fieldset) {
+					
+					$('div.active').removeClass('active').removeClass('in');
+					$('li.active').removeClass('active');
+
+					var new_stream_tab_id = 'new-stream-' + current_number_of_streams;
+					$('#stream-tabs').append('<li><a href="#' + new_stream_tab_id + '" data-toggle="tab">new stream</a></li>');
+					$('#stream-panes').append('<div class="tab-pane" id="' + new_stream_tab_id + '"></div>');
+					$('#'+new_stream_tab_id).append(fieldset);
+					$('#stream-tabs a:last').tab('show'); 
+                });
+            });
             // - -
+			
             //
 			//var timeline = new Timeline("body");
 			var timelines = [];
             
             $('#camera-schedule-dialog .form-control').timepicker({
-                showMeridian: false
+                showMeridian: true
             });
 
 			var updateTimelines = function( data, options ) {
 				
-				var timeline = timelines[data.cam];
+				var timeline = timelines[data.stream];
 
 				if (!timeline) return;
 				
-				var thumb = "/cameras/"+data.cam+"/thumb/"+data.start;
+				var thumb = "/cameras/" + data.cam + "/streams/" + data.stream + "/thumb/"+data.start;
 
 				var img = new Image();
 			        
 				if (options && options.updateThumb) {
-				  
-				  setTimeout( function() {
-				  	$(img).load(function(){
-						$("#thumb-"+data.cam).html( $(this) );
-				  	}).attr({
-						src: thumb,
-				  		width: "100%",
-				  		height: "100%"
-				  	}).error(function(){
-				  	});
-				   }, 1000);	
+				  $(img).attr({
+                        src: thumb,
+                        width: "100%",
+                        height: "100%"
+                    }).load(function(){
+                        $("#thumb-"+data.cam).html( $(this) );
+                    }).error(function(){
+                        console.log("unable to load image")
+                    });
+				  // setTimeout( function() {
+				  // 	$img
+				  //  }, 1000);	
 				  			
 				}
 
@@ -281,15 +236,14 @@
 					w: data.end - data.start,
 					thumb: thumb,
 					mouseover: function(d) {
-
 						showThumb(d.attr("data-thumb"));
 					}
 				});
 			}
 
             socket.on('newChunk', function (data) {
-				
-                $("#timeline-"+data.cam).animate({
+				console.log(data);
+                $("#timeline-"+data.stream).animate({
 					backgroundColor: "none"
 				}, 1000);
 				updateTimelines(data, {updateThumb: true});
@@ -301,10 +255,13 @@
             $("#add-new-camera").click(function() {
 
                 var camera = {};
-                
-                camera.name = $("#camera-name").val();
-                camera.ip = $("#camera-ip").val();
-                camera.rtsp = $("#rtsp-stream").val();
+                // clear the form                
+
+                // camera.name = $("#camera-name").val();
+                // camera.ip = $("#camera-ip").val();
+                // camera.rtsp = $("#rtsp-stream").val();
+				
+				console.log($("#camera-form").serializeArray());
 
                 $("#update-camera").hide();
                 $("#add-new-camera").show();
@@ -313,9 +270,22 @@
                     $("#add-new-camera-dialog").modal('hide');
                     addCameraItem( data );
 					console.log(data);
-					timelineSetup(data._id, data.name);
+                    for (var i in data.streams) {
+                        
+                        timelineSetup(data._id, data.streams[i].id, data.streams[i].name);
+                    }
                 });
             });
+
+            $("#camera-username, #camera-password").on( "blur", function(){
+            
+                //get the values of the username and password
+
+                //get the supported parameters of the camera
+            });
+
+
+
             // - - -
             var openAddCameraDialog = function() {
                 $("#update-camera").hide();
@@ -330,6 +300,27 @@
                 $("#add-new-camera").show();
             });
             // - - -
+
+			// var addCamToScanList = function( cam ) {
+
+			// 	console.log( cam );
+
+			// 	var html = '';
+			// 	html += '<b>ip:</b> ' + cam.ip;
+			// 	html += ' | <b>type:</b> ' + cam.type;
+				
+			// 	if (cam.status === 'needs_authentication') {
+			// 		html += ' | <i>needs authentication</i>';
+			// 	} else if (cam.status === 'not_supported') {
+			// 		html += ' | <i>doesn\'t support basic onvif actions';
+			// 	}
+
+			// 	var camItem = $('<div>', {
+			// 		id: 'cam_' +cam.ip,
+			// 		html: html ,
+			// 		class: 'scan-list-item'
+			// 	}).appendTo('#scan-list');
+			// };
 
         </script>
     </body>

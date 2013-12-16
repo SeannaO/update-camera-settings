@@ -12,6 +12,15 @@ var request = require('request');										// for making requests to lifeline ap
 var CamHelper = require('./helpers/cameras_helper.js');					// abstraction for start/stop recordings
 var DiskSpaceAgent = require('./helpers/diskSpaceAgent.js');			// agent that periodically checks disk space
 
+
+// - - -
+// kills any ffmpeg, iostat and smartctl processes that might be already running
+var exec = require('child_process').exec;
+exec('killall ffmpeg', function( error, stdout, stderr) {});
+exec('killall iostat', function( error, stdout, stderr) {});
+exec('killall smartctl', function( error, stdout, stderr) {});
+// - - 
+
 // - - -
 // stores machine ip
 var localIp = "";
@@ -34,7 +43,6 @@ io.set('log level', 1);
 // end of socket.io config
 // - - -
 
-
 // - - - - -
 // sets base folder from the command line
 // usage:  node app.js /my/folder
@@ -42,6 +50,10 @@ var baseFolder;
 
 if ( process.argv.length > 2 ) {
 	baseFolder = process.argv[2];
+	if ( baseFolder.slice(-1) === '/' ) {
+		baseFolder = baseFolder.substr(0, baseFolder.length-1);
+	}
+	console.log('* * * baseFolder: ' + baseFolder);
 	if ( !fs.existsSync( baseFolder ) ) {
 		console.log('the folder ' + baseFolder + ' doesn\'t exist; create that folder before starting the server');
 		process.exit();
@@ -57,7 +69,7 @@ if ( process.argv.length > 2 ) {
 server.listen( 8080 );
 
 //var folder = '/Users/manuel/solink/nas/cameras';
-var camerasController = new CamerasController( __dirname + '/db/cam_db', baseFolder);
+var camerasController = new CamerasController( mp4Handler, __dirname + '/db/cam_db', baseFolder);
 
 
 // middleware for parsing request body contents
@@ -67,15 +79,19 @@ app.use(express.bodyParser());
 
 // - - - - -
 // disk space agent
+//
+var usageThreshold = 90; // usage threshold (%)
+
 var diskSpaceAgent = new DiskSpaceAgent( baseFolder );
 diskSpaceAgent.launch();
 diskSpaceAgent.on('disk_usage', function(usage) {
 	var nCameras = camerasController.getAllCameras().length;
 	console.log( "usage: " + usage + "%");
-	console.log("nCameras: " + nCameras);
-	if (usage > 90) {	// usage in %
-			camerasController.deleteOldestChunks( 10*nCameras, function(data) {
-			console.log( "done deleting files. is it enough?" );
+	if (usage > usageThreshold) {	// usage in %
+		
+		console.log('freeing disk space...');
+		camerasController.deleteOldestChunks( 10 * nCameras, function(data) {
+			console.log( "added old files to deletion queue" );
 		});
 	}
 });
@@ -83,49 +99,17 @@ diskSpaceAgent.on('disk_usage', function(usage) {
 
 // - - - - -
 // health check modules
-var Iostat = require('./helpers/iostat.js');
-var iostat = new Iostat();
-iostat.launch();
-
-var Smart = require('./helpers/smart.js');
-var smart = new Smart({development: true});
-smart.start();
-
-var Diskstat = require('./helpers/diskstat.js');
-var diskstat = new Diskstat({development: true});
-diskstat.launch();
-
-var SensorsInfo = require('./helpers/sensors.js');
-var sensorsInfo = new SensorsInfo({development: true});
-sensorsInfo.launch();
+require('./controllers/health.js')( io );
 // - - -
 
 // - - - -
 // socket.io broadcasts setup
 camerasController.on('new_chunk', function( data ) {
-   
     io.sockets.emit( 'newChunk', data );
 });
 
 camerasController.on('camera_status', function( data ) {
-
 	io.sockets.emit( 'cameraStatus', data );
-});
-
-iostat.on('cpu_load', function(data) {
-	io.sockets.emit('cpu_load', data);
-});
-
-smart.on('smart', function(data) {
-	io.sockets.emit('smart', data);
-});
-
-diskstat.on('hdd_throughput', function(data) {
-	io.sockets.emit('hdd_throughput', data);
-});
-
-sensorsInfo.on('sensors_data', function(data) {
-	io.sockets.emit('sensorsData', data);
 });
 // end of socket.io broadcasts setup
 // - - -
@@ -170,6 +154,7 @@ app.use(express.session({secret: 'solink'}));	// for session storage
 // static files
 app.use('/css', express.static(__dirname + '/assets/css'));		
 app.use('/js', express.static(__dirname + '/assets/js'));
+app.use('/img', express.static(__dirname + '/assets/img'));
 // end of static files
 // - - -
 
@@ -190,6 +175,13 @@ app.get('/health', function(req, res) {
 
     res.sendfile(__dirname + '/views/health.html');
 });
+// - - -
+
+
+// - - -
+// camera scanner
+// usage: append subnet prefix in the form xxx.xxx.xxx
+require('./helpers/camera_scanner/scanner.js')( app, '192.168.215' );
 // - - -
 
 
@@ -219,7 +211,10 @@ app.get('/live', function(req, res) {
 app.get('/cameras.json', function(req, res) {
 
     camerasController.listCameras( function(err, list) {
-        console.log(list);
+        list.map(function(item) {
+            return [item.toJSON()];
+        });
+        
         if (err) {
             res.end("{ 'error': '" + JSON.stringify(err) + "'}");
         } else {
@@ -234,19 +229,24 @@ app.get('/cameras.json', function(req, res) {
 // renders main cameras page
 app.get('/cameras', function(req, res) {
     res.sendfile(__dirname + '/views/cameras.html');
-
-	//camerasController.deleteOldestChunks();
-
 });
 // - - -
 
+// - - -
+// lists all profiles
+app.get('/cameras/:id/streams', function(req, res) {
+    var camId = req.params.id;
+    res.end( camerasController.getStreamsJSON() );
+});
+// - - -
 
 // - - -
 // lists all videos
-app.get('/cameras/:id/list_videos', function(req, res) {
-    var camId = req.params.id;
+app.get('/cameras/:cam_id/streams/:id/list_videos', function(req, res) {
+    var camId = req.params.cam_id;
+    var streamId = req.params.id;
     
-    camerasController.listVideosByCamera( camId, req.query.start, req.query.end, function(err, fileList, offset) {
+    camerasController.listVideosByCamera( camId, streamId, req.query.start, req.query.end, function(err, fileList, offset) {
         if (err) {
             res.json({error: err, success: false});
         } else {
@@ -259,9 +259,10 @@ app.get('/cameras/:id/list_videos', function(req, res) {
 
 // - - -
 // gets thumbnail
-app.get('/cameras/:id/thumb/:thumb', function(req, res) {
+app.get('/cameras/:cam_id/streams/:id/thumb/:thumb', function(req, res) {
 
-    var camId = req.params.id;
+    var camId = req.params.cam_id;
+    var streamId = req.params.id;
     var thumb = req.params.thumb;
     thumb = path.basename(thumb);
 
@@ -270,7 +271,7 @@ app.get('/cameras/:id/thumb/:thumb', function(req, res) {
             res.json( { error: err } );
         } else {
 
-            var file = cam.videosFolder + "/thumbs/"+thumb+".jpg";
+            var file = cam.videosFolder + "/" + streamId + "/thumbs/"+thumb+".jpg";
 			
             fs.exists( file, function(exists) {
                 if (exists) { 
@@ -291,15 +292,7 @@ app.get('/cameras/:id/thumb/:thumb', function(req, res) {
 app.get('/cameras/:id/snapshot', function(req, res) {
     
     var camId = req.params.id;
-
-    camerasController.getCamera( camId, function(err, cam) {
-
-        if (err) {
-            res.json( { error: err } );
-        } else {
-            mp4Handler.takeSnapshot( cam.db, cam, req, res );
-        }
-    });
+	camerasController.requestSnapshot( camId, req, res );
 });
 // - - -
 
@@ -349,11 +342,12 @@ app.get('/cameras/:id/video', function(req, res) {
 });
 // - - -
 
+
 // - - -
 // gets inMem mp4 video
 app.get('/cameras/:id/memvideo', function(req, res) {
-	res.end('feature under construction');
-/*
+//	res.end('feature under construction');
+
     var camId = req.params.id;
     var begin = parseInt( req.query.begin, 10 );
     var end = parseInt( req.query.end, 10 );
@@ -365,7 +359,7 @@ app.get('/cameras/:id/memvideo', function(req, res) {
             mp4Handler.inMemoryMp4Video( cam.db, cam, begin, end, req, res );
         }
     });
-	*/
+	
 });
 // - - -
 
@@ -436,7 +430,7 @@ app.get('/cameras/:id', function(req, res) {
             res.end("couldn't find this camera");
         } else {
 			// console.log( cam.deleteOldestChunks(10) );
-            res.render('camera', {id: cam._id, rtsp: cam.rtsp, name: cam.name});
+            res.render('camera', cam.toJSON());
         }
     });
 });
@@ -448,6 +442,7 @@ app.put('/cameras/:id/schedule', function(req, res) {
     params._id = req.params.id;
     camerasController.updateCameraSchedule(params, function(err) {
         if (err) {
+			console.log( err ) ;
             res.json({success: false, error: err});
         } else {
             res.json({success: true});
@@ -464,7 +459,7 @@ app.get('/cameras/:id/json', function(req, res) {
         if (err || !cam || cam.length === 0) {
             res.json({ success: false, error: err });
         } else {
-            res.json({ success: true, camera: {_id: cam._id, name: cam.name, ip: cam.ip, rtsp: cam.rtsp } });
+            res.json({ success: true, camera: cam.toJSON() });
         }
     });
 });
@@ -493,6 +488,9 @@ app.put('/cameras/:id', function(req, res) {
 
     camerasController.updateCamera( cam, function(err) {
         if (err) {
+			console.log("*** updateCamera error: ");
+			console.log( err );
+			console.log("* * *");
             res.json({success: false, error: err});
         } else {
             res.json({success: true});
@@ -513,22 +511,6 @@ app.delete('/cameras/:id', function(req, res) {
         if (err) {
             res.json({success: false, error: err});
         } else if (cam) {
-			/*  
-			// delete camera on lifeline app
-			try {
-				var url = "https://admin:admin@192.168.215.153/cp/solink_delete_camera?v=2&id="+encodeURIComponent( cam.id );
-				request(url, {
-					strictSSL: false
-				},
-				function(err, r) {
-					if (err) {
-						console.log("error communicating with lifeline app: ");
-						console.log(err);
-					}
-				});
-			} catch (e) {
-
-			} */
             res.json({success: true, _id: req.params.id});
         }
     });

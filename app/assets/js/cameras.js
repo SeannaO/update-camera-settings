@@ -1,6 +1,6 @@
 var mouseX = 0;
 var mouseY = 0;
-
+var current_number_of_streams = 0;
 $(document).ready(function(){
 
 	$(document).mousemove(function(e){
@@ -41,7 +41,7 @@ function removeTsExt(fileName) {
     return fileName.replace('.ts', '');
 }
 
-var timelineSetup = function( id, name ) {
+var timelineSetup = function( cam_id, id, name ) {
 
     var label = name ? name : id;
 
@@ -56,28 +56,29 @@ var timelineSetup = function( id, name ) {
 		$("<div>", {
 			id: "timeline-"+id,
 			class: "timeline-container"
-		}).appendTo("#camera-item-"+id).mouseleave( function() {
+		}).appendTo("#camera-item-"+cam_id).mouseleave( function() {
 			$("#thumb").fadeOut();
 		});
 		$("<div>", {
-			id: "thumb-" + id,
+			id: "thumb-" + cam_id,
 			class: "thumb-container"
-		}).appendTo("#camera-item-"+id);
+		}).appendTo("#camera-item-"+cam_id);
 	}
 	
 	timelines[id] = new Timeline("#timeline-"+id);
 
-    $.getJSON( "/cameras/" + id + "/list_videos?start="+startTime+"&end="+Date.now(), function( data ) {
+    $.getJSON( "/cameras/" + cam_id + "/streams/" + id + "/list_videos?start="+startTime+"&end="+Date.now(), function( data ) {
 
         var videos = data.videos;
 
 		for (var i = 0; i < videos.length; i++) {
 			if ( videos[i].file && videos[i].start && videos[i].end) {
-				timelineData[0].times.push({ thumb: "/cameras/" + id + "/thumb/" + removeTsExt(videos[i].file), starting_time: (parseInt(videos[i].start)-1000), ending_time: (parseInt(videos[i].end) + 1000)}); 
+				timelineData[0].times.push({ thumb: "/cameras/" + cam_id + "/streams/" + id + "/thumb/" + removeTsExt(videos[i].file), starting_time: (parseInt(videos[i].start)-1000), ending_time: (parseInt(videos[i].end) + 1000)}); 
 				var start = videos[i].start;
 
 				updateTimelines({
-					cam: id,
+					cam: cam_id,
+                    stream: id,
 					start: videos[i].start,
 					end: videos[i].end
 				});
@@ -129,7 +130,9 @@ var list = function() {
             if (data[i]) {
                 cameras.push( data[i] );
                 addCameraItem(data[i]);
-                timelineSetup(data[i]._id, data[i].name);
+                for (var j in data[i].streams) {
+                    timelineSetup(data[i]._id, data[i].streams[j].id, data[i].streams[j].name);
+                }
             }
         }
     });
@@ -156,13 +159,13 @@ var addCameraItem = function( camera ) {
 
 	$("<div>", {
 		class: "camera-item-name",
-		html: '<a href = "/cameras/'+camera._id+'/">' + camera.name + '</a>'
+		html: '<a href = "/cameras/'+camera._id+'/">' + (camera.name || (camera.ip + " | " + camera.manufacturer)) + '</a>'
 	}).appendTo("#camera-item-"+camera._id);
 
-	$("<div>", {
-		class: "camera-item-rtsp",
-		html: camera.rtsp
-	}).appendTo("#camera-item-"+camera._id);
+        $("<div>", {
+        class: "camera-item-status",
+        html: '<div class="camera-item-rtsp">' + camera.status + '</div>'
+    }).appendTo("#camera-item-"+camera._id);
 
 	switchHtml = '' +
 		'<input type="checkbox" id="switch-'+camera._id+'" name="switch-'+camera._id+'" class="switch" value="1"/>' +
@@ -266,17 +269,15 @@ var deleteCamera = function(id) {
 
 
 var updateCamera = function(id, cb) {
-
-    var camera = {};
-
-    camera.name = $("#camera-name").val();
-    camera.ip = $("#camera-ip").val();
-    camera.rtsp = $("#rtsp-stream").val();
     
+    var params = $('#camera-form').serializeObject();
+
+	console.log(params);
+
     $.ajax({
         type: "PUT",
         url: "/cameras/" + id,
-        data: JSON.stringify( camera ),
+        data: JSON.stringify( params.camera ),
         contentType: 'application/json',
         success: function(data) {
             cb( data );
@@ -287,6 +288,7 @@ var updateCamera = function(id, cb) {
 var updateSchedule = function(id, cb) {
 
     var params = $('#camera-schedule').serializeObject();
+	console.log( params );
     $.ajax({
         type: "PUT",
         url: "/cameras/" + id + "/schedule",
@@ -303,26 +305,40 @@ var editCamera = function(camId) {
 
     $("#update-camera").show();
     $("#add-new-camera").hide();
+	$("#stream-tabs").html("");
+	$("#stream-panes").html("");
 
     $.ajax({
         type: "GET",
         url: "/cameras/" + camId + "/json",
         contentType: 'application/json',
         success: function(data) {
-            console.log(data);
+            console.log(data.camera);
             if (data.success) {
                 $("#add-new-camera-dialog #camera-name").val(data.camera.name);
                 $("#add-new-camera-dialog #camera-ip").val(data.camera.ip);
-                $("#add-new-camera-dialog #rtsp-stream").val(data.camera.rtsp);             
+                $("#add-new-camera-dialog #camera-manufacturer").attr("selected", data.camera.manufacturer);
+                $("#add-new-camera-dialog #camera-username").val(data.camera.username);
+                $("#add-new-camera-dialog #camera-password").val(data.camera.password);
+                $("#add-new-camera-dialog #camera-manufacturer").val(data.camera.manufacturer);
+                
+				if ( data.camera.streams ){
 
+					current_number_of_streams = 0;
+                    
+					for (var i in data.camera.streams) {
+						var stream = data.camera.streams[i];
+						addStream( stream );
+					}
+                }
+                
                 $("#update-camera").unbind();
                 $("#update-camera").click( function() {
                     updateCamera( camId, function(data) {
-                        //console.log(data);
                         if (data.success) {
                             location.reload();
                         } else {
-                            alert(data.error);
+							console.log( data );
                         }
                     });
                 });
@@ -333,6 +349,268 @@ var editCamera = function(camId) {
             }
         }
     });    
+};
+
+
+var meridian = function(hour){
+	return (Math.round(hour / 12) > 0) ? " PM" : " AM";
+};
+
+
+var to12HourTime = function(hours){
+	return ( (hours + 11) % 12 + 1 );
+};
+
+
+scanForCameras = function() {
+            
+    $("#scan-spinner").show();
+    $.ajax({
+        type: "GET",
+        url: "/scan.json",
+        contentType: 'application/json',
+        success: function(data) {
+            var ip_addresses = $.map(cameras, function(n,i){
+               return [ n.ip ];
+            });
+            for (var idx in data) {
+                if ($.inArray(data[idx].ip, ip_addresses) === -1){
+                    addCamera( data[idx], function(result) {
+                        if (result._id){
+                            addCameraItem( result );
+                            console.log(result);
+                            for (var j in result.streams) {
+                                timelineSetup(result._id, result.streams[j].id, result.streams[j].name);
+                            }
+                        }
+                    });                                
+                }
+            }
+            $("#scan-spinner").hide();
+        }
+    });    
+    
+};
+
+
+var generateScheduleTable = function() {
+	var days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+	var header = '<tr>';
+	header += '<th></th>';
+	for (var d in days) {
+		var day = days[d];
+		header += '<th>' + day + '</th>';
+	}
+	header += '</tr>';
+	
+	var startTime = '<tr>';
+	startTime += '<td>Start Time</td>';
+	
+	for (var d in days) {
+		var day = days[d];
+		startTime += '<td>';
+		startTime += '<div class="form-group">';
+		startTime += '<div class="input-append bootstrap-timepicker">';
+		startTime += '<input type="text" class="form-control input-small" id="schedule-'+day+'-open" name="schedule['+day+'][open]">';
+		startTime += '</div>';
+		startTime += '</div>';
+		startTime += '</td>';
+	}
+	startTime += '</tr>';
+
+
+	var endTime = '<tr>';
+	endTime += '<td>End Time</td>';
+	
+	for (var d in days) {
+		var day = days[d];
+		endTime += '<td>';
+		endTime += '<div class="form-group">';
+		endTime += '<div class="input-append bootstrap-timepicker">';
+		endTime += '<input type="text" class="form-control input-small" id="schedule-'+day+'-close" name="schedule['+day+'][close]">';
+		endTime += '</div>';
+		endTime += '</div>';
+		endTime += '</td>';
+	}
+	endTime += '</tr>';
+
+	var table = '<table class="table table-bordered">';
+	table += header;
+	table += startTime;
+	table += endTime;
+	table += '</table>';
+	return table;
+};
+
+
+var addStreamFieldset = function( cb ) {
+	
+	var fieldset = $('<fieldset>', {
+		class: 'recording-profile-fields'
+	});
+
+	//
+	// hidden id field
+	var camera_stream_id = $('<input>', {
+		type: 'hidden',
+		id: 'camera-streams-' + current_number_of_streams + '-id',
+		name: 'camera[streams][' + current_number_of_streams + '][id]'
+	});
+    // end of hidden id field
+	//
+
+	//
+	// ** temporary, development only **
+	// 
+	var camera_stream_rtsp_group = $('<div>', {
+		class: 'form-group',
+		html: '<label for="camera-stream-rtsp">rtsp (temporary, dev only)</label>'
+	});
+	
+	var camera_stream_rtsp = $('<input>', {
+		type: 'text',
+		disabled: 'disabled',
+		class: 'form-control',
+		id: 'camera-streams-' + current_number_of_streams + '-url',
+		name: 'camera[streams][' + current_number_of_streams + '][rtsp]'
+	});	
+	camera_stream_rtsp_group.append( camera_stream_rtsp );
+	//
+	//
+	
+	//
+	// name field
+	var camera_stream_name_group = $('<div>', {
+		class: 'form-group',
+		html: '<label for="camera-stream-name">name</label>'
+	});
+
+	var camera_stream_name = $('<input>', {
+		type: 'string',
+		class: 'form-control',
+		id: 'camera-streams-' + current_number_of_streams + '-name',
+		name: 'camera[streams][' + current_number_of_streams + '][name]'
+	});
+	
+	camera_stream_name_group.append( camera_stream_name );
+	// end of name field
+	//
+	
+	//
+	// resolution field
+	var camera_stream_resolution_group = $('<div>', {
+		class: 'form-group col-xs-3',
+		html: '<label for="camera-stream-resolution">resolution</label>'
+	});
+
+	var camera_stream_resolution = $('<input>', {
+		type: 'string',
+		class: 'form-control',
+		id: 'camera-streams-' + current_number_of_streams + '-resolution',
+		name: 'camera[streams][' + current_number_of_streams + '][resolution]'
+	});
+	
+	camera_stream_resolution_group.append( camera_stream_resolution );
+	// end of resolution field
+	//
+	
+	//
+	// framerate field
+	var camera_stream_framerate_group = $('<div>', {
+		class: 'form-group  col-xs-2',
+		html: '<label for="camera-stream-framerate">framerate</label>'
+	});
+
+	var camera_stream_framerate = $('<input>', {
+		type: 'number',
+		min: 1,
+		max: 30,
+		class: 'form-control',
+		id: 'camera-streams-' + current_number_of_streams + '-framerate',
+		name: 'camera[streams][' + current_number_of_streams + '][framerate]'
+	});
+	
+	camera_stream_framerate_group.append( camera_stream_framerate );
+	// end of framerate field
+	//
+
+	//
+	// quality field
+	var camera_stream_quality_group = $('<div>', {
+		class: 'form-group  col-xs-2',
+		html: '<label for="camera-stream-quality">quality</label>'
+	});
+
+	var camera_stream_quality = $('<input>', {
+		type: 'number',
+		min: 1,
+		max: 30,
+		class: 'form-control',
+		id: 'camera-streams-' + current_number_of_streams + '-quality',
+		name: 'camera[streams][' + current_number_of_streams + '][quality]'
+	});
+	
+	camera_stream_quality_group.append( camera_stream_quality );
+	// end of quality field
+	//
+
+	//
+	// retention field
+	var camera_stream_retention_group = $('<div>', {
+		class: 'form-group  col-xs-4',
+		html: '<label for="camera-stream-retention">retention period</label>'
+	});
+
+	var camera_stream_retention = $('<input>', {
+		type: 'number',
+		min: 1,
+		class: 'form-control',
+		id: 'camera-streams-' + current_number_of_streams + '-retention',
+		name: 'camera[streams][' + current_number_of_streams + '][retention]'
+	});
+	
+	camera_stream_retention_group.append( camera_stream_retention );
+	// end of retention field
+	//
+	
+	fieldset.append( camera_stream_id );
+	fieldset.append( camera_stream_rtsp_group );
+	fieldset.append( camera_stream_name_group );
+	fieldset.append( camera_stream_resolution_group );
+	fieldset.append( camera_stream_framerate_group );
+	fieldset.append( camera_stream_quality_group );
+	fieldset.append( camera_stream_retention_group );
+
+    fieldset.find("#remove-stream-" + current_number_of_streams).click(function(){
+        $(this).parent().remove();
+    });
+	
+    current_number_of_streams++;
+
+    cb( fieldset, current_number_of_streams);
+};
+
+
+var addStream = function( stream ) {
+
+	addStreamFieldset( function(fieldset, current_number_of_streams) {
+		
+		var idx = current_number_of_streams-1;
+		console.log("idx: " + idx);
+
+		var stream_name = stream.name || 'new stream';
+
+		var new_stream_tab_id = 'new-stream-' + current_number_of_streams;
+		$('#stream-tabs').append('<li><a href="#' + new_stream_tab_id + '" data-toggle="tab">' + stream_name + '</a></li>');
+		$('#stream-panes').append('<div class="tab-pane" id="' + new_stream_tab_id + '"></div>');
+		$('#'+new_stream_tab_id).append(fieldset);
+		$('#stream-tabs a:last').tab('show'); 
+
+		for (var attr in stream) {
+			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).val( stream[attr] );
+		}
+	});
 };
 
 
@@ -353,22 +631,16 @@ var cameraSchedule = function(camId) {
                         $('#camera-schedule-dialog .form-control').prop('disabled', true);
                     }
                 });
-                $("#schedule-sunday-open").timepicker('setTime',data.schedule[0].open.hour + ":" + data.schedule[0].open.minutes);
-                $("#schedule-monday-open").timepicker('setTime',data.schedule[1].open.hour + ":" + data.schedule[1].open.minutes);
-                $("#schedule-tuesday-open").timepicker('setTime',data.schedule[2].open.hour + ":" + data.schedule[2].open.minutes);
-                $("#schedule-wednesday-open").timepicker('setTime',data.schedule[3].open.hour + ":" + data.schedule[3].open.minutes);
-                $("#schedule-thursday-open").timepicker('setTime',data.schedule[4].open.hour + ":" + data.schedule[4].open.minutes);
-                $("#schedule-friday-open").timepicker('setTime',data.schedule[5].open.hour + ":" + data.schedule[5].open.minutes);
-                $("#schedule-saturday-open").timepicker('setTime',data.schedule[6].open.hour + ":" + data.schedule[6].open.minutes);
 
-                $("#schedule-sunday-close").timepicker('setTime',data.schedule[0].close.hour + ":" + data.schedule[0].close.minutes);
-                $("#schedule-monday-close").timepicker('setTime',data.schedule[1].close.hour + ":" + data.schedule[1].close.minutes);
-                $("#schedule-tuesday-close").timepicker('setTime',data.schedule[2].close.hour + ":" + data.schedule[2].close.minutes);
-                $("#schedule-wednesday-close").timepicker('setTime',data.schedule[3].close.hour + ":" + data.schedule[3].close.minutes);
-                $("#schedule-thursday-close").timepicker('setTime',data.schedule[4].close.hour + ":" + data.schedule[4].close.minutes);
-                $("#schedule-friday-close").timepicker('setTime',data.schedule[5].close.hour + ":" + data.schedule[5].close.minutes);
-                $("#schedule-saturday-close").timepicker('setTime',data.schedule[6].close.hour + ":" + data.schedule[6].close.minutes);
-                if (data.schedule_enabled == "0"){
+				var days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+				
+				for (var d in days) {
+					var day = days[d];
+ 					$('#schedule-'+day+'-open').timepicker('setTime',   to12HourTime(data.schedule[d].open.hour) + ":" + data.schedule[d].open.minutes + meridian(data.schedule[0].open.hour));
+					$('#schedule-'+day+'-close').timepicker('setTime',   to12HourTime(data.schedule[d].close.hour)   + ":" + data.schedule[d].close.minutes + meridian(data.schedule[0].close.hour));
+				}
+
+                if (data.schedule_enabled === "0"){
                     $('#camera-schedule-dialog .form-control').prop('disabled', true);
                 }else{
                     $('#camera-schedule-dialog .form-control').prop('disabled', false);
@@ -378,7 +650,6 @@ var cameraSchedule = function(camId) {
                 $("#update-schedule").unbind();
                 $("#update-schedule").click( function() {
                     updateSchedule( camId, function(data) {
-                    //console.log(data);
                         if (data.success) {
                             location.reload();
                         } else {

@@ -4,7 +4,7 @@ var RecordModel = require('./record_model');
 var Dblite = require('../db_layers/dblite.js');
 var util = require('util');
 var EventEmitter = require('events').EventEmitter;
-
+var rtspUrl = require('../helpers/camera_scanner/rtsp.js');
 
 function Camera( cam, videosFolder ) {
 
@@ -13,77 +13,356 @@ function Camera( cam, videosFolder ) {
     var self = this;
 
     this._id = cam._id;
-    this.name = cam.name;
-    this.ip = cam.ip;
-    this.rtsp = cam.rtsp;
-    
-	this.videosFolder = videosFolder + "/" + this._id;
-    
-	this.recording = false;
-    this.enabled = cam.enabled;
 
-    this.schedule = new WeeklySchedule(cam.schedule);
-	this.schedule_enabled = cam.enableSchedule;
-	
-	this.lastChunkTime = Date.now();
-
-	if ( !fs.existsSync( this.videosFolder) ){
-        console.log(this.videosFolder);
-		fs.mkdirSync( this.videosFolder );
-	}
-
-    this.db = new Dblite( this.videosFolder + "/db.sqlite" );
-	this.recordModel = new RecordModel( this );
-
-    if (cam.id) {
+	if (cam.id) {
         this.id = cam.id;
     } else {
         this.id = cam._id;
     } 
+
+    this.name = cam.name;
+    this.ip = cam.ip;
+    this.status = cam.status;
+    this.manufacturer = cam.manufacturer;
+    this.type = cam.type;
+    this.indexing = false;
+	this.username = cam.username;
+    this.password = cam.password;
+
+	this.videosFolder = videosFolder + "/" + this._id;
+
+	this.streams = {};
+
+	this.recording = false;
+    this.enabled = cam.enabled;
 	
-	this.setupEvents();
+	this.lastChunkTime = Date.now();
 
-	console.log("should be recording? " + this.shouldBeRecording() );
+	// //
+	if ( !cam.deleted ) {
+		this.schedule = new WeeklySchedule(cam.schedule);
+		this.schedule_enabled = cam.enableSchedule;
+		
+		if ( !fs.existsSync( this.videosFolder) ){
+			console.log(this.videosFolder);
+			fs.mkdirSync( this.videosFolder );
+		}
 
-    if (!this.recording && this.shouldBeRecording()) {
-		console.log("starting camera " + this.name);
-        this.startRecording();
-    } else {
-		console.log("stopping camera " + this.name);
-        this.stopRecording();
-    }
+		// instantiates streams
+		for (var i in cam.streams) {
+			self.addStream( cam.streams[i] );
+		}
+		
+		this.setupEvents();
+
+		if (!this.recording && this.shouldBeRecording()) {
+			console.log("starting camera " + this.name);
+			this.startRecording();
+		} else {
+			console.log("stopping camera " + this.name);
+			this.stopRecording();
+		}
+	} else {
+		
+	}
+	// //
 }
+
 
 util.inherits(Camera, EventEmitter);
 
+Camera.prototype.addStream = function( stream ) {
+
+	console.log('*** addStream');
+	console.log(stream);
+	console.log('* * *');
+
+	var self = this;
+
+	stream.db = new Dblite( this.videosFolder + '/db_'+stream.id+'.sqlite' );
+	
+	stream.url = rtspUrl({
+		manufacturer: self.manufacturer,
+		ip: self.ip,
+		user: self.username,
+		password: self.password,
+		resolution: stream.resolution,
+		framerate: stream.framerate,
+		quality: stream.quality
+	});
+
+	console.log('stream.url: ' + stream.url);
+
+	stream.recordModel = new RecordModel( this, stream );
+
+	self.streams[stream.id] = stream;
+
+	if ( this.shouldBeRecording() ) {
+		stream.recordModel.startRecording();
+	}
+};
+
+
+Camera.prototype.updateAllStreams = function( new_streams ) {
+
+	var self = this;
+
+	console.log('*** update all streams');
+	console.log( new_streams );
+	console.log('* * *');
+
+	for ( var s in new_streams ) {
+		var stream = new_streams[s];
+
+		if ( !stream.id || !self.streams[ stream.id ] ) { 
+			// adds new stream if id is blank or doesn't match
+			self.addStream( stream );
+		} else {
+			self.updateStream( stream );
+		}
+	}
+
+	// checks for streams to be deleted
+	//
+	var ids = [];
+	if (new_streams) {
+		// creates an array of the new streams ids
+		ids = new_streams.map( function(s) {
+			return s.id;
+		});
+	}
+
+	for ( var streamId in self.streams ) {
+		// removes streams that are not in the array
+		if (streamId && ids.indexOf( streamId ) === -1) {
+			self.removeStream( streamId );
+		}
+	}
+};
+
+
+Camera.prototype.removeStream  = function( streamId ) {
+
+	var self = this;
+
+	if ( !self.streams[streamId] ) return;
+
+	self.streams[streamId].recordModel.stopRecording();
+	delete self.streams[streamId].recordModel;
+	delete self.streams[streamId];
+
+	//TODO: delete stream files
+
+};
+
+
+Camera.prototype.updateStream = function( stream ) {
+
+	var self = this;
+
+	if ( !self.streams[stream.id] ) return;
+
+	var id = stream.id;
+
+	var need_restart = false;
+
+	self.streams[id].name = stream.name;
+	self.streams[id].retention = stream.retention;
+
+	var restartParams = ['resolution', 'framerate', 'quality'];
+
+	for (var i in restartParams) {
+		var param = restartParams[i];
+		if ( stream[param] && self.streams[id][param] !== stream[param] ) {
+			self.streams[id][param] = stream[param];
+			need_restart = true;
+		}
+	}
+	
+	if (need_restart) {
+		console.log('*** updateStream: restarting stream after update...');
+		self.restartStream( id );
+	}
+};
+
+
+Camera.prototype.restartAllStreams = function() {
+	
+	var self = this;
+
+	for (var i in self.streams) {
+		self.restartStream(i);
+	}
+};
+
+Camera.prototype.restartStream = function( streamId ) {
+
+	console.log('*** restartStream: restarting stream ' + streamId);
+
+	var self = this;
+
+	if ( !self.streams[streamId] ) return;
+	var stream = self.streams[ streamId ];
+
+	self.streams[streamId].recordModel.stopRecording();
+	delete self.streams[streamId].recordModel;
+	
+	stream.url = rtspUrl({
+		manufacturer: self.manufacturer,
+		ip: self.ip,
+		user: self.username,
+		password: self.password,
+		resolution: stream.resolution,
+		framerate: stream.framerate,
+		quality: stream.quality
+	});
+	
+	self.streams[streamId].recordModel = new RecordModel( self, stream );
+
+	if ( self.shouldBeRecording ) {
+		self.streams[streamId].recordModel.startRecording();
+	}
+};
+
 
 Camera.prototype.shouldBeRecording = function() {
-	console.log("this.schedule_enabled: " + this.schedule_enabled);
-	console.log("this.enabled: " + this.enabled );
 
     return ( ( this.schedule_enabled && this.schedule.isOpen() ) || ( !this.schedule_enabled && this.enabled ) );
 };
 
 
-Camera.prototype.getOldestChunks = function( numberOfChunks, cb ) {
+Camera.prototype.daysToMillis = function(days) {
+	
+	//return days * 24 * 60 * 60 * 1000;
+	
+	return days * 1000; // debug: seconds
+};
+
+
+Camera.prototype.getExpiredChunksFromStream = function( streamId, nChunks, cb ) {
 	
 	var self = this;
-	self.db.getOldestChunks( numberOfChunks, function( data ) {
+
+	if ( !this.streams[streamId] ) {
+		console.log('[error] cameraModel.getExpiredChunksFromStream: no stream with id ' + streamId);
+		return;
+	}
+	var stream = self.streams[streamId];
+	
+	if ( !stream.retention || stream.retention <= 0) {
+		cb([]);
+		return;
+	}
+
+	var retentionToMillis = self.daysToMillis( stream.retention );
+	var expirationDate = Date.now() - retentionToMillis;
+
+	// TODO: check if this condition is indeed working
+	if ( stream.oldestChunkDate && ( Date.now() - stream.oldestChunkDate < retentionToMillis ) ) {
+		console.log('- no expired chunks');
+		cb([]);
+	} else {
+		stream.db.getExpiredChunks( expirationDate, nChunks, function( data ) {
+			if ( data.length === 0 ) {
+				stream.oldestChunkDate = Date.now() - retentionToMillis;
+			}
+			cb( data );
+		});
+	}
+};
+
+
+Camera.prototype.getExpiredChunks = function(  chunks, streamList, nChunks, cb ) {
+	
+	var self = this;
+	
+	if ( !Array.isArray( streamList ) ) {
+		
+		nChunks = chunks;
+		cb = streamList;
+		streamList = Object.keys( self.streams );
+		chunks = [];
+	}
+	
+	if (streamList.length === 0) {
+		cb( chunks );
+	} else {
+		var streamId = streamList.shift();
+		self.getExpiredChunksFromStream( streamId, nChunks, function( data ) {
+			data = data.map( function(d) {
+				d.stream_id = streamId;
+				return d;
+			});
+			self.getExpiredChunks( chunks.concat(data), streamList, nChunks, cb );
+		});		
+	}
+};
+
+
+
+Camera.prototype.getOldestChunks = function( chunks, streamList, numberOfChunks, cb ) {
+
+	var self = this;
+
+	if ( !Array.isArray( streamList ) ) {
+		
+		numberOfChunks = chunks;
+		cb = streamList;
+		streamList = Object.keys( self.streams );
+		chunks = [];
+	}
+	
+	if (streamList.length === 0) {
+		cb( chunks );
+	} else {
+		var streamId = streamList.shift();
+		self.getOldestChunksFromStream( streamId, numberOfChunks, function( data ) {
+			data = data.map( function(d) {
+				d.stream_id = streamId;
+				return d;
+			});
+			self.getOldestChunks( chunks.concat(data), streamList, numberOfChunks, cb );
+		});		
+	}
+};
+
+
+Camera.prototype.getOldestChunksFromStream = function( streamId, numberOfChunks, cb ) {
+
+	if ( !this.streams[streamId] ) {
+		console.log('[error] cameraModel.getOldestChunks: no stream with id ' + streamId);
+		return;
+	}
+	
+	var self = this;
+	self.streams[streamId].db.getOldestChunks( numberOfChunks, function( data ) {
 		cb( data );
 	});
 };
 
 
-Camera.prototype.addChunk = function( chunk ) {
-	this.db.insertVideo( chunk );
+Camera.prototype.addChunk = function( streamId, chunk ) {
+	
+	if ( !this.streams[streamId] ) {
+		console.log('[error] cameraModel.addChunk: no stream with id ' + streamId);
+		return;
+	}
+
+	this.streams[ streamId ].db.insertVideo( chunk );
 };
 
 
-Camera.prototype.deleteChunk = function( chunk, cb ) {
+
+Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
+
+	if ( !this.streams[streamId] ) {
+		console.log('[error] cameraModel.deleteChunk: no stream with id ' + streamId);
+		return;
+	}
 	
 	var self = this;
 
-	self.db.deleteVideo( chunk.id, function( err ) {
+	self.streams[ streamId ].db.deleteVideo( chunk.id, function( err ) {
 
 		if (err && err !== "") {
 			console.log( "error removing indexes from db" );
@@ -113,94 +392,160 @@ Camera.prototype.deleteChunk = function( chunk, cb ) {
 };
 
 
-Camera.prototype.deleteChunks = function( chunks, cb ) {
-	
-	var self = this;
-	
-	for (var c in chunks) {
-		self.deleteChunk( chunks[c], function( data ) {
-			if(cb) cb(data);
-		});
-	}
-};
-
 
 Camera.prototype.setupEvents = function( cb ) {
 
     var self = this;
-
-    this.recordModel.on( 'new_chunk', function(data) {
-		this.lastChunkTime = Date.now();
-        self.emit( 'new_chunk', data);
-    });
-
-    this.recordModel.on('camera_status', function(data) {
-        self.emit('camera_status', { cam_id: self._id, status: data.status } );
-    });
+    for (var i in self.streams) {
+        this.streams[i].recordModel.on( 'new_chunk', function(data) {
+            self.emit( 'new_chunk', data);
+        });
+        this.streams[i].recordModel.on('camera_status', function(data) {
+            self.emit('camera_status', { cam_id: self._id, status: data.status } );
+        });
+    }
+	
 };
+
 
 Camera.prototype.isRecording = function() {
     return this.recording;
 };
 
+
 Camera.prototype.startRecording = function() {
     
     var self = this;
-    
-	this.lastChunkTime = Date.now();
 
     if (this.recording) {
         console.log(this.name + " is already recording.");
     } else {
         console.log("* * * " + this.name + " will start recording...");
-        this.recordModel.startRecording();
-        this.recording = true;
-		this.enabled = true;
+		for (var i in self.streams) {
+			this.streams[i].recordModel.startRecording();
+		}
+		this.recording = true;
+		this.enabled = true;		
     }
 };
 
 
 Camera.prototype.stopRecording = function() {
 
+	var self = this;
+
     if (this.recording) {
         console.log(this.name + " will stop recording...");
         this.recording = false;
 		this.enabled = false;
-        this.recordModel.stopRecording();
+		for (var i in self.streams) {
+			this.streams[i].recordModel.stopRecording();
+		}
     } else {
         console.log( this.name + " is already stopped.");
     }
 };
 
+
 Camera.prototype.setRecordingSchedule = function(schedule) {
     this.schedule = new WeeklySchedule(schedule);
 };
 
-
-    
-
 Camera.prototype.updateRecorder = function() {
-    this.recordModel.updateCameraInfo( this );
+	for (var i in this.streams) {
+		this.streams[i].recordModel.updateCameraInfo( this, this.streams[i] );
+	}
 };
 
 
 Camera.prototype.deleteAllFiles = function() {
 
-    deleteFolderRecursive( this.videosFolder );
+    // deleteFolderRecursive( this.videosFolder );
 };
 
 
-Camera.prototype.indexPendingFiles = function( cb ) {
- 
-    this.recordModel.indexPendingFiles( function() {
-		if (cb) {
-			cb();
+Camera.prototype.indexPendingFiles = function( streamList, cb ) {
+
+	var self = this;
+	
+	if ( !streamList || typeof streamList === 'function' ) {
+		if (self.indexing) {
+			console.log('*** this camera is already indexing');
+			return;
 		}
-	});
+		if ( typeof streamList === 'function') cb = streamList;
+		streamList = Object.keys( self.streams );
+		self.indexing = true;
+	}
+
+	if ( streamList.length === 0 ) {
+		if (cb) cb();
+		self.indexing = false;
+	} else {
+		self.indexing = true;
+		var streamId = streamList.shift();
+		
+		this.streams[streamId].recordModel.indexPendingFiles( function() {
+			self.indexPendingFiles( streamList, cb );
+		});
+	}
+};
+
+
+Camera.prototype.getStreamsJSON = function() {
+	
+	var self = this;
+	
+	var streamIds = Object.keys(self.streams);
+
+	var streams = [];
+
+	for (var id in self.streams) {
+		var s = self.streams[id];
+		streams.push({
+			retention: s.retention,
+			url: s.url,
+			rtsp: s.rtsp,
+			resolution: s.resolution,
+			quality: s.quality,
+			framerate: s.framerate,
+			name: s.name,
+			id: id
+		}); 
+	}
+
+	return streams;
+};
+
+
+Camera.prototype.toJSON = function() {
+    var info = {};
+    
+    info.name = this.name;
+    info.ip = this.ip;
+    info._id = this._id;
+    info.enabled = this.enabled;
+    info.status = this.status;
+    info.type = this.type;
+    info.manufacturer = this.manufacturer;
+    info.username = this.username;
+    info.password = this.password;
+	
+	info.streams = this.getStreamsJSON();
+	
+    if (this.id) {
+        info.id = this.id;
+    } else {
+        info.id = this._id;
+    }
+
+    return info;
 };
 
 
 var deleteFolderRecursive = function( path ) {
+	// TODO: mark stream for deletion and enqueues files for progressive deletion
+	/*
     if( fs.existsSync(path) ) {
         fs.readdirSync(path).forEach(function(file,index){
             var curPath = path + "/" + file;
@@ -212,10 +557,20 @@ var deleteFolderRecursive = function( path ) {
         });
         fs.rmdirSync(path);
     }
+	*/
 };
 
 
 module.exports = Camera;
 
 
+function generateUUID() {
+    var d = new Date().getTime();
+    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = (d + Math.random()*16)%16 | 0;
+        d = Math.floor(d/16);
+        return (c=='x' ? r : (r&0x7|0x8)).toString(16);
+    });
+    return uuid;
+}
 

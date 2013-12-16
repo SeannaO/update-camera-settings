@@ -11,7 +11,7 @@ var RECORDING = 2,
     STOPPED = 0,
     ERROR = -1;
 
-function RecordModel( camera ) {
+function RecordModel( camera, stream ) {
 
     var self = this;
 
@@ -23,9 +23,10 @@ function RecordModel( camera ) {
     this.status = ERROR;
 
 	this.camera = camera;
-    this.rtsp = camera.rtsp;
-    this.db = camera.db;
     this.camId = camera._id;
+    this.rtsp = stream.rtsp || stream.url;
+	this.stream = stream;
+    this.db = stream.db;
     
     this.error = false;
 
@@ -47,8 +48,9 @@ util.inherits(RecordModel, EventEmitter);
 
 RecordModel.prototype.setupFolders = function() {
    
-    this.folder = this.camera.videosFolder;
+    this.folder = this.camera.videosFolder + '/' + this.stream.id ;
 
+	this.setupFolderSync( this.camera.videosFolder );
     this.setupFolderSync(this.folder);
     this.setupFolderSync(this.folder + "/tmp");
     this.setupFolderSync(this.folder + "/videos");
@@ -70,13 +72,15 @@ RecordModel.prototype.setupFolders = function() {
 };
 
 
-RecordModel.prototype.updateCameraInfo = function( camera ) {
-    this.rtsp = camera.rtsp;
+RecordModel.prototype.updateCameraInfo = function( camera, stream ) {
+    this.rtsp = stream.url || stream.rtsp;
     this.camId = camera._id;
 };
 
 
 RecordModel.prototype.stopRecording = function() {
+
+	console.log(" - - - record model stop recording - - - ");
 
     this.status = STOPPING;
 
@@ -92,7 +96,7 @@ RecordModel.prototype.stopRecording = function() {
         this.ffmpegProcess.removeAllListeners('exit');
         this.ffmpegProcess.kill();
         var exec = require('child_process').exec;
-        exec("kill -s 9 " + this.ffmpegProcess.pid, function(err) {console.log(err);});
+        exec("kill -s 9 " + this.ffmpegProcess.pid, function(err) {});
         this.status = STOPPED;
     }
 };
@@ -110,17 +114,28 @@ RecordModel.prototype.indexPendingFiles = function( cb ) {
 
     var self = this;
 
-    while (self.pending.length > 1)  {
-        var file = self.pending.shift();   
-		console.log(file);
-        self.moveAndIndexFile( file, cb );
+	//console.log(self.pending);
+
+	if (self.pending.length <= 1) {
+		if (cb) cb();
+	} else {
+        var file = self.pending.shift();
+        self.moveAndIndexFile( file, function() {
+			self.indexPendingFiles( cb );
+		});
     }
 };
 
 
 RecordModel.prototype.startRecording = function() {    
 
+	console.log(" - - - record model start recording - - - ");
+	
     var self = this;
+	if (this.status === RECORDING) {
+		console.log('-- already recording! --');
+		return;
+	}
 
     this.status = RECORDING;
     this.lastChunkTime = Date.now();
@@ -128,7 +143,8 @@ RecordModel.prototype.startRecording = function() {
     this.watcher.startWatching();
 	
     this.watcher.on("new_files", function( files ) {
-		
+		console.log("new file");
+		console.log(files);
 		if (self.status === ERROR) {
 			self.emit('camera_status', {status: 'connected'});
 		} else {
@@ -143,7 +159,7 @@ RecordModel.prototype.startRecording = function() {
 		
 		var dt = Date.now() - self.lastChunkTime;
 
-		if ( (dt > 20*1000 && self.status === RECORDING) || (dt > 10*1000 && self.status === ERROR) ) 
+		if ( (dt > 30*1000 && self.status === RECORDING) || (dt > 20*1000 && self.status === ERROR) ) 
 		{	
 			if ( self.status !== ERROR ) {
 				self.emit('camera_status', { status: 'disconnected' });
@@ -179,14 +195,15 @@ RecordModel.prototype.setupFolderSync = function(folder) {
 RecordModel.prototype.moveAndIndexFile = function( file, cb ) {
 
     var self = this;
-
+	console.log( '***moveAndIndexFile ' + file );
     self.calcDuration( file, function( video ) {
-        self.moveFile( video );
-        self.emit('new_chunk', video );
-		if ( cb ) {
-			cb();
-		}
-    });
+        self.moveFile( video, function() {
+			self.emit('new_chunk', video );
+			if ( cb ) {
+				cb();
+			}
+		});
+	});
 };
 
 
@@ -195,6 +212,11 @@ RecordModel.prototype.calcDuration = function( file, cb ) {
 	var self = this;
 
     fs.stat( file, function( err, fileInfo ) {
+		
+		//console.log("Fileinfo" + fileInfo);
+		//console.log( file );
+		if (err ) console.log( err );
+
 		var lastModified = ( new Date(fileInfo.mtime) ).getTime();
 
 		ffmpeg.calcDuration( file, function(duration) {
@@ -204,9 +226,10 @@ RecordModel.prototype.calcDuration = function( file, cb ) {
 
 			video = {
 				cam: self.camId,
-			start: start,
-			end: end,
-			file: file
+				stream: self.stream.id,
+				start: start,
+				end: end,
+				file: file
 			};
 
 			cb( video );
@@ -220,7 +243,6 @@ RecordModel.prototype.checkForConnectionErrors = function() {
 	var self = this;
 
 	if (this.status === STOPPING) {
-		console.log("STOPPING");
 		this.status = STOPPED;
 	} else if ( Date.now() - this.lastErrorTime > 20000 ) {
 	//	self.lastErrorTime = Date.now();
@@ -250,11 +272,11 @@ RecordModel.prototype.moveFile = function( video, cb ) {
             else {
                 video.file = to;
                 ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() { 
+					self.camera.addChunk( self.stream.id, video );
+					if (cb) {
+						cb();
+					}
                 });
-                self.camera.addChunk( video );
-				if (cb) {
-					cb();
-				}
             }                        
         });
     });
@@ -278,29 +300,36 @@ RecordModel.prototype.recordContinuously = function() {
     var self = this;
 
     if (self.rtsp.indexOf("rtsp") >= 0) {
-
-         this.ffmpegProcess = exec( "ffmpeg -rtsp_transport tcp -fflags +igndts -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
+         this.ffmpegProcess = exec( "nice -n -20 ffmpeg -rtsp_transport tcp -fflags +igndts -i '" + self.rtsp + "' -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
 
                 function (error, stdout, stderr) {
+
                     if (error !== null  && error.signal != 'SIGKILL' ) {
-						self.checkForConnectionErrors();
+						console.log("ffmpeg record error");
+						console.log( error );
+						setTimeout( function() {
+							self.checkForConnectionErrors();
+						}, 500 );
                     }
                 }); 
 
         this.ffmpegProcess.on('exit', function() {
-
-			self.checkForConnectionErrors();
-			self.recordContinuously();
+			
+			setTimeout( function() {
+				if (self.status !== STOPPING && self.status !== STOPPED) {
+					self.recordContinuously();
+					self.checkForConnectionErrors();
+				}
+			}, 500 );
 		});
  
     } else if (self.rtsp.indexOf("http") >= 0) {
-        this.ffmpegProcess = exec( "ffmpeg -i " + self.rtsp + " -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
+        this.ffmpegProcess = exec( "nice -n -20 ffmpeg -i '" + self.rtsp + "' -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
 
                 function (error, stdout, stderr) {
-
+					console.log("ffmpeg record error");
                     if (error !== null && error.signal !== 'SIGKILL') {
 						setTimeout( function() {
-							console.log( error );
 							self.checkForConnectionErrors();
 						}, 500 );
 					} 
@@ -309,8 +338,10 @@ RecordModel.prototype.recordContinuously = function() {
         this.ffmpegProcess.on('exit', function() {
 			
 			setTimeout( function() {
-				self.checkForConnectionErrors();
-				self.recordContinuously();
+				//if (self.status !== STOPPING && self.status !== STOPPED) {
+					self.recordContinuously();
+					self.checkForConnectionErrors();
+				//}
 			}, 500 );
 		});   
     }

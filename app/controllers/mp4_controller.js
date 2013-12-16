@@ -4,22 +4,53 @@ var fs = require('fs');
 var spawn = require('child_process').spawn;
 
 
-function inMemorySnapshot( file, req, res ) {
+function inMemorySnapshot( file, offset, res, options, cb) {
 	
 	console.log("-- in-memory snapshot --");
 
-	var child = spawn('ffmpeg', ['-y', '-i', file, '-vframes', '1', '-ss', '1', '-f', 'image2', '-loglevel', 'quiet', '-']);
+	//	var child = spawn('ffmpeg', ['-y', '-i', file, '-vframes', '1', '-ss', '1', '-f', 'image2', '-loglevel', 'quiet', '-']);
+
+	var size = "";
+	
+	if (typeof options === 'function') {
+		cb = options;
+		options = {};
+	} else if ( !options ) {
+		options = {};
+	}
+
+	if (options.size) {
+		size = ' -s ' + options.size.width + 'x' + options.size.height;
+	}
+
+	console.log( "snapshot for file: " + file );
+
+	var child = spawn( 'ffmpeg', 
+				['-y',
+                '-i', file,
+                '-vframes', '1',
+                // '-ss', offset,
+                '-f', 'image2',
+                '-vcodec', 'mjpeg',
+                '-an',
+                '-loglevel', 'quiet',
+                '-'
+				]);
+
 
 	child.stderr.on('data', function (data) {
-		console.log('stderr: ' + data);
-		//res.end( data );
+		console.log('inMem snapshot error: ' + data);
+		res.end( 'there was an error, please try again' );
 	});
 	
-	res.writeHead(200, {'Content-Type': 'image/jpeg'});
+	res.writeHead(200, {
+		'Content-Type': 'image/jpeg'
+	});
+
 	child.stdout.pipe( res );
 	
 	child.on('close', function(code) {
-		console.log( code );
+		if (cb) cb();
 	});
 	
 	res.on('close', function() {
@@ -153,7 +184,7 @@ function generateMp4Video( db, cam, begin, end, cb ) {
 
 
 //
-function takeSnapshot( db, cam, req, res ) {
+function takeSnapshot( db, cam, req, res, cb ) {
     var time = parseInt(req.query.time, 10);
     
 	var width = parseInt(req.query.width, 10);
@@ -187,18 +218,21 @@ function takeSnapshot( db, cam, req, res ) {
         
         fs.exists(file, function(exists) {
             if (exists) {
-				/*
-                ffmpeg.smartSnapshot( file, cam.videosFolder + "/tmp", offset, options, function(fileName, error) {
-                    res.sendfile( fileName,
-                        {},
-                        function() {
-                            fs.unlink( fileName );
-                        });
-                });
-				*/
-					inMemorySnapshot(file, req, res);
+					/*
+					ffmpeg.smartSnapshot( file, cam.videosFolder + "/tmp", offset, options, function(fileName, error) {
+						res.sendfile( fileName,
+							{},
+							function() {
+								fs.unlink( fileName );
+							});
+					});
+					*/
+					inMemorySnapshot(file, offset, res, function() {
+						if (cb) cb();
+					});
                 } else {
                     res.end( "sorry, no videos were recorded at " + (new Date(time)) );
+					if (cb) cb();
                 }
             });
     });

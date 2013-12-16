@@ -45,12 +45,13 @@ Dblite.prototype.insertVideo = function( data ) {
         console.log("db is not ready yet");
     }
 
-    if ( typeof data !== 'object' || !data.file ) {
+    if ( !data || (typeof data !== 'object') || !data.file || !data.start || !data.end ) {
+		console.log("!!! attempt to insert invalid data to database !!!");
+		console.log( data );
+		console.log("!!!");
         return;
     }
 
-    // console.log("* * * inserting video");
-    // console.log(data);
     this.db.query('INSERT INTO videos(start, end, file) VALUES(?, ?, ?)', [data.start, data.end, data.file]);
 };
 // - - end of insertVideo
@@ -113,11 +114,33 @@ Dblite.prototype.searchVideosByInterval = function( start, end, cb ) {
 // - - - - - - - - - - - - - - - - - - - -
 
 
+Dblite.prototype.getExpiredChunks = function( expirationDate, numberOfChunks, cb ) {
+
+	var query = 'SELECT id, file, start FROM videos WHERE start < ? ORDER BY id ASC LIMIT ?';
+
+    var fileList = this.db.query(
+			query, 
+            [expirationDate, numberOfChunks], 
+            ['id', 'file', 'start'], 
+            function(err, data) {
+				console.log('get expired chunks: ');
+				console.log( data );
+                if (!data || data.length === 0) {
+                     cb( [] );
+                } else {
+                    cb(data);
+                }
+            }
+		);
+};
+
+
 Dblite.prototype.getOldestChunks = function( numberOfChunks, cb ) {
 
-	var query = 'SELECT id, file, start from videos where id in (select id from videos order by id asc limit ?)';
+	var query = 'SELECT id, file, start FROM videos WHERE id in (SELECT id FROM videos ORDER BY id ASC LIMIT ?)';
 
-    var fileList = this.db.query(query, 
+    var fileList = this.db.query(
+			query, 
             [numberOfChunks], 
             ['id', 'file', 'start'], 
             function(err, data) {
@@ -127,7 +150,8 @@ Dblite.prototype.getOldestChunks = function( numberOfChunks, cb ) {
                 } else {
                     cb(data);
                 }
-            });
+            }
+		);
 };
 
 /**
