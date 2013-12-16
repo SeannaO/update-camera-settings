@@ -10,7 +10,7 @@ module.exports = function( options ) {
 		var user = options.user;
 		var pass = options.password;
 		
-		var resolution = options.res || '1280x960';
+		var resolution = options.resolution || options.res || '1280x960';
 		var framerate = options.framerate || '30';
 		var quality = options.quality || '5';
 		

@@ -7,15 +7,15 @@ module.exports = function(io) {
 	iostat.launch();
 
 	var Smart = require('../helpers/smart.js');
-	var smart = new Smart({development: true});
+	var smart = new Smart();//new Smart({development: true});
 	smart.start();
 
 	var Diskstat = require('../helpers/diskstat.js');
-	var diskstat = new Diskstat({development: true});
+	var diskstat = new Diskstat();//new Diskstat({development: true});
 	diskstat.launch();
 
 	var SensorsInfo = require('../helpers/sensors.js');
-	var sensorsInfo = new SensorsInfo({development: true});
+	var sensorsInfo = new SensorsInfo();//new SensorsInfo({development: true});
 	sensorsInfo.launch();
 
 	// broadcasts
