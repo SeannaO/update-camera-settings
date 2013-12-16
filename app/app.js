@@ -105,6 +105,7 @@ require('./controllers/health.js')( io );
 // - - - -
 // socket.io broadcasts setup
 camerasController.on('new_chunk', function( data ) {
+    console.log("emitting new_chunk")
     io.sockets.emit( 'newChunk', data );
 });
 
