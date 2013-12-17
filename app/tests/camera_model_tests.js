@@ -47,7 +47,9 @@ describe('Camera', function(){
 
 		it('should create a folder for each stream', function() {
 			
+			cam_with_streams._id = 'constructor_test_1_' + Math.random();			
 			var new_cam = new Camera( cam_with_streams, videosFolder );
+
 			for (var stream_id in cam_with_streams.streams) {
 				console.log(stream_id);
 				fs.exists(videosFolder+"/"+cam_with_streams._id+"/"+ stream_id, function(exists) {
@@ -58,6 +60,7 @@ describe('Camera', function(){
 
 		it('should setup a new recordModel for each stream', function() {
 
+			cam_with_streams._id = 'constructor_test_2_' + Math.random();		
 			var new_cam = new Camera( cam_with_streams, videosFolder );
 
 			for (var stream_id in cam_with_streams.streams) {
@@ -85,8 +88,10 @@ describe('Camera', function(){
 
 
 	describe('start recording', function() {
-
+	
 		it('should call recordModel.startRecording on all streams if not already recording', function() {
+
+			cam_with_streams._id = 'startRecording_test_1_' + Math.random();			
 			var new_cam = new Camera( cam_with_streams, videosFolder );
 			
 			for (var i in new_cam.streams ) {
@@ -101,6 +106,8 @@ describe('Camera', function(){
 		});
 
 		it('should NOT call recordModel.startRecording again on a stream that is already recording', function() {
+
+			cam_with_streams._id = 'startRecording_test_2_' + Math.random();			
 			var new_cam = new Camera( cam_with_streams, videosFolder );
 
 			for (var i in new_cam.streams ) {
@@ -119,7 +126,12 @@ describe('Camera', function(){
 
 	describe('stop recording', function() {
 
+		//cam_with_streams.name = cam_with_streams.name + '_stopRecording_test' + Math.random();
+		//var new_cam = new Camera( cam_with_streams, videosFolder );
+		
 		it('should call recordModel.stopRecording on all streams if still recording', function() {
+			
+			cam_with_streams._id = 'stopRecording_test_1_' + Math.random();			
 			var new_cam = new Camera( cam_with_streams, videosFolder );
 
 			new_cam.startRecording();
@@ -136,8 +148,10 @@ describe('Camera', function(){
 		});
 
 		it('should NOT call recordModel.stopRecording again on a stream that is already stopped', function() {
-			var new_cam = new Camera( cam_with_streams, videosFolder );
 
+			cam_with_streams._id = 'stopRecording_test_2_' + Math.random();			
+			var new_cam = new Camera( cam_with_streams, videosFolder );
+			
 			new_cam.startRecording();
 
 			for (var i in new_cam.streams ) {
@@ -156,9 +170,10 @@ describe('Camera', function(){
 
 	describe('index pending files', function() {
 
-		it('should call recordModel.indexPendingFiles on each stream', function() {
+		cam_with_streams._id = 'indexPendingFiles_test_' + Math.random();			
+		var new_cam = new Camera( cam_with_streams, videosFolder );
 
-			var new_cam = new Camera( cam_with_streams, videosFolder );
+		it('should call recordModel.indexPendingFiles on each stream', function() {
 
 			for (var i in new_cam.streams ) {
 				sinon.spy( new_cam.streams[i].recordModel, "indexPendingFiles" );
@@ -176,6 +191,7 @@ describe('Camera', function(){
 	
 	describe('addChunk', function() {
 		
+		cam_with_streams._id = 'addChunk_test';
 		var new_cam = new Camera( cam_with_streams, videosFolder );
 
 		it('should call db.insertVideo with correct param on corresponding stream', function() {
@@ -199,56 +215,119 @@ describe('Camera', function(){
 				for (var d in chunk) {
 					assert.equal(new_cam.streams[stream_id].db.insertVideo.getCall(0).args[0][d], chunk[d]);
 				}
+
+				new_cam.streams[stream_id].db.insertVideo.restore();
 			}
 		});
+
+		it('should call db.insertVideo with correct param on corresponding stream', function() {
+
+					
+			for (var stream_id in new_cam.streams) {
+
+				var chunk = {
+					start: 1,
+					end: 10,
+					file: 'chunk_file'
+				};
+
+				new_cam.addChunk( stream_id, chunk );
+			}
+		});
+		
 	});
 
 	
 	describe('deleteChunk', function() {
-		/*
+
 		var fake_chunk = {id: 1, file: "fake_file"};
 
-		it('should call db.deleteVideo', function() {
-			var new_cam = new Camera( cam, videosFolder );
-			sinon.spy( new_cam.db, "deleteVideo" );
-			new_cam.deleteChunk(fake_chunk, function() {
-			});
-			assert( new_cam.db.deleteVideo.calledOnce );
-			new_cam.db.deleteVideo.restore();
+		cam_with_streams._id = 'camera_test_deleteChunk_'+Math.random();
+		var new_cam = new Camera( cam_with_streams, videosFolder );
+		
+		it('should call db.deleteVideo on corresponding stream', function() {
+			
+			for (var stream_id in new_cam.streams) {
+				sinon.spy( new_cam.streams[stream_id].db, "deleteVideo" );
+				new_cam.deleteChunk(stream_id, fake_chunk, function() {
+				});
+				assert( new_cam.streams[stream_id].db.deleteVideo.calledOnce );	
+				new_cam.streams[stream_id].db.deleteVideo.restore();
+			}
+				
 		});
-
-		it('should callback deleted chunk', function( done ) {
-			var new_cam = new Camera( cam, videosFolder );
-			new_cam.deleteChunk(fake_chunk, function( chunk, err ) {
-				console.log("###### " + chunk.id);
-				assert.equal( chunk.id, fake_chunk.id );
-				done();
-			});
-		});
-		*/
+		
 	});
 
 
 	describe('getOldestChunks', function() {
 
-		/*
-		var new_cam = new Camera( cam, videosFolder );
+		cam_with_streams._id = 'camera_test_getOldestChunks_'+Math.random();
+		var new_cam = new Camera( cam_with_streams, videosFolder );
 		var numChunks = 10;
 		
-		it('should call db.getOldestChunks with correct params', function() {
-			sinon.spy( new_cam.db, "getOldestChunks" );
-			new_cam.getOldestChunks( numChunks, function(){} );
-			assert(new_cam.db.getOldestChunks.calledOnce);
-			assert.equal(numChunks, new_cam.db.getOldestChunks.getCall(0).args[0]);
-			new_cam.db.getOldestChunks.restore();
-		});
+		var nStreams = Object.keys(new_cam.streams).length;
+		var chunks = [];
 
-		it('should callback data', function(done) {
+		// adding some chunks on each stream
+		for (var stream_id in new_cam.streams) {
+			//( function() {	
+				for (var k = 1; k <= 10; k++) {
+					var chunk = {
+						start: k*10,
+						end: (k+1)*10,
+						file: 'chunk_file_'+k,
+						stream_id: stream_id	// this param is being used only for this test
+					};
+					chunks.push( chunk );
+					new_cam.addChunk( stream_id, chunk );
+				}
+			//})();
+		}
+
+		it('should call db.getOldestChunks with correct params on each stream', function(done) {
+			done();
+/*
+			for (var stream_id in new_cam.streams) {
+				sinon.spy( new_cam.streams[stream_id].db, "getOldestChunks" );
+			}
+
 			new_cam.getOldestChunks( numChunks, function(data) {
+				for (var stream_id in new_cam.streams) {
+					assert(new_cam.streams[stream_id].db.getOldestChunks.calledOnce);
+					assert.equal(numChunks, new_cam.streams[stream_id].db.getOldestChunks.getCall(0).args[0]);					
+					new_cam.streams[stream_id].db.getOldestChunks.restore();
+				}
+				done();
+			});
+		*/	
+		});
+	
+		it('should return a maximum of numChunks * numStreams via callback', function(done) {
+			new_cam.getOldestChunks( numChunks, function(data) {
+				assert( data.length <= numChunks * nStreams );
 				done();
 			});
 		});
-		*/
+
+
+		it('should return the oldest chunks from the camera', function(done) {
+
+			chunks = chunks.sort( function(a, b) {
+				return a.start - b.start;
+			});
+			console.log(chunks);
+			
+			new_cam.getOldestChunks( numChunks, function(data) {
+				console.log(data);
+				for (var i in data) {
+					assert(data[i].start !== chunks[i].start);
+				}
+				done();
+			});
+
+		});
+
 	});
 
 
@@ -281,3 +360,5 @@ describe('Camera', function(){
 	});
 
 });
+
+
