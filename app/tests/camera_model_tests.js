@@ -5,117 +5,207 @@ var fs = require('fs');
 
 var Camera = require('../models/camera_model.js');
 
-var cam = {
+var cam_with_streams = {
 	_id: "abc",
 	name: "a name",
 	ip: "127.0.0.1",
-	rtsp: "rtsp://hello.world"
+	manufacturer: 'a_manufacturer',
+	user: 'a_user',
+	password: 'a_password',
+	streams: {
+		stream_1 : {
+			id: 'stream_1',
+			resolution: '640x480',
+			framerate: '10',
+			quality: '5'
+		}, 
+		stream_2 : {
+			id: 'stream_2',
+			resolution: '1280x960',
+			framerate:	'20',
+			quality:	'30'
+		}
+	}
 };
 
+var cam_without_streams = {
+	_id: "abc",
+	name: "a name",
+	ip: "127.0.0.1",
+	manufacturer: 'a_manufacturer',
+	user: 'a_user',
+	password: 'a_password',
+};
+
+
 var videosFolder = "tests/videosFolder"; 
+
 
 describe('Camera', function(){
 
 	describe('new', function() {
 
-		it('should create a folder for the videos', function() {
-			var new_cam = new Camera( cam, videosFolder );
-			fs.exists(videosFolder+"/"+cam._id, function(exists) {
-				assert.ok(exists);
-			});
+		it('should create a folder for each stream', function() {
+			
+			var new_cam = new Camera( cam_with_streams, videosFolder );
+			for (var stream_id in cam_with_streams.streams) {
+				console.log(stream_id);
+				fs.exists(videosFolder+"/"+cam_with_streams._id+"/"+ stream_id, function(exists) {
+					assert.ok(exists);
+				});
+			}
 		});
 
-		it('should setup a new recordModel', function() {
-			var new_cam = new Camera( cam, videosFolder );
-			assert( new_cam.recordModel );
-			assert( typeof new_cam.recordModel === 'object' );
+		it('should setup a new recordModel for each stream', function() {
+
+			var new_cam = new Camera( cam_with_streams, videosFolder );
+
+			for (var stream_id in cam_with_streams.streams) {
+				assert( new_cam.streams[stream_id].recordModel );
+				assert( typeof new_cam.streams[stream_id].recordModel === 'object' );
+			}
 		});
 
 		it('should create a new camera with correct params', function(){
-			var new_cam = new Camera( cam, videosFolder );
-			assert.equal( new_cam._id, cam._id );
-			assert.equal( new_cam.name, cam.name );
-			assert.equal( new_cam.ip, cam.ip );
-			assert.equal( new_cam.rtsp, cam.rtsp );
+
+			var cameras = [cam_with_streams, cam_without_streams];
+			
+			for (var cam in cameras) {
+				var new_cam = new Camera( cam, videosFolder );
+				assert.equal( new_cam._id, cam._id );
+				assert.equal( new_cam.name, cam.name );
+				assert.equal( new_cam.ip, cam.ip );
+				assert.equal( new_cam.rtsp, cam.rtsp );
+				assert.equal( new_cam.username, cam.username );
+				assert.equal( new_cam.password, cam.password );
+				assert.equal( new_cam.manufacturer, cam.manufacturer );
+			}
 		});
 	});
+
 
 	describe('start recording', function() {
 
-		it('should call recordModel.startRecording if not already recording', function() {
-			var new_cam = new Camera( cam, videosFolder );
-			sinon.spy(new_cam.recordModel, "startRecording");
+		it('should call recordModel.startRecording on all streams if not already recording', function() {
+			var new_cam = new Camera( cam_with_streams, videosFolder );
+			
+			for (var i in new_cam.streams ) {
+				sinon.spy(new_cam.streams[i].recordModel, "startRecording");
+			}
+
 			new_cam.startRecording();
-			assert(new_cam.recordModel.startRecording.calledOnce);
+			
+			for (var i in new_cam.streams ) {
+				assert(new_cam.streams[i].recordModel.startRecording.calledOnce);
+			}
 		});
-		it('should NOT call recordModel.startRecording again if already recording', function() {
-			var new_cam = new Camera( cam, videosFolder );
-			sinon.spy(new_cam.recordModel, "startRecording");
+
+		it('should NOT call recordModel.startRecording again on a stream that is already recording', function() {
+			var new_cam = new Camera( cam_with_streams, videosFolder );
+
+			for (var i in new_cam.streams ) {
+				sinon.spy(new_cam.streams[i].recordModel, "startRecording");
+			}
+
 			new_cam.startRecording();
 			new_cam.startRecording();
-			assert(new_cam.recordModel.startRecording.calledOnce);
+
+			for (var i in new_cam.streams ) {
+				assert(new_cam.streams[i].recordModel.startRecording.calledOnce);
+			}
 		});
 	});
 
-	describe('stop recording', function() {
-		
-		var new_cam = new Camera( cam, videosFolder );
 
-		it('should call recordModel.stopRecording if recording', function() {
-			sinon.spy(new_cam.recordModel, "stopRecording");
+	describe('stop recording', function() {
+
+		it('should call recordModel.stopRecording on all streams if still recording', function() {
+			var new_cam = new Camera( cam_with_streams, videosFolder );
+
 			new_cam.startRecording();
+
+			for (var i in new_cam.streams ) {
+				sinon.spy(new_cam.streams[i].recordModel, "stopRecording");
+			}
+
 			new_cam.stopRecording();
-			assert(new_cam.recordModel.stopRecording.calledOnce);
-			new_cam.recordModel.stopRecording.restore();
+			
+			for (var i in new_cam.streams ) {
+				assert(new_cam.streams[i].recordModel.stopRecording.calledOnce);
+			}
 		});
 
-		it('should NOT call recordModel.startRecording again if already recording', function() {
-			sinon.spy(new_cam.recordModel, "stopRecording");
+		it('should NOT call recordModel.stopRecording again on a stream that is already stopped', function() {
+			var new_cam = new Camera( cam_with_streams, videosFolder );
+
 			new_cam.startRecording();
+
+			for (var i in new_cam.streams ) {
+				sinon.spy(new_cam.streams[i].recordModel, "stopRecording");
+			}
+
 			new_cam.stopRecording();
 			new_cam.stopRecording();
-			assert(new_cam.recordModel.stopRecording.calledOnce);
-			new_cam.recordModel.stopRecording.restore();
+
+			for (var i in new_cam.streams ) {
+				assert(new_cam.streams[i].recordModel.stopRecording.calledOnce);
+			}
 		});
 	});
 	
 
-	describe('indexing', function() {
+	describe('index pending files', function() {
 
-		it('should call recordModel.indexPendingFiles', function() {
-			var new_cam = new Camera( cam, videosFolder );
-			sinon.spy( new_cam.recordModel, "indexPendingFiles" );
+		it('should call recordModel.indexPendingFiles on each stream', function() {
+
+			var new_cam = new Camera( cam_with_streams, videosFolder );
+
+			for (var i in new_cam.streams ) {
+				sinon.spy( new_cam.streams[i].recordModel, "indexPendingFiles" );
+			}
+
 			new_cam.indexPendingFiles();
-			assert( new_cam.recordModel.indexPendingFiles.calledOnce );
+
+			for (var i in new_cam.streams ) {
+				assert( new_cam.streams[i].recordModel.indexPendingFiles.calledOnce );
+			}
 		});
+		
 	});
 
 	
 	describe('addChunk', function() {
 		
-		var new_cam = new Camera( cam, videosFolder );
+		var new_cam = new Camera( cam_with_streams, videosFolder );
 
-		it('should call db.insertVideo with correct param', function() {
-			sinon.spy( new_cam.db, 'insertVideo' );
-			var chunk = {
-				cam: 'id',
-				start: 0,
-				end: 10,
-				file: 'chunk_file'
-			};
-			new_cam.addChunk( chunk );
-			assert(new_cam.db.insertVideo.calledOnce);
+		it('should call db.insertVideo with correct param on corresponding stream', function() {
+
+			for (var i in new_cam.streams) {
+				sinon.spy( new_cam.streams[i].db, 'insertVideo' );
+			}
 			
-			for (var d in chunk) {
-				console.log(chunk[d]);
-				assert.equal(new_cam.db.insertVideo.getCall(0).args[0][d], chunk[d]);
+			for (var stream_id in new_cam.streams) {
+
+				var chunk = {
+					start: 1,
+					end: 10,
+					file: 'chunk_file'
+				};
+
+				new_cam.addChunk( stream_id, chunk );
+				
+				assert( new_cam.streams[stream_id].db.insertVideo.calledOnce );
+			
+				for (var d in chunk) {
+					assert.equal(new_cam.streams[stream_id].db.insertVideo.getCall(0).args[0][d], chunk[d]);
+				}
 			}
 		});
 	});
 
 	
 	describe('deleteChunk', function() {
-		
+		/*
 		var fake_chunk = {id: 1, file: "fake_file"};
 
 		it('should call db.deleteVideo', function() {
@@ -135,11 +225,13 @@ describe('Camera', function(){
 				done();
 			});
 		});
+		*/
 	});
 
 
 	describe('getOldestChunks', function() {
 
+		/*
 		var new_cam = new Camera( cam, videosFolder );
 		var numChunks = 10;
 		
@@ -156,11 +248,12 @@ describe('Camera', function(){
 				done();
 			});
 		});
+		*/
 	});
 
 
 	describe('listeners', function() {
-
+	/*
 		var new_cam = new Camera( cam, videosFolder );
 
 		it('sould emit new_chunk with correct data on recordModel new_chunk event', function(done) {
@@ -183,6 +276,7 @@ describe('Camera', function(){
 			});			
 			new_cam.recordModel.emit('camera_status', fake_data);
 		});
+		*/
 
 	});
 

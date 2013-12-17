@@ -26,11 +26,11 @@ function RecordModel( camera, stream ) {
 	this.camera = camera;	
     this.camId = camera._id;
     this.rtsp = stream.rtsp || stream.url;	// supports different attribute names for rtsp 
-											// (we might want to change that)
+											// TODO: we might want to change that
 	this.stream = stream;	// corresponding stream
     this.db = stream.db;	// corresponding stream.db - for indexing
     
-	//    this.error = false;		// 
+	//    this.error = false;		// apparently not being used
 
     this.folder = "";		// stream folder - it's empty until we setup the folders
 
@@ -540,6 +540,7 @@ RecordModel.prototype.recordContinuously = function() {
 };
 // end of recordContinuously
 //
+
 
 module.exports = RecordModel;
 

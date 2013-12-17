@@ -1,9 +1,8 @@
-var Datastore = require('nedb');
-var Camera = require('./../models/camera_model');
-var EventEmitter = require('events').EventEmitter;
-var util = require('util');
+var Datastore = require('nedb');					// nedb datastore
+var Camera = require('./../models/camera_model');	// 
+var EventEmitter = require('events').EventEmitter;	// 
+var util = require('util');							// for inheritance
 
-//var db;
 var cameras = [];
 
 function CamerasController( mp4Handler, filename, videosFolder, cb ) {
