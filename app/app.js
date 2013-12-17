@@ -64,7 +64,6 @@ if ( process.argv.length > 2 ) {
 }
 // - - -
 
-
 // server.listen(process.env.PORT || 8080);
 server.listen( 8080 );
 
@@ -114,30 +113,16 @@ camerasController.on('camera_status', function( data ) {
 // end of socket.io broadcasts setup
 // - - -
 
-
+// - - - -
+// scheduler setup
 var Scheduler = require('./helpers/scheduler.js');
 var scheduler = new Scheduler(10000);
 setTimeout(function(){
     scheduler.launchForAllCameras(camerasController.getCameras());
 }, 10000);
 
-
-camerasController.on('create', function(camera) {
-    console.log("camera created calling launchForCamera on scheduler");
-    scheduler.launchForCamera(camera);
-});
-
-camerasController.on('delete', function(camera) {
-    console.log("camera deleted, removing scheduler");
-    scheduler.clearForCamera(camera);
-});
-
-camerasController.on('schedule_update', function(camera) {
-    console.log("camera scheduler updated, relaunching scheduler");
-    scheduler.clearForCamera(camera);
-    scheduler.launchForCamera(camera);
-});
-
+scheduler.setupListeners( camerasController );
+// - - -
 
 app.all('/*', function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -162,26 +147,23 @@ app.set('view engine', 'ejs');	// rendering engine (like erb)
 
 // - - -
 // main page
-app.get('/', function (req, res) {    
-    res.sendfile(__dirname + '/views/cameras.html');
-});
 // - - -
 
 
 // - - -
-//	health stats
-app.get('/health', function(req, res) {
+// API
+require('./api/cameras.js')( app, camerasController );			// cameras
 
+// usage: append subnet prefix in the form xxx.xxx.xxx
+require('./api/scanner.js')( app, '192.168.215' );				// scanner
+
+app.get('/health', function(req, res) {							// health
     res.sendfile(__dirname + '/views/health.html');
 });
-// - - -
 
-require('./api/cameras.js')(app, camerasController);
-
-// - - -
-// camera scanner
-// usage: append subnet prefix in the form xxx.xxx.xxx
-require('./helpers/camera_scanner/scanner.js')( app, '192.168.215' );
+app.get('/', function (req, res) {								// main page
+    res.sendfile(__dirname + '/views/cameras.html');			
+});
 // - - -
 
 

@@ -1,59 +1,9 @@
+var request = require('request');
 var onvif = require('./protocols/onvif.js');
 var psia = require('./protocols/psia.js');
-
-var request = require('request');
-
 var api = require( './cam_api/api.js').api;
+
 var camList = Object.keys( api );
-
-
-module.exports = function( app, prefix ) {
-	
-	app.get('/scan.json', function( req, res ) {
-		scan(prefix, function( camlist ) {
-			console.log('camera scanner: ');
-			console.log( camlist );
-			res.json( camlist );
-		});
-	});
-
-	app.get('/rtsp_url', function( req, res ) {
-		
-		var manufacturer = req.query.manufacturer;
-
-		var ip = req.query.ip;
-		var user = req.query.user;
-		var pass = req.query.pass;
-		
-		var resolution = req.query.res || '1280x960';
-		var framerate = req.query.fps || '30';
-		var quality = req.query.q || '5';
-		
-		if ( camList.indexOf( manufacturer ) > -1 ) {
-
-			var rtspUrl = require('./cam_api/'+api[manufacturer]).getRtspUrl({
-				ip: ip,
-				user: user,
-				password: pass
-			}, {
-				name: 'solink',
-				description: 'profile for solink vms',
-				resolution: resolution,
-				framerate: framerate
-			});
-
-			res.json( {
-				url: rtspUrl 
-			});
-		} else {
-			res.json({
-				error: 'unknown manufacturer'
-			});
-		}
-	});
-};
-
-
 
 var detectCamByHttpResponse = function( ip, response, cb ) {
 
@@ -200,3 +150,4 @@ var psiaScan = function( prefix, cb ) {
 
 
 
+module.exports.scan = scan;
