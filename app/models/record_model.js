@@ -253,9 +253,11 @@ RecordModel.prototype.startRecording = function() {
  *  
  */
 RecordModel.prototype.launchMonitor = function() {
+		
+	var self = this;
 
 	this.isRecordingIntervalId = setInterval( function() {
-		
+
 		var dt = Date.now() - self.lastChunkTime;	// interval since last chunk arrived
 
 		// thresholds: 
