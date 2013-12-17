@@ -85,16 +85,16 @@ CamerasController.prototype.checkSnapshotQ = function() {
 CamerasController.prototype.takeSnapshot = function( camId, req, res, cb ) {
 
 	var self = this;
-	
-	console.log("*** camerasController.takeSnapshot ");
-	var self = this;
 
     this.getCamera( camId, function(err, cam) {
 
-		var firstStreamId = Object.keys(cam.streams)[0];
+		var firstStreamId;
+
+		if (cam) {
+			firstStreamId = Object.keys(cam.streams)[0];
+		}
 
         if ( err || !cam || !cam.streams || !cam.streams[firstStreamId]) {
-			console.log("*** camerasController error");
             res.json( { error: err } );
 			if (cb) cb();
         } else {
