@@ -13,6 +13,8 @@ function Camera( cam, videosFolder ) {
 
     var self = this;
 
+    this.api = require('./cam_api/'+api[manufacturer]))
+
     this._id = cam._id;
 
 	if (cam.id) { 

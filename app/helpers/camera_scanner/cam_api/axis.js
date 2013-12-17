@@ -193,6 +193,29 @@ var getRtspUrl = function ( cam, profile ) {
 		.replace('{framerate}', profile.framerate);
 };
 
+
+var setMotionParams = function(params){
+	
+}
+
+var setupMotionDetection = function(cam){
+	// start tcp server if not already started
+	// on camera
+		// enable motion
+		// create a recipient
+		// create a notifier
+};
+
+var startListeningForMotionDetection = function(cam, cb){
+	//poll
+		//emit motion
+};
+
+var stopListeningForMotionDetection = function(){
+	//poll
+		//emit motion
+};
+
 exports.getRtspUrl = getRtspUrl;
 
 

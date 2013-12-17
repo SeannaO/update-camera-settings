@@ -24,6 +24,34 @@ var getRtspUrl = function ( cam, profile ) {
 		.replace('{framerate}', profile.framerate);
 };
 
+var setMotionParams = function(params){
+	// "/set?motiondetect=on"
+};
+
+var getMotionParams = function(){
+	
+};
+
+var isMotionEnabled = function(){
+
+};
+
+var setupMotionDetection = function(cam){
+	// check 
+	// enable motion detection
+
+};
+
+var startListeningForMotionDetection = function(cam, cb){
+	//poll
+		//emit motion
+};
+
+var stopListeningForMotionDetection = function(){
+	//poll
+		//emit motion
+};
+
 
 exports.getRtspUrl = getRtspUrl;
 
