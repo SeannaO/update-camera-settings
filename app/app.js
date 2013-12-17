@@ -6,10 +6,7 @@ var hlsHandler = require('./controllers/hls_controller');				// hls abstraction
 var mp4Handler = require('./controllers/mp4_controller');				// mp4 abstraction
 var CamerasController = require('./controllers/cameras_controller');	// cameras controller								
 var fs = require('fs');													// for sending files
-var path = require('path');												// for parsing path urls
 var lifeline = require('./helpers/lifeline_api.js');					// api layer for lifeline app
-var request = require('request');										// for making requests to lifeline app
-var CamHelper = require('./helpers/cameras_helper.js');					// abstraction for start/stop recordings
 var DiskSpaceAgent = require('./helpers/diskSpaceAgent.js');			// agent that periodically checks disk space
 
 
@@ -67,13 +64,25 @@ if ( process.argv.length > 2 ) {
 // server.listen(process.env.PORT || 8080);
 server.listen( 8080 );
 
-//var folder = '/Users/manuel/solink/nas/cameras';
+// instantiates camerasController, launching all cameras
 var camerasController = new CamerasController( mp4Handler, __dirname + '/db/cam_db', baseFolder);
 
 
-// middleware for parsing request body contents
-// this must come before app.all
-app.use(express.bodyParser());  
+// - - - -
+// express config
+app.use(express.bodyParser());  // middleware for parsing request body contents
+								// this must come before app.all
+
+app.all('/*', function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With");
+  next();
+});
+
+app.use(express.cookieParser());				// cookies middleware
+app.use(express.session({secret: 'solink'}));	// for session storage
+app.set('view engine', 'ejs');					// rendering engine (like erb)
+// - - -
 
 
 // - - - - -
@@ -113,6 +122,7 @@ camerasController.on('camera_status', function( data ) {
 // end of socket.io broadcasts setup
 // - - -
 
+
 // - - - -
 // scheduler setup
 var Scheduler = require('./helpers/scheduler.js');
@@ -124,15 +134,6 @@ setTimeout(function(){
 scheduler.setupListeners( camerasController );
 // - - -
 
-app.all('/*', function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "X-Requested-With");
-  next();
-});
-//
-
-app.use(express.cookieParser());				// cookies middleware
-app.use(express.session({secret: 'solink'}));	// for session storage
 
 // - - -
 // static files
@@ -140,13 +141,6 @@ app.use('/css', express.static(__dirname + '/assets/css'));
 app.use('/js', express.static(__dirname + '/assets/js'));
 app.use('/img', express.static(__dirname + '/assets/img'));
 // end of static files
-// - - -
-
-app.set('view engine', 'ejs');	// rendering engine (like erb)
-
-
-// - - -
-// main page
 // - - -
 
 
@@ -164,6 +158,11 @@ app.get('/health', function(req, res) {							// health
 app.get('/', function (req, res) {								// main page
     res.sendfile(__dirname + '/views/cameras.html');			
 });
+app.get('/cameras', function(req, res) {
+	res.sendfile(__dirname + '/views/cameras.html');			// main page - alternative route
+});
+// - - -
+
 // - - -
 
 
@@ -183,7 +182,6 @@ app.get('/ts/:id/:file', function(req, res) {
 //	gets hls live stream
 //	TODO: not yet implemented
 app.get('/live', function(req, res) {
-
     hlsHandler.generateLivePlaylist( db, req, res );       
 });
 // - - -
@@ -192,8 +190,7 @@ app.get('/live', function(req, res) {
 // - - -
 // multicam mockup 
 // TODO: create a real multicam page
-app.get('/multiview', function(req, res) {
-    
+app.get('/multiview', function(req, res) {    
 	res.sendfile(__dirname + '/views/multi.html');
 });
 // - - -
@@ -202,9 +199,7 @@ app.get('/multiview', function(req, res) {
 /////////////////////
 /// lifeline  api ///
 ////////////////////
-
 lifeline.setup( app, camerasController, mp4Handler, hlsHandler );
-
 ////////////////////
 
 

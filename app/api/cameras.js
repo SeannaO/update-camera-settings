@@ -3,12 +3,6 @@ var fs = require('fs');													// for sending files
 
 module.exports = function( app, camerasController ) {
 
-	// - - -
-	// renders main cameras page
-	app.get('/cameras', function(req, res) {
-		res.sendfile(__dirname + '/views/cameras.html');
-	});
-	// - - -
 
 	// - - -
 	// gets json list of cameras
