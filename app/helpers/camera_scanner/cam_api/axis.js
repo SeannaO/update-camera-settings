@@ -13,13 +13,12 @@ var listAllParamsUrl = baseUrl + 'list';
 
 
 var Axis = function() {
+	console.log("[Axis] initializing API...");	
 	this.cam = {};
 };
 
 
 Axis.prototype.checkForExistingProfile = function( profileName, cb ) {
-
-	console.log("[Axis] initializing API...");
 
 	var self = this;
 
@@ -92,6 +91,8 @@ Axis.prototype.isProfileH264 = function( profileId, cb ){
 
 
 Axis.prototype.createNewProfile = function( profile, cb ) {
+	
+	var self = this;
 
 	var url = createProfileUrl
 		.replace('{user}', self.cam.user)
@@ -109,7 +110,7 @@ Axis.prototype.createNewProfile = function( profile, cb ) {
 			if (profileId && profileId.length <= 0) {
 				if (cb) cb(-1);
 			} else if(profileId){
-				updateProfile( self.cam, profileId[0], profile, function(id) {
+				self.updateProfile( self.cam, profileId[0], profile, function(id) {
 					cb(id);
 				});
 			} else {
@@ -122,6 +123,8 @@ Axis.prototype.createNewProfile = function( profile, cb ) {
 
 
 Axis.prototype.updateProfile = function(profileId, profile, cb) {
+
+	var self = this;
 
 	var id = parseInt( profileId.substr(1, profileId.length) );
 
@@ -207,6 +210,8 @@ Axis.prototype.getRtspUrl = function ( profile ) {
 
 Axis.prototype.setCameraParams = function(params) {
 	
+	console.log("[Axis] Updating camera params");
+	console.log( params );
 	this.cam.ip = params.ip || this.cam.ip;
 	this.cam.user = params.user || params.username || this.cam.user;
 	this.cam.password = params.password || this.cam.password;

@@ -59,7 +59,7 @@ function Camera( cam, videosFolder ) {
 		for (var i in cam.streams) {
 			self.addStream( cam.streams[i] );
 		}
-		
+	
 		this.setupEvents();
 
 		if (!this.recording && this.shouldBeRecording()) {
@@ -136,6 +136,13 @@ Camera.prototype.updateAllStreams = function( new_streams ) {
 
 	var self = this;
 
+	this.api.setCameraParams({
+		ip: self.ip,
+		password: self.password,
+		username: self.username
+	});
+
+	
 	for ( var s in new_streams ) {
 		var stream = new_streams[s];
 
@@ -275,10 +282,6 @@ Camera.prototype.restartStream = function( streamId ) {
 	
 	// refreshes rtsp url
 	stream.url = self.api.getRtspUrl({
-		manufacturer: self.manufacturer,
-		ip: self.ip,
-		user: self.username,
-		password: self.password,
 		resolution: stream.resolution,
 		framerate: stream.framerate,
 		quality: stream.quality
@@ -286,7 +289,7 @@ Camera.prototype.restartStream = function( streamId ) {
 	
 	self.streams[streamId].recordModel = new RecordModel( self, stream );
 
-	if ( self.shouldBeRecording ) {
+	if ( self.shouldBeRecording() ) {
 		self.streams[streamId].recordModel.startRecording();
 	}
 };
