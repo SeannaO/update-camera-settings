@@ -1,7 +1,7 @@
 var request = require('request');
 var onvif = require('./protocols/onvif.js');
 var psia = require('./protocols/psia.js');
-var api = require( './cam_api/api.js').api;
+var api = require( './cam_api/api.js').api_list;
 
 var camList = Object.keys( api );
 

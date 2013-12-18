@@ -13,7 +13,6 @@ var listAllParamsUrl = baseUrl + 'list';
 
 
 var Axis = function() {
-	this.cam = {};
 };
 
 
@@ -176,20 +175,20 @@ Axis.prototype.getRtspUrl = function ( profile ) {
 
 	console.log('[Axis.getRtspUrl] checking for existing profiles');
 
-	self.checkForExistingProfile( profile.name, function( profileId ) {
+	checkForExistingProfile( cam, profile.name, function( profileId ) {
 		console.log('[Axis.getRtspUrl] profile id: ' + profileId);
 		if (profileId > -1) {
-			self.isProfileH264(profileId, function(isH264) {
+			isProfileH264(cam, profileId, function(isH264) {
 				if (!isH264) {
 					console.log('[Axis.getRtspUrl] profile is not h264; I will change that');
-					self.updateProfile( profileId, profile, function(id) {
+					updateProfile( cam, profileId, profile, function(id) {
 						console.log('[Axis.getRtspUrl] now this profile is h264');
 					});
 				} 
 			});
 		} else {
 			console.log('[Axis.getRtspUrl] the camera does not have our profile yet. I will create a new one');
-			self.createNewProfile( profile, function(id) {
+			self.createNewProfile( self.cam, profile, function(id) {
 				console.log('[Axis.getRtspUrl] new profile created');
 			});
 		}
@@ -242,6 +241,7 @@ Axis.prototype.stopListeningForMotionDetection = function(){
 
 
 module.exports = Axis;
+
 
 
 

@@ -11,7 +11,12 @@ function Arecont( cam ){
 
 Arecont.prototype.getRtspUrl = function (profile ) {
 	
-	if (!profile) return;
+	var self = this;
+
+	if (!profile) {
+		console.log("[Arecont] ERROR - empty profile");
+		return;
+	}
 	
 	var dimensions = profile.resolution.split('x');
 	var width = dimensions[0];
@@ -39,6 +44,14 @@ Arecont.prototype.cameraUrl = function () {
 		.replace('{ip}', this.ip);
 };
 
+Arecont.prototype.setCameraParams = function(params) {
+	
+	this.ip = params.ip;
+	this.username = params.user || params.username;
+	this.password = params.password;
+
+};
+
 Arecont.prototype.setMotionParams = function(params){
 	var urlParams= [];
 	if (params.enabled){
@@ -51,11 +64,14 @@ Arecont.prototype.setMotionParams = function(params){
 		urlParams.push("mdsensitivity=" + params.sensitivity );
 	}
 
-	var url = this.cameraUrl() + "/get?" + urlParams.join("&");
+	var url = this.cameraUrl() + "/set?" + urlParams.join("&");
+	var digest = new Buffer(this.username + ":" + this.password).toString('base64');
 	request({ 
 		url: url,
 		headers: {
-			'User-Agent': 'nodejs'
+			'User-Agent': 'nodejs',
+			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+			'Authorization': 'Basic ' + digest
 		},
 	}, function( error, response, body) {
 			if (!error && body) {
@@ -67,7 +83,7 @@ Arecont.prototype.setMotionParams = function(params){
 	);
 };
 
-Arecont.prototype.getParam = function(name){
+Arecont.prototype.getParam = function(name, cb){
 	var value = "";
 	var self = this;
 	var digest = new Buffer(this.username + ":" + this.password).toString('base64');
@@ -81,9 +97,12 @@ Arecont.prototype.getParam = function(name){
 	}, function( error, response, body) {
 		
 			if (!error && body) {
+				// console.log(body);
 				var ele = body.toString().split("=");
+
 				value = ele[1];
-				return value;
+				// console.log(value);
+				cb(value);
 			}else{
 
 			}
@@ -92,41 +111,41 @@ Arecont.prototype.getParam = function(name){
 	
 };
 
-Arecont.prototype.getMotionParams = function(){
-
-	return {
-		enabled: this.isMotionEnabled(),
-		threshold: parseInt(this.getParam("mdlevelthreshold")), 
-		sensitivity: parseInt(this.getParam("mdsensitivity"))};
+Arecont.prototype.getMotionParams = function(cb){
+	this.getParam("mdlevelthreshold",function(threshold){
+		this.getParam("mdsensitivity",function(sensitivity){
+			this.isMotionEnabled(function(enabled){
+				cb({enabled: enabled, threshold: parseInt(threshold), sensitivity: parseInt(sensitivity)})
+			});
+		});
+	});
 };
 
-Arecont.prototype.isMotionEnabled = function(){
-	return this.getParam("motiondetect") == "on" ? true : false
+Arecont.prototype.isMotionEnabled = function(cb){
+	this.getParam("motiondetect",function(value){
+		cb(value == "on" ? true : false);
+	});
 };
 
 Arecont.prototype.setupMotionDetection = function(){
-	if (!isMotionEnabled()){
-		setMotionParams({enabled: true})
-	}
-
+	setMotionParams({enabled: true});
 };
 
 Arecont.prototype.startListeningForMotionDetection = function(cb){
 	var self = this;
 	console.log(self.cameraUrl() + "/get?" + 'mdresult');
 	self.process_id = setInterval(function(){
-		result = self.getParam('mdresult');
-		if (result !== 'no motion'){
-			cb();
-		}
+		self.getParam('mdresult',function(result){
+			console.log(result);
+			if (result !== 'no motion'){
+				cb(result);
+			}
+		});
 	},100);
 };
 
 Arecont.prototype.stopListeningForMotionDetection = function(){
 		clearInterval(this.process_id);
 };
-
-
-// exports.getRtspUrl = getRtspUrl;
 
 module.exports = Arecont;

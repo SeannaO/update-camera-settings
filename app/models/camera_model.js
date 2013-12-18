@@ -4,7 +4,6 @@ var RecordModel = require('./record_model');					// recorder
 var Dblite = require('../db_layers/dblite.js');					// sqlite layer
 var util = require('util');										// for inheritance
 var EventEmitter = require('events').EventEmitter;				// events
-var rtspUrl = require('../helpers/camera_scanner/rtsp.js');		// rtsp generator
 
 
 function Camera( cam, videosFolder ) {
@@ -12,8 +11,6 @@ function Camera( cam, videosFolder ) {
 	console.log("initializing camera " + cam._id);
 
     var self = this;
-
-    this.api = require('./cam_api/'+api[manufacturer]))
 
     this._id = cam._id;
 
@@ -39,6 +36,15 @@ function Camera( cam, videosFolder ) {
 	this.recording = false;					// is the camera recording?
     this.enabled = cam.enabled;				// is the camera enabled?
 	
+
+	this.api = require('../helpers/camera_scanner/cam_api/api.js').getApi( this.manufacturer );
+
+	this.api.setCameraParams({
+		ip: this.ip,
+		password: this.password,
+		username: this.username
+	});
+
 
 	if ( !cam.deleted ) {	// starts camera if it's not being deleted					
 		this.schedule = new WeeklySchedule(cam.schedule);
@@ -96,7 +102,7 @@ Camera.prototype.addStream = function( stream ) {
 
 	stream.db = new Dblite( this.videosFolder + '/db_'+stream.id+'.sqlite' );
 	
-	stream.url = rtspUrl({
+	stream.url = this.api.getRtspUrl({
 		manufacturer: self.manufacturer,
 		ip: self.ip,
 		user: self.username,
@@ -268,7 +274,7 @@ Camera.prototype.restartStream = function( streamId ) {
 	delete self.streams[streamId].recordModel;
 	
 	// refreshes rtsp url
-	stream.url = rtspUrl({
+	stream.url = self.api.getRtspUrl({
 		manufacturer: self.manufacturer,
 		ip: self.ip,
 		user: self.username,
