@@ -83,16 +83,16 @@ Arecont.prototype.setMotionParams = function(params, cb){
 	}
 	if (params.threshold){
 		var range = this.getThresholdRange();
-		if (threshold > range.max && threshold < range.min){
+		if (params.threshold > range.max && params.threshold < range.min){
 			console.log("Error: threshold is out of range.")
 		}else{
 			urlParams.push("mdlevelthreshold=" + params.threshold );
 		}
 	}
 	if (params.sensitivity){
-		var range = this.getThresholdRange();
-		if (threshold > range.max && threshold < range.min){
-			console.log("Error: threshold is out of range.")
+		var range = this.getSensitivityRange();
+		if (params.sensitivity > range.max && params.sensitivity < range.min){
+			console.log("Error: sensitivity is out of range.")
 		}else{
 			urlParams.push("mdsensitivity=" + params.sensitivity );
 		}
