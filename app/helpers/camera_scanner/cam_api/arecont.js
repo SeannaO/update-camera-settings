@@ -4,9 +4,12 @@ var baseUrl = 'http://{user}:{pass}@{ip}';
 var rtspUrl = 'rtsp://{user}:{pass}@{ip}/h264.sdp?res={resolution}&fps={framerate}';
 
 function Arecont( cam ){
-	this.username = cam.username;
-	this.password = cam.password;
-	this.ip = cam.ip;
+	if (cam){
+		this.username = cam.username;
+		this.password = cam.password;
+		this.ip = cam.ip;		
+	}
+
 };
 
 Arecont.prototype.getRtspUrl = function (profile ) {
@@ -52,7 +55,7 @@ Arecont.prototype.setCameraParams = function(params) {
 
 };
 
-Arecont.prototype.setMotionParams = function(params){
+Arecont.prototype.setMotionParams = function(params, cb){
 	var urlParams= [];
 	if (params.enabled){
 		urlParams.push("motiondetect=" + (params.enabled ? "on" : "off") );
@@ -74,11 +77,7 @@ Arecont.prototype.setMotionParams = function(params){
 			'Authorization': 'Basic ' + digest
 		},
 	}, function( error, response, body) {
-			if (!error && body) {
-
-			}else{
-
-			}
+				cb(error, body);
 		}
 	);
 };
@@ -112,9 +111,10 @@ Arecont.prototype.getParam = function(name, cb){
 };
 
 Arecont.prototype.getMotionParams = function(cb){
-	this.getParam("mdlevelthreshold",function(threshold){
-		this.getParam("mdsensitivity",function(sensitivity){
-			this.isMotionEnabled(function(enabled){
+	var self = this;
+	self.getParam("mdlevelthreshold",function(threshold){
+		self.getParam("mdsensitivity",function(sensitivity){
+			self.isMotionEnabled(function(enabled){
 				cb({enabled: enabled, threshold: parseInt(threshold), sensitivity: parseInt(sensitivity)})
 			});
 		});

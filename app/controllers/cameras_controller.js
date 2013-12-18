@@ -181,6 +181,22 @@ CamerasController.prototype.getCamera = function(camId, cb) {
     });
 };
 
+CamerasController.prototype.getMotion = function(camId, cb) {
+
+    var self = this;
+
+	this.getCamera( camId, function(err, cam) {
+		if (err || !cam || cam.length === 0) {
+			cb( err, null );
+		} else {
+			console.log(cam);
+			cam.api.getMotionParams(function(motion_params){
+				cb( err, motion_params );
+			});
+		}
+	});
+};
+
 
 CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_ids_list ) {
 	
@@ -519,6 +535,28 @@ CamerasController.prototype.updateCameraSchedule = function(params, cb) {
         }
     });   
 
+};
+
+
+CamerasController.prototype.updateCameraMotion = function(params, cb) {
+
+    console.log("*** updating camera motion:" );
+    console.log(params);
+    var self = this;
+    var camera = this.findCameraById( params._id );
+    
+	if (!camera) {
+        cb("{error: 'camera not found'}");
+        return;
+    }
+	
+	camera.api.setMotionParams(params.camera.motion, function(error, body){
+		if (!error && body) {
+			self.emit("motion_update", {camera: camera.cam, motion: params.camera.motion});
+		}else{
+			console.log(error);
+		}
+	}); 
 };
 
 

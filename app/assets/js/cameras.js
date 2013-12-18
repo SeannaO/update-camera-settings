@@ -150,6 +150,7 @@ var addCameraItem = function( camera ) {
 	var menuHtml = "" +
 				"<a href = \"javascript:editCamera('" + camera._id + "')\">[ edit ]</a> | " +
                 "<a href = \"javascript:cameraSchedule('" + camera._id + "')\">[ schedule ]</a> | " +
+                "<a href = \"javascript:cameraMotion('" + camera._id + "')\">[ motion ]</a> | " +
 				"<a href = \"javascript:deleteCamera('" + camera._id + "')\">[ remove ]</a>";
    
 	$("<div>", {
@@ -169,7 +170,7 @@ var addCameraItem = function( camera ) {
 
 	switchHtml = '' +
 		'<input type="checkbox" id="switch-'+camera._id+'" name="switch-'+camera._id+'" class="switch" value="1"/>' +
-		'<label for="switch-'+camera._id+'">on/off</label>';
+		'<label for="switch-'+camera._id+'">off/on</label>';
 
 	$("<div>", {
 		class: "camera-item-switch",
@@ -292,6 +293,21 @@ var updateSchedule = function(id, cb) {
     $.ajax({
         type: "PUT",
         url: "/cameras/" + id + "/schedule",
+        data: JSON.stringify( params ),
+        contentType: 'application/json',
+        success: function(data) {
+            cb( data );
+        }
+    });
+};
+
+var updateMotion = function(id, cb) {
+
+    var params = $('#camera-motion').serializeObject();
+	console.log( params );
+    $.ajax({
+        type: "PUT",
+        url: "/cameras/" + id + "/motion",
         data: JSON.stringify( params ),
         contentType: 'application/json',
         success: function(data) {
@@ -618,7 +634,7 @@ var cameraSchedule = function(camId) {
 
     $.ajax({
         type: "GET",
-        url: "/cameras/" + camId + "/schedule/json",
+        url: "/cameras/" + camId + "/schedule.json",
         contentType: 'application/json',
         success: function(data) {
             console.log(data);
@@ -640,10 +656,10 @@ var cameraSchedule = function(camId) {
 					$('#schedule-'+day+'-close').timepicker('setTime',   to12HourTime(data.schedule[d].close.hour)   + ":" + data.schedule[d].close.minutes + meridian(data.schedule[0].close.hour));
 				}
 
-                if (data.schedule_enabled === "0"){
-                    $('#camera-schedule-dialog .form-control').prop('disabled', true);
-                }else{
+                if (data.schedule_enabled){
                     $('#camera-schedule-dialog .form-control').prop('disabled', false);
+                }else{
+                	$('#camera-schedule-dialog .form-control').prop('disabled', true);
                 }
 
 
@@ -658,6 +674,43 @@ var cameraSchedule = function(camId) {
                     });
                 });
                 $("#camera-schedule-dialog").modal('show');
+            } else {
+                
+            }
+        }
+    });
+};
+
+
+var cameraMotion = function(camId) {
+
+    $.ajax({
+        type: "GET",
+        url: "/cameras/" + camId + "/motion.json",
+        contentType: 'application/json',
+        success: function(data) {
+            console.log(data);
+            if (data.success) {
+                $('#camera-motion-enable').prop('checked', data.motion_enabled == "1").change( function() {
+
+                    if ( $(this).is(':checked') ) {
+                        $('#camera-motion-dialog .form-control').prop('disabled', false);
+                    } else {
+                        $('#camera-motion-dialog .form-control').prop('disabled', true);
+                    }
+                });
+
+                $("#update-motion").unbind();
+                $("#update-motion").click( function() {
+                    updateMotion( camId, function(data) {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert(data.error);
+                        }
+                    });
+                });
+                $("#camera-motion-dialog").modal('show');
             } else {
                 
             }

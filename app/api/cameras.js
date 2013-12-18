@@ -117,6 +117,19 @@ module.exports = function( app, camerasController ) {
 		});
 	});
 
+	app.put('/cameras/:id/motion', function(req, res) {
+		var params = req.body;
+		params._id = req.params.id;
+		camerasController.updateCameraMotion(params, function(err) {
+			if (err) {
+				console.log( err ) ;
+				res.json({success: false, error: err});
+			} else {
+				res.json({success: true});
+			}
+		});
+	});
+
 	// - - -
 	// delete camera
 	// TODO: delete camera on lifeline app
@@ -138,7 +151,7 @@ module.exports = function( app, camerasController ) {
 
 	// - - 
 	// 
-	app.get('/cameras/:id/schedule/json', function(req, res) {
+	app.get('/cameras/:id/schedule.json', function(req, res) {
 		var camId = req.params.id;
 
 		camerasController.getCamera( camId, function(err, cam) {
@@ -147,6 +160,23 @@ module.exports = function( app, camerasController ) {
 			} else {
 				console.log(cam);
 				res.json({ success: true, schedule_enabled: cam.schedule_enabled, schedule: cam.schedule.toJSON() });
+			}
+		});
+	});
+	// - - -
+
+
+		// - - 
+	// 
+	app.get('/cameras/:id/motion.json', function(req, res) {
+		var camId = req.params.id;
+
+		camerasController.getMotion( camId, function(err, motion_params) {
+			if (err || !motion_params || motion_params.length === 0) {
+				res.json({ success: false, error: err });
+			} else {
+				console.log(motion_params);
+				res.json({ success: true, camera: {motion: motion_params}});
 			}
 		});
 	});
