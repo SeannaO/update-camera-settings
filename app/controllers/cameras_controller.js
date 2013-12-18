@@ -375,6 +375,8 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
     var self = this;
 
+	console.log(cam);
+
     cam.schedule_enabled = false;
     cam.enabled = false
     cam.schedule = {"sunday":{"open":0,"close":"12:00 PM"},"monday":{"open":0,"close":"12:00 PM"},"tuesday":{"open":0,"close":"12:00 PM"},"wednesday":{"open":0,"close":"12:00 PM"},"thursday":{"open":0,"close":"12:00 PM"},"friday":{"open":0,"close":"12:00 PM"},"saturday":{"open":0,"close":"12:00 PM"}};
@@ -466,8 +468,8 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
         $set: { 
             name: cam.name							|| camera.name, 
             manufacturer: cam.manufacturer			|| camera.manufacturer, 
-            ip_address: cam.ip_address || cam.ip	|| camera.ip,
-			id:cam.id								|| camera.id,
+            ip: 		cam.ip						|| camera.ip,
+			id: cam.id								|| camera.id,
             username: cam.username					|| camera.username,
             password: cam.password					|| camera.password,
             streams: streamsHash
@@ -480,9 +482,6 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
         } else {
 
             self.db.loadDatabase();
-
-			console.log("&&&&&&&");
-			console.log( cam );
 
             camera.cam.name = cam.name;
 			camera.cam.id = cam.id;

@@ -45,7 +45,12 @@ function Camera( cam, videosFolder ) {
 		username: this.username
 	});
 
-
+	// motion detection test -- TESTS ONLY
+	self.setMotionDetection( function() {
+		self.startMotionDetection();
+	});
+	//
+	
 	if ( !cam.deleted ) {	// starts camera if it's not being deleted					
 		this.schedule = new WeeklySchedule(cam.schedule);
 		this.schedule_enabled = cam.enableSchedule;
@@ -118,6 +123,41 @@ Camera.prototype.addStream = function( stream ) {
 };
 // end of addStream
 //
+
+
+Camera.prototype.setMotionDetection = function( cb ) {
+	
+	var motionParams = {
+		enabled: true,
+		threshold: 10,
+		sensitivity: 80
+	};
+
+	this.api.setMotionParams( motionParams, function( err, body ) {
+		if (cb) cb();
+	});
+};
+
+
+Camera.prototype.startMotionDetection = function() {
+	
+	var self = this;
+
+	this.api.startListeningForMotionDetection( function() {
+
+		// console.log("* * * motion " + Date.now() + " * * * " + self.manufacturer);
+		
+		if ( !self.recording ) {
+			self.startRecording();
+			if (self.stopRecordingTimeout) {
+				clearInterval( self.stopRecordingTimeout );
+			}
+			self.stopRecordingTimeout = setTimeout (function() {
+				self.stopRecording();
+			},30000);
+		}
+	});
+};
 
 
 /**
@@ -633,7 +673,7 @@ Camera.prototype.startRecording = function() {
 		this.enabled = true;		
     }
 };
-// enf od startRecording
+// end of startRecording
 //
 
 

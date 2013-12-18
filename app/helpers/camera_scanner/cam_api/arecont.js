@@ -53,11 +53,10 @@ Arecont.prototype.setCameraParams = function(params) {
 	this.ip = params.ip 							|| this.ip;
 	this.username = params.username || params.user 	|| this.username;
 	this.password = params.password 				|| this.password;
-
-	console.log( params );
 };
 
 Arecont.prototype.setMotionParams = function(params, cb){
+
 	var urlParams= [];
 	if (params.enabled){
 		urlParams.push("motiondetect=" + (params.enabled ? "on" : "off") );
@@ -98,6 +97,7 @@ Arecont.prototype.getParam = function(name, cb){
 	}, function( error, response, body) {
 		
 			if (!error && body) {
+//				console.log(body.toString());
 				// console.log(body);
 				var ele = body.toString().split("=");
 
@@ -135,11 +135,13 @@ Arecont.prototype.setupMotionDetection = function(){
 
 Arecont.prototype.startListeningForMotionDetection = function(cb){
 	var self = this;
+	
 	console.log(self.cameraUrl() + "/get?" + 'mdresult');
+	
 	self.process_id = setInterval(function(){
 		self.getParam('mdresult',function(result){
-			console.log(result);
-			if (result !== 'no motion'){
+			
+			if (result && result !== 'no motion'){
 				cb(result);
 			}
 		});
