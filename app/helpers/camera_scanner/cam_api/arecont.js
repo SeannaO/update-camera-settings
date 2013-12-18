@@ -4,16 +4,16 @@ var baseUrl = 'http://{user}:{pass}@{ip}';
 var rtspUrl = 'rtsp://{user}:{pass}@{ip}/h264.sdp?res={resolution}&fps={framerate}';
 
 function Arecont( cam ){
-	if (cam){
+
+	if (cam) {
 		this.username = cam.username;
 		this.password = cam.password;
-		this.ip = cam.ip;		
+		this.ip = cam.ip;
 	}
-
-};
+}
 
 Arecont.prototype.getRtspUrl = function (profile ) {
-	
+
 	var self = this;
 
 	if (!profile) {
@@ -47,12 +47,14 @@ Arecont.prototype.cameraUrl = function () {
 		.replace('{ip}', this.ip);
 };
 
+
 Arecont.prototype.setCameraParams = function(params) {
 	
-	this.ip = params.ip;
-	this.username = params.user || params.username;
-	this.password = params.password;
+	this.ip = params.ip 							|| this.ip;
+	this.username = params.username || params.user 	|| this.username;
+	this.password = params.password 				|| this.password;
 
+	console.log( params );
 };
 
 Arecont.prototype.setMotionParams = function(params, cb){
@@ -121,7 +123,7 @@ Arecont.prototype.getMotionParams = function(cb){
 	});
 };
 
-Arecont.prototype.isMotionEnabled = function(cb){
+Arecont.prototype.isMotionEnabled = function(cb) {
 	this.getParam("motiondetect",function(value){
 		cb(value == "on" ? true : false);
 	});

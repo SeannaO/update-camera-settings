@@ -94,7 +94,7 @@ util.inherits(Camera, EventEmitter);
  */
 Camera.prototype.addStream = function( stream ) {
 
-	console.log('*** addStream');
+	console.log('[Camera.prototype.addStream] ');
 	console.log(stream);
 	console.log('* * *');
 
@@ -103,10 +103,6 @@ Camera.prototype.addStream = function( stream ) {
 	stream.db = new Dblite( this.videosFolder + '/db_'+stream.id+'.sqlite' );
 	
 	stream.url = this.api.getRtspUrl({
-		manufacturer: self.manufacturer,
-		ip: self.ip,
-		user: self.username,
-		password: self.password,
 		resolution: stream.resolution,
 		framerate: stream.framerate,
 		quality: stream.quality
@@ -248,8 +244,15 @@ Camera.prototype.updateStream = function( stream ) {
  */
 Camera.prototype.restartAllStreams = function() {
 	
+	
 	var self = this;
 
+	this.api.setCameraParams({
+		ip: self.ip,
+		password: self.password,
+		username: self.username
+	});
+	
 	for (var i in self.streams) {
 		self.restartStream(i);
 	}
@@ -281,13 +284,14 @@ Camera.prototype.restartStream = function( streamId ) {
 	delete self.streams[streamId].recordModel;
 	
 	// refreshes rtsp url
-	stream.url = self.api.getRtspUrl({
+	self.streams[streamId].rtsp = self.streams[streamId].url = self.api.getRtspUrl({
 		resolution: stream.resolution,
 		framerate: stream.framerate,
 		quality: stream.quality
 	});
+	console.log("#### url: " + self.streams[streamId].url );
 	
-	self.streams[streamId].recordModel = new RecordModel( self, stream );
+	self.streams[streamId].recordModel = new RecordModel( self, self.streams[streamId] );
 
 	if ( self.shouldBeRecording() ) {
 		self.streams[streamId].recordModel.startRecording();
