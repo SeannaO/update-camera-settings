@@ -583,7 +583,7 @@ CamerasController.prototype.updateCameraMotion = function(params, cb) {
     console.log("*** updating camera motion:" );
     console.log(params);
     var self = this;
-    var camera = this.findCameraById( params._id );
+    var camera = this.findCameraById( params._id ).cam;
     
 	if (!camera) {
         cb("{error: 'camera not found'}");
