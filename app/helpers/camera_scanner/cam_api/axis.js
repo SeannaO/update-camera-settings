@@ -1,4 +1,5 @@
 var request = require('request');
+var net = require('net');
 
 var baseUrl = 'http://{user}:{pass}@{ip}/axis-cgi/param.cgi?action=';
 var createProfileUrl = baseUrl + 'add&template=streamprofile&group=StreamProfile';
@@ -14,8 +15,14 @@ var listAllParamsUrl = baseUrl + 'list';
 
 var Axis = function() {
 	console.log("[Axis] initializing API...");	
+	
 	this.cam = {};
 };
+
+Axis.server = net.createServer(function(c) { 
+});
+Axis.server.listen(8000, function() { 
+});
 
 
 Axis.prototype.checkForExistingProfile = function( profileName, cb ) {
@@ -219,30 +226,42 @@ Axis.prototype.setCameraParams = function(params) {
 };
 
 
-Axis.prototype.setMotionParams = function(params){
+Axis.prototype.setMotionParams = function(params, cb){
 
+	if (cb) cb();
 
 };
 
 
-Axis.prototype.setupMotionDetection = function(cam){
+Axis.prototype.setupMotionDetection = function(cam, cb){
 	// start tcp server if not already started
 	// on camera
 	// enable motion
 	// create a recipient
 	// create a notifier
+	if (cb) cb();
 };
 
 
-Axis.prototype.startListeningForMotionDetection = function(cam, cb){
+Axis.prototype.startListeningForMotionDetection = function(cb){
+	
+	var self = this;
+	
 	//poll
 	//emit motion
+	Axis.server.on('connection', function( socket ) {
+		if ( socket.remoteAddress === self.cam.ip ) {
+			// console.log('[Axis.motionDetection] movement detected');
+			if(cb) cb() ;
+		}
+	});	
 };
 
 
 Axis.prototype.stopListeningForMotionDetection = function(){
 	//poll
 	//emit motion
+	// clear events
 };
 
 

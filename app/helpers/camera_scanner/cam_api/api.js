@@ -8,14 +8,19 @@ exports.api_list = api_list;
 
 exports.getApi = function( manufacturer ) {
 	
-	manufacturer = manufacturer.toLowerCase();
+	if (manufacturer) {
+		manufacturer = manufacturer.toLowerCase();
+	} else {
+	//	manufacturer = 'generic';
+		console.log("[api.getApi] ERROR - empty manufacturer");
+	}
 	
 	var api;
 
 	if ( api_list[ manufacturer ] ){
 		api = require( './' + api_list[ manufacturer ] );
 	} else {
-		api = require( './generic.js' );
+		api = require( './axis.js' );
 	}
 
 	return ( new api() );
