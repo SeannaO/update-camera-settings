@@ -81,6 +81,22 @@ CamerasController.prototype.checkSnapshotQ = function() {
 };
 
 
+CamerasController.prototype.getCameraOptions = function(params, cb){
+    var self = this;
+    var camId = params._id;
+    console.log(params);
+	this.getCamera( camId, function(err, cam) {
+		
+		if (err || !cam || cam.length === 0) {
+			cb( err, null );
+		} else {
+			console.log(cam.api);
+			console.log({ framerate_range: cam.api.getFrameRateRange(), resolutions: cam.api.getResolutionOptions(), quality_range: cam.api.getVideoQualityRange()});
+			cb( err, { framerate_range: cam.api.getFrameRateRange(), resolutions: cam.api.getResolutionOptions(), quality_range: cam.api.getVideoQualityRange()});
+		}
+	});
+};
+
 // TODO: specify a stream
 CamerasController.prototype.takeSnapshot = function( camId, req, res, cb ) {
 

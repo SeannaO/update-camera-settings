@@ -47,6 +47,26 @@ Arecont.prototype.cameraUrl = function () {
 		.replace('{ip}', this.ip);
 };
 
+Arecont.prototype.getResolutionOptions = function () {
+	return ['full','half'];
+};
+
+Arecont.prototype.getFrameRateRange = function () {
+	return {min: 1, max: 30};
+};
+
+Arecont.prototype.getThresholdRange = function () {
+	return {min: 2, max: 31};
+};
+
+Arecont.prototype.getVideoQualityRange = function () {
+	return {min: 1, max: 21};
+};
+
+Arecont.prototype.getSensitivityRange = function () {
+	return {min: 0, max: 100};
+};
+
 
 Arecont.prototype.setCameraParams = function(params) {
 	
@@ -63,10 +83,20 @@ Arecont.prototype.setMotionParams = function(params, cb){
 		urlParams.push("motiondetect=" + (params.enabled ? "on" : "off") );
 	}
 	if (params.threshold){
-		urlParams.push("mdlevelthreshold=" + params.threshold );
+		var range = this.getThresholdRange();
+		if (threshold > range.max && threshold < range.min){
+			console.log("Error: threshold is out of range.")
+		}else{
+			urlParams.push("mdlevelthreshold=" + params.threshold );
+		}
 	}
 	if (params.sensitivity){
-		urlParams.push("mdsensitivity=" + params.sensitivity );
+		var range = this.getThresholdRange();
+		if (threshold > range.max && threshold < range.min){
+			console.log("Error: threshold is out of range.")
+		}else{
+			urlParams.push("mdsensitivity=" + params.sensitivity );
+		}
 	}
 
 	var url = this.cameraUrl() + "/set?" + urlParams.join("&");
@@ -108,8 +138,23 @@ Arecont.prototype.getParam = function(name, cb){
 
 			}
 		}
+	);	
+};
+
+Arecont.prototype.setParam = function(key, value, cb){
+	var url = this.cameraUrl() + "/set?" + key + "=" + value + "&id=" + Date.now();
+	var digest = new Buffer(this.username + ":" + this.password).toString('base64');
+	request({ 
+		url: url,
+		headers: {
+			'User-Agent': 'nodejs',
+			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+			'Authorization': 'Basic ' + digest
+		},
+	}, function( error, response, body) {
+				cb(error, body);
+		}
 	);
-	
 };
 
 Arecont.prototype.getMotionParams = function(cb){
@@ -130,6 +175,13 @@ Arecont.prototype.isMotionEnabled = function(cb) {
 };
 
 Arecont.prototype.setupMotionDetection = function(){
+	setParam("mdzonesize", 2, function(error, body){
+
+	});
+
+	setParam("mddetail", 2, function(error, body){
+
+	});
 	setMotionParams({enabled: true});
 };
 

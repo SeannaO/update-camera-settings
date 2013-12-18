@@ -268,6 +268,25 @@ var deleteCamera = function(id) {
     });    
 };
 
+var getCameraOptions = function(id, cb) {
+
+	var username = $("#camera-username").val();
+	var password = $("#camera-password").val();
+	if (username && password && username !== '' && password !== ''){
+	    $.ajax({
+	        type: "GET",
+	        url: "/cameras/" + id + "/configuration",
+	        data: {camera:{username:username, password:password}},
+	        contentType: 'application/json',
+	        success: function(data) {
+	            cb( data );
+	        }
+	    });
+	}else{
+		cb(null);
+	}
+};
+
 
 var updateCamera = function(id, cb) {
     
@@ -358,7 +377,9 @@ var editCamera = function(camId) {
                         }
                     });
                 });
-                
+                setConstraintsOnStreamFields(camId);
+				$("#camera-username, #camera-password").unbind();
+                $("#camera-username, #camera-password").on( "blur", setConstraintsOnStreamFields(camId));
                 $("#add-new-camera-dialog").modal('show');
             } else {
                 
@@ -367,6 +388,41 @@ var editCamera = function(camId) {
     });    
 };
 
+
+var setConstraintsOnStreamFields = function(camId){
+	getCameraOptions(camId,function(data){
+		if (data){
+			// add a stream if one does not already exist
+			if (!$("#stream-panes .tab-pane")){
+				addStream();
+			}
+			//get the supported parameters of the camera
+			if (data && data.resolutions && data.framerate_range && data.quality_range){
+				$(".camera-stream-framerate-input").attr({
+					min: data.framerate_range.min,
+					max: data.framerate_range.max
+				});
+				$(".camera-stream-quality-input").attr({
+					min: data.quality_range.min,
+					max: data.quality_range.max
+				});
+
+				$('.camera-stream-resolution-select').each(function(){
+					var $self = $(this);
+					var current_val = $self.val();
+					$self.html('');
+					for (idx in data.resolutions){
+						$self.append($('<option>', {
+					    	value: data.resolutions[idx],
+					    	text: data.resolutions[idx]
+						}));
+					}
+					$self.val(current_val);
+				});
+			}
+		}
+	});
+};
 
 var meridian = function(hour){
 	return (Math.round(hour / 12) > 0) ? " PM" : " AM";
@@ -520,9 +576,8 @@ var addStreamFieldset = function( cb ) {
 		html: '<label for="camera-stream-resolution">resolution</label>'
 	});
 
-	var camera_stream_resolution = $('<input>', {
-		type: 'string',
-		class: 'form-control',
+	var camera_stream_resolution = $('<select>', {
+		class: 'form-control camera-stream-resolution-select',
 		id: 'camera-streams-' + current_number_of_streams + '-resolution',
 		name: 'camera[streams][' + current_number_of_streams + '][resolution]'
 	});
@@ -542,7 +597,7 @@ var addStreamFieldset = function( cb ) {
 		type: 'number',
 		min: 1,
 		max: 30,
-		class: 'form-control',
+		class: 'form-control camera-stream-framerate-input',
 		id: 'camera-streams-' + current_number_of_streams + '-framerate',
 		name: 'camera[streams][' + current_number_of_streams + '][framerate]'
 	});
@@ -562,7 +617,7 @@ var addStreamFieldset = function( cb ) {
 		type: 'number',
 		min: 1,
 		max: 30,
-		class: 'form-control',
+		class: 'form-control camera-stream-quality-input',
 		id: 'camera-streams-' + current_number_of_streams + '-quality',
 		name: 'camera[streams][' + current_number_of_streams + '][quality]'
 	});

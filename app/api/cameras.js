@@ -259,6 +259,22 @@ module.exports = function( app, camerasController ) {
 	// - - -
 
 
+	// - - -
+	// gets camera configurations
+	app.get('/cameras/:id/configuration', function(req, res) {
+		var camera = req.query.camera;
+		camera._id = req.params.id;
+		camerasController.getCameraOptions( camera, function(err, data) {
+			if (err) {
+				res.json( { error: err } );
+			} else {
+				data.success = true;
+				res.json(data);
+			}
+		});
+	});
+	// - - -
+
 
 	// - - -
 	// requests snapshot, returns jpeg
