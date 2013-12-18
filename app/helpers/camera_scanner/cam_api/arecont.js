@@ -1,9 +1,20 @@
 var baseUrl = 'http://{user}:{pass}@{ip}';
 var rtspUrl = 'rtsp://{user}:{pass}@{ip}/h264.sdp?res={resolution}&fps={framerate}';
 
-var getRtspUrl = function ( cam, profile ) {
+
+function Arecont() {
+	console.log("[Arecont] initializing API...");
+	this.cam = {};
+}
+
+Arecont.prototype.getRtspUrl = function ( profile ) {
 	
-	if (!cam || !profile) return;
+	var self = this;
+
+	if (!profile) {
+		console.log("[Arecont] ERROR - empty profile");
+		return;
+	}
 	
 	var dimensions = profile.resolution.split('x');
 	var width = dimensions[0];
@@ -17,41 +28,50 @@ var getRtspUrl = function ( cam, profile ) {
 	}
 
 	return rtspUrl
-		.replace('{user}', cam.user)
-		.replace('{pass}', cam.password)
-		.replace('{ip}', cam.ip)
+		.replace('{user}', self.cam.user)
+		.replace('{pass}', self.cam.password)
+		.replace('{ip}', self.cam.ip)
 		.replace('{resolution}', res)
 		.replace('{framerate}', profile.framerate);
 };
 
-var setMotionParams = function(params){
+
+Arecont.prototype.setCameraParams = function(params) {
+	
+	this.cam.ip = params.ip || this.cam.ip;
+	this.cam.user = params.user || params.username || this.cam.user;
+	this.cam.password = params.password || this.cam.password;
+
+};
+
+Arecont.prototype.setMotionParams = function(params){
 	// "/set?motiondetect=on"
 };
 
-var getMotionParams = function(){
+Arecont.prototype.getMotionParams = function(){
 	
 };
 
-var isMotionEnabled = function(){
+Arecont.prototype.isMotionEnabled = function(){
 
 };
 
-var setupMotionDetection = function(cam){
+Arecont.prototype.setupMotionDetection = function(cam){
 	// check 
 	// enable motion detection
 
 };
 
-var startListeningForMotionDetection = function(cam, cb){
+Arecont.prototype.startListeningForMotionDetection = function(cam, cb){
 	//poll
 		//emit motion
 };
 
-var stopListeningForMotionDetection = function(){
+Arecont.prototype.stopListeningForMotionDetection = function(){
 	//poll
 		//emit motion
 };
 
 
-exports.getRtspUrl = getRtspUrl;
+module.exports = Arecont;
 
