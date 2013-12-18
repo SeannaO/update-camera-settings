@@ -465,19 +465,44 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 
             self.db.loadDatabase();
 
+			console.log("&&&&&&&");
+			console.log( cam );
+
             camera.cam.name = cam.name;
- 
-			if (camera.cam.manufacturer !== cam.manufacturer) {
+			camera.cam.id = cam.id;
+
+			var need_restart_all_streams = false;
+
+			if (cam.manufacturer && (camera.cam.manufacturer !== cam.manufacturer) ) {
 				camera.cam.manufacturer = cam.manufacturer;
-				camera.cam.restartAllStreams();
+				need_restart_all_streams = true;
 			}
 			
-			camera.cam.ip_address = camera.cam.ip = cam.ip_address || cam.ip;
+			if ( cam.ip && (camera.cam.ip !== cam.ip) ) {
+				camera.cam.ip_address = camera.cam.ip = cam.ip;
+				need_restart_all_streams = true;
+			}
 
-			camera.cam.id = cam.id;
-            camera.cam.username = cam.username;
-            camera.cam.password = cam.password;
-			
+			if ( cam.username && ( camera.cam.username !== cam.username ) ){
+				camera.cam.username = cam.username;
+				need_restart_all_streams = true;
+			}
+
+			if ( cam.password && ( camera.cam.password !== cam.password ) ){
+				camera.cam.password = cam.password;
+				need_restart_all_streams = true;
+			}
+
+			camera.cam.api.setCameraParams({
+				ip: camera.cam.ip,
+				password: camera.cam.password,
+				username: camera.cam.username
+			});
+
+			if (need_restart_all_streams) {
+				camera.cam.restartAllStreams();
+			}
+						
 			camera.cam.updateAllStreams( cam.streams );
             camera.cam.updateRecorder();
 

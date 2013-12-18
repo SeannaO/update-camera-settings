@@ -4,13 +4,16 @@ var baseUrl = 'http://{user}:{pass}@{ip}';
 var rtspUrl = 'rtsp://{user}:{pass}@{ip}/h264.sdp?res={resolution}&fps={framerate}';
 
 function Arecont( cam ){
-	this.username = cam.username;
-	this.password = cam.password;
-	this.ip = cam.ip;
-};
+
+	if (cam) {
+		this.username = cam.username;
+		this.password = cam.password;
+		this.ip = cam.ip;
+	}
+}
 
 Arecont.prototype.getRtspUrl = function (profile ) {
-	
+
 	var self = this;
 
 	if (!profile) {
@@ -44,13 +47,16 @@ Arecont.prototype.cameraUrl = function () {
 		.replace('{ip}', this.ip);
 };
 
+
 Arecont.prototype.setCameraParams = function(params) {
 	
-	this.ip = params.ip;
-	this.username = params.user || params.username;
-	this.password = params.password;
+	this.ip = params.ip 							|| this.ip;
+	this.username = params.username || params.user 	|| this.username;
+	this.password = params.password 				|| this.password;
 
+	console.log( params );
 };
+
 
 Arecont.prototype.setMotionParams = function(params){
 	var urlParams= [];
@@ -112,16 +118,20 @@ Arecont.prototype.getParam = function(name, cb){
 };
 
 Arecont.prototype.getMotionParams = function(cb){
-	this.getParam("mdlevelthreshold",function(threshold){
-		this.getParam("mdsensitivity",function(sensitivity){
-			this.isMotionEnabled(function(enabled){
-				cb({enabled: enabled, threshold: parseInt(threshold), sensitivity: parseInt(sensitivity)})
+	this.getParam("mdlevelthreshold", function(threshold){
+		this.getParam("mdsensitivity", function(sensitivity){
+			this.isMotionEnabled( function(enabled){
+				cb({
+					enabled: enabled, 
+					threshold: parseInt(threshold), 
+					sensitivity: parseInt(sensitivity)
+				});
 			});
 		});
 	});
 };
 
-Arecont.prototype.isMotionEnabled = function(cb){
+Arecont.prototype.isMotionEnabled = function(cb) {
 	this.getParam("motiondetect",function(value){
 		cb(value == "on" ? true : false);
 	});

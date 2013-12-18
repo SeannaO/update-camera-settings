@@ -110,7 +110,7 @@ Axis.prototype.createNewProfile = function( profile, cb ) {
 			if (profileId && profileId.length <= 0) {
 				if (cb) cb(-1);
 			} else if(profileId){
-				self.updateProfile( self.cam, profileId[0], profile, function(id) {
+				self.updateProfile( profileId[0], profile, function(id) {
 					cb(id);
 				});
 			} else {
