@@ -1,6 +1,7 @@
 //require('look').start();  -- profiler ( NOT for production )
 
 var express = require('express');										// express 
+var request = require('request');										// request
 var tsHandler = require('./helpers/ts');								// ts abstraction
 var hlsHandler = require('./controllers/hls_controller');				// hls abstraction
 var mp4Handler = require('./controllers/mp4_controller');				// mp4 abstraction
@@ -9,6 +10,8 @@ var fs = require('fs');													// for sending files
 var lifeline = require('./helpers/lifeline_api.js');					// api layer for lifeline app
 var DiskSpaceAgent = require('./helpers/diskSpaceAgent.js');			// agent that periodically checks disk space
 
+var passport = require('passport');
+var BasicStrategy = require('passport-http').BasicStrategy;
 
 // - - -
 // kills any ffmpeg, iostat and smartctl processes that might be already running
@@ -27,18 +30,55 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 });
 // - - -
 
+
+passport.use(new BasicStrategy({
+	},function(username,password,done){
+		process.nextTick(function(){
+			var digest = new Buffer(username + ":" + password).toString('base64');
+			// 127.0.0.1
+			var url = "https://" + username + ":" + password + "@192.168.215.153/cp/UserVerify?v=2&login=" + username + "&password=" + password
+			request({ 
+				url: url,
+				strictSSL: false,
+				headers: {
+					'User-Agent': 'nodejs',
+					'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+					'Authorization': 'Basic ' + digest	
+				},
+			}, function( error, response, body) {
+				if (error){ return done(error); }
+				if (body){ return body === "true" ? done(null,true) : done(null,false); }
+			}
+			);
+		});
+	})
+);
+
+
+
 // starts express
-var app = express();
+var app = express.createServer();
 
 // - - -
 // socket.io config 
 var io = require('socket.io');
 
-var server = require('http').createServer(app);
-io = io.listen(server);
+// var server = require('http').createServer(app);
+io = io.listen(app);
 io.set('log level', 1);
 // end of socket.io config
 // - - -
+
+app.configure(function() {
+  app.use(express.static('public'));
+  app.use(express.cookieParser());
+  app.use(express.bodyParser());
+  app.use(express.session({ secret: 'keyboard cat' }));
+  app.use(passport.initialize());
+  app.use(passport.session());
+  app.use(app.router);
+});
+
 
 // - - - - -
 // sets base folder from the command line
@@ -61,8 +101,7 @@ if ( process.argv.length > 2 ) {
 }
 // - - -
 
-// server.listen(process.env.PORT || 8080);
-server.listen( 8080 );
+
 
 // instantiates camerasController, launching all cameras
 var camerasController = new CamerasController( mp4Handler, __dirname + '/db/cam_db', baseFolder);
@@ -81,6 +120,8 @@ app.all('/*', function(req, res, next) {
 
 app.use(express.cookieParser());				// cookies middleware
 app.use(express.session({secret: 'solink'}));	// for session storage
+app.use(express.logger());
+// app.use(passport.initialize());
 app.set('view engine', 'ejs');					// rendering engine (like erb)
 // - - -
 
@@ -152,14 +193,14 @@ require('./api/cameras.js')( app, camerasController );			// cameras
 // TODO: we need to configure the subnet that camera should scan
 require('./api/scanner.js')( app, '192.168.215' );				// scanner
 
-app.get('/health', function(req, res) {							// health
+app.get('/health', passport.authenticate('basic', {session: false}), function(req, res) {							// health
     res.sendfile(__dirname + '/views/health.html');
 });
 
-app.get('/', function (req, res) {								// main page
+app.get('/', passport.authenticate('basic', {session: false}), function (req, res) {								// main page
     res.sendfile(__dirname + '/views/cameras.html');			
 });
-app.get('/cameras', function(req, res) {
+app.get('/cameras', passport.authenticate('basic', {session: false}), function(req, res) {
 	res.sendfile(__dirname + '/views/cameras.html');			// main page - alternative route
 });
 // - - -
@@ -169,7 +210,7 @@ app.get('/cameras', function(req, res) {
 
 // - - -
 // gets ts segment
-app.get('/ts/:id/:file', function(req, res) {
+app.get('/ts/:id/:file', passport.authenticate('basic', {session: false}), function(req, res) {
     
     var camId = req.params.id;
     var file = req.params.file;
@@ -182,7 +223,7 @@ app.get('/ts/:id/:file', function(req, res) {
 // - - -
 //	gets hls live stream
 //	TODO: not yet implemented
-app.get('/live', function(req, res) {
+app.get('/live', passport.authenticate('basic', {session: false}), function(req, res) {
     hlsHandler.generateLivePlaylist( db, req, res );       
 });
 // - - -
@@ -190,7 +231,7 @@ app.get('/live', function(req, res) {
 // - - -
 // multicam mockup 
 // TODO: create a real multicam page
-app.get('/multiview', function(req, res) {    
+app.get('/multiview', passport.authenticate('basic', {session: false}), function(req, res) {    
 	res.sendfile(__dirname + '/views/multi.html');
 });
 // - - -
@@ -202,5 +243,6 @@ app.get('/multiview', function(req, res) {
 lifeline.setup( app, camerasController, mp4Handler, hlsHandler );
 ////////////////////
 
-
+// server.listen(process.env.PORT || 8080);
+app.listen( 8080 );
 

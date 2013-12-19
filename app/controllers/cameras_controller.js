@@ -486,7 +486,7 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
         $set: { 
             name: cam.name							|| camera.name, 
             manufacturer: cam.manufacturer			|| camera.manufacturer, 
-            ip: 		cam.ip						|| camera.ip,
+            ip: cam.ip								|| camera.ip,
 			id: cam.id								|| camera.id,
             username: cam.username					|| camera.username,
             password: cam.password					|| camera.password,
