@@ -47,8 +47,8 @@ Arecont.prototype.cameraUrl = function () {
 		.replace('{ip}', this.ip);
 };
 
-Arecont.prototype.getResolutionOptions = function () {
-	return ['full','half'];
+Arecont.prototype.getResolutionOptions = function (cb) {
+	cb([{value:'full',name:'Full'},{value:'half', name:'Half'}]);
 };
 
 Arecont.prototype.getFrameRateRange = function () {

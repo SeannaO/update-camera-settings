@@ -413,8 +413,8 @@ var setConstraintsOnStreamFields = function(camId){
 					$self.html('');
 					for (idx in data.resolutions){
 						$self.append($('<option>', {
-					    	value: data.resolutions[idx],
-					    	text: data.resolutions[idx]
+					    	value: data.resolutions[idx].value,
+					    	text: data.resolutions[idx].name
 						}));
 					}
 					$self.val(current_val);

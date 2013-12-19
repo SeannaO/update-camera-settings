@@ -91,8 +91,10 @@ CamerasController.prototype.getCameraOptions = function(params, cb){
 			cb( err, null );
 		} else {
 			console.log(cam.api);
-			console.log({ framerate_range: cam.api.getFrameRateRange(), resolutions: cam.api.getResolutionOptions(), quality_range: cam.api.getVideoQualityRange()});
-			cb( err, { framerate_range: cam.api.getFrameRateRange(), resolutions: cam.api.getResolutionOptions(), quality_range: cam.api.getVideoQualityRange()});
+			cam.api.getResolutionOptions(function(resolutions){
+				cb( err, { framerate_range: cam.api.getFrameRateRange(), resolutions: resolutions, quality_range: cam.api.getVideoQualityRange()});
+			})
+			
 		}
 	});
 };

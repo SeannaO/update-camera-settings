@@ -1,4 +1,5 @@
 var request = require('request');
+var xml2js = require('xml2js').parseString;
 var net = require('net');
 
 var baseUrl = 'http://{user}:{pass}@{ip}/axis-cgi/param.cgi?action=';
@@ -11,7 +12,7 @@ var parametersString = "videocodec=h264&framerate={framerate}&resolution={resolu
 var rtspUrl = 'rtsp://{user}:{pass}@{ip}/axis-media/media.amp?{profile_name}&framerate={framerate}&resolution={resolution}';
 var listParamsUrl = baseUrl + 'list&group={group_name}';
 var listAllParamsUrl = baseUrl + 'list';
-
+var listResolutionsUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&group=ImageSource.I0.Sensor.CaptureMode"
 
 var Axis = function() {
 	console.log("[Axis] initializing API...");	
@@ -262,6 +263,57 @@ Axis.prototype.stopListeningForMotionDetection = function(){
 	//poll
 	//emit motion
 	// clear events
+};
+
+
+
+Axis.prototype.getResolutionOptions = function (cb) {
+	var self = this;
+	var url = listResolutionsUrl
+		.replace('{user}', self.cam.user)
+		.replace('{pass}', self.cam.password)
+		.replace('{ip}', self.cam.ip);
+	console.log(url);
+	var digest = new Buffer(self.cam.user + ":" + self.cam.password).toString('base64');
+	request({ 
+		url: url,
+		headers: {
+			'User-Agent': 'nodejs',
+			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+			'Authorization': 'Basic ' + digest			
+		},
+	}, function( error, response, body) {
+		console.log(body);
+		if (!error && body){
+			xml2js(body, function(err,result){
+				console.log(result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry);
+				var output = result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry.map(function(element){
+					console.log({value:element['$'].value, name:element['$'].niceValue});
+					return {value:element['$'].value, name:element['$'].niceValue}
+				});
+				cb(output);
+			});
+		}else{
+			cb(null);
+		}
+	}
+	);
+};
+
+Axis.prototype.getFrameRateRange = function () {
+	return {min: 1, max: 30};
+};
+
+Axis.prototype.getThresholdRange = function () {
+	return {min: 2, max: 31};
+};
+
+Axis.prototype.getVideoQualityRange = function () {
+	return {min: 1, max: 21};
+};
+
+Axis.prototype.getSensitivityRange = function () {
+	return {min: 0, max: 100};
 };
 
 
