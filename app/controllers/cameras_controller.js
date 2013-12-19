@@ -585,7 +585,7 @@ CamerasController.prototype.updateCameraMotion = function(params, cb) {
     console.log("*** updating camera motion:" );
     console.log(params);
     var self = this;
-    var camera = this.findCameraById( params._id );
+    var camera = this.findCameraById( params._id ).cam;
     
 	if (!camera) {
         cb("{error: 'camera not found'}");
@@ -594,7 +594,7 @@ CamerasController.prototype.updateCameraMotion = function(params, cb) {
 	
 	camera.api.setMotionParams(params.camera.motion, function(error, body){
 		if (!error && body) {
-			self.emit("motion_update", {camera: camera.cam, motion: params.camera.motion});
+			self.emit("motion_update", {camera: camera, motion: params.camera.motion});
 		}else{
 			console.log(error);
 		}

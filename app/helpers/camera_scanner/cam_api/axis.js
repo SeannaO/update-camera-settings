@@ -130,6 +130,24 @@ Axis.prototype.createNewProfile = function( profile, cb ) {
 };
 
 
+Axis.prototype.isMotionEnabled = function() {
+
+	var self = this;
+	
+	return self.motion_enabled;
+};
+
+Axis.prototype.getMotionParams = function(cb) {
+	
+	var self = this;
+
+	cb({
+		enabled: self.isMotionEnabled(), 
+		threshold: self.threshold, 
+		sensitivity: self.sensitivity
+	});
+};
+
 Axis.prototype.updateProfile = function(profileId, profile, cb) {
 
 	var self = this;
@@ -172,6 +190,8 @@ Axis.prototype.updateProfile = function(profileId, profile, cb) {
 	}
 	);
 };
+
+
 
 
 Axis.prototype.getRtspUrl = function ( profile ) {
@@ -229,6 +249,11 @@ Axis.prototype.setCameraParams = function(params) {
 
 Axis.prototype.setMotionParams = function(params, cb){
 
+	var self = this;
+
+	self.threshold = params.threshold || 50;
+	self.sensitivity = params.sensitivity || 50;
+
 	if (cb) cb();
 
 };
@@ -246,8 +271,11 @@ Axis.prototype.setupMotionDetection = function(cam, cb){
 
 Axis.prototype.startListeningForMotionDetection = function(cb){
 	
+	
 	var self = this;
 	
+	self.motion_enabled = true;
+
 	//poll
 	//emit motion
 	Axis.server.on('connection', function( socket ) {
@@ -263,6 +291,8 @@ Axis.prototype.stopListeningForMotionDetection = function(){
 	//poll
 	//emit motion
 	// clear events
+	//
+	self.motion_enabled = false;
 };
 
 
