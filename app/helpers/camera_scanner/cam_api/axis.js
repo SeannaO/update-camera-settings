@@ -339,7 +339,7 @@ Axis.prototype.getThresholdRange = function () {
 };
 
 Axis.prototype.getVideoQualityRange = function () {
-	return {min: 1, max: 21};
+	return {min: 0, max: 100};
 };
 
 Axis.prototype.getSensitivityRange = function () {

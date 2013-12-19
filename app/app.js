@@ -149,6 +149,7 @@ app.use('/img', express.static(__dirname + '/assets/img'));
 require('./api/cameras.js')( app, camerasController );			// cameras
 
 // usage: append subnet prefix in the form xxx.xxx.xxx
+// TODO: we need to configure the subnet that camera should scan
 require('./api/scanner.js')( app, '192.168.215' );				// scanner
 
 app.get('/health', function(req, res) {							// health
@@ -185,7 +186,6 @@ app.get('/live', function(req, res) {
     hlsHandler.generateLivePlaylist( db, req, res );       
 });
 // - - -
-
 
 // - - -
 // multicam mockup 

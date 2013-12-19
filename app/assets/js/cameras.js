@@ -59,10 +59,7 @@ var timelineSetup = function( cam_id, id, name ) {
 		}).appendTo("#camera-item-"+cam_id).mouseleave( function() {
 			$("#thumb").fadeOut();
 		});
-		$("<div>", {
-			id: "thumb-" + cam_id,
-			class: "thumb-container"
-		}).appendTo("#camera-item-"+cam_id);
+
 	}
 	
 	timelines[id] = new Timeline("#timeline-"+id);
@@ -177,6 +174,10 @@ var addCameraItem = function( camera ) {
 		html: switchHtml
 	}).appendTo("#camera-item-"+camera._id);
 
+	$("<div>", {
+		id: "thumb-" + camera._id,
+		class: "thumb-container"
+	}).appendTo("#camera-item-"+camera._id);
            
 	console.log( camera );
 
