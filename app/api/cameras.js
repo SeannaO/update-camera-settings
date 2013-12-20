@@ -1,12 +1,12 @@
 var path = require('path');												// for parsing path urls
 var fs = require('fs');													// for sending files
 
-module.exports = function( app, camerasController ) {
+module.exports = function( app, passport, camerasController ) {
 
 
 	// - - -
 	// gets json list of cameras
-	app.get('/cameras.json', function(req, res) {
+	app.get('/cameras.json', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		camerasController.listCameras( function(err, list) {
 			list.map(function(item) {
@@ -24,7 +24,7 @@ module.exports = function( app, camerasController ) {
 
 	// - - -
 	// returns camera info (json)
-	app.get('/cameras/:id/json', function(req, res) {
+	app.get('/cameras/:id/json', passport.authenticate('basic', {session: false}), function(req, res) {
 		var camId = req.params.id;
 
 		camerasController.getCamera( camId, function(err, cam) {
@@ -40,7 +40,7 @@ module.exports = function( app, camerasController ) {
 
 	// - - -
 	// update camera
-	app.put('/cameras/:id', function(req, res) {
+	app.put('/cameras/:id', passport.authenticate('basic', {session: false}), function(req, res) {
 		var cam = req.body;
 		cam._id = req.params.id;
 
@@ -61,7 +61,7 @@ module.exports = function( app, camerasController ) {
 
 	// - - -
 	// posts new camera
-	app.post('/cameras/new', function(req, res) {
+	app.post('/cameras/new', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		camerasController.insertNewCamera( req.body, function( err, newDoc ) {
 			if (err) {
@@ -104,7 +104,7 @@ module.exports = function( app, camerasController ) {
 	// - - -
 
 
-	app.put('/cameras/:id/schedule', function(req, res) {
+	app.put('/cameras/:id/schedule', passport.authenticate('basic', {session: false}), function(req, res) {
 		var params = req.body;
 		params._id = req.params.id;
 		camerasController.updateCameraSchedule(params, function(err) {
@@ -117,7 +117,7 @@ module.exports = function( app, camerasController ) {
 		});
 	});
 
-	app.put('/cameras/:id/motion', function(req, res) {
+	app.put('/cameras/:id/motion', passport.authenticate('basic', {session: false}), function(req, res) {
 		var params = req.body;
 		params._id = req.params.id;
 		camerasController.updateCameraMotion(params, function(err) {
@@ -133,7 +133,7 @@ module.exports = function( app, camerasController ) {
 	// - - -
 	// delete camera
 	// TODO: delete camera on lifeline app
-	app.delete('/cameras/:id', function(req, res) {
+	app.delete('/cameras/:id', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		var cam = camerasController.findCameraById( req.params.id ).cam;
 
@@ -151,7 +151,7 @@ module.exports = function( app, camerasController ) {
 
 	// - - 
 	// 
-	app.get('/cameras/:id/schedule.json', function(req, res) {
+	app.get('/cameras/:id/schedule.json', passport.authenticate('basic', {session: false}), function(req, res) {
 		var camId = req.params.id;
 
 		camerasController.getCamera( camId, function(err, cam) {
@@ -168,7 +168,7 @@ module.exports = function( app, camerasController ) {
 
 		// - - 
 	// 
-	app.get('/cameras/:id/motion.json', function(req, res) {
+	app.get('/cameras/:id/motion.json', passport.authenticate('basic', {session: false}), function(req, res) {
 		var camId = req.params.id;
 
 		camerasController.getMotion( camId, function(err, motion_params) {
@@ -186,7 +186,7 @@ module.exports = function( app, camerasController ) {
 
 	// - - -
 	// renders camera page
-	app.get('/cameras/:id', function(req, res) {
+	app.get('/cameras/:id', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		var camId = req.params.id;
 
@@ -206,7 +206,7 @@ module.exports = function( app, camerasController ) {
 
 	// - - -
 	// lists all profiles
-	app.get('/cameras/:id/streams', function(req, res) {
+	app.get('/cameras/:id/streams', passport.authenticate('basic', {session: false}), function(req, res) {
 		var camId = req.params.id;
 		res.end( camerasController.getStreamsJSON() );
 	});
@@ -214,7 +214,7 @@ module.exports = function( app, camerasController ) {
 
 	// - - -
 	// lists all videos
-	app.get('/cameras/:cam_id/streams/:id/list_videos', function(req, res) {
+	app.get('/cameras/:cam_id/streams/:id/list_videos', passport.authenticate('basic', {session: false}), function(req, res) {
 		var camId = req.params.cam_id;
 		var streamId = req.params.id;
 
@@ -231,7 +231,7 @@ module.exports = function( app, camerasController ) {
 
 	// - - -
 	// gets thumbnail
-	app.get('/cameras/:cam_id/streams/:id/thumb/:thumb', function(req, res) {
+	app.get('/cameras/:cam_id/streams/:id/thumb/:thumb', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		var camId = req.params.cam_id;
 		var streamId = req.params.id;
@@ -261,7 +261,7 @@ module.exports = function( app, camerasController ) {
 
 	// - - -
 	// gets camera configurations
-	app.get('/cameras/:id/configuration', function(req, res) {
+	app.get('/cameras/:id/configuration', passport.authenticate('basic', {session: false}), function(req, res) {
 		var camera = req.query.camera;
 		camera._id = req.params.id;
 		camerasController.getCameraOptions( camera, function(err, data) {
@@ -278,7 +278,7 @@ module.exports = function( app, camerasController ) {
 
 	// - - -
 	// requests snapshot, returns jpeg
-	app.get('/cameras/:id/snapshot', function(req, res) {
+	app.get('/cameras/:id/snapshot', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		var camId = req.params.id;
 		camerasController.requestSnapshot( camId, req, res );
@@ -289,7 +289,7 @@ module.exports = function( app, camerasController ) {
 
 	// - - -
 	// gets mp4 video
-	app.get('/cameras/:id/video', function(req, res) {
+	app.get('/cameras/:id/video', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		var camId = req.params.id;
 		var begin = parseInt( req.query.begin, 10 );
@@ -313,7 +313,7 @@ module.exports = function( app, camerasController ) {
 
 	// - - -
 	// requests mp4video, returns json when ready
-	app.get('/cameras/:id/video.json', function(req, res) {
+	app.get('/cameras/:id/video.json', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		var camId = req.params.id;
 		var begin = parseInt( req.query.begin, 10 );
@@ -333,7 +333,7 @@ module.exports = function( app, camerasController ) {
 
 	// - - -
 	// gets inMem mp4 video
-	app.get('/cameras/:id/memvideo', function(req, res) {
+	app.get('/cameras/:id/memvideo', passport.authenticate('basic', {session: false}), function(req, res) {
 		//	res.end('feature under construction');
 
 		var camId = req.params.id;
@@ -354,10 +354,10 @@ module.exports = function( app, camerasController ) {
 	// - - -
 	// starts recording
 	// TODO: should be only via post
-	app.get('/cameras/:id/start_recording', function(req, res) {
+	app.get('/cameras/:id/start_recording', passport.authenticate('basic', {session: false}), function(req, res) {
 		startRecording(req, res);
 	});
-	app.post('/cameras/:id/start_recording', function(req, res) {
+	app.post('/cameras/:id/start_recording', passport.authenticate('basic', {session: false}), function(req, res) {
 		startRecording(req, res);
 	});
 	// - - -
@@ -366,17 +366,17 @@ module.exports = function( app, camerasController ) {
 	// - - -
 	// stops recording
 	// TODO: should be only via post
-	app.post('/cameras/:id/stop_recording', function(req, res) {
+	app.post('/cameras/:id/stop_recording', passport.authenticate('basic', {session: false}), function(req, res) {
 		stopRecording( req, res );
 	});
-	app.get('/cameras/:id/stop_recording', function(req, res) {
+	app.get('/cameras/:id/stop_recording', passport.authenticate('basic', {session: false}), function(req, res) {
 		stopRecording( req, res );
 	});
 	// - - -
 
 	// - - -
 	// gets hls stream for finite length video
-	app.get('/cameras/:id/video.hls', function(req, res) {
+	app.get('/cameras/:id/video.hls', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		var camId = req.params.id;
 		var begin = parseInt( req.query.begin, 10 );

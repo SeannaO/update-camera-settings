@@ -1,5 +1,5 @@
 //require('look').start();  -- profiler ( NOT for production )
-
+var winston = require('winston');
 var express = require('express');										// express 
 var request = require('request');										// request
 var tsHandler = require('./helpers/ts');								// ts abstraction
@@ -20,6 +20,13 @@ exec('killall ffmpeg', function( error, stdout, stderr) {});
 exec('killall iostat', function( error, stdout, stderr) {});
 exec('killall smartctl', function( error, stdout, stderr) {});
 // - - 
+
+var logger = new (winston.Logger)({
+	transports: [
+		new (winston.transports.Console)(),
+		new (winston.transports.File)({filename: 'production.log'})
+	]
+});
 
 // - - -
 // stores machine ip
@@ -54,7 +61,21 @@ passport.use(new BasicStrategy({
 	})
 );
 
-
+// Your own super cool function
+var logrequest = function(req, res, next) {
+	var auth_user = "";
+	if (req.headers.authorization){
+		var rx = /Basic ([A-Za-z0-9=]+)/;
+		var matches = rx.exec(req.headers.authorization);
+		if (matches){
+			var buf = new Buffer(matches[1], 'base64');
+			auth_user = buf.toString().split(":")[0]
+		}
+	}
+	
+    logger.log("[" + auth_user + "] " + req.method + " " + req.url);
+    next(); // Passing the request to the next handler in the stack.
+}
 
 // starts express
 var app = express.createServer();
@@ -71,12 +92,20 @@ io.set('log level', 1);
 
 app.configure(function() {
   app.use(express.static('public'));
-  app.use(express.cookieParser());
-  app.use(express.bodyParser());
-  app.use(express.session({ secret: 'keyboard cat' }));
+  app.use(express.cookieParser());				// cookies middleware
+  // - - - -
+  // express config
+  app.use(express.bodyParser());  // middleware for parsing request body contents
+								// this must come before app.all
+  app.use(express.session({secret: 'solink'}));	// for session storage
   app.use(passport.initialize());
-  app.use(passport.session());
+  // app.use(passport.session());
+  app.use(express.logger());  
+  app.use(logrequest);
   app.use(app.router);
+  // app.use(passport.initialize());
+  app.set('view engine', 'ejs');					// rendering engine (like erb)
+  // - - -  
 });
 
 
@@ -107,23 +136,11 @@ if ( process.argv.length > 2 ) {
 var camerasController = new CamerasController( mp4Handler, __dirname + '/db/cam_db', baseFolder);
 
 
-// - - - -
-// express config
-app.use(express.bodyParser());  // middleware for parsing request body contents
-								// this must come before app.all
-
 app.all('/*', function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "X-Requested-With");
   next();
 });
-
-app.use(express.cookieParser());				// cookies middleware
-app.use(express.session({secret: 'solink'}));	// for session storage
-app.use(express.logger());
-// app.use(passport.initialize());
-app.set('view engine', 'ejs');					// rendering engine (like erb)
-// - - -
 
 
 // - - - - -
@@ -187,11 +204,11 @@ app.use('/img', express.static(__dirname + '/assets/img'));
 
 // - - -
 // API
-require('./api/cameras.js')( app, camerasController );			// cameras
+require('./api/cameras.js')( app, passport, camerasController );			// cameras
 
 // usage: append subnet prefix in the form xxx.xxx.xxx
 // TODO: we need to configure the subnet that camera should scan
-require('./api/scanner.js')( app, '192.168.215' );				// scanner
+require('./api/scanner.js')( app, passport, '192.168.215' );				// scanner
 
 app.get('/health', passport.authenticate('basic', {session: false}), function(req, res) {							// health
     res.sendfile(__dirname + '/views/health.html');
