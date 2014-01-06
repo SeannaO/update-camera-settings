@@ -40,6 +40,15 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 
 passport.use(new BasicStrategy({
 	},function(username,password,done){
+
+		// bypasses auth for development mode
+		if (process.env['NODE_ENV'] === 'development') {
+			process.nextTick(function() {
+				return done( null, true );
+			});	
+			return;
+		}
+
 		process.nextTick(function(){
 			var digest = new Buffer(username + ":" + password).toString('base64');
 			// 127.0.0.1
@@ -130,6 +139,19 @@ if ( process.argv.length > 2 ) {
 }
 // - - -
 
+// - - - - -
+// sets environment mode 
+// -production by default...
+// ... or -development
+// usage:	node app.js /my/folder -development
+//			node app.js /my/foder		(production by default)
+if ( process.argv.indexOf('-development') > -1 ) {
+	process.env['NODE_ENV'] = 'development';
+	console.log("*** development mode");
+} else {
+	console.log("*** production mode");
+}
+// - - -
 
 
 // instantiates camerasController, launching all cameras
