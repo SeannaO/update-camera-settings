@@ -380,7 +380,28 @@ var editCamera = function(camId) {
                 });
                 setConstraintsOnStreamFields(camId);
 				$("#camera-username, #camera-password").unbind();
-                $("#camera-username, #camera-password").on( "blur", setConstraintsOnStreamFields(camId));
+                $("#camera-username, #camera-password").blur(function(){
+                    setConstraintsOnStreamFields(camId)
+                });
+
+                $("#add-stream").unbind();
+                $("#add-stream").click(function(){
+                    var streamsFieldsetContainer = $(this).siblings("#streams-fieldset-container");
+                    addStreamFieldset(function(fieldset) {
+                        
+                        $('div.active').removeClass('active').removeClass('in');
+                        $('li.active').removeClass('active');
+
+                        var new_stream_tab_id = 'new-stream-' + current_number_of_streams;
+                        $('#stream-tabs').append('<li><a href="#' + new_stream_tab_id + '" data-toggle="tab">new stream</a></li>');
+                        $('#stream-panes').append('<div class="tab-pane" id="' + new_stream_tab_id + '"></div>');
+                        $('#'+new_stream_tab_id).append(fieldset);
+                        $('#stream-tabs a:last').tab('show');
+                        setConstraintsOnStreamFields(camId);
+                    });
+                });
+                // - -
+
                 $("#add-new-camera-dialog").modal('show');
             } else {
                 
@@ -393,10 +414,6 @@ var editCamera = function(camId) {
 var setConstraintsOnStreamFields = function(camId){
 	getCameraOptions(camId,function(data){
 		if (data){
-			// add a stream if one does not already exist
-			if (!$("#stream-panes .tab-pane")){
-				addStream();
-			}
 			//get the supported parameters of the camera
 			if (data && data.resolutions && data.framerate_range && data.quality_range){
 				$(".camera-stream-framerate-input").attr({
@@ -667,7 +684,6 @@ var addStreamFieldset = function( cb ) {
 var addStream = function( stream ) {
 
 	addStreamFieldset( function(fieldset, current_number_of_streams) {
-		
 		var idx = current_number_of_streams-1;
 		console.log("idx: " + idx);
 

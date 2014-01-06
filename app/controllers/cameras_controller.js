@@ -86,10 +86,10 @@ CamerasController.prototype.getCameraOptions = function(params, cb){
     var camId = params._id;
     console.log(params);
 	this.getCamera( camId, function(err, cam) {
-		
 		if (err || !cam || cam.length === 0) {
 			cb( err, null );
 		} else {
+			cam.api.setCameraParams(params);
 			console.log(cam.api);
 			cam.api.getResolutionOptions(function(resolutions){
 				cb( err, { framerate_range: cam.api.getFrameRateRange(), resolutions: resolutions, quality_range: cam.api.getVideoQualityRange()});
@@ -205,6 +205,7 @@ CamerasController.prototype.getMotion = function(camId, cb) {
 
 	this.getCamera( camId, function(err, cam) {
 		if (err || !cam || cam.length === 0) {
+			console.log(err);
 			cb( err, null );
 		} else {
 			console.log(cam);
@@ -596,7 +597,6 @@ CamerasController.prototype.updateCameraMotion = function(params, cb) {
 	
 	params.camera.motion.enabled = (params.camera.motion.enabled === '1') ? true : false
 	console.log(params);
-	console.log(camera.api);
 	camera.api.setMotionParams(params.camera.motion, function(error, body){
 		if (!error && body) {
 			self.emit("motion_update", {camera: camera, motion: params.camera.motion});

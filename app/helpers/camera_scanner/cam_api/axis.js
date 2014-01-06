@@ -317,13 +317,17 @@ Axis.prototype.getResolutionOptions = function (cb) {
 		if (!error && body){
 			var re = /(\d+)x(\d+)/
 			xml2js(body, function(err,result){
-				console.log(result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry);
-				var output = result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry.map(function(element){
-					console.log({value:element['$'].value, name:element['$'].niceValue});
-					element['$'].niceValue
-					return {value: re.exec(element['$'].niceValue)[0]  , name:element['$'].niceValue}
-				});
-				cb(output);
+				if (!err){
+					console.log(result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry);
+					var output = result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry.map(function(element){
+						console.log({value:element['$'].value, name:element['$'].niceValue});
+						element['$'].niceValue
+						return {value: re.exec(element['$'].niceValue)[0]  , name:element['$'].niceValue}
+					});
+					cb(output);
+				}else{
+					cb(err);
+				}
 			});
 		}else{
 			cb(null);

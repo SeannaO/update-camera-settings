@@ -170,7 +170,7 @@ module.exports = function( app, passport, camerasController ) {
 	// 
 	app.get('/cameras/:id/motion.json', passport.authenticate('basic', {session: false}), function(req, res) {
 		var camId = req.params.id;
-
+		console.log(camId);
 		camerasController.getMotion( camId, function(err, motion_params) {
 			if (err || !motion_params || motion_params.length === 0) {
 				res.json({ success: false, error: err });
