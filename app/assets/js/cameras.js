@@ -677,10 +677,82 @@ var addStream = function( stream ) {
 		$('#stream-tabs').append('<li><a href="#' + new_stream_tab_id + '" data-toggle="tab">' + stream_name + '</a></li>');
 		$('#stream-panes').append('<div class="tab-pane" id="' + new_stream_tab_id + '"></div>');
 		$('#'+new_stream_tab_id).append(fieldset);
-		$('#stream-tabs a:last').tab('show'); 
+		$('#stream-tabs a:last').tab('show');
+		
+		var check_stream_button = $('<button>', {
+			id: 'check-stream-button-'+new_stream_tab_id,
+			class: 'btn btn-info btn-sm check-stream',
+			html: 'check stream'
+		});
+
+		var spinner = $('<div class="spinner" id="check-stream-spinner-'+new_stream_tab_id+'">' +
+						'<div class="bounce1"></div>' +
+						'<div class="bounce2"></div>' +
+						'<div class="bounce3"></div>' +
+						'</div>');
+
+		spinner.hide();
+
+		var check_stream_status = $('<div>',{
+			id: 'check-stream-status-'+new_stream_tab_id,
+			class: 'check-stream-status'
+		});	
+
+		//check_stream_status.hide();
+
+		$('#'+new_stream_tab_id).append(check_stream_button);			
+		$('#'+new_stream_tab_id).append(spinner);
+		$('#'+new_stream_tab_id).append(check_stream_status);	
+		
+		check_stream_button.click( function( e ) {
+			e.preventDefault();
+			checkH264( stream.url, new_stream_tab_id );
+		});
 
 		for (var attr in stream) {
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).val( stream[attr] );
+		}
+	});
+};
+
+
+var checkH264 = function( url, new_stream_tab_id ) {
+
+	var button = $('#check-stream-button-'+new_stream_tab_id);
+	var spinner = $('#check-stream-spinner-'+new_stream_tab_id);
+	var stream_status = $('#check-stream-status-'+new_stream_tab_id);
+
+	spinner.show();
+
+	button.attr('disabled', 'disabled');
+	button.html('checking stream...');
+
+	$.ajax({
+		type: "POST",
+		url: '/check_h264.json',
+		data: {
+			url: url
+		},
+		success: function( data ) {
+			button.removeAttr('disabled');
+			button.html('check stream');
+			
+			if (data.h264) {
+				stream_status.removeClass('stream-error');
+				stream_status.addClass('stream-ok');
+				stream_status.html("this stream is h264");
+			} else {
+				stream_status.removeClass('stream-ok')
+				stream_status.addClass('stream-error');
+				stream_status.html("invalid h264 stream");
+			}
+
+			spinner.fadeOut( function() {
+				stream_status.fadeIn();
+			});
+		},
+		error: function( data ) {
+			button.removeAttr('disabled');			
 		}
 	});
 };

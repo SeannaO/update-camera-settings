@@ -142,3 +142,21 @@ input.switch:checked ~ label:after
 #camera-schedule-dialog table th,#camera-schedule-dialog table td{
 	text-align: center;
 }
+
+.check-stream {
+	float: left;
+}
+
+.check-stream-status {
+	float: left;
+	margin: 5px;
+	color: #555;
+}
+
+.stream-error {
+	color: #a00;
+}
+
+.stream-ok {
+	color: #0a0;
+}
