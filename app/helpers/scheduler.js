@@ -58,7 +58,7 @@ Scheduler.prototype.clearForCamera = function( camera ) {
 };
 
 Scheduler.prototype.setupListeners = function( emitter ) {
-
+    var scheduler = this
 	emitter.on('create', function(camera) {
 		console.log("camera created calling launchForCamera on scheduler");
 		scheduler.launchForCamera(camera);

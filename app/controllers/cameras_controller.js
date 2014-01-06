@@ -420,6 +420,7 @@ CamerasController.prototype.pushCamera = function( cam ) {
     cameras.push( cam );
 
     cam.on('new_chunk', function( data ) {
+    	console.log('new_chunk');
         self.emit('new_chunk', data );
     });
 
