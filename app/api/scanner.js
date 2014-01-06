@@ -9,6 +9,18 @@ module.exports = function( app, passport, prefix ) {
 			res.json( camlist );
 		});
 	});
+
+	// - - -
+	// checks if stream is h264 encoded
+	app.get('/check_h264.json', passport.authenticate('basic', {session: false}), function(req, res) {
+
+		var checkH264 = require('../helpers/ffmpeg.js').checkH264;
+		checkH264('http://localhost:1234', function(isH264) { 
+			res.json({ h264: isH264 });
+		});		
+	});
+	// - - -
+
 };
 
 
