@@ -21,16 +21,16 @@ Arecont.prototype.getRtspUrl = function (profile ) {
 		return;
 	}
 	
-	var dimensions = profile.resolution.split('x');
-	var width = dimensions[0];
-	var height = dimensions[1];
+	// var dimensions = profile.resolution.split('x');
+	// var width = dimensions[0];
+	// var height = dimensions[1];
 	
 	var res = '';
-	if (width > 1000 && height > 600) {
+	// if (width > 1000 && height > 600) {
 		res = 'full';
-	} else {
-		res = 'half';
-	}
+	// } else {
+	// 	res = 'half';
+	// }
 
 	return rtspUrl
 		.replace('{user}', this.username)
