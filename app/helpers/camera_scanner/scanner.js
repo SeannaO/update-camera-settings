@@ -2,6 +2,7 @@ var request = require('request');
 var onvif = require('./protocols/onvif.js');
 var psia = require('./protocols/psia.js');
 var api = require( './cam_api/api.js').api_list;
+var zlib = require('zlib');
 
 var camList = Object.keys( api );
 
@@ -32,7 +33,7 @@ var detectCamByHttpResponse = function( ip, response, cb ) {
 			if ( !error && response.headers['www-authenticate'] ) {
 				
 				var realm = response.headers['www-authenticate'];
-				
+
 				for (var i in camList) {
 					if ( realm.toLowerCase().indexOf( camList[i] ) != -1 ) {
 						if (cb) cb( camList[i] );
@@ -41,18 +42,33 @@ var detectCamByHttpResponse = function( ip, response, cb ) {
 				}
 			} else if ( !error && response.body !== '' ) {
 
-				console.log( response.body );
+				var page = '';
+
+				var output = '';
+				var gzip = zlib.createGunzip();
+
+				if( response.headers['content-encoding'] == 'gzip' ) {
+					output = "";
+					zlib.gunzip(response.body, function(data) {
+						console.log(data);
+					});
+				} else {
+					output = res;
+				}
+
+
 				for (var i in camList) {
-					if ( response.body.toLowerCase().indexOf( camList[i] ) != -1 ) {
+					if ( output.toString().toLowerCase().indexOf( camList[i] ) != -1 ) {
 						if (cb) cb( camList[i] );
 						return;
 					}
 				}				
 			} else {
-
+		
 				if (cb) cb( 'unkwnown' );
 			}
-			if (cb) cb('unknwon');
+			
+			if (cb) cb('unkwnown');
 		}
 	);
 };
@@ -107,13 +123,13 @@ var onvifScan = function( prefix, cb ) {
 					status = 'ok';
 				}
 
-				var c = {
+				var new_cam = {
 					ip: ip,
 					type: 'onvif',
 					status: status
 				};
 
-				addCam( c, response, function( cam ) {
+				addCam( new_cam, response, function( cam ) {
 					camList.push( cam );
 					if (camList.length === list.length && cb) {
 						cb(camList);
