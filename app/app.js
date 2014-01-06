@@ -87,14 +87,14 @@ var logrequest = function(req, res, next) {
 };
 
 // starts express
-var app = express.createServer();
+var app = express();
 
 // - - -
 // socket.io config 
 var io = require('socket.io');
 
-// var server = require('http').createServer(app);
-io = io.listen(app);
+var server = require('http').createServer(app);
+io = io.listen(server);
 io.set('log level', 1);
 // end of socket.io config
 // - - -
@@ -112,7 +112,7 @@ app.configure(function() {
   app.use(express.logger());  
   app.use(logrequest);
   app.use(app.router);
-  // app.use(passport.initialize());
+  app.use(passport.initialize());
   app.set('view engine', 'ejs');					// rendering engine (like erb)
   // - - -  
 });
@@ -189,6 +189,10 @@ diskSpaceAgent.on('disk_usage', function(usage) {
 // health check modules
 require('./controllers/health.js')( io );
 // - - -
+
+io.on('connection', function(socket) {
+
+});
 
 // - - - -
 // socket.io broadcasts setup
@@ -283,5 +287,5 @@ lifeline.setup( app, camerasController, mp4Handler, hlsHandler );
 ////////////////////
 
 // server.listen(process.env.PORT || 8080);
-app.listen( 8080 );
+server.listen( 8080 );
 
