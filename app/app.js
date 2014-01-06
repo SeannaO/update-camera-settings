@@ -52,7 +52,7 @@ passport.use(new BasicStrategy({
 		process.nextTick(function(){
 			var digest = new Buffer(username + ":" + password).toString('base64');
 			// 127.0.0.1
-			var url = "https://" + username + ":" + password + "@192.168.215.153/cp/UserVerify?v=2&login=" + username + "&password=" + password
+			var url = "https://" + username + ":" + password + "@192.168.215.153/cp/UserVerify?v=2&login=" + username + "&password=" + password;
 			request({ 
 				url: url,
 				strictSSL: false,
@@ -78,13 +78,13 @@ var logrequest = function(req, res, next) {
 		var matches = rx.exec(req.headers.authorization);
 		if (matches){
 			var buf = new Buffer(matches[1], 'base64');
-			auth_user = buf.toString().split(":")[0]
+			auth_user = buf.toString().split(":")[0];
 		}
 	}
 	
     logger.log("[" + auth_user + "] " + req.method + " " + req.url);
     next(); // Passing the request to the next handler in the stack.
-}
+};
 
 // starts express
 var app = express.createServer();

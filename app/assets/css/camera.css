@@ -139,7 +139,7 @@ input.switch:checked ~ label:after
 	width: 850px;
 }
 
-#camera-schedule-dialog table th,#camera-schedule-dialog table td{
+#camera-schedule-dialog table th, #camera-schedule-dialog table td {
 	text-align: center;
 }
 
