@@ -209,6 +209,7 @@ CamerasController.prototype.getMotion = function(camId, cb) {
 		} else {
 			console.log(cam);
 			cam.api.getMotionParams(function(motion_params){
+				console.log(motion_params);
 				cb( err, motion_params );
 			});
 		}
@@ -593,12 +594,17 @@ CamerasController.prototype.updateCameraMotion = function(params, cb) {
         return;
     }
 	
+	params.camera.motion.enabled = (params.camera.motion.enabled === '1') ? true : false
+	console.log(params);
+	console.log(camera.api);
 	camera.api.setMotionParams(params.camera.motion, function(error, body){
 		if (!error && body) {
 			self.emit("motion_update", {camera: camera, motion: params.camera.motion});
+
 		}else{
 			console.log(error);
 		}
+		cb(error, body);
 	}); 
 };
 

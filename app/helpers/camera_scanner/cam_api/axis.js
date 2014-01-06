@@ -250,7 +250,7 @@ Axis.prototype.setCameraParams = function(params) {
 Axis.prototype.setMotionParams = function(params, cb){
 
 	var self = this;
-
+	self.motion_enabled = params.enabled;
 	self.threshold = params.threshold || 50;
 	self.sensitivity = params.sensitivity || 50;
 

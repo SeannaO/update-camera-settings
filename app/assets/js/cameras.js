@@ -818,8 +818,8 @@ var cameraMotion = function(camId) {
         contentType: 'application/json',
         success: function(data) {
             console.log(data);
-            if (data.success) {
-                $('#camera-motion-enable').prop('checked', data.motion_enabled == "1").change( function() {
+            if (data.success && data.camera.motion) {
+                $('#camera-motion-enable').prop('checked', data.camera.motion.enabled == "1").change( function() {
 
                     if ( $(this).is(':checked') ) {
                         $('#camera-motion-dialog .form-control').prop('disabled', false);
@@ -827,6 +827,8 @@ var cameraMotion = function(camId) {
                         $('#camera-motion-dialog .form-control').prop('disabled', true);
                     }
                 });
+                $('#camera-motion-threshold').val(data.camera.motion.threshold);
+                $('#camera-motion-sensitivity').val(data.camera.motion.sensitivity);
 
                 $("#update-motion").unbind();
                 $("#update-motion").click( function() {
