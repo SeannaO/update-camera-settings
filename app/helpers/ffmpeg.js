@@ -7,6 +7,7 @@
 var ffmpeg = require('fluent-ffmpeg');
 var fs = require('fs');
 var path = require('path');
+var spawn = require('child_process').spawn;
 
 
 /**
@@ -443,6 +444,38 @@ var sendMp4Stream = function(file, offset, req, res) {
 // - - - - - - - - - - - - - - - - - - - -
 
 
+/**
+ * checkH264
+ *
+ */
+var checkH264 = function( url, cb ) {
+	var self = this;
+	var timeout = 10000;
+
+	var ffmpegProcess = spawn('ffmpeg', [
+			'-i', url
+	]);
+
+	var ffmpegTimeout = setTimeout( function() {
+		console.log('[ffmpeg.js:checkH264] H264 detection timed out');
+		ffmpegProcess.kill();
+		cb( false );
+	}, timeout);
+	
+	ffmpegProcess.stderr.on('data', function(data) {
+		var msg = data.toString();
+		if ( msg.indexOf('h264') > -1 ) {
+			console.log('[ffmpeg.js:checkH264] detected h264 stream');
+			clearTimeout( ffmpegTimeout );
+			cb( true );
+			ffmpegProcess.kill();
+		}
+	});
+};
+// - - end of checkH264
+// - - - - - - - - - - - - - - - - - - - -
+
+
 // exports
 exports.sendWebMStream = sendWebMStream;
 exports.sendStream = sendMp4Stream;
@@ -453,3 +486,4 @@ exports.makeThumb = makeThumb;
 exports.smartSnapshot = smartSnapshot;
 exports.sendMp4File = sendMp4File;
 exports.inMemoryStitch = inMemoryStitch;
+exports.checkH264 = checkH264;

@@ -59,10 +59,7 @@ var timelineSetup = function( cam_id, id, name ) {
 		}).appendTo("#camera-item-"+cam_id).mouseleave( function() {
 			$("#thumb").fadeOut();
 		});
-		$("<div>", {
-			id: "thumb-" + cam_id,
-			class: "thumb-container"
-		}).appendTo("#camera-item-"+cam_id);
+
 	}
 	
 	timelines[id] = new Timeline("#timeline-"+id);
@@ -150,6 +147,7 @@ var addCameraItem = function( camera ) {
 	var menuHtml = "" +
 				"<a href = \"javascript:editCamera('" + camera._id + "')\">[ edit ]</a> | " +
                 "<a href = \"javascript:cameraSchedule('" + camera._id + "')\">[ schedule ]</a> | " +
+                "<a href = \"javascript:cameraMotion('" + camera._id + "')\">[ motion ]</a> | " +
 				"<a href = \"javascript:deleteCamera('" + camera._id + "')\">[ remove ]</a>";
    
 	$("<div>", {
@@ -169,13 +167,17 @@ var addCameraItem = function( camera ) {
 
 	switchHtml = '' +
 		'<input type="checkbox" id="switch-'+camera._id+'" name="switch-'+camera._id+'" class="switch" value="1"/>' +
-		'<label for="switch-'+camera._id+'">on/off</label>';
+		'<label for="switch-'+camera._id+'">off/on</label>';
 
 	$("<div>", {
 		class: "camera-item-switch",
 		html: switchHtml
 	}).appendTo("#camera-item-"+camera._id);
 
+	$("<div>", {
+		id: "thumb-" + camera._id,
+		class: "thumb-container"
+	}).appendTo("#camera-item-"+camera._id);
            
 	console.log( camera );
 
@@ -267,6 +269,25 @@ var deleteCamera = function(id) {
     });    
 };
 
+var getCameraOptions = function(id, cb) {
+
+	var username = $("#camera-username").val();
+	var password = $("#camera-password").val();
+	if (username && password && username !== '' && password !== ''){
+	    $.ajax({
+	        type: "GET",
+	        url: "/cameras/" + id + "/configuration",
+	        data: {camera:{username:username, password:password}},
+	        contentType: 'application/json',
+	        success: function(data) {
+	            cb( data );
+	        }
+	    });
+	}else{
+		cb(null);
+	}
+};
+
 
 var updateCamera = function(id, cb) {
     
@@ -292,6 +313,21 @@ var updateSchedule = function(id, cb) {
     $.ajax({
         type: "PUT",
         url: "/cameras/" + id + "/schedule",
+        data: JSON.stringify( params ),
+        contentType: 'application/json',
+        success: function(data) {
+            cb( data );
+        }
+    });
+};
+
+var updateMotion = function(id, cb) {
+
+    var params = $('#camera-motion').serializeObject();
+	console.log( params );
+    $.ajax({
+        type: "PUT",
+        url: "/cameras/" + id + "/motion",
         data: JSON.stringify( params ),
         contentType: 'application/json',
         success: function(data) {
@@ -342,7 +378,9 @@ var editCamera = function(camId) {
                         }
                     });
                 });
-                
+                setConstraintsOnStreamFields(camId);
+				$("#camera-username, #camera-password").unbind();
+                $("#camera-username, #camera-password").on( "blur", setConstraintsOnStreamFields(camId));
                 $("#add-new-camera-dialog").modal('show');
             } else {
                 
@@ -351,6 +389,41 @@ var editCamera = function(camId) {
     });    
 };
 
+
+var setConstraintsOnStreamFields = function(camId){
+	getCameraOptions(camId,function(data){
+		if (data){
+			// add a stream if one does not already exist
+			if (!$("#stream-panes .tab-pane")){
+				addStream();
+			}
+			//get the supported parameters of the camera
+			if (data && data.resolutions && data.framerate_range && data.quality_range){
+				$(".camera-stream-framerate-input").attr({
+					min: data.framerate_range.min,
+					max: data.framerate_range.max
+				});
+				$(".camera-stream-quality-input").attr({
+					min: data.quality_range.min,
+					max: data.quality_range.max
+				});
+
+				$('.camera-stream-resolution-select').each(function(){
+					var $self = $(this);
+					var current_val = $self.val();
+					$self.html('');
+					for (idx in data.resolutions){
+						$self.append($('<option>', {
+					    	value: data.resolutions[idx].value,
+					    	text: data.resolutions[idx].name
+						}));
+					}
+					$self.val(current_val);
+				});
+			}
+		}
+	});
+};
 
 var meridian = function(hour){
 	return (Math.round(hour / 12) > 0) ? " PM" : " AM";
@@ -504,9 +577,8 @@ var addStreamFieldset = function( cb ) {
 		html: '<label for="camera-stream-resolution">resolution</label>'
 	});
 
-	var camera_stream_resolution = $('<input>', {
-		type: 'string',
-		class: 'form-control',
+	var camera_stream_resolution = $('<select>', {
+		class: 'form-control camera-stream-resolution-select',
 		id: 'camera-streams-' + current_number_of_streams + '-resolution',
 		name: 'camera[streams][' + current_number_of_streams + '][resolution]'
 	});
@@ -526,7 +598,7 @@ var addStreamFieldset = function( cb ) {
 		type: 'number',
 		min: 1,
 		max: 30,
-		class: 'form-control',
+		class: 'form-control camera-stream-framerate-input',
 		id: 'camera-streams-' + current_number_of_streams + '-framerate',
 		name: 'camera[streams][' + current_number_of_streams + '][framerate]'
 	});
@@ -546,7 +618,7 @@ var addStreamFieldset = function( cb ) {
 		type: 'number',
 		min: 1,
 		max: 30,
-		class: 'form-control',
+		class: 'form-control camera-stream-quality-input',
 		id: 'camera-streams-' + current_number_of_streams + '-quality',
 		name: 'camera[streams][' + current_number_of_streams + '][quality]'
 	});
@@ -618,7 +690,7 @@ var cameraSchedule = function(camId) {
 
     $.ajax({
         type: "GET",
-        url: "/cameras/" + camId + "/schedule/json",
+        url: "/cameras/" + camId + "/schedule.json",
         contentType: 'application/json',
         success: function(data) {
             console.log(data);
@@ -640,10 +712,10 @@ var cameraSchedule = function(camId) {
 					$('#schedule-'+day+'-close').timepicker('setTime',   to12HourTime(data.schedule[d].close.hour)   + ":" + data.schedule[d].close.minutes + meridian(data.schedule[0].close.hour));
 				}
 
-                if (data.schedule_enabled === "0"){
-                    $('#camera-schedule-dialog .form-control').prop('disabled', true);
-                }else{
+                if (data.schedule_enabled){
                     $('#camera-schedule-dialog .form-control').prop('disabled', false);
+                }else{
+                	$('#camera-schedule-dialog .form-control').prop('disabled', true);
                 }
 
 
@@ -658,6 +730,43 @@ var cameraSchedule = function(camId) {
                     });
                 });
                 $("#camera-schedule-dialog").modal('show');
+            } else {
+                
+            }
+        }
+    });
+};
+
+
+var cameraMotion = function(camId) {
+
+    $.ajax({
+        type: "GET",
+        url: "/cameras/" + camId + "/motion.json",
+        contentType: 'application/json',
+        success: function(data) {
+            console.log(data);
+            if (data.success) {
+                $('#camera-motion-enable').prop('checked', data.motion_enabled == "1").change( function() {
+
+                    if ( $(this).is(':checked') ) {
+                        $('#camera-motion-dialog .form-control').prop('disabled', false);
+                    } else {
+                        $('#camera-motion-dialog .form-control').prop('disabled', true);
+                    }
+                });
+
+                $("#update-motion").unbind();
+                $("#update-motion").click( function() {
+                    updateMotion( camId, function(data) {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert(data.error);
+                        }
+                    });
+                });
+                $("#camera-motion-dialog").modal('show');
             } else {
                 
             }

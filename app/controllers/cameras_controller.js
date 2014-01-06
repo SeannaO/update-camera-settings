@@ -1,9 +1,8 @@
-var Datastore = require('nedb');
-var Camera = require('./../models/camera_model');
-var EventEmitter = require('events').EventEmitter;
-var util = require('util');
+var Datastore = require('nedb');					// nedb datastore
+var Camera = require('./../models/camera_model');	// 
+var EventEmitter = require('events').EventEmitter;	// 
+var util = require('util');							// for inheritance
 
-//var db;
 var cameras = [];
 
 function CamerasController( mp4Handler, filename, videosFolder, cb ) {
@@ -82,16 +81,45 @@ CamerasController.prototype.checkSnapshotQ = function() {
 };
 
 
+CamerasController.prototype.getCameraOptions = function(params, cb){
+    var self = this;
+    var camId = params._id;
+    console.log(params);
+	this.getCamera( camId, function(err, cam) {
+		
+		if (err || !cam || cam.length === 0) {
+			cb( err, null );
+		} else {
+			console.log(cam.api);
+			cam.api.getResolutionOptions(function(resolutions){
+				cb( err, { framerate_range: cam.api.getFrameRateRange(), resolutions: resolutions, quality_range: cam.api.getVideoQualityRange()});
+			})
+			
+		}
+	});
+};
+
+// TODO: specify a stream
 CamerasController.prototype.takeSnapshot = function( camId, req, res, cb ) {
 
 	var self = this;
 
     this.getCamera( camId, function(err, cam) {
 
-        if (err) {
+		var firstStreamId;
+
+		if (cam) {
+			firstStreamId = Object.keys(cam.streams)[0];
+		}
+
+        if ( err || !cam || !cam.streams || !cam.streams[firstStreamId]) {
             res.json( { error: err } );
+			if (cb) cb();
         } else {
-            self.mp4Handler.takeSnapshot( cam.db, cam, req, res, function() {
+			// TODO: specify a stream
+			// for now, just select one of the streams
+			
+            self.mp4Handler.takeSnapshot( cam.streams[firstStreamId].db, cam, req, res, function() {
 				if (cb) {
 					cb();
 				}
@@ -171,6 +199,22 @@ CamerasController.prototype.getCamera = function(camId, cb) {
     });
 };
 
+CamerasController.prototype.getMotion = function(camId, cb) {
+
+    var self = this;
+
+	this.getCamera( camId, function(err, cam) {
+		if (err || !cam || cam.length === 0) {
+			cb( err, null );
+		} else {
+			console.log(cam);
+			cam.api.getMotionParams(function(motion_params){
+				cb( err, motion_params );
+			});
+		}
+	});
+};
+
 
 CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_ids_list ) {
 	
@@ -179,8 +223,8 @@ CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_id
 	var maxChunksPerCamera = 100;			// limits query to 100 chunks per camera
 											// to avoid having a large array in memory
 
-	var millisPeriodicity = 1000 * 60 * 15; // checks each 15 minutes
-	//var millisPeriodicity = 1000 * 10 * 1;		// !! checks each 10s - debug only !!
+	//var millisPeriodicity = 1000 * 60 * 15; // checks each 15 minutes
+	var millisPeriodicity = 1000 * 10 * 1;		// !! checks each 10s - debug only !!
 
 	var self = this;
 
@@ -349,6 +393,8 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
     var self = this;
 
+	console.log(cam);
+
     cam.schedule_enabled = false;
     cam.enabled = false
     cam.schedule = {"sunday":{"open":0,"close":"12:00 PM"},"monday":{"open":0,"close":"12:00 PM"},"tuesday":{"open":0,"close":"12:00 PM"},"wednesday":{"open":0,"close":"12:00 PM"},"thursday":{"open":0,"close":"12:00 PM"},"friday":{"open":0,"close":"12:00 PM"},"saturday":{"open":0,"close":"12:00 PM"}};
@@ -440,8 +486,8 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
         $set: { 
             name: cam.name							|| camera.name, 
             manufacturer: cam.manufacturer			|| camera.manufacturer, 
-            ip_address: cam.ip_address || cam.ip	|| camera.ip,
-			id:cam.id								|| camera.id,
+            ip: cam.ip								|| camera.ip,
+			id: cam.id								|| camera.id,
             username: cam.username					|| camera.username,
             password: cam.password					|| camera.password,
             streams: streamsHash
@@ -456,18 +502,40 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
             self.db.loadDatabase();
 
             camera.cam.name = cam.name;
- 
-			if (camera.cam.manufacturer !== cam.manufacturer) {
+			camera.cam.id = cam.id;
+
+			var need_restart_all_streams = false;
+
+			if (cam.manufacturer && (camera.cam.manufacturer !== cam.manufacturer) ) {
 				camera.cam.manufacturer = cam.manufacturer;
-				camera.cam.restartAllStreams();
+				need_restart_all_streams = true;
 			}
 			
-			camera.cam.ip_address = camera.cam.ip = cam.ip_address || cam.ip;
+			if ( cam.ip && (camera.cam.ip !== cam.ip) ) {
+				camera.cam.ip_address = camera.cam.ip = cam.ip;
+				need_restart_all_streams = true;
+			}
 
-			camera.cam.id = cam.id;
-            camera.cam.username = cam.username;
-            camera.cam.password = cam.password;
-			
+			if ( cam.username && ( camera.cam.username !== cam.username ) ){
+				camera.cam.username = cam.username;
+				need_restart_all_streams = true;
+			}
+
+			if ( cam.password && ( camera.cam.password !== cam.password ) ){
+				camera.cam.password = cam.password;
+				need_restart_all_streams = true;
+			}
+
+			camera.cam.api.setCameraParams({
+				ip: camera.cam.ip,
+				password: camera.cam.password,
+				username: camera.cam.username
+			});
+
+			if (need_restart_all_streams) {
+				camera.cam.restartAllStreams();
+			}
+						
 			camera.cam.updateAllStreams( cam.streams );
             camera.cam.updateRecorder();
 
@@ -509,6 +577,28 @@ CamerasController.prototype.updateCameraSchedule = function(params, cb) {
         }
     });   
 
+};
+
+
+CamerasController.prototype.updateCameraMotion = function(params, cb) {
+
+    console.log("*** updating camera motion:" );
+    console.log(params);
+    var self = this;
+    var camera = this.findCameraById( params._id ).cam;
+    
+	if (!camera) {
+        cb("{error: 'camera not found'}");
+        return;
+    }
+	
+	camera.api.setMotionParams(params.camera.motion, function(error, body){
+		if (!error && body) {
+			self.emit("motion_update", {camera: camera, motion: params.camera.motion});
+		}else{
+			console.log(error);
+		}
+	}); 
 };
 
 

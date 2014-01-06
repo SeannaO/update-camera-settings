@@ -160,8 +160,8 @@
                     </div>
                     <div class="modal-body">
                         <form id="camera-schedule" role="form">
-                            <div class="camera-schedule-switch"><input type="hidden" name="schedule_enabled" value="0" />
-<input type="checkbox" id="camera-schedule-enable" name="schedule_enabled" class="switch" value="1"><label for="camera-schedule-enable">on/off</label></div>
+                            <div class="camera-schedule-switch">
+<input type="checkbox" id="camera-schedule-enable" name="schedule_enabled" class="switch" value="1"><label for="camera-schedule-enable">off/on</label></div>
 							<div id = 'schedule-table'>
 							</div>
 							<script>
@@ -179,6 +179,43 @@
                 </div><!-- /.modal-content -->
             </div><!-- /.modal-dialog -->
         </div><!-- /.modal -->                
+
+
+        <div class="modal fade" id = "camera-motion-dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title">Camera Motion</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form id="camera-motion" role="form">
+							<div style = "height: auto; overflow: auto"> 
+	                        	<input type="hidden" name="camera_id" />
+	                            <div class="camera-motion-switch"><input type="hidden" name="camera[motion][enabled]" value="0" />
+	<input type="checkbox" id="camera-motion-enable" name="camera[motion][enabled]" class="switch" value="1"><label for="camera-motion-enable">off/on</label></div>
+								<div class="form-group  col-xs-4">
+									<label for="camera-motion-sensitivity">Sensitivity</label>
+									<input type="number" class="form-control" id="camera-motion-sensitivity" name="camera[motion][sensitivity]">
+								</div>
+
+								<div class="form-group  col-xs-4">
+									<label for="camera-motion-threshold">Threshold</label>
+									<input type="number" class="form-control" id="camera-motion-threshold" name="camera[motion][threshold]">
+								</div>
+							</div>
+						</form>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
+                        <button type="button" class="btn btn-primary" id = "update-motion">save</button>
+                    </div>
+
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->  
 
         <script>
             $("#add-stream").click(function(){
@@ -275,13 +312,6 @@
                         timelineSetup(data._id, data.streams[i].id, data.streams[i].name);
                     }
                 });
-            });
-
-            $("#camera-username, #camera-password").on( "blur", function(){
-            
-                //get the values of the username and password
-
-                //get the supported parameters of the camera
             });
 
 

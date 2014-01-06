@@ -1,10 +1,10 @@
-var fs = require('fs');
-var WeeklySchedule = require('weekly-schedule');
-var RecordModel = require('./record_model');
-var Dblite = require('../db_layers/dblite.js');
-var util = require('util');
-var EventEmitter = require('events').EventEmitter;
-var rtspUrl = require('../helpers/camera_scanner/rtsp.js');
+var fs = require('fs');											// fs utils
+var WeeklySchedule = require('weekly-schedule');				// scheduler
+var RecordModel = require('./record_model');					// recorder
+var Dblite = require('../db_layers/dblite.js');					// sqlite layer
+var util = require('util');										// for inheritance
+var EventEmitter = require('events').EventEmitter;				// events
+
 
 function Camera( cam, videosFolder ) {
 
@@ -14,32 +14,44 @@ function Camera( cam, videosFolder ) {
 
     this._id = cam._id;
 
-	if (cam.id) {
-        this.id = cam.id;
+	if (cam.id) { 
+        this.id = cam.id;		// id: assigned from lifeline - legacy
     } else {
-        this.id = cam._id;
+        this.id = cam._id;		// _id: assigned from db
     } 
 
     this.name = cam.name;
     this.ip = cam.ip;
     this.status = cam.status;
     this.manufacturer = cam.manufacturer;
-    this.type = cam.type;
-    this.indexing = false;
-	this.username = cam.username;
+    this.type = cam.type;					// 'ovif' or 'psia'
+    this.indexing = false;					// lock for indexPendingFiles
+	this.username = cam.username;			
     this.password = cam.password;
 
 	this.videosFolder = videosFolder + "/" + this._id;
 
 	this.streams = {};
 
-	this.recording = false;
-    this.enabled = cam.enabled;
+	this.recording = false;					// is the camera recording?
+    this.enabled = cam.enabled;				// is the camera enabled?
 	
-	this.lastChunkTime = Date.now();
 
-	// //
-	if ( !cam.deleted ) {
+	this.api = require('../helpers/camera_scanner/cam_api/api.js').getApi( this.manufacturer );
+
+	this.api.setCameraParams({
+		ip: this.ip,
+		password: this.password,
+		username: this.username
+	});
+
+	// motion detection test -- TESTS ONLY
+	self.setMotionDetection( function() {
+		self.startMotionDetection();
+	});
+	//
+	
+	if ( !cam.deleted ) {	// starts camera if it's not being deleted					
 		this.schedule = new WeeklySchedule(cam.schedule);
 		this.schedule_enabled = cam.enableSchedule;
 		
@@ -52,7 +64,7 @@ function Camera( cam, videosFolder ) {
 		for (var i in cam.streams) {
 			self.addStream( cam.streams[i] );
 		}
-		
+	
 		this.setupEvents();
 
 		if (!this.recording && this.shouldBeRecording()) {
@@ -62,18 +74,32 @@ function Camera( cam, videosFolder ) {
 			console.log("stopping camera " + this.name);
 			this.stopRecording();
 		}
-	} else {
-		
+	} else {	// if camera is being deleted, starts deletion process 
+
+		//TODO:	periodically push chunks to the deletion queue until db is empty
+		//		then recursively deletes cam folders 
+		//		and finally removes the camera from the cameras db
 	}
-	// //
 }
+// end of constructor
+//
 
 
 util.inherits(Camera, EventEmitter);
 
+
+/**
+ * Adds stream to camera, 
+ *  gets rtsp url,
+ *	instantiates corresponding record model
+ *	and starts recording stream if camera should be recording
+ *
+ * @param {stream} obj 
+ *     stream should contain: { resolution, framerate, quality }
+ */
 Camera.prototype.addStream = function( stream ) {
 
-	console.log('*** addStream');
+	console.log('[Camera.prototype.addStream] ');
 	console.log(stream);
 	console.log('* * *');
 
@@ -81,17 +107,11 @@ Camera.prototype.addStream = function( stream ) {
 
 	stream.db = new Dblite( this.videosFolder + '/db_'+stream.id+'.sqlite' );
 	
-	stream.url = rtspUrl({
-		manufacturer: self.manufacturer,
-		ip: self.ip,
-		user: self.username,
-		password: self.password,
+	stream.url = this.api.getRtspUrl({
 		resolution: stream.resolution,
 		framerate: stream.framerate,
 		quality: stream.quality
 	});
-
-	console.log('stream.url: ' + stream.url);
 
 	stream.recordModel = new RecordModel( this, stream );
 
@@ -101,29 +121,75 @@ Camera.prototype.addStream = function( stream ) {
 		stream.recordModel.startRecording();
 	}
 };
+// end of addStream
+//
 
 
+Camera.prototype.setMotionDetection = function( cb ) {
+	
+	var motionParams = {
+		enabled: true,
+		threshold: 10,
+		sensitivity: 80
+	};
+
+	this.api.setMotionParams( motionParams, function( err, body ) {
+		if (cb) cb();
+	});
+};
+
+
+Camera.prototype.startMotionDetection = function() {
+	
+	var self = this;
+
+	this.api.startListeningForMotionDetection( function() {
+
+		// console.log("* * * motion " + Date.now() + " * * * " + self.manufacturer);
+		
+		if ( !self.recording ) {
+			self.startRecording();
+			if (self.stopRecordingTimeout) {
+				clearInterval( self.stopRecordingTimeout );
+			}
+			self.stopRecordingTimeout = setTimeout (function() {
+				self.stopRecording();
+			},30000);
+		}
+	});
+};
+
+
+/**
+ * Updates all camera streams from an array of streams,
+ *  adding new stream if 'id' is empty or doesn't match,
+ *  and deleting existing streams that are not listed on the array.
+ *
+ * @param { new_streams } Array
+ *     new_streams is just an array of streams
+ */
 Camera.prototype.updateAllStreams = function( new_streams ) {
 
 	var self = this;
 
-	console.log('*** update all streams');
-	console.log( new_streams );
-	console.log('* * *');
+	this.api.setCameraParams({
+		ip: self.ip,
+		password: self.password,
+		username: self.username
+	});
 
+	
 	for ( var s in new_streams ) {
 		var stream = new_streams[s];
 
 		if ( !stream.id || !self.streams[ stream.id ] ) { 
-			// adds new stream if id is blank or doesn't match
-			self.addStream( stream );
+			self.addStream( stream );		// adds new stream if 'id' is blank or doesn't match
 		} else {
-			self.updateStream( stream );
+			self.updateStream( stream );	// ...or updates exiting stream otherwise
 		}
 	}
 
 	// checks for streams to be deleted
-	//
 	var ids = [];
 	if (new_streams) {
 		// creates an array of the new streams ids
@@ -139,8 +205,16 @@ Camera.prototype.updateAllStreams = function( new_streams ) {
 		}
 	}
 };
+// end of updateAllStreams
+//
 
 
+/**
+ * Removes stream
+ *	TODO: marking stream for deletion and storing 'stream.deleted = true' on the db
+ *
+ * @param { streamId } string
+ */
 Camera.prototype.removeStream  = function( streamId ) {
 
 	var self = this;
@@ -151,11 +225,19 @@ Camera.prototype.removeStream  = function( streamId ) {
 	delete self.streams[streamId].recordModel;
 	delete self.streams[streamId];
 
+	//TODO: mark stream for deletion and store it on db
 	//TODO: delete stream files
-
 };
+// end of removeStream
+//
 
 
+/**
+ * Updates a specific camera stream,
+ *  restarting the record model if the url changes
+ *
+ * @param { stream } obj
+ */
 Camera.prototype.updateStream = function( stream ) {
 
 	var self = this;
@@ -169,11 +251,18 @@ Camera.prototype.updateStream = function( stream ) {
 	self.streams[id].name = stream.name;
 	self.streams[id].retention = stream.retention;
 
+	// these are the parameters that requires restarting the recorder when they change,
+	// because the rtsp url changes.
 	var restartParams = ['resolution', 'framerate', 'quality'];
 
+	// iterates through restart params, checks if any of them changed, 
+	// sets restarting if needed
 	for (var i in restartParams) {
+
 		var param = restartParams[i];
+
 		if ( stream[param] && self.streams[id][param] !== stream[param] ) {
+
 			self.streams[id][param] = stream[param];
 			need_restart = true;
 		}
@@ -184,122 +273,218 @@ Camera.prototype.updateStream = function( stream ) {
 		self.restartStream( id );
 	}
 };
+// end of updateStream
+//
 
 
+
+/**
+ * Restarts all camera streams
+ *
+ */
 Camera.prototype.restartAllStreams = function() {
+	
 	
 	var self = this;
 
+	this.api.setCameraParams({
+		ip: self.ip,
+		password: self.password,
+		username: self.username
+	});
+	
 	for (var i in self.streams) {
 		self.restartStream(i);
 	}
 };
+// end of restartAllStreams
+//
 
+
+/**
+ * Restarts a stream
+ *	by stopping and deleting the corresponding recordModel,
+ *	refreshing the rtsp url,
+ *	and then lanching a new recordModel attached to the stream
+ *
+ * @param { streamId } int
+ */
 Camera.prototype.restartStream = function( streamId ) {
 
 	console.log('*** restartStream: restarting stream ' + streamId);
 
 	var self = this;
 
-	if ( !self.streams[streamId] ) return;
+	// for safety reasons; avoids dealing with wrong stream ids
+	if ( !self.streams[streamId] ) return; 
+
 	var stream = self.streams[ streamId ];
 
 	self.streams[streamId].recordModel.stopRecording();
 	delete self.streams[streamId].recordModel;
 	
-	stream.url = rtspUrl({
-		manufacturer: self.manufacturer,
-		ip: self.ip,
-		user: self.username,
-		password: self.password,
+	// refreshes rtsp url
+	self.streams[streamId].rtsp = self.streams[streamId].url = self.api.getRtspUrl({
 		resolution: stream.resolution,
 		framerate: stream.framerate,
 		quality: stream.quality
 	});
+	console.log("#### url: " + self.streams[streamId].url );
 	
-	self.streams[streamId].recordModel = new RecordModel( self, stream );
+	self.streams[streamId].recordModel = new RecordModel( self, self.streams[streamId] );
 
-	if ( self.shouldBeRecording ) {
+	if ( self.shouldBeRecording() ) {
 		self.streams[streamId].recordModel.startRecording();
 	}
 };
+// end of restartStream
+//
 
 
+/**
+ * Checks if camera should be recording
+ *	it depends on the scheduler
+ *
+ * @return {boolean} 'true' iff camera should be recording
+ */
 Camera.prototype.shouldBeRecording = function() {
 
     return ( ( this.schedule_enabled && this.schedule.isOpen() ) || ( !this.schedule_enabled && this.enabled ) );
 };
+// end of shouldBeRecording
+//
 
 
+/**
+ * Converts from days to millis
+ *
+ * @return {Number} converted value in millis
+ */
 Camera.prototype.daysToMillis = function(days) {
 	
-	//return days * 24 * 60 * 60 * 1000;
-	
-	return days * 1000; // debug: seconds
+	return days * 24 * 60 * 60 * 1000;
+	// return days * 1000; // seconds instead of days - !!! tests only !!!
 };
+// end of daysToMillis
+//
 
 
+/**
+ * Gets chunks from a given stream that expired retention period time,
+ *	limiting the number of chunks to be returned (for performance reasons)
+ *
+ * @param { streamId } string 
+ * @param { nChunks } int Max number of chunks to be returned
+ * @param { cb } function Callback, receives an array of chunks as param
+ */
 Camera.prototype.getExpiredChunksFromStream = function( streamId, nChunks, cb ) {
 	
 	var self = this;
 
+	// for safety reasons, avoids non-existing ids
 	if ( !this.streams[streamId] ) {
 		console.log('[error] cameraModel.getExpiredChunksFromStream: no stream with id ' + streamId);
 		return;
 	}
+
 	var stream = self.streams[streamId];
 	
+	// if there's no retention period, just return an empty array
 	if ( !stream.retention || stream.retention <= 0) {
 		cb([]);
 		return;
 	}
 
-	var retentionToMillis = self.daysToMillis( stream.retention );
-	var expirationDate = Date.now() - retentionToMillis;
+	var retentionToMillis = self.daysToMillis( stream.retention );	// converts to millis
+	var expirationDate = Date.now() - retentionToMillis;			// when should it expire?
 
-	// TODO: check if this condition is indeed working
+	// TODO: check if this condition is indeed working and really necessary
+	// try to avoid call to db when we know that there are no expired chunks
 	if ( stream.oldestChunkDate && ( Date.now() - stream.oldestChunkDate < retentionToMillis ) ) {
 		console.log('- no expired chunks');
 		cb([]);
 	} else {
 		stream.db.getExpiredChunks( expirationDate, nChunks, function( data ) {
 			if ( data.length === 0 ) {
+				// we reched the last expired chunk, 
+				// so let's try to avoid hitting the db unnecessarily
 				stream.oldestChunkDate = Date.now() - retentionToMillis;
 			}
 			cb( data );
 		});
 	}
 };
+// end of getExpiredChunksFromStream
+//
 
 
+/**
+ * Gets expired chunks from all streams, one stream at a time,
+ *	returning the chunks in an array as a callback param.
+ *	Getting chunks one stream at a time avoids CPU usage peaks.
+ *	To achieve that, this function calls itself recursively 
+ *	after getting the chunks from each stream.
+ *
+ * @param { chunks } array Used for the recursive call. 
+ *		- not necessary when first calling the method
+ * @param { streamList } array List of the streams ids, used for the recursive call. 
+ *		- not necessary when first calling the method
+ * @param { nChunks } int Max number of chunks per stream (for performance reasons)		
+ * @param { cb } function Callback, receives an array of chunks as param
+ */
 Camera.prototype.getExpiredChunks = function(  chunks, streamList, nChunks, cb ) {
 	
 	var self = this;
 	
+	// checks if method is being called for the first time
 	if ( !Array.isArray( streamList ) ) {
 		
-		nChunks = chunks;
-		cb = streamList;
-		streamList = Object.keys( self.streams );
-		chunks = [];
+		nChunks = chunks;							//	
+		cb = streamList;							//	cb is always the last param
+		streamList=Object.keys( self.streams);		//	creates an array of streams id
+		chunks=[];									//	no chunks yet
 	}
 	
-	if (streamList.length === 0) {
-		cb( chunks );
+	if (streamList.length === 0) {	// we are done checking all streams
+		cb( chunks );				// ...so let's pass the list of chunks
+
 	} else {
-		var streamId = streamList.shift();
+
+		var streamId = streamList.shift();	
+
 		self.getExpiredChunksFromStream( streamId, nChunks, function( data ) {
+
+			// appends stream id to the chunk object,
+			// so that when we return the data from all streams,
+			// we know which chunk is from which stream
 			data = data.map( function(d) {
 				d.stream_id = streamId;
 				return d;
 			});
+			
+			// appends chunks to our array and recursively proceeds to next stream
 			self.getExpiredChunks( chunks.concat(data), streamList, nChunks, cb );
 		});		
 	}
 };
+// end of getExpiredChunks
+//
 
 
-
+/**
+ * Gets oldest chunks from all streams, one stream at a time,
+ *	returning the chunks in an array as a callback param.
+ *	Getting chunks one stream at a time avoids CPU usage peaks.
+ *	To achieve that, this function calls itself recursively 
+ *	after getting the chunks from each stream.
+ *
+ * @param { chunks } array Used for the recursive call. 
+ *		- not necessary when first calling the method
+ * @param { streamList } array List of the streams ids, used for the recursive call. 
+ *		- not necessary when first calling the method
+ * @param { numberOfChunks } int Max number of chunks per stream (for performance reasons)		
+ * @param { cb } function Callback, receives an array of chunks as param
+ */
 Camera.prototype.getOldestChunks = function( chunks, streamList, numberOfChunks, cb ) {
 
 	var self = this;
@@ -312,47 +497,87 @@ Camera.prototype.getOldestChunks = function( chunks, streamList, numberOfChunks,
 		chunks = [];
 	}
 	
-	if (streamList.length === 0) {
-		cb( chunks );
+	if (streamList.length === 0) {	// we are done checking all streams
+		cb( chunks );				// ...so let's pass the list of chunks
+
 	} else {
+
 		var streamId = streamList.shift();
+		
 		self.getOldestChunksFromStream( streamId, numberOfChunks, function( data ) {
+
+			// appends stream id to the chunk object,
+			// so that when we return the data from all streams,
+			// we know which chunk is from which stream			
 			data = data.map( function(d) {
 				d.stream_id = streamId;
 				return d;
 			});
+
+			// appends chunks to our array and recursively proceeds to next stream			
 			self.getOldestChunks( chunks.concat(data), streamList, numberOfChunks, cb );
 		});		
 	}
 };
+// end of getOldestChunks
+//
 
 
+/**
+ * Gets oldest chunks from a given stream,
+ *	limiting the number of chunks to be returned (for performance reasons)
+ *
+ * @param { streamId } string 
+ * @param { nChunks } int Max number of chunks to be returned
+ * @param { cb } function Callback, receives an array of chunks as param
+ */
 Camera.prototype.getOldestChunksFromStream = function( streamId, numberOfChunks, cb ) {
 
+	// for safety reasons, avoids non-existing ids
 	if ( !this.streams[streamId] ) {
 		console.log('[error] cameraModel.getOldestChunks: no stream with id ' + streamId);
 		return;
 	}
 	
 	var self = this;
+	
 	self.streams[streamId].db.getOldestChunks( numberOfChunks, function( data ) {
 		cb( data );
 	});
 };
+// end of getOldestChunksFromStream
+//
 
 
+/**
+ * Indexes new chunk
+ *
+ * @param { streamId } string 
+ * @param { chunk } obj Chunk object
+ *	chunk should contain: { start, end, file }
+ */
 Camera.prototype.addChunk = function( streamId, chunk ) {
 	
+	// for safety reasons, avoids non-existing ids
 	if ( !this.streams[streamId] ) {
 		console.log('[error] cameraModel.addChunk: no stream with id ' + streamId);
 		return;
 	}
-
+	
 	this.streams[ streamId ].db.insertVideo( chunk );
 };
+// end of addChunk
+//
 
 
-
+/**
+ * Deletes a given chunk and the corresponding thumbnail,
+ *	after removing it from db
+ *
+ * @param { streamId } string 
+ * @param { chunk } obj Chunk object
+ *	chunk should contain: { file }
+ */
 Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 
 	if ( !this.streams[streamId] ) {
@@ -369,11 +594,14 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 			console.log(err);
 			cb( chunk, err );
 		} else { 
-			fs.exists(chunk.file, function(exists) {
+			fs.exists(chunk.file, function(exists) {	// check if file really exists before deleting
+														// it might not be necessary,  
+														// it's only being used now for extra safety reasons
 				if (exists) {
 					fs.unlink( chunk.file, function(err) {
 						if (!err) {
 							// attempts to delete the corresponding thumb
+							// notice that the thumb file has the same name as the chunk file
 							var thumb = chunk.file.replace('/videos', '/thumbs');
 							thumb = thumb.replace('.ts','.jpg');
 							fs.unlink(thumb);
@@ -384,16 +612,20 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 					});
 				} else {
 					cb( chunk );
-				}
-				
+				}	
 			});
 		}
 	});	
 };
+// deleteChunk
+//
 
 
-
-Camera.prototype.setupEvents = function( cb ) {
+/**
+ * Sets up listeners and emitters
+ *
+ */
+Camera.prototype.setupEvents = function() {
 
     var self = this;
     for (var i in self.streams) {
@@ -406,98 +638,156 @@ Camera.prototype.setupEvents = function( cb ) {
     }
 	
 };
+// end of setupEvents
+//
 
 
+/**
+ * Is camera recording?
+ *
+ * @return { boolean }
+ */
 Camera.prototype.isRecording = function() {
     return this.recording;
 };
+// end of isRecording
+//
 
 
+/**
+ * Starts recording all the streams
+ *
+ */
 Camera.prototype.startRecording = function() {
     
     var self = this;
 
-    if (this.recording) {
+    if (this.recording) {	// avoids calling startRecording twice
         console.log(this.name + " is already recording.");
     } else {
         console.log("* * * " + this.name + " will start recording...");
 		for (var i in self.streams) {
 			this.streams[i].recordModel.startRecording();
 		}
-		this.recording = true;
+		this.recording = true;	
 		this.enabled = true;		
     }
 };
+// end of startRecording
+//
 
 
+/**
+ * Stops recording all the streams
+ *
+ */
 Camera.prototype.stopRecording = function() {
 
 	var self = this;
 
-    if (this.recording) {
+    if (this.recording) { // avoids calling stopRecording twice
         console.log(this.name + " will stop recording...");
         this.recording = false;
 		this.enabled = false;
 		for (var i in self.streams) {
 			this.streams[i].recordModel.stopRecording();
 		}
-    } else {
+    } else { 
         console.log( this.name + " is already stopped.");
     }
 };
+// stopRecording
+//
 
 
+/**
+ * Sets recording schedule
+ *
+ * @param { schedule } obj 
+ */
 Camera.prototype.setRecordingSchedule = function(schedule) {
+
     this.schedule = new WeeklySchedule(schedule);
 };
+// end of setRecordingSchedule
+//
 
+
+/**
+ * Updates all streams recorders
+ *
+ */
 Camera.prototype.updateRecorder = function() {
+
 	for (var i in this.streams) {
 		this.streams[i].recordModel.updateCameraInfo( this, this.streams[i] );
 	}
-};
+}; 
+// end of updateRecorder
+//
 
 
-Camera.prototype.deleteAllFiles = function() {
-
-    // deleteFolderRecursive( this.videosFolder );
-};
-
-
+/**
+ * Index pending chunks on each stream,
+ *	one stream at a time to avoid CPU peaks.
+ *
+ * @param { streamList } array Used for the recursive call
+ *		- this param is not necessary when first calling the method
+ *	@param { cb } function Callback, called when done with all streams	
+ */
 Camera.prototype.indexPendingFiles = function( streamList, cb ) {
 
 	var self = this;
 	
+	// checks if method is being called for the first time
+	// or if it's a recursive call
 	if ( !streamList || typeof streamList === 'function' ) {
-		if (self.indexing) {
+
+		if (self.indexing) {									// avoids calling the method
+																// while the camera is still indexing
 			console.log('*** this camera is already indexing');
 			return;
 		}
-		if ( typeof streamList === 'function') cb = streamList;
-		streamList = Object.keys( self.streams );
-		self.indexing = true;
+
+		if ( typeof streamList === 'function') cb = streamList;	
+		streamList = Object.keys( self.streams );				// sets up array with all streams ids
+		self.indexing = true;									// this camera is now indexing
 	}
 
-	if ( streamList.length === 0 ) {
-		if (cb) cb();
-		self.indexing = false;
+	if ( streamList.length === 0 ) {	// we're done with all the streams
+		
+		if (cb) cb();					// .. so let's call the callback
+		self.indexing = false;			// .. and we're not indexing anymore
 	} else {
-		self.indexing = true;
+
+		self.indexing = true;				// we're indexing now
 		var streamId = streamList.shift();
 		
+		// index pending files on a stream
 		this.streams[streamId].recordModel.indexPendingFiles( function() {
-			self.indexPendingFiles( streamList, cb );
+														// done indexing on that stream
+			self.indexPendingFiles( streamList, cb );	// recursive call, index pending files on the next stream
 		});
 	}
 };
+// indexPendingFiles
+//
 
 
+/**
+ * Renders streams info as a json array
+ * NOTE: remember to edit this method when changing stream data attributes
+ *
+ * @return { array } Json array containing all streams object
+ */
 Camera.prototype.getStreamsJSON = function() {
 	
 	var self = this;
 	
+	// array with all streams ids
 	var streamIds = Object.keys(self.streams);
 
+	// json array to be returned
 	var streams = [];
 
 	for (var id in self.streams) {
@@ -515,9 +805,17 @@ Camera.prototype.getStreamsJSON = function() {
 	}
 
 	return streams;
-};
+}; 
+// end of getStreamsJSON
+//
 
 
+/**
+ * Renders camera as a json object
+ * NOTE: remember to edit this method when changing camera data attributes
+ *
+ * @return { array } Json array containing all streams object
+ */
 Camera.prototype.toJSON = function() {
     var info = {};
     
@@ -541,6 +839,8 @@ Camera.prototype.toJSON = function() {
 
     return info;
 };
+// end of toJSON
+//
 
 
 var deleteFolderRecursive = function( path ) {
@@ -564,6 +864,11 @@ var deleteFolderRecursive = function( path ) {
 module.exports = Camera;
 
 
+/**
+ * Helper method: generates UUID for streams
+ *
+ * @return { string } UUID string 
+ */
 function generateUUID() {
     var d = new Date().getTime();
     var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -573,4 +878,5 @@ function generateUUID() {
     });
     return uuid;
 }
-
+// end of generateUUID
+//

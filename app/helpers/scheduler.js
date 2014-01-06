@@ -57,6 +57,25 @@ Scheduler.prototype.clearForCamera = function( camera ) {
     delete this.processes[camera._id];
 };
 
+Scheduler.prototype.setupListeners = function( emitter ) {
+
+	emitter.on('create', function(camera) {
+		console.log("camera created calling launchForCamera on scheduler");
+		scheduler.launchForCamera(camera);
+	});
+
+	emitter.on('delete', function(camera) {
+		console.log("camera deleted, removing scheduler");
+		scheduler.clearForCamera(camera);
+	});
+
+	emitter.on('schedule_update', function(camera) {
+		console.log("camera scheduler updated, relaunching scheduler");
+		scheduler.clearForCamera(camera);
+		scheduler.launchForCamera(camera);
+	});
+};
+
 // - - -
 
 

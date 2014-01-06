@@ -67,6 +67,11 @@ body {
 	top: 0px;
 	left: 735px;
 }
+.camera-motion-switch {
+	padding-bottom:40px;
+	margin-left:18px;
+}
+
 
 
 input.switch {
