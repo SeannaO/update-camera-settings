@@ -69,34 +69,34 @@ module.exports = function( app, passport, camerasController ) {
 			} else {
 				res.json( newDoc );
 
-				try {
-					var id = encodeURIComponent( newDoc.id );
-					var rtspurl = encodeURIComponent( newDoc.rtsp );
-					var name = encodeURIComponent( newDoc.name );
-					var ip = encodeURIComponent( newDoc.ip ); 
+				//try {
+					//var id = encodeURIComponent( newDoc.id );
+					//var rtspurl = encodeURIComponent( newDoc.rtsp );
+					//var name = encodeURIComponent( newDoc.name );
+					//var ip = encodeURIComponent( newDoc.ip ); 
 
-					var url = "https://admin:admin@localhost/cp/solink_add_or_update_camera?v=2&camera:name="+name+"&camera:state="+1+"&camera:ipaddress=0.0.0.0&camera:rtspurl="+rtspurl;
-					request(url, {
-						strictSSL: false
-					},
-					function(err, r) {
+					//var url = "https://admin:admin@localhost/cp/solink_add_or_update_camera?v=2&camera:name="+name+"&camera:state="+1+"&camera:ipaddress=0.0.0.0&camera:rtspurl="+rtspurl;
+					//request(url, {
+					//	strictSSL: false
+					//},
+					//function(err, r) {
 
-						if (!err) {
-							var newCam = newDoc;
-							var newId = r.body;
-							newId = newId.replace(/"/g, "");
-							console.log(newId);
-							newCam.id = newId;
-							camerasController.updateCamera( newCam, function(err) {} );
-						} else {
-							console.log("error communicating with lifeline app: ");
-							console.log(err);
-						}
-					});
-				} catch( e ) {
-					console.log("error when connecting to lifeline");
-					console.log ( e );
-				}
+					//	if (!err) {
+							//var newCam = newDoc;
+							//var newId = r.body;
+							//newId = newId.replace(/"/g, "");
+							//console.log(newId);
+							//newCam.id = newId;
+							//camerasController.updateCamera( newCam, function(err) {} );
+					//	} else {
+					//		console.log("error communicating with lifeline app: ");
+					//		console.log(err);
+					//	}
+					//});
+				//} catch( e ) {
+				//	console.log("error when connecting to lifeline");
+				//	console.log ( e );
+				//}
 			}
 		});
 	});

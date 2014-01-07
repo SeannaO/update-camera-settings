@@ -737,6 +737,8 @@ Camera.prototype.updateRecorder = function() {
  */
 Camera.prototype.indexPendingFiles = function( streamList, cb ) {
 
+	//console.log("####### indexPendingFiles");
+
 	var self = this;
 	
 	// checks if method is being called for the first time
@@ -748,6 +750,8 @@ Camera.prototype.indexPendingFiles = function( streamList, cb ) {
 			console.log('*** this camera is already indexing');
 			return;
 		}
+
+		//console.log("######### streams: " + self.streams.length);
 
 		if ( typeof streamList === 'function') cb = streamList;	
 		streamList = Object.keys( self.streams );				// sets up array with all streams ids

@@ -222,7 +222,7 @@ RecordModel.prototype.startRecording = function() {
     this.watcher.startWatching();		// launches watcher
 	
     this.watcher.on("new_files", function( files ) {
-		// console.log("new file");
+		 console.log("##### new file");
 		// console.log(files);
 		if (self.status === ERROR) {							// if status WAS ERROR,
 			self.emit('camera_status', {status: 'connected'});	// emits event telling that
