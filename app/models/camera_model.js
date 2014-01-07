@@ -120,6 +120,15 @@ Camera.prototype.addStream = function( stream ) {
 	if ( this.shouldBeRecording() ) {
 		stream.recordModel.startRecording();
 	}
+
+	stream.recordModel.on( 'new_chunk', function(data) {
+		self.emit( 'new_chunk', data);
+	});
+	stream.recordModel.on('camera_status', function(data) {
+		self.emit('camera_status', { cam_id: self._id, status: data.status } );
+	});
+	
+	
 };
 // end of addStream
 //

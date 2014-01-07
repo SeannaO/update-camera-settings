@@ -326,6 +326,7 @@ RecordModel.prototype.moveAndIndexFile = function( file, cb ) {
         self.moveFile( video, function() {			// creates thumb,
 													// moves chunk to definitive folder
 													// and indexes it
+			console.log("!!! move file !!!");
 			self.emit('new_chunk', video );	
 			if ( cb ) {
 				cb();								
