@@ -140,7 +140,7 @@ function generateMp4Video( db, cam, begin, end, cb ) {
         return;
     }
 
-    var fileName = cam.videosFolder + "/tmp/" + camId + "_" + begin + "_" + end + ".mp4";
+    var fileName = cam.videosFolder + "/" + camId + "_" + begin + "_" + end + ".mp4";
 
     fs.exists( fileName, function(exists) {
         if (exists) {
