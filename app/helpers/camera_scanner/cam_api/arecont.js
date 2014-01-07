@@ -21,20 +21,20 @@ Arecont.prototype.getRtspUrl = function (profile ) {
 		return;
 	}
 	
-	var dimensions = profile.resolution.split('x');
-	var width = dimensions[0];
-	var height = dimensions[1];
+	// var dimensions = profile.resolution.split('x');
+	// var width = dimensions[0];
+	// var height = dimensions[1];
 	
 	var res = '';
-	if (width > 1000 && height > 600) {
+	// if (width > 1000 && height > 600) {
 		res = 'full';
-	} else {
-		res = 'half';
-	}
+	// } else {
+	// 	res = 'half';
+	// }
 
 	return rtspUrl
-		.replace('{user}', this.username)
-		.replace('{pass}', this.password)
+		.replace('{user}', this.username || '')
+		.replace('{pass}', this.password || '')
 		.replace('{ip}', this.ip)
 		.replace('{resolution}', res)
 		.replace('{framerate}', profile.framerate);
@@ -42,8 +42,8 @@ Arecont.prototype.getRtspUrl = function (profile ) {
 
 Arecont.prototype.cameraUrl = function () {
 	return baseUrl
-		.replace('{user}', this.username)
-		.replace('{pass}', this.password)
+		.replace('{user}', this.username || '')
+		.replace('{pass}', this.password || '')
 		.replace('{ip}', this.ip);
 };
 
@@ -75,42 +75,94 @@ Arecont.prototype.setCameraParams = function(params) {
 	this.password = params.password 				|| this.password;
 };
 
+Arecont.prototype.setMotionThreshold = function(threshold, cb){
+	var range = this.getThresholdRange();
+	if (threshold > range.max && threshold < range.min){
+		console.log("Error: threshold is out of range.");
+		cb("Error: threshold is out of range.");
+	}else{
+		this.setParam("mdlevelthreshold", threshold, function(error, body){
+			cb(error,body);
+		});
+	}
+}
+
+Arecont.prototype.setMotionSensitivity = function(sensitivity, cb){
+	var range = this.getSensitivityRange();
+	if (sensitivity > range.max && sensitivity < range.min){
+		console.log("Error: sensitivity is out of range.");
+		cb("Error: sensitivity is out of range.");
+	}else{
+		this.setParam("mdsensitivity", sensitivity, function(error, body){
+			cb(error,body);
+		});
+	}
+}
+
 Arecont.prototype.setMotionParams = function(params, cb){
-
-	var urlParams= [];
-	if (params.enabled){
-		urlParams.push("motiondetect=" + (params.enabled ? "on" : "off") );
-	}
-	if (params.threshold){
-		var range = this.getThresholdRange();
-		if (params.threshold > range.max && params.threshold < range.min){
-			console.log("Error: threshold is out of range.")
+	var self = this;
+	if (params.enabled === 'undefined'){
+		if (params.threshold){
+			self.setMotionThreshold(params.threshold,function(error, body){
+				if (error){
+					cb(error,body);
+				}else{
+					if (params.sensitivity){
+						self.setMotionSensitivity(params.sensitivity,function(error, body){
+							if (error){
+								cb(error, body);
+							}else{
+								cb(null, "OK");
+							}
+						});
+					}else{
+						cb(null, "OK");
+					}
+				}
+			})
 		}else{
-			urlParams.push("mdlevelthreshold=" + params.threshold );
+			if (params.sensitivity){
+				self.setMotionSensitivity(params.sensitivity,function(error, body){
+					if (error){
+						cb(error, body);
+					}else{
+						cb(null, "OK");
+					}
+				});
+			}else{
+				cb(null, "OK");
+			}
 		}
-	}
-	if (params.sensitivity){
-		var range = this.getSensitivityRange();
-		if (params.sensitivity > range.max && params.sensitivity < range.min){
-			console.log("Error: sensitivity is out of range.")
-		}else{
-			urlParams.push("mdsensitivity=" + params.sensitivity );
-		}
-	}
+	}else{
+		self.setParam("motiondetect", (params.enabled ? "on" : "off"), function(error, body){
+			if (error){
+				cb(error,body);
+			}else{
+				if (params.threshold){
+					self.setMotionThreshold(params.threshold,function(error, body){
+						if (error){
+							cb(error,body);
+						}else{
+							if (params.sensitivity){
+								self.setMotionSensitivity(params.sensitivity,function(error, body){
+									if (error){
+										cb(error, body);
+									}else{
+										cb(null, "OK");
+									}
+								});
+							}else{
+								cb(null, "OK");
+							}
+						}
+					})
+				}else{
+					cb(null, "OK");
+				}				
+			}
 
-	var url = this.cameraUrl() + "/set?" + urlParams.join("&");
-	var digest = new Buffer(this.username + ":" + this.password).toString('base64');
-	request({ 
-		url: url,
-		headers: {
-			'User-Agent': 'nodejs',
-			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-			'Authorization': 'Basic ' + digest
-		},
-	}, function( error, response, body) {
-				cb(error, body);
-		}
-	);
+		});
+	}
 };
 
 Arecont.prototype.getParam = function(name, cb){

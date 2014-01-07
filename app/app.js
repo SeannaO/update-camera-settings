@@ -52,7 +52,7 @@ passport.use(new BasicStrategy({
 		process.nextTick(function(){
 			var digest = new Buffer(username + ":" + password).toString('base64');
 			// 127.0.0.1
-			var url = "https://" + username + ":" + password + "@192.168.215.153/cp/UserVerify?v=2&login=" + username + "&password=" + password
+			var url = "https://" + username + ":" + password + "@192.168.215.153/cp/UserVerify?v=2&login=" + username + "&password=" + password;
 			request({ 
 				url: url,
 				strictSSL: false,
@@ -78,23 +78,23 @@ var logrequest = function(req, res, next) {
 		var matches = rx.exec(req.headers.authorization);
 		if (matches){
 			var buf = new Buffer(matches[1], 'base64');
-			auth_user = buf.toString().split(":")[0]
+			auth_user = buf.toString().split(":")[0];
 		}
 	}
 	
     logger.log("[" + auth_user + "] " + req.method + " " + req.url);
     next(); // Passing the request to the next handler in the stack.
-}
+};
 
 // starts express
-var app = express.createServer();
+var app = express();
 
 // - - -
 // socket.io config 
 var io = require('socket.io');
 
-// var server = require('http').createServer(app);
-io = io.listen(app);
+var server = require('http').createServer(app);
+io = io.listen(server);
 io.set('log level', 1);
 // end of socket.io config
 // - - -
@@ -112,7 +112,7 @@ app.configure(function() {
   app.use(express.logger());  
   app.use(logrequest);
   app.use(app.router);
-  // app.use(passport.initialize());
+  app.use(passport.initialize());
   app.set('view engine', 'ejs');					// rendering engine (like erb)
   // - - -  
 });
@@ -189,6 +189,10 @@ diskSpaceAgent.on('disk_usage', function(usage) {
 // health check modules
 require('./controllers/health.js')( io );
 // - - -
+
+io.on('connection', function(socket) {
+
+});
 
 // - - - -
 // socket.io broadcasts setup
@@ -283,5 +287,5 @@ lifeline.setup( app, camerasController, mp4Handler, hlsHandler );
 ////////////////////
 
 // server.listen(process.env.PORT || 8080);
-app.listen( 8080 );
+server.listen( 8080 );
 

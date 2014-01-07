@@ -12,16 +12,15 @@ module.exports = function( app, passport, prefix ) {
 
 	// - - -
 	// checks if stream is h264 encoded
-	app.get('/check_h264.json', passport.authenticate('basic', {session: false}), function(req, res) {
+	app.post('/check_h264.json', passport.authenticate('basic', {session: false}), function(req, res) {
+
+		var url = req.body.url;
 
 		var checkH264 = require('../helpers/ffmpeg.js').checkH264;
-		checkH264('http://localhost:1234', function(isH264) { 
+		checkH264(url, function(isH264) { 
 			res.json({ h264: isH264 });
 		});		
 	});
 	// - - -
 
 };
-
-
-

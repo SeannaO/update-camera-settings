@@ -222,7 +222,7 @@ RecordModel.prototype.startRecording = function() {
     this.watcher.startWatching();		// launches watcher
 	
     this.watcher.on("new_files", function( files ) {
-		// console.log("new file");
+		 console.log("##### new file");
 		// console.log(files);
 		if (self.status === ERROR) {							// if status WAS ERROR,
 			self.emit('camera_status', {status: 'connected'});	// emits event telling that
@@ -413,37 +413,48 @@ RecordModel.prototype.checkForConnectionErrors = function() {
  *
  *	TODO: we don't want to generate thumbs for all streams of the same camera
  */
-RecordModel.prototype.moveFile = function( video, cb ) { 
+RecordModel.prototype.moveFile = function( video, cb ) { 	
 
     var self = this;
 
-    var from = self.folder + "/videos/tmp/" + path.basename( video.file );
-    var to = self.folder + "/videos/" + video.start + path.extname( video.file );
+	var date = new Date(video.start);
+	var dateString = date.getUTCFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+
+	var toFolder = self.folder + '/videos/' + dateString;
+
+	var from = self.folder + "/videos/tmp/" + path.basename( video.file );
+    var to = toFolder + '/' + video.start + path.extname( video.file );
  
     fs.exists( from, function(exists) {
-        fs.rename( from, to, function(err) { 
-            if (err) {
-                console.log("[ error ] RecordModel.moveFile: error when moving file: " + err);
-				if (cb) cb(err);
-            }
-            else {
-                
-				video.file = to;	// updates file path after moving it
-
-                ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() { 
-					
-					self.camera.addChunk( self.stream.id, video );	// the chunk will be indexed by the camera
-					
-					if (cb) {
-						cb();
+		//if (exists) {
+			fs.mkdir(toFolder, function(e) {
+				fs.rename( from, to, function(err) { 
+					if (err) {
+						console.log("[RecordModel.moveFile]: error when moving file: " + err);
+						if (cb) cb(err);
 					}
-                });
-            }                        
-        });
+					else {
+						
+						video.file = to;	// updates file path after moving it
+
+						ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() { 
+							
+							self.camera.addChunk( self.stream.id, video );	// the chunk will be indexed by the camera
+							
+							if (cb) {
+								cb();
+							}
+						});
+					}                        
+				});
+			});
+		//}
     });
 };
 // end of moveFile
 //
+
+
 
 
 /**

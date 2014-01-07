@@ -1,7 +1,9 @@
 var request = require('request');
+var http = require('http');
 var onvif = require('./protocols/onvif.js');
 var psia = require('./protocols/psia.js');
 var api = require( './cam_api/api.js').api_list;
+var zlib = require('zlib');
 
 var camList = Object.keys( api );
 
@@ -26,34 +28,54 @@ var detectCamByHttpResponse = function( ip, response, cb ) {
 		}
 	};
 
-	request( options,
+	var req = request( options, 
 		function (error, response, body) {
-
 			if ( !error && response.headers['www-authenticate'] ) {
 				
 				var realm = response.headers['www-authenticate'];
-				
+
 				for (var i in camList) {
 					if ( realm.toLowerCase().indexOf( camList[i] ) != -1 ) {
 						if (cb) cb( camList[i] );
 						return;
 					}
 				}
-			} else if ( !error && response.body !== '' ) {
-
-				console.log( response.body );
-				for (var i in camList) {
-					if ( response.body.toLowerCase().indexOf( camList[i] ) != -1 ) {
-						if (cb) cb( camList[i] );
-						return;
-					}
-				}				
-			} else {
-
-				if (cb) cb( 'unkwnown' );
 			}
-			if (cb) cb('unknwon');
 		}
+	);
+
+	var buffer = [];
+	var gunzip = zlib.createGunzip();
+	
+	req.on('response', function(res) {
+		var encoding = res.headers['content-encoding'];
+		if (encoding === 'gzip') {
+			res.pipe( gunzip );	
+		} else {
+			if (cb) cb('u');
+		}		
+	});
+
+	gunzip.on('data', function(data) {
+            buffer.push(data.toString());
+        }
+	).on("end", function() {
+			
+		buffer.join('');
+
+		for (var i in camList) {
+			if ( buffer.toString().toLowerCase().indexOf( camList[i] ) != -1 ) {
+				if (cb) cb( camList[i] );
+				return;
+			}
+		}		
+
+		if (cb) cb('unknwown');
+
+        }
+	).on("error", function(e) {
+            if(cb) cb('unknwown');
+        }
 	);
 };
 
@@ -107,13 +129,13 @@ var onvifScan = function( prefix, cb ) {
 					status = 'ok';
 				}
 
-				var c = {
+				var new_cam = {
 					ip: ip,
 					type: 'onvif',
 					status: status
 				};
 
-				addCam( c, response, function( cam ) {
+				addCam( new_cam, response, function( cam ) {
 					camList.push( cam );
 					if (camList.length === list.length && cb) {
 						cb(camList);
