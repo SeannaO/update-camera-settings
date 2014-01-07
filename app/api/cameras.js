@@ -270,13 +270,17 @@ module.exports = function( app, passport, camerasController ) {
 			if (err) {
 				res.json( { error: err } );
 			} else {
-				mp4Handler.generateMp4Video( cam.db, cam, begin, end, function( response ) {
-					if(response.success) {
-						mp4Handler.sendMp4Video( response.file, req, res );
-					} else {
-						res.end( response.error );
-					}
-				});
+				for (stream in cam.streams){
+					console.log(cam.streams[stream].db);
+					camerasController.mp4Handler.generateMp4Video( cam.streams[stream].db, cam, begin, end, function( response ) {
+						if(response.success) {
+							camerasController.mp4Handler.sendMp4Video( response.file, req, res );
+						} else {
+							res.end( response.error );
+						}
+					});
+					break;
+				}
 			}
 		});
 	});
@@ -294,9 +298,15 @@ module.exports = function( app, passport, camerasController ) {
 			if (err) {
 				res.json( { error: err } );
 			} else {
-				mp4Handler.generateMp4Video( cam.db, cam, begin, end, function( response ) {
-					res.json( response );
-				});
+				
+				for (stream in cam.streams){
+					console.log(cam.streams[stream].db);
+					camerasController.mp4Handler.generateMp4Video( cam.streams[stream].db, cam, begin, end, function( response ) {
+						console.log(response);
+						res.json( response );
+					});
+					break;
+				}
 			}
 		});
 	});
@@ -315,7 +325,11 @@ module.exports = function( app, passport, camerasController ) {
 			if (err) {
 				res.json( { error: err } );
 			} else {
-				mp4Handler.inMemoryMp4Video( cam.db, cam, begin, end, req, res );
+				for (stream in cam.streams){
+					console.log(cam.streams[stream].db);
+					camerasController.mp4Handler.inMemoryMp4Video( cam.streams[stream].db, cam, begin, end, req, res );
+					break;
+				}
 			}
 		});
 
@@ -352,16 +366,19 @@ module.exports = function( app, passport, camerasController ) {
 		var camId = req.params.id;
 		var begin = parseInt( req.query.begin, 10 );
 		var end = parseInt( req.query.end, 10 );
+		for (stream in cam.streams){
+			console.log(cam.streams[stream].db);
+			hlsHandler.generateFinitePlaylist( cam.streams[stream].db, camId, begin, end, function( playlist ) {
 
-		hlsHandler.generateFinitePlaylist( cam.db, camId, begin, end, function( playlist ) {
+				res.writeHead(200, { 
+					"Content-Type":"application/x-mpegURL",
+					'content-length': playlist.length 
+				});
 
-			res.writeHead(200, { 
-				"Content-Type":"application/x-mpegURL",
-				'content-length': playlist.length 
+				res.end(playlist);    
 			});
-
-			res.end(playlist);    
-		});
+			break;
+		}
 	});
 	// - - -
 

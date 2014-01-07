@@ -147,9 +147,12 @@ function generateMp4Video( db, cam, begin, end, cb ) {
             var response = { success: true, file: fileName };
             cb( response );
         } else {
+            console.log(begin);
+            console.log(end);
+            console.log(db);
             db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
                 
-                //console.log(videoList);
+                console.log(videoList);
                 console.log("** offset **");
                 console.log(offset);
 
@@ -166,7 +169,12 @@ function generateMp4Video( db, cam, begin, end, cb ) {
                         return video.file;
                     });
 
+                console.log(fileList);
+                console.log(fileName);
+                console.log(offset);
+
                     ffmpeg.stitch( fileList, fileName, offset, function(mergedFile, error) {
+                        console.log(mergedFile);
                         if ( !error ) {
                             var response = { success: true, file: mergedFile };
                             cb( response );
