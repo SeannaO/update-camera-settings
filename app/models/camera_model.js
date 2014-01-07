@@ -630,6 +630,7 @@ Camera.prototype.setupEvents = function() {
     var self = this;
     for (var i in self.streams) {
         this.streams[i].recordModel.on( 'new_chunk', function(data) {
+			console.log("!!! new chunk !!!");
             self.emit( 'new_chunk', data);
         });
         this.streams[i].recordModel.on('camera_status', function(data) {
