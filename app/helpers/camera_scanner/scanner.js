@@ -1,4 +1,5 @@
 var request = require('request');
+var http = require('http');
 var onvif = require('./protocols/onvif.js');
 var psia = require('./protocols/psia.js');
 var api = require( './cam_api/api.js').api_list;
@@ -27,9 +28,8 @@ var detectCamByHttpResponse = function( ip, response, cb ) {
 		}
 	};
 
-	request( options,
+	var req = request( options, 
 		function (error, response, body) {
-
 			if ( !error && response.headers['www-authenticate'] ) {
 				
 				var realm = response.headers['www-authenticate'];
@@ -40,36 +40,42 @@ var detectCamByHttpResponse = function( ip, response, cb ) {
 						return;
 					}
 				}
-			} else if ( !error && response.body !== '' ) {
-
-				var page = '';
-
-				var output = '';
-				var gzip = zlib.createGunzip();
-
-				if( response.headers['content-encoding'] == 'gzip' ) {
-					output = "";
-					zlib.gunzip(response.body, function(data) {
-						console.log(data);
-					});
-				} else {
-					output = res;
-				}
-
-
-				for (var i in camList) {
-					if ( output.toString().toLowerCase().indexOf( camList[i] ) != -1 ) {
-						if (cb) cb( camList[i] );
-						return;
-					}
-				}				
-			} else {
-		
-				if (cb) cb( 'unkwnown' );
 			}
-			
-			if (cb) cb('unkwnown');
 		}
+	);
+
+	var buffer = [];
+	var gunzip = zlib.createGunzip();
+	
+	req.on('response', function(res) {
+		var encoding = res.headers['content-encoding'];
+		if (encoding === 'gzip') {
+			res.pipe( gunzip );	
+		} else {
+			if (cb) cb('u');
+		}		
+	});
+
+	gunzip.on('data', function(data) {
+            buffer.push(data.toString());
+        }
+	).on("end", function() {
+			
+		buffer.join('');
+
+		for (var i in camList) {
+			if ( buffer.toString().toLowerCase().indexOf( camList[i] ) != -1 ) {
+				if (cb) cb( camList[i] );
+				return;
+			}
+		}		
+
+		if (cb) cb('unknwown');
+
+        }
+	).on("error", function(e) {
+            if(cb) cb('unknwown');
+        }
 	);
 };
 
