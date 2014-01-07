@@ -338,7 +338,6 @@ Camera.prototype.restartStream = function( streamId ) {
 		framerate: stream.framerate,
 		quality: stream.quality
 	});
-	console.log("#### url: " + self.streams[streamId].url );
 	
 	self.streams[streamId].recordModel = new RecordModel( self, self.streams[streamId] );
 
@@ -639,7 +638,6 @@ Camera.prototype.setupEvents = function() {
     var self = this;
     for (var i in self.streams) {
         this.streams[i].recordModel.on( 'new_chunk', function(data) {
-			console.log("!!! new chunk !!!");
             self.emit( 'new_chunk', data);
         });
         this.streams[i].recordModel.on('camera_status', function(data) {

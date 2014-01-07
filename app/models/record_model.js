@@ -326,7 +326,6 @@ RecordModel.prototype.moveAndIndexFile = function( file, cb ) {
         self.moveFile( video, function() {			// creates thumb,
 													// moves chunk to definitive folder
 													// and indexes it
-			console.log("!!! move file !!!");
 			self.emit('new_chunk', video );	
 			if ( cb ) {
 				cb();								
@@ -429,8 +428,6 @@ RecordModel.prototype.moveFile = function( video, cb ) {
     fs.exists( from, function(exists) {
 		//if (exists) {
 			fs.mkdir(toFolder, function(e) {
-				console.log("#########");
-				console.log(e);
 				fs.rename( from, to, function(err) { 
 					if (err) {
 						console.log("[RecordModel.moveFile]: error when moving file: " + err);
