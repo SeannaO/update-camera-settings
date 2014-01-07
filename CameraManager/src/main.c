@@ -257,17 +257,17 @@ void setupAndLaunchServer(){
 	}
 	loginAdmin("Administrator", "password");
 	cpIpcSetThreadUser("Administrator");
-	syslog(LOG_DEBUG, "Checking drive share...");
-	if (!shareExists()){
-		syslog(LOG_DEBUG, "Share doesn't exist. Creating share...");
+	//syslog(LOG_DEBUG, "Checking drive share...");
+	//if (shareExists()){
+		//syslog(LOG_DEBUG, "Share doesn't exist. Creating share...");
 		if (shareCreate()){
 			syslog(LOG_DEBUG, "Successfully created share.");
 		}else{
 			syslog(LOG_DEBUG, "Share already exists.");
 		}
-	}else{
-		syslog(LOG_DEBUG, "Share already exists.");
-	}
+	//}else{
+	//	syslog(LOG_DEBUG, "Share already exists.");
+	//}
 	
 	syslog(LOG_DEBUG, "Checking server...");
 	if (!isServerRunning()){

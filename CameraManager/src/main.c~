@@ -141,7 +141,7 @@ gboolean getSharePath(gchar ** share_path){
 	}
 	int len = strlen(ret->path);
 	*share_path = (gchar*)malloc(len+1);
-	strncpy(*share_path, ret->path, len);
+	strcpy(*share_path, ret->path);
 	share_path[len+1] = (char)'\0';
 	cpShareFree(ret);
 	return TRUE;
@@ -258,7 +258,7 @@ void setupAndLaunchServer(){
 	loginAdmin("Administrator", "password");
 	cpIpcSetThreadUser("Administrator");
 	syslog(LOG_DEBUG, "Checking drive share...");
-	if (!shareExists()){
+	if (shareExists()){
 		syslog(LOG_DEBUG, "Share doesn't exist. Creating share...");
 		if (shareCreate()){
 			syslog(LOG_DEBUG, "Successfully created share.");
