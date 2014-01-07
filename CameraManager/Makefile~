@@ -103,7 +103,6 @@ package: deb_control $(TARGET_BUILD_PATH)/$(target)/CameraManager
 	cp -rf $(TARGET_BINARY_FILES) $(PKG_DIR)
 	cp -rf $(NODEAPP_TARGET_FILES) $(PKG_DIR)
 	cp -rf bin/$(LINUX_ARCH)/forever $(PKG_DIR)/node_modules
-	ln -f $(PKG_DIR)/node_modules/forever/bin/forever $(PKG_DIR)
 	cp -rf $(CAMERAMANAGER_TARGET_WWW) $(PKG_DIR)
 	chmod -R 0775 $(PKG_DIR)/$(CAMERAMANAGER_TARGET_CGI)
 	if [ -d $(CAMERAMANAGER_TARGET_CONTROL) ]; then cp -rf $(CAMERAMANAGER_TARGET_CONTROL)/ $(PKG_DIR_ROOT); fi
