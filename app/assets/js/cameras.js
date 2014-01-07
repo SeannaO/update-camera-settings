@@ -243,7 +243,7 @@ var addCamera = function(camera, cb) {
 
     $.ajax({
         type: "POST",
-        url: "cameras/new",
+        url: "/cameras/new",
         data: JSON.stringify( camera ),
         contentType: 'application/json',
         success: function(data) {
@@ -257,7 +257,7 @@ var deleteCamera = function(id) {
 
     $.ajax({
         type: "DELETE",
-        url: "cameras/" + id,
+        url: "/cameras/" + id,
         contentType: 'application/json',
         success: function(data) {
             if (data.success) {
