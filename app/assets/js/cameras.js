@@ -271,10 +271,11 @@ var deleteCamera = function(id) {
 
 var getCameraOptions = function(id, cb) {
 
-	var username = $("#camera-username").val();
-	var password = $("#camera-password").val();
-	if (username && password && username !== '' && password !== ''){
-	    $.ajax({
+	var username = $("#camera-username").val() || '';
+	var password = $("#camera-password").val() || '';
+	//if (username && password && username !== '' && password !== ''){
+	if ( true ) {
+	   $.ajax({
 	        type: "GET",
 	        url: "/cameras/" + id + "/configuration",
 	        data: {camera:{username:username, password:password}},
@@ -354,8 +355,8 @@ var editCamera = function(camId) {
                 $("#add-new-camera-dialog #camera-name").val(data.camera.name);
                 $("#add-new-camera-dialog #camera-ip").val(data.camera.ip);
                 $("#add-new-camera-dialog #camera-manufacturer").attr("selected", data.camera.manufacturer);
-                $("#add-new-camera-dialog #camera-username").val(data.camera.username);
-                $("#add-new-camera-dialog #camera-password").val(data.camera.password);
+                $("#add-new-camera-dialog #camera-username").val(data.camera.username || '');
+                $("#add-new-camera-dialog #camera-password").val(data.camera.password || '');
                 $("#add-new-camera-dialog #camera-manufacturer").val(data.camera.manufacturer);
                 
 				if ( data.camera.streams ){
@@ -412,6 +413,9 @@ var editCamera = function(camId) {
 
 
 var setConstraintsOnStreamFields = function(camId){
+	
+	console.log("stream fields: " + camId);
+
 	getCameraOptions(camId,function(data){
 		if (data){
 			//get the supported parameters of the camera

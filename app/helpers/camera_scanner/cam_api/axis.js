@@ -227,8 +227,8 @@ Axis.prototype.getRtspUrl = function ( profile ) {
 	});
 
 	return rtspUrl
-		.replace('{user}', self.cam.user)
-		.replace('{pass}', self.cam.password)
+		.replace('{user}', self.cam.user || '')
+		.replace('{pass}', self.cam.password || '')
 		.replace('{profile_name}', profile.name)
 		.replace('{ip}', self.cam.ip)
 		.replace('{resolution}', profile.resolution)
@@ -300,8 +300,8 @@ Axis.prototype.stopListeningForMotionDetection = function(){
 Axis.prototype.getResolutionOptions = function (cb) {
 	var self = this;
 	var url = listResolutionsUrl
-		.replace('{user}', self.cam.user)
-		.replace('{pass}', self.cam.password)
+		.replace('{user}', self.cam.user || '')
+		.replace('{pass}', self.cam.password || '')
 		.replace('{ip}', self.cam.ip);
 	console.log(url);
 	var digest = new Buffer(self.cam.user + ":" + self.cam.password).toString('base64');
@@ -318,6 +318,8 @@ Axis.prototype.getResolutionOptions = function (cb) {
 			var re = /(\d+)x(\d+)/
 			xml2js(body, function(err,result){
 				if (!err){
+					
+					try {
 					console.log(result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry);
 					var output = result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry.map(function(element){
 						console.log({value:element['$'].value, name:element['$'].niceValue});
@@ -325,6 +327,9 @@ Axis.prototype.getResolutionOptions = function (cb) {
 						return {value: re.exec(element['$'].niceValue)[0]  , name:element['$'].niceValue}
 					});
 					cb(output);
+					} catch( e ) {
+						cb('error: not authorized');
+					}
 				}else{
 					cb(err);
 				}

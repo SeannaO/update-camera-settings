@@ -33,8 +33,8 @@ Arecont.prototype.getRtspUrl = function (profile ) {
 	// }
 
 	return rtspUrl
-		.replace('{user}', this.username)
-		.replace('{pass}', this.password)
+		.replace('{user}', this.username || '')
+		.replace('{pass}', this.password || '')
 		.replace('{ip}', this.ip)
 		.replace('{resolution}', res)
 		.replace('{framerate}', profile.framerate);
@@ -42,8 +42,8 @@ Arecont.prototype.getRtspUrl = function (profile ) {
 
 Arecont.prototype.cameraUrl = function () {
 	return baseUrl
-		.replace('{user}', this.username)
-		.replace('{pass}', this.password)
+		.replace('{user}', this.username || '')
+		.replace('{pass}', this.password || '')
 		.replace('{ip}', this.ip);
 };
 

@@ -26,8 +26,8 @@ function Camera( cam, videosFolder ) {
     this.manufacturer = cam.manufacturer;
     this.type = cam.type;					// 'ovif' or 'psia'
     this.indexing = false;					// lock for indexPendingFiles
-	this.username = cam.username;			
-    this.password = cam.password;
+	this.username = cam.username || '';			
+    this.password = cam.password || '';
 
 	this.videosFolder = videosFolder + "/" + this._id;
 
@@ -838,8 +838,8 @@ Camera.prototype.toJSON = function() {
     info.status = this.status;
     info.type = this.type;
     info.manufacturer = this.manufacturer;
-    info.username = this.username;
-    info.password = this.password;
+    info.username = this.username || '';
+    info.password = this.password || '';
 	
 	info.streams = this.getStreamsJSON();
 	
