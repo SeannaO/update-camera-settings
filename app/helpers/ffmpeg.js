@@ -451,6 +451,8 @@ var sendMp4Stream = function(file, offset, req, res) {
 var checkH264 = function( url, cb ) {
 	var self = this;
 	var timeout = 10000;
+	
+	console.log( '[ffmpeg.js:checkH264] checking stream ' + url );
 
 	var ffmpegProcess = spawn('ffmpeg', [
 			'-i', url

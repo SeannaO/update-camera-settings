@@ -201,6 +201,42 @@ module.exports = function( app, passport, camerasController ) {
 
 
 	// - - -
+	// gets most recent thumb
+	app.get('/cameras/:cam_id/streams/:id/thumb.json', passport.authenticate('basic', {session: false}), function(req, res) {
+
+		var camId = req.params.cam_id;
+		var streamId = req.params.id;
+		
+		camerasController.getCamera( camId, function(err, cam) {
+			if (err) {
+				res.json( { error: err } );
+			} else {
+				
+				var stream = cam.streams[streamId];
+				
+				if (stream) {
+					if (stream.latestThumb) {
+						res.json({
+							img: stream.latestThumb
+						});
+					} else {
+						res.json({
+							error: 'this stream does not have any thumbnail yet'
+						});
+					}
+				} else {
+					res.json({
+						error: 'invalid stream id ' + streamId
+					});
+				}
+			}
+		});
+	});
+	// - - -
+	
+	
+
+	// - - -
 	// gets thumbnail
 	app.get('/cameras/:cam_id/streams/:id/thumb/:thumb', passport.authenticate('basic', {session: false}), function(req, res) {
 

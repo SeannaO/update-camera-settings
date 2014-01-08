@@ -573,6 +573,7 @@ Camera.prototype.addChunk = function( streamId, chunk ) {
 	}
 	
 	this.streams[ streamId ].db.insertVideo( chunk );
+	this.streams[ streamId ].latestThumb = video.start;	
 };
 // end of addChunk
 //
@@ -812,7 +813,8 @@ Camera.prototype.getStreamsJSON = function() {
 			quality: s.quality,
 			framerate: s.framerate,
 			name: s.name,
-			id: id
+			id: id,
+			latestThumb: s.latestThumb
 		}); 
 	}
 

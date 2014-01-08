@@ -195,6 +195,33 @@ var addCameraItem = function( camera ) {
 			stopRecording(camera._id);
 		}
 	});
+
+	
+	for (var s in camera.streams) {
+
+		var thumb = camera.streams[s].latestThumb;
+		var streamId = camera.streams[s].id;
+		
+		if (thumb) {
+			var thumbUrl = '/cameras/' + camera._id + '/streams/' + streamId + '/thumb/' + thumb;
+			
+			var img = new Image();
+
+			$(img).attr({
+				src: thumbUrl,
+				width: "100%",
+				height: "100%"
+			}).load(function(){
+				$("#thumb-"+camera._id).html( $(this) );
+			}).error(function(){
+				console.log("unable to load image")
+			});
+			
+			
+			break;
+		}
+	}
+
 };
 
 
