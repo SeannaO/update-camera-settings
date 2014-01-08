@@ -143,8 +143,6 @@ function generateMp4Video( db, cam, streamId, begin, end, cb ) {
     }
 
     var fileName = cam.videosFolder + "/" + streamId + "/tmp/" + begin + "_" + end + ".mp4";
-	
-	console.log("############# " + fileName);
 
     fs.exists( fileName, function(exists) {
         if (exists) {
@@ -205,9 +203,6 @@ function takeSnapshot( db, cam, req, res, cb ) {
 		};
 	}
 
-	console.log(":::::::::::::::::::");
-	console.log( options );
-
     var camId = cam._id;
 
     if ( isNaN(time) ) {
@@ -222,16 +217,8 @@ function takeSnapshot( db, cam, req, res, cb ) {
         
         fs.exists(file, function(exists) {
             if (exists) {
-					/*
-					ffmpeg.smartSnapshot( file, cam.videosFolder + "/tmp", offset, options, function(fileName, error) {
-						res.sendfile( fileName,
-							{},
-							function() {
-								fs.unlink( fileName );
-							});
-					});
-					*/
-					inMemorySnapshot(file, offset, res, function() {
+
+				inMemorySnapshot(file, offset, res, function() {
 						if (cb) cb();
 					});
                 } else {
