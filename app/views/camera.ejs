@@ -45,6 +45,13 @@
     <body style = "margin: 10px">
         <h2 class = 'text-muted'> <a href ="/cameras">cameras</a> | <%= name %> </h2> 
         <hr>
+		
+		<div id = 'stream-selector-container' style = 'width: 300px; height: 70px;'>
+			<label for="stream-selector">streams</label>
+			<select id = 'stream-selector' class="form-control col-xs-4 input-sm">
+			</select>
+		</div>
+
         <div id = "search-bar" class="form-inline">
             <input id="begin_date" type="text" placeholder="start time" ></input>
             <input id="end_date" placeholder="end time" ></input>
@@ -74,7 +81,9 @@
                     var begin = 1000*moment( $("#begin_date").val() ).unix(); //.add("minutes", moment().zone()).unix();
                     var end = 1000*moment( $("#end_date").val() ).unix(); //.add("minutes", moment().zone()).unix();
 
-                    queryVideo(begin, end);
+					var stream = $("#stream-selector").val();
+
+                    queryVideo(begin, end, stream);
                 });
 
 
@@ -104,15 +113,15 @@
             });
 
             // 'begin' and 'end' should be on unix format
-            var queryVideo = function(begin, end) {
+            var queryVideo = function(begin, end, stream) {
                 
                 $("#video").html("<h5 class = 'text-muted lead video-box-message'> loading... </h5>");
 
                 $.ajax({
-                    url: "/cameras/"+camId+"/video.json?begin="+begin+"&end="+end,
+                    url: "/cameras/"+camId+"/video.json?begin="+begin+"&end="+end+"&stream="+stream,
                     success: function(data, status, xhr) {
                         if(data.success) {
-                             showVideo( "/cameras/"+camId+"/video?begin="+begin+"&end="+end );
+                             showVideo( "/cameras/"+camId+"/video?begin="+begin+"&end="+end+"&stream="+stream );
                         }
                         else {
                             $("#video").html("<h5 class = 'text-muted lead video-box-message'>" + data.error +"</h5>"); 
@@ -198,6 +207,10 @@
                     $("#video").html( html );
             }
         </script>
+
+		<script>
+			getStreamsInfo( camId );
+		</script>
 
     </body>
 </html>

@@ -265,22 +265,30 @@ module.exports = function( app, passport, camerasController ) {
 		var camId = req.params.id;
 		var begin = parseInt( req.query.begin, 10 );
 		var end = parseInt( req.query.end, 10 );
+		var stream = req.query.stream;
 
 		camerasController.getCamera( camId, function(err, cam) {
+			
 			if (err) {
 				res.json( { error: err } );
 			} else {
-				for (stream in cam.streams){
-					console.log(cam.streams[stream].db);
-					camerasController.mp4Handler.generateMp4Video( cam.streams[stream].db, cam, begin, end, function( response ) {
-						if(response.success) {
-							camerasController.mp4Handler.sendMp4Video( response.file, req, res );
-						} else {
-							res.end( response.error );
-						}
-					});
-					break;
+
+				// in case the streamId is invalid or not specified
+				if (!cam.streams[stream]) {
+					console.log("########## no such stream ");
+					for (var s in cam.streams){
+						stream = s;
+						break;
+					}
 				}
+				
+				camerasController.mp4Handler.generateMp4Video( cam.streams[stream].db, cam, begin, end, function( response ) {
+					if(response.success) {
+						camerasController.mp4Handler.sendMp4Video( response.file, req, res );
+					} else {
+						res.end( response.error );
+					}
+				});
 			}
 		});
 	});
@@ -299,10 +307,8 @@ module.exports = function( app, passport, camerasController ) {
 				res.json( { error: err } );
 			} else {
 				
-				for (stream in cam.streams){
-					console.log(cam.streams[stream].db);
+				for (var stream in cam.streams){
 					camerasController.mp4Handler.generateMp4Video( cam.streams[stream].db, cam, begin, end, function( response ) {
-						console.log(response);
 						res.json( response );
 					});
 					break;
@@ -325,7 +331,7 @@ module.exports = function( app, passport, camerasController ) {
 			if (err) {
 				res.json( { error: err } );
 			} else {
-				for (stream in cam.streams){
+				for (var stream in cam.streams){
 					console.log(cam.streams[stream].db);
 					camerasController.mp4Handler.inMemoryMp4Video( cam.streams[stream].db, cam, begin, end, req, res );
 					break;

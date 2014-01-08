@@ -40,6 +40,9 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 
 passport.use(new BasicStrategy({
 	},function(username,password,done){
+		
+		console.log("##### node env #####");
+		console.log(process.env['NODE_ENV']);
 
 		// bypasses auth for development mode
 		if (process.env['NODE_ENV'] === 'development') {
@@ -100,21 +103,21 @@ io.set('log level', 1);
 // - - -
 
 app.configure(function() {
-  app.use(express.static('public'));
-  app.use(express.cookieParser());				// cookies middleware
-  // - - - -
-  // express config
-  app.use(express.bodyParser());  // middleware for parsing request body contents
+	app.use(express.static('public'));
+	app.use(express.cookieParser());				// cookies middleware
+	// - - - -
+	// express config
+	app.use(express.bodyParser());  // middleware for parsing request body contents
 								// this must come before app.all
-  app.use(express.session({secret: 'solink'}));	// for session storage
-  app.use(passport.initialize());
-  // app.use(passport.session());
-  app.use(express.logger());  
-  app.use(logrequest);
-  app.use(app.router);
-  app.use(passport.initialize());
-  app.set('view engine', 'ejs');					// rendering engine (like erb)
-  // - - -  
+	app.use(express.session({secret: 'solink'}));	// for session storage
+	app.use(passport.initialize());
+	// app.use(passport.session());
+	app.use(express.logger());  
+	app.use(logrequest);
+	app.use(app.router);
+	//app.use(passport.initialize());
+	app.set('view engine', 'ejs');					// rendering engine (like erb)
+	// - - -  
 });
 
 
