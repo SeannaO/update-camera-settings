@@ -352,6 +352,9 @@ var editCamera = function(camId) {
         success: function(data) {
             console.log(data.camera);
             if (data.success) {
+
+				current_camera = data.camera;
+
                 $("#add-new-camera-dialog #camera-name").val(data.camera.name);
                 $("#add-new-camera-dialog #camera-ip").val(data.camera.ip);
                 $("#add-new-camera-dialog #camera-manufacturer").attr("selected", data.camera.manufacturer);
@@ -382,7 +385,7 @@ var editCamera = function(camId) {
                 setConstraintsOnStreamFields(camId);
 				$("#camera-username, #camera-password").unbind();
                 $("#camera-username, #camera-password").blur(function(){
-                    setConstraintsOnStreamFields(camId)
+                    setConstraintsOnStreamFields(camId);
                 });
 
                 $("#add-stream").unbind();
@@ -412,7 +415,7 @@ var editCamera = function(camId) {
 };
 
 
-var setConstraintsOnStreamFields = function(camId){
+var setConstraintsOnStreamFields = function(camId, cam){
 	
 	console.log("stream fields: " + camId);
 
@@ -430,16 +433,16 @@ var setConstraintsOnStreamFields = function(camId){
 				});
 
 				$('.camera-stream-resolution-select').each(function(){
-					var $self = $(this);
-					var current_val = $self.val();
-					$self.html('');
+					var self = $(this);
+					var current_val = self.val() || self.attr('data-resolution');
+					self.html('');
 					for (idx in data.resolutions){
-						$self.append($('<option>', {
+						self.append($('<option>', {
 					    	value: data.resolutions[idx].value,
 					    	text: data.resolutions[idx].name
 						}));
 					}
-					$self.val(current_val);
+					self.val(current_val);
 				});
 			}
 		}
@@ -689,7 +692,6 @@ var addStream = function( stream ) {
 
 	addStreamFieldset( function(fieldset, current_number_of_streams) {
 		var idx = current_number_of_streams-1;
-		console.log("idx: " + idx);
 
 		var stream_name = stream.name || 'new stream';
 
@@ -731,6 +733,7 @@ var addStream = function( stream ) {
 
 		for (var attr in stream) {
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).val( stream[attr] );
+			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).attr( 'data-'+attr, stream[attr] );
 		}
 	});
 };
