@@ -41,9 +41,12 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 passport.use(new BasicStrategy({
 	},function(username,password,done){
 		
-		console.log("##### node env #####");
-		console.log(process.env['NODE_ENV']);
-
+		console.log('[passport basicStrategy] environment: ' + process.env['NODE_ENV']);
+		
+		// stores lifeline auth in memory for later usage
+		process.env['USER'] = username;
+		process.env['PASSWORD'] = password;
+		
 		// bypasses auth for development mode
 		if (process.env['NODE_ENV'] === 'development') {
 			process.nextTick(function() {
@@ -54,8 +57,8 @@ passport.use(new BasicStrategy({
 
 		process.nextTick(function(){
 			var digest = new Buffer(username + ":" + password).toString('base64');
-			// 127.0.0.1
-			var url = "https://" + username + ":" + password + "@192.168.215.153/cp/UserVerify?v=2&login=" + username + "&password=" + password;
+			
+			var url = "https://" + username + ":" + password + "@192.168.215.129/cp/UserVerify?v=2&login=" + username + "&password=" + password;
 			request({ 
 				url: url,
 				strictSSL: false,

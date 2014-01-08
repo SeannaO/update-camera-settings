@@ -36,10 +36,13 @@ SensorsInfo.prototype.requestNewData = function() {
 	
 	var self = this;
 
-	var url = 'https://admin:admin@localhost/cp/Sensors?v=2';
+	var password = process.env['PASSWORD'];
+	var user = process.env['USER'];
+
+	var url = 'https://' + user + ':' + password + '@localhost/cp/Sensors?v=2';
 
 	if (self.developmentMode) {
-		url = 'https://admin:admin@192.168.215.153/cp/Sensors?v=2';
+		url = 'https://' + user + ':' + password + '@192.168.215.129/cp/Sensors?v=2';
 	}
 
 	request( url, {
