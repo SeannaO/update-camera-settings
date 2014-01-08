@@ -38,8 +38,7 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 // - - -
 
 
-passport.use(new BasicStrategy({
-	},function(username,password,done){
+passport.use(new BasicStrategy( function(username,password,done){
 		
 		console.log('[passport basicStrategy] environment: ' + process.env['NODE_ENV']);
 		
@@ -114,7 +113,7 @@ app.configure(function() {
 								// this must come before app.all
 	app.use(express.session({secret: 'solink'}));	// for session storage
 	app.use(passport.initialize());
-	// app.use(passport.session());
+	//app.use(passport.session());
 	app.use(express.logger());  
 	app.use(logrequest);
 	app.use(app.router);

@@ -18,7 +18,7 @@
         <script src="/js/d3-timeline.js"></script>        
         <script>
             var camId = "<%= id %>";
-            var rtsp = "<%= streams[0].url %>"
+            
         </script>
 
         <style>
@@ -107,7 +107,7 @@
                 });
 
                 $("#get-livestream").click( function() {
-                    showLiveStream(rtsp);
+                    showLiveStream( getRtsp() );
                 });
                 
             });
@@ -199,7 +199,7 @@
             var showLiveStream = function(url) {
 
                 var html = '<object type="application/x-vlc-plugin" data="'+url+'" width="640" height="480" id="video1">';
-                    html += '<param name="movie" value="'+rtsp+'"/>';
+                    html += '<param name="movie" value="'+ getRtsp() +'"/>';
                     html += '<embed type="application/x-vlc-plugin" name="video1"';
                     html += 'autoplay="no" loop="no" width="640" height="480"';
                     html += 'target="'+rtsp+'" /> </object>';

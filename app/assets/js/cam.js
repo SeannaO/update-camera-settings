@@ -29,3 +29,7 @@ var populateStreamSelector = function(streams) {
           .text( text ));		
 	}
 };
+
+var getRtsp = function() {
+	return('#stream-selector').val();	
+};
