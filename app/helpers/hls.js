@@ -30,7 +30,7 @@ var livePlaylist = function( videos, targetDuration, mediaSequence, cb ) {
  * generatePlaylist
  *
  */
-var generatePlaylist = function( camId, videos, targetDuration, mediaSequence, closed, cb ) {
+var generatePlaylist = function( camId, streamId, videos, targetDuration, mediaSequence, closed, cb ) {
     
     console.log("generate playlist");
 
@@ -42,8 +42,11 @@ var generatePlaylist = function( camId, videos, targetDuration, mediaSequence, c
                   "#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n";
 
     for ( var i = 0; i < videos.length; i++ ) {
+		
+		console.log(videos[i].url);
+
         content = content + "#EXTINF:" + videos[i].duration + ".0,\n";
-        content = content + "/ts/" + camId + "/" + path.basename(videos[i].url) + "\n";
+        content = content + "/ts/" + camId + "/" + streamId + "/" + path.basename(videos[i].url) + "\n";
     }
 
     if ( closed ) {

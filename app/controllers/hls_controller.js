@@ -1,17 +1,15 @@
 var hls = require('./../helpers/hls');
 
 function generateFinitePlaylist( db, camId, begin, end, cb ) {
-   
-    console.log("generate finite play list");
 
-    db.searchVideosByInterval( camId, begin, end, function( err, videoList, offset ) {
+    db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
         
         var fileList = videoList.map( function(video) {
             return video.file;
         });
 
         hls.calculateLengths( fileList, function(videos) {
-            hls.generatePlaylist( camId, videos, 20, 0, true, function(playlist) {
+            hls.generatePlaylist( camId, videos, 10, 0, true, function(playlist) {
                 cb( playlist );
             });
         });
