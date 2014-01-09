@@ -641,7 +641,7 @@ var addStreamFieldset = function( cb ) {
 			type: 'text',
 			class: 'form-control',
 			id: 'camera-streams-' + current_number_of_streams + '-url',
-			name: 'camera[streams][' + current_number_of_streams + '][rtsp]',
+			name: 'camera[streams][' + current_number_of_streams + '][url]',
 			value: rtsp_uri
 		});	
 		camera_stream_rtsp_group.append( camera_stream_rtsp );

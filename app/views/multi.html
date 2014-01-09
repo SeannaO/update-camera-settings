@@ -17,11 +17,28 @@
         <script src="/js/d3.v3.min.js"></script>
         <script src="/js/d3-timeline.js"></script>        
         <script>
-            var camId = "rtsp://192.168.215.66/axis-media/media.amp";
-            var rtsp1 = "rtsp://192.168.215.66/axis-media/media.amp";
- 			var rtsp2 = "rtsp://192.168.215.66/axis-media/media.amp";
-  			var rtsp3 = "rtsp://192.168.215.66/axis-media/media.amp";
-   			var rtsp4 = "rtsp://192.168.215.66/axis-media/media.amp";
+            var playerHTML = function(id, rtsp, width, height) {
+
+                var html = '<object type="application/x-vlc-plugin" data="'+rtsp+'" width="'+ width +'" height="'+ height +'" id="' + id + '">';
+                    html += '<param name="movie" value="'+rtsp+'"/>';
+                    html += '<embed type="application/x-vlc-plugin" name="'+ id +'"';
+                    html += 'autoplay="no" loop="no" width="'+ width +'" height="'+ height +'"';
+                    html += 'target="'+rtsp+'" /> </object>';
+
+                    return html;
+            }
+// 480x360 
+// 320x240
+            $(function(){
+                var $list = $("#cameras-list");
+                $.getJSON( "/cameras.json", function( data ) {
+                    for (var i = 0; i < data.length; i++) {
+                        if (data[i] && data[i].streams && data[i].streams.length > 0) {
+                            $list.append("<div id=\"video-container-" + i +"\" class=\"video-box\">" + playerHTML("video" + i, data[i].streams[0].url, 480, 360) + "</div>");
+                        }
+                    }
+                });
+            });
         </script>
     </head>
 
@@ -29,41 +46,9 @@
     <body style = "margin: 10px">
         <h2 class = 'text-muted'> <a href ="/cameras">cameras</a> | multiview </h2> 
         <hr>
-
-        <div id = "video1" class = "video-box">
+        <div id="cameras-list" class = "video-items">
+            
         </div>
- 		<div id = "video2" class = "video-box">
-        </div>
-		<div id = "video3" class = "video-box">
-        </div>
- 		<div id = "video4" class = "video-box">
-        </div>
-       
-
-        <script>
-            $(function() {
-					showLiveStream("#video1", rtsp1); 
-					showLiveStream("#video2", rtsp2); 
-					showLiveStream("#video3", rtsp3); 
-					showLiveStream("#video4", rtsp4); 
-            });
-		</script>
-
-
-        <script>
-
-            var showLiveStream = function(eId, rtsp) {
-
-                var html = '<object type="application/x-vlc-plugin" data="'+rtsp+'" width="640" height="480" id="video1">';
-                    html += '<param name="movie" value="'+rtsp+'"/>';
-                    html += '<embed type="application/x-vlc-plugin" name="video1"';
-                    html += 'autoplay="no" loop="no" width="640" height="480"';
-                    html += 'target="'+rtsp+'" /> </object>';
-
-                    $(eId).html( html );
-            }
-        </script>
-
     </body>
 </html>
 
