@@ -583,28 +583,8 @@ var addStreamFieldset = function( cb ) {
 	});
     // end of hidden id field
 	//
+	var manufacturer = $("#camera-manufacturer").val();
 
-	//
-	// ** temporary, development only **
-	//
-
-	// var camera_stream_rtsp_group = $('<div>', {
-	// 	class: 'form-group',
-	// 	html: '<label for="camera-stream-rtsp">rtsp (temporary, dev only)</label>'
-	// });
-	
-	// var camera_stream_rtsp = $('<input>', {
-	// 	type: 'text',
-	// 	disabled: 'disabled',
-	// 	class: 'form-control',
-	// 	id: 'camera-streams-' + current_number_of_streams + '-url',
-	// 	name: 'camera[streams][' + current_number_of_streams + '][rtsp]'
-	// });	
-	// camera_stream_rtsp_group.append( camera_stream_rtsp );
-
-	//
-	//
-	
 	//
 	// name field
 	var camera_stream_name_group = $('<div>', {
@@ -620,67 +600,8 @@ var addStreamFieldset = function( cb ) {
 	});
 	
 	camera_stream_name_group.append( camera_stream_name );
-	// end of name field
-	//
-	
-	//
-	// resolution field
-	var camera_stream_resolution_group = $('<div>', {
-		class: 'form-group col-xs-3',
-		html: '<label for="camera-stream-resolution">resolution</label>'
-	});
 
-	var camera_stream_resolution = $('<select>', {
-		class: 'form-control camera-stream-resolution-select',
-		id: 'camera-streams-' + current_number_of_streams + '-resolution',
-		name: 'camera[streams][' + current_number_of_streams + '][resolution]'
-	});
-	
-	camera_stream_resolution_group.append( camera_stream_resolution );
-	// end of resolution field
-	//
-	
-	//
-	// framerate field
-	var camera_stream_framerate_group = $('<div>', {
-		class: 'form-group  col-xs-2',
-		html: '<label for="camera-stream-framerate">framerate</label>'
-	});
-
-	var camera_stream_framerate = $('<input>', {
-		type: 'number',
-		min: 1,
-		max: 30,
-		class: 'form-control camera-stream-framerate-input',
-		id: 'camera-streams-' + current_number_of_streams + '-framerate',
-		name: 'camera[streams][' + current_number_of_streams + '][framerate]'
-	});
-	
-	camera_stream_framerate_group.append( camera_stream_framerate );
-	// end of framerate field
-	//
-
-	//
-	// quality field
-	var camera_stream_quality_group = $('<div>', {
-		class: 'form-group  col-xs-2',
-		html: '<label for="camera-stream-quality">quality</label>'
-	});
-
-	var camera_stream_quality = $('<input>', {
-		type: 'number',
-		min: 1,
-		max: 30,
-		class: 'form-control camera-stream-quality-input',
-		id: 'camera-streams-' + current_number_of_streams + '-quality',
-		name: 'camera[streams][' + current_number_of_streams + '][quality]'
-	});
-	
-	camera_stream_quality_group.append( camera_stream_quality );
-	// end of quality field
-	//
-
-	//
+		//
 	// retention field
 	var camera_stream_retention_group = $('<div>', {
 		class: 'form-group  col-xs-4',
@@ -690,22 +611,116 @@ var addStreamFieldset = function( cb ) {
 	var camera_stream_retention = $('<input>', {
 		type: 'number',
 		min: 1,
-		class: 'form-control',
+		class: 'form-control camera-streams-retention',
 		id: 'camera-streams-' + current_number_of_streams + '-retention',
 		name: 'camera[streams][' + current_number_of_streams + '][retention]'
 	});
-	
-	camera_stream_retention_group.append( camera_stream_retention );
+	camera_stream_retention_unit = $("<span class='retention-unit'>days</span>");
+	camera_stream_container = $("<div>").append(camera_stream_retention_unit).append(camera_stream_retention);
+	camera_stream_retention_group.append( camera_stream_container );
 	// end of retention field
 	//
-	
-	fieldset.append( camera_stream_id );
-	// fieldset.append( camera_stream_rtsp_group );
-	fieldset.append( camera_stream_name_group );
-	fieldset.append( camera_stream_resolution_group );
-	fieldset.append( camera_stream_framerate_group );
-	fieldset.append( camera_stream_quality_group );
-	fieldset.append( camera_stream_retention_group );
+
+	if (manufacturer == 'unknown'){
+
+		var ip = $("#camera-ip").val();
+		var username = $("#camera-username").val();
+		var password = $("#camera-password").val();
+		var rtsp_uri = '';
+		if (username.length > 0){
+			rtsp_uri = "rtsp://" + username + ":" + password + "@" + ip + "/";
+		}else{
+			rtsp_uri = "rtsp://" + ip + "/";			
+		}
+		var camera_stream_rtsp_group = $('<div>', {
+			class: 'form-group',
+			html: '<label for="camera-stream-rtsp">rtsp Stream</label>'
+		});
+		
+		var camera_stream_rtsp = $('<input>', {
+			type: 'text',
+			class: 'form-control',
+			id: 'camera-streams-' + current_number_of_streams + '-url',
+			name: 'camera[streams][' + current_number_of_streams + '][rtsp]',
+			value: rtsp_uri
+		});	
+		camera_stream_rtsp_group.append( camera_stream_rtsp );
+
+		fieldset.append( camera_stream_id );
+		fieldset.append( camera_stream_name_group );		
+		fieldset.append( camera_stream_rtsp_group );
+		fieldset.append( camera_stream_retention_group );
+	}else{
+
+		// end of name field
+		//
+		
+		//
+		// resolution field
+		var camera_stream_resolution_group = $('<div>', {
+			class: 'form-group col-xs-3',
+			html: '<label for="camera-stream-resolution">resolution</label>'
+		});
+
+		var camera_stream_resolution = $('<select>', {
+			class: 'form-control camera-stream-resolution-select',
+			id: 'camera-streams-' + current_number_of_streams + '-resolution',
+			name: 'camera[streams][' + current_number_of_streams + '][resolution]'
+		});
+		
+		camera_stream_resolution_group.append( camera_stream_resolution );
+		// end of resolution field
+		//
+		
+		//
+		// framerate field
+		var camera_stream_framerate_group = $('<div>', {
+			class: 'form-group  col-xs-2',
+			html: '<label for="camera-stream-framerate">framerate</label>'
+		});
+
+		var camera_stream_framerate = $('<input>', {
+			type: 'number',
+			min: 1,
+			max: 30,
+			class: 'form-control camera-stream-framerate-input',
+			id: 'camera-streams-' + current_number_of_streams + '-framerate',
+			name: 'camera[streams][' + current_number_of_streams + '][framerate]'
+		});
+		
+		camera_stream_framerate_group.append( camera_stream_framerate );
+		// end of framerate field
+		//
+
+		//
+		// quality field
+		var camera_stream_quality_group = $('<div>', {
+			class: 'form-group  col-xs-2',
+			html: '<label for="camera-stream-quality">quality</label>'
+		});
+
+		var camera_stream_quality = $('<input>', {
+			type: 'number',
+			min: 1,
+			max: 30,
+			class: 'form-control camera-stream-quality-input',
+			id: 'camera-streams-' + current_number_of_streams + '-quality',
+			name: 'camera[streams][' + current_number_of_streams + '][quality]'
+		});
+		
+		camera_stream_quality_group.append( camera_stream_quality );
+		// end of quality field
+		//
+		
+		fieldset.append( camera_stream_id );
+		// fieldset.append( camera_stream_rtsp_group );
+		fieldset.append( camera_stream_name_group );
+		fieldset.append( camera_stream_resolution_group );
+		fieldset.append( camera_stream_framerate_group );
+		fieldset.append( camera_stream_quality_group );
+		fieldset.append( camera_stream_retention_group );
+	}
+
 
     fieldset.find("#remove-stream-" + current_number_of_streams).click(function(){
         $(this).parent().remove();
