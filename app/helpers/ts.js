@@ -3,21 +3,32 @@ var path = require('path');
 
 function deliverTsFile( camId, streamId, file, res ) {
 
-//	var fileName = path.basename(file, '.ts');
-//	var date = var dateString = date.getUTCFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+	var fileName = path.basename(file, '.ts');
+	var date = new Date( parseInt(fileName, 10) );
+	var dateFolder = date.getUTCFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
 
-    var fileUri =  __dirname + '/cameras/' + camId + '/' + streamId + '/videos/' + file;
+    var fileUri =  process.env['BASE_FOLDER'] + '/' + camId + '/' + streamId + '/videos/' + fileName + '.ts';
+	var fileUriWithDate =  process.env['BASE_FOLDER'] + '/' + camId + '/' + streamId + '/videos/' + dateFolder + '/' + fileName + '.ts';
 
-    fs.exists(fileUri, function( exists ) {
+    fs.exists(fileUriWithDate, function( exists ) {
 
         if (exists) {
             res.writeHead(200, { "Content-Type": "video/MP2T" });
-            var fileStream = fs.createReadStream( fileUri );
+            var fileStream = fs.createReadStream( fileUriWithDate );
             fileStream.pipe(res);
         } 
         else {
-             res.writeHead(200, { "Content-Type": "text" });
-             res.end("file not found: " + fileUri);
+			fs.exists(fileUri, function( exists ) {
+				if (exists) {
+					res.writeHead(200, { "Content-Type": "video/MP2T" });
+					var fileStream = fs.createReadStream( fileUri );
+					fileStream.pipe(res);
+				}
+				else {
+					res.writeHead(200, { "Content-Type": "text" });
+					res.end("file not found: " + fileUriWithDate);
+				}
+			});	
         }
     });
 }

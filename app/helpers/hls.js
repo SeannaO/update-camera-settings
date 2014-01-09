@@ -22,7 +22,6 @@ var livePlaylist = function( videos, targetDuration, mediaSequence, cb ) {
     }
     
     cb( content );
-    console.log( content );
 };
 
 
@@ -32,7 +31,6 @@ var livePlaylist = function( videos, targetDuration, mediaSequence, cb ) {
  */
 var generatePlaylist = function( camId, streamId, videos, targetDuration, mediaSequence, closed, cb ) {
     
-    console.log("generate playlist");
 
     var content = "#EXTM3U\n" +
                   "#EXT-X-VERSION:3\n" +        
@@ -42,18 +40,14 @@ var generatePlaylist = function( camId, streamId, videos, targetDuration, mediaS
                   "#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n";
 
     for ( var i = 0; i < videos.length; i++ ) {
-		
-		console.log(videos[i].url);
 
-        content = content + "#EXTINF:" + videos[i].duration + ".0,\n";
+        content = content + "#EXTINF:" + videos[i].duration + ",\n";
         content = content + "/ts/" + camId + "/" + streamId + "/" + path.basename(videos[i].url) + "\n";
     }
 
     if ( closed ) {
         content = content + "#EXT-X-ENDLIST\n";
     }
-
-    console.log( content );
 
     cb( content );
 };
@@ -88,16 +82,22 @@ var sortVideosByName = function( a, b ) {
 
 
 var calculateLengthsAsync = function(files, list, cb) {
+
     var file = files.shift();     
+
     if (file) {
-        ffmpeg.calcDuration( file, function(duration, f) {
-            list.push({
-                url: path.basename(f),
-                duration: duration/1000.0
-            });
-            
+        //ffmpeg.calcDuration( file, function(duration, f) {
+        //    list.push({
+        //        url: f,
+        //        duration: duration/1000.0
+        //    });
+        
+		list.push({
+			url: file,
+			duration: 15
+		});
             calculateLengthsAsync(files, list, cb);
-        });
+        
     } else {
         cb( list.sort( sortVideosByName ) );
     }

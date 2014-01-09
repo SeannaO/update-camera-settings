@@ -143,6 +143,8 @@ if ( process.argv.length > 2 ) {
 	process.exit();
 }
 // - - -
+process.env['BASE_FOLDER'] = baseFolder;
+
 
 // - - - - -
 // sets environment mode 
