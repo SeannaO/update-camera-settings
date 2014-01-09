@@ -160,3 +160,12 @@ input.switch:checked ~ label:after
 .stream-ok {
 	color: #0a0;
 }
+
+.camera-streams-retention{
+	width:85%;
+}
+.retention-unit{
+	width:10%;
+	float:right;
+	margin-top:5px;
+}
