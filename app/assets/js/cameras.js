@@ -144,11 +144,12 @@ var addCameraItem = function( camera ) {
 		class: "camera-item"
 	}).prependTo("#camera-list");
 
-	var menuHtml = "" +
-				"<a href = \"javascript:editCamera('" + camera._id + "')\">[ edit ]</a> | " +
-                "<a href = \"javascript:cameraSchedule('" + camera._id + "')\">[ schedule ]</a> | " +
-                "<a href = \"javascript:cameraMotion('" + camera._id + "')\">[ motion ]</a> | " +
-				"<a href = \"javascript:deleteCamera('" + camera._id + "')\">[ remove ]</a>";
+	var menuHtml = "<a href = \"javascript:editCamera('" + camera._id + "')\">[ edit ]</a> | " +
+                "<a href = \"javascript:cameraSchedule('" + camera._id + "')\">[ schedule ]</a> | ";
+	if (camera.manufacturer !== 'undefined' && camera.manufacturer !== 'unknown'){
+		menuHtml += "<a href = \"javascript:cameraMotion('" + camera._id + "')\">[ motion ]</a> | ";	
+	}
+	menuHtml += "<a href = \"javascript:deleteCamera('" + camera._id + "')\">[ remove ]</a>";
    
 	$("<div>", {
 		class: "camera-item-menu",
