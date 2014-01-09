@@ -337,9 +337,26 @@ var updateCamera = function(id, cb) {
     });
 };
 
+var timeStringToHourAndMinutes = function(str){
+	arr = str.split(":");
+	return {hour: parseInt(arr[0]), minutes: parseInt(arr[1])};
+};
+
 var updateSchedule = function(id, cb) {
 
     var params = $('#camera-schedule').serializeObject();
+    for (i in params.schedule){
+    	if (params.schedule[i].open === params.schedule[i].close){
+    		params.schedule[i].open = null;
+    		params.schedule[i].close = null;
+    	}else if (params.schedule[i].open === "0:00" && params.schedule[i].close === "23:59"){
+			params.schedule[i].open = false;
+			params.schedule[i].close = false;    		
+    	}else{
+    		params.schedule[i].open = timeStringToHourAndMinutes(params.schedule[i].open);
+    		params.schedule[i].close = timeStringToHourAndMinutes(params.schedule[i].close);    		
+    	}
+    }
 	console.log( params );
     $.ajax({
         type: "PUT",
@@ -848,8 +865,16 @@ var cameraSchedule = function(camId) {
 				
 				for (var d in days) {
 					var day = days[d];
- 					$('#schedule-'+day+'-open').timepicker('setTime',   to12HourTime(data.schedule[d].open.hour) + ":" + data.schedule[d].open.minutes + meridian(data.schedule[0].open.hour));
-					$('#schedule-'+day+'-close').timepicker('setTime',   to12HourTime(data.schedule[d].close.hour)   + ":" + data.schedule[d].close.minutes + meridian(data.schedule[0].close.hour));
+					if (data.schedule[d].close === false){
+ 						$('#schedule-'+day+'-open').timepicker('setTime',   "0:00");
+						$('#schedule-'+day+'-close').timepicker('setTime',  "23:59");
+					}else if (data.schedule[d].close || data.schedule[d].open){
+						$('#schedule-'+day+'-open').timepicker('setTime',   data.schedule[d].open.hour + ":" + data.schedule[d].open.minutes);
+						$('#schedule-'+day+'-close').timepicker('setTime',  data.schedule[d].close.hour   + ":" + data.schedule[d].close.minutes);						
+					}else{
+ 						$('#schedule-'+day+'-open').timepicker('setTime',   "0:00");
+						$('#schedule-'+day+'-close').timepicker('setTime',  "0:00");
+					}
 				}
 
                 if (data.schedule_enabled){

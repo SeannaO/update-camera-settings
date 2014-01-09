@@ -403,7 +403,7 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
     cam.schedule_enabled = false;
     cam.enabled = false;
-    cam.schedule = {"sunday":{"open":0,"close":"12:00 PM"},"monday":{"open":0,"close":"12:00 PM"},"tuesday":{"open":0,"close":"12:00 PM"},"wednesday":{"open":0,"close":"12:00 PM"},"thursday":{"open":0,"close":"12:00 PM"},"friday":{"open":0,"close":"12:00 PM"},"saturday":{"open":0,"close":"12:00 PM"}};
+    cam.schedule = {"sunday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"monday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"tuesday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"wednesday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"thursday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"friday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"saturday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}}};
 
     self.db.insert( cam, function( err, newDoc ) {
         if (err) {

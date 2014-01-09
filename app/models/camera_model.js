@@ -51,8 +51,10 @@ function Camera( cam, videosFolder ) {
 	});
 	//
 	
-	if ( !cam.deleted ) {	// starts camera if it's not being deleted					
+	if ( !cam.deleted ) {	// starts camera if it's not being deleted
+		console.log(cam.schedule);
 		this.schedule = new WeeklySchedule(cam.schedule);
+		console.log(this.schedule.toJSON());
 		this.schedule_enabled = cam.enableSchedule;
 		
 		if ( !fs.existsSync( this.videosFolder) ){
