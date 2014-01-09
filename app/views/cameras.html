@@ -89,17 +89,15 @@
 								<input name="camera[manufacturer]" type="hidden" id="camera-manufacturer"-->
 								<!-- TEMPORARY, DEVELOPMENT ONLY -->
 								<div class="form-group  col-xs-6">
-									<label for="camera-manufacturer">manufacturer (tests only)</label>
+									<label for="camera-manufacturer">manufacturer</label>
 									<select id = 'camera-manufacturer' name="camera[manufacturer]" class="form-control" >
 										<option value="axis">Axis</option> 
 										<option value="arecont" selected>Arecont</option>
-										<option value="bosch">Bosch</option>
-										<option value="unknown">just another manufacturer</option>
 									</select>
 								</div>
 
 								<div class="form-group  col-xs-4">
-									<label for="camera-ip">camera ip (tests only)</label>
+									<label for="camera-ip">camera ip</label>
 									<input type="text" class="form-control" id="camera-ip" placeholder="camera ip" name="camera[ip]">
 								</div>
 								<!-- end of TEMPORARY, DEVELOPMENT ONLY -->
@@ -289,7 +287,11 @@
                 $("#add-new-camera").show();
 
                 addCamera( camera, function(data) {
-                    $("#add-new-camera-dialog").modal('hide');
+                    $dialog = $("#add-new-camera-dialog");
+                    $dialog.find('.modal-title').html("add new camera");
+                    $dialog.find("#camera-manufacturer").prop('disabled', false);
+                    $dialog.find("#camera-ip").prop('disabled', false);
+                    $dialog.modal('hide');
                     addCameraItem( data );
 					console.log(data);
                     for (var i in data.streams) {

@@ -13,9 +13,14 @@ var testIpForPsiaCamera = function( ip, cb ) {
             timeout: 5000
         }, function (error, response, body) {
             if ( !error && body.length === 0 && response.statusCode !== 404 ) {
-
+                console.log(ip);
+                console.log('unauthorized');
+                console.log(body);
                 cb( error, 'unauthorized', ip );
             } else if ( !error && body.indexOf("psialliance-org") > -1 ) {
+                console.log(ip);
+                console.log('psia');
+                console.log(body);
 				cb( error, 'psia', ip );
 			} else {
                 cb( error, '', ip );

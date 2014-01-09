@@ -120,7 +120,7 @@ var list = function() {
             $("#camera-list").html("");
         }
         else {
-            $("#camera-list").html("no cameras have been added<br>");
+            $("#camera-list").html("<div id='no-cameras'>no cameras have been added<br></div>");
         }
 
         for (var i = 0; i < data.length; i++) {
@@ -221,6 +221,8 @@ var addCameraItem = function( camera ) {
 			break;
 		}
 	}
+
+	$('#no-cameras').remove();
 
 };
 
@@ -371,7 +373,6 @@ var editCamera = function(camId) {
     $("#add-new-camera").hide();
 	$("#stream-tabs").html("");
 	$("#stream-panes").html("");
-
     $.ajax({
         type: "GET",
         url: "/cameras/" + camId + "/json",
@@ -381,13 +382,12 @@ var editCamera = function(camId) {
             if (data.success) {
 
 				current_camera = data.camera;
-
+				$('#add-new-camera-dialog .modal-title').html("edit camera");
                 $("#add-new-camera-dialog #camera-name").val(data.camera.name);
-                $("#add-new-camera-dialog #camera-ip").val(data.camera.ip);
-                $("#add-new-camera-dialog #camera-manufacturer").attr("selected", data.camera.manufacturer);
+                $("#add-new-camera-dialog #camera-ip").val(data.camera.ip).prop('disabled', 'disabled');
+                $("#add-new-camera-dialog #camera-manufacturer").attr("selected", data.camera.manufacturer).prop('disabled', 'disabled');;
                 $("#add-new-camera-dialog #camera-username").val(data.camera.username || '');
                 $("#add-new-camera-dialog #camera-password").val(data.camera.password || '');
-                $("#add-new-camera-dialog #camera-manufacturer").val(data.camera.manufacturer);
                 
 				if ( data.camera.streams ){
 
@@ -586,20 +586,22 @@ var addStreamFieldset = function( cb ) {
 
 	//
 	// ** temporary, development only **
-	// 
-	var camera_stream_rtsp_group = $('<div>', {
-		class: 'form-group',
-		html: '<label for="camera-stream-rtsp">rtsp (temporary, dev only)</label>'
-	});
+	//
+
+	// var camera_stream_rtsp_group = $('<div>', {
+	// 	class: 'form-group',
+	// 	html: '<label for="camera-stream-rtsp">rtsp (temporary, dev only)</label>'
+	// });
 	
-	var camera_stream_rtsp = $('<input>', {
-		type: 'text',
-		disabled: 'disabled',
-		class: 'form-control',
-		id: 'camera-streams-' + current_number_of_streams + '-url',
-		name: 'camera[streams][' + current_number_of_streams + '][rtsp]'
-	});	
-	camera_stream_rtsp_group.append( camera_stream_rtsp );
+	// var camera_stream_rtsp = $('<input>', {
+	// 	type: 'text',
+	// 	disabled: 'disabled',
+	// 	class: 'form-control',
+	// 	id: 'camera-streams-' + current_number_of_streams + '-url',
+	// 	name: 'camera[streams][' + current_number_of_streams + '][rtsp]'
+	// });	
+	// camera_stream_rtsp_group.append( camera_stream_rtsp );
+
 	//
 	//
 	
@@ -698,7 +700,7 @@ var addStreamFieldset = function( cb ) {
 	//
 	
 	fieldset.append( camera_stream_id );
-	fieldset.append( camera_stream_rtsp_group );
+	// fieldset.append( camera_stream_rtsp_group );
 	fieldset.append( camera_stream_name_group );
 	fieldset.append( camera_stream_resolution_group );
 	fieldset.append( camera_stream_framerate_group );
