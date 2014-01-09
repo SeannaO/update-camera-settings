@@ -1,6 +1,6 @@
 var hls = require('./../helpers/hls');
 
-function generateFinitePlaylist( db, camId, begin, end, cb ) {
+function generateFinitePlaylist( db, camId, streamId, begin, end, cb ) {
 
     db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
         
@@ -9,7 +9,7 @@ function generateFinitePlaylist( db, camId, begin, end, cb ) {
         });
 
         hls.calculateLengths( fileList, function(videos) {
-            hls.generatePlaylist( camId, videos, 10, 0, true, function(playlist) {
+            hls.generatePlaylist( camId, streamId, videos, 20, 0, true, function(playlist) {
                 cb( playlist );
             });
         });
@@ -22,7 +22,6 @@ function generateLivePlaylist( db, req, res ) {
     var begin = 0;
     var end = Date.now();
     
-    console.log( Date.now() );
     if ( isNaN( begin ) ) {
         res.end("invalid time");
         return;

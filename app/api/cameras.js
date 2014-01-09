@@ -166,7 +166,6 @@ module.exports = function( app, passport, camerasController ) {
 			if (err || cam.length === 0) {
 				res.end("couldn't find this camera");
 			} else {
-				// console.log( cam.deleteOldestChunks(10) );
 				res.render('camera', cam.toJSON());
 			}
 		});
@@ -417,7 +416,7 @@ module.exports = function( app, passport, camerasController ) {
 		var camId = req.params.id;
 		var begin = parseInt( req.query.begin, 10 );
 		var end = parseInt( req.query.end, 10 );
-		var stream = req.query.stream;
+		var streamId = req.query.stream;
 
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err) {
@@ -426,15 +425,15 @@ module.exports = function( app, passport, camerasController ) {
 
 				//for (var stream in cam.streams){
 				// in case the streamId is invalid or not specified
-				if (!cam.streams[stream]) {
+				if (!cam.streams[streamId]) {
 					for (var s in cam.streams){
-						stream = s;
+						streamId = s;
 						break;
 					}
 				}
 
 
-				hlsHandler.generateFinitePlaylist( cam.streams[stream].db, camId, begin, end, function( playlist ) {
+				hlsHandler.generateFinitePlaylist( cam.streams[streamId].db, camId, streamId, begin, end, function( playlist ) {
 
 					res.writeHead(200, { 
 						"Content-Type":"application/x-mpegURL",
