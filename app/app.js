@@ -258,12 +258,13 @@ app.get('/cameras', passport.authenticate('basic', {session: false}), function(r
 
 // - - -
 // gets ts segment
-app.get('/ts/:id/:file', passport.authenticate('basic', {session: false}), function(req, res) {
+app.get('/ts/:cam_id/streams/:stream_id/:file', passport.authenticate('basic', {session: false}), function(req, res) {
     
-    var camId = req.params.id;
+    var camId = req.params.cam_id;
+	var streamId = req.params.stream_id;
     var file = req.params.file;
 
-    tsHandler.deliverTsFile( camId, file, res );
+    tsHandler.deliverTsFile( camId, streamId, file, res );
 });
 // - - -
 
