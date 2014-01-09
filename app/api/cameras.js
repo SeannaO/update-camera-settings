@@ -416,20 +416,35 @@ module.exports = function( app, passport, camerasController ) {
 		var camId = req.params.id;
 		var begin = parseInt( req.query.begin, 10 );
 		var end = parseInt( req.query.end, 10 );
-		for (stream in cam.streams){
-			console.log(cam.streams[stream].db);
-			hlsHandler.generateFinitePlaylist( cam.streams[stream].db, camId, begin, end, function( playlist ) {
+		var stream = req.query.stream;
 
-				res.writeHead(200, { 
-					"Content-Type":"application/x-mpegURL",
-					'content-length': playlist.length 
+		camerasController.getCamera( camId, function(err, cam) {
+			if (err) {
+				res.json( { error: err } );
+			} else {
+
+				//for (var stream in cam.streams){
+				// in case the streamId is invalid or not specified
+				if (!cam.streams[stream]) {
+					for (var s in cam.streams){
+						stream = s;
+						break;
+					}
+				}
+
+
+				hlsHandler.generateFinitePlaylist( cam.streams[stream].db, camId, begin, end, function( playlist ) {
+
+					res.writeHead(200, { 
+						"Content-Type":"application/x-mpegURL",
+						'content-length': playlist.length 
+					});
+
+					res.end(playlist);    
 				});
-
-				res.end(playlist);    
+			}
 			});
-			break;
-		}
-	});
+		});
 	// - - -
 
 	// - - -

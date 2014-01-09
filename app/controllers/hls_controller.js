@@ -11,7 +11,7 @@ function generateFinitePlaylist( db, camId, begin, end, cb ) {
         });
 
         hls.calculateLengths( fileList, function(videos) {
-            hls.generatePlaylist( camId, videos, 20, 0, true, function(playlist) {
+            hls.generatePlaylist( camId, videos, 10, 0, true, function(playlist) {
                 cb( playlist );
             });
         });
