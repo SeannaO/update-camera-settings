@@ -497,15 +497,6 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 		}
 		streamsHash[ cam.streams[s].id ] = cam.streams[s];
 	}
-
-	console.log("###########");
-	console.log(camera);
-	console.log("###########");
-	console.log(cam);
-	console.log("###########");
-	var x = cam.ip || camera.ip;
-	console.log(x);
-	console.log("###########");
 	
     self.db.update({ _id: cam._id }, { 
         $set: { 
