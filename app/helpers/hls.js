@@ -17,8 +17,10 @@ var livePlaylist = function( videos, targetDuration, mediaSequence, cb ) {
                   "#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n";
 
     for ( var i = 0; i < videos.length; i++ ) {
-        content = content + "#EXTINF:" + videos[i].duration + ",\n";
-        content = content + "/ts/" + path.basename(videos[i].url) + "\n";
+		
+		var duration = (videos[i].end - videos[i].start)/1000.0;
+        content = content + "#EXTINF:" + duration + ",\n";
+        content = content + "/ts/" + path.basename(videos[i].file) + "\n";
     }
     
     cb( content );
@@ -40,9 +42,10 @@ var generatePlaylist = function( camId, streamId, videos, targetDuration, mediaS
                   "#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n";
 
     for ( var i = 0; i < videos.length; i++ ) {
-
-        content = content + "#EXTINF:" + videos[i].duration + ",\n";
-        content = content + "/ts/" + camId + "/" + streamId + "/" + path.basename(videos[i].url) + "\n";
+		
+		var duration = (videos[i].end - videos[i].start)/1000.0;		
+        content = content + "#EXTINF:" + duration + ",\n";
+        content = content + "/ts/" + camId + "/" + streamId + "/" + path.basename(videos[i].file) + "\n";
     }
 
     if ( closed ) {
