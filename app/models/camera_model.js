@@ -274,7 +274,7 @@ Camera.prototype.updateStream = function( stream ) {
 		var param = restartParams[i];
 
 		if ( stream[param] && self.streams[id][param] !== stream[param] ) {
-
+					
 			self.streams[id][param] = stream[param];
 			need_restart = true;
 		}

@@ -496,20 +496,23 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 			cam.streams[s].id = generateUUID();
 		}
 		streamsHash[ cam.streams[s].id ] = cam.streams[s];
-
-		console.log("##########");
-		console.log(streamsHash);
-		console.log("##########");
 	}
-	
+
+	if (typeof cam.username == "undefined") {
+		cam.username = camera.cam.username	|| '';
+	}
+	if (typeof cam.password == "undefined") {
+		cam.password = camera.cam.password	|| '';
+	}
+
     self.db.update({ _id: cam._id }, { 
         $set: { 
             name: cam.name							|| camera.cam.name, 
             manufacturer: cam.manufacturer			|| camera.cam.manufacturer, 
             ip: cam.ip								|| camera.cam.ip,
 			id: cam.id								|| camera.cam.id,
-            username: cam.username					|| camera.cam.username	|| '',
-            password: cam.password					|| camera.cam.password	|| '',
+            username: cam.username,
+            password: cam.password,
             streams: streamsHash
         } 
     }, { multi: true }, function (err, numReplaced) {
@@ -536,12 +539,12 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 				need_restart_all_streams = true;
 			}
 
-			if ( cam.username && ( camera.cam.username !== cam.username ) ){
+			if ( camera.cam.username !== cam.username ){
 				camera.cam.username = cam.username;
 				need_restart_all_streams = true;
 			}
 
-			if ( cam.password && ( camera.cam.password !== cam.password ) ){
+			if ( camera.cam.password !== cam.password ){
 				camera.cam.password = cam.password;
 				need_restart_all_streams = true;
 			}
