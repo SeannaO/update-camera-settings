@@ -130,7 +130,7 @@ module.exports = function( app, passport, camerasController ) {
 			if (err || !cam || cam.length === 0) {
 				res.json({ success: false, error: err });
 			} else {
-				console.log(cam);
+				console.log(cam.schedule.toJSON());
 				res.json({ success: true, schedule_enabled: cam.schedule_enabled, schedule: cam.schedule.toJSON() });
 			}
 		});

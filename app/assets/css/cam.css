@@ -5,13 +5,11 @@
 }
 
 .video-box {
-	width:640px; 
-	height:480px; 
 	background:rgb(240,240,240); 
-	margin: 5px;
+	margin: 10px;
 	position: relative;
 	float: left;
-	padding: 0px;
+	padding: 10px;
 
 }
 
