@@ -9,6 +9,25 @@ body {
 	color: #8F8F8F;
 }
 
+.status{
+	width:12px;
+	height:12px;
+	background-repeat: no-repeat;
+	background-color: transparent;
+	margin:0px 2px;
+	display:inline-block;
+}
+.status.red{
+	background-image: url("../img/redstatus.png");
+}
+.status.green{
+	background-image: url("../img/greenstatus.png");
+}
+.status.gray{
+	background-image: url("../img/graystatus.png");
+}
+
+
 .timeline-end-time {
 	position: absolute;
 	top: 28px;

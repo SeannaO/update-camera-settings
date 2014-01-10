@@ -144,10 +144,13 @@ var addCameraItem = function( camera ) {
 		class: "camera-item"
 	}).prependTo("#camera-list");
 
+	var schedule_status_class = camera.schedule_enabled ? "green" : "red";
+
 	var menuHtml = "<a href = \"javascript:editCamera('" + camera._id + "')\">[ edit ]</a> | " +
-                "<a href = \"javascript:cameraSchedule('" + camera._id + "')\">[ schedule ]</a> | ";
+                "<a href = \"javascript:cameraSchedule('" + camera._id + "')\">[<span class=\"status " + schedule_status_class + "\"></span>schedule ]</a> | ";
 	if (camera.manufacturer !== 'undefined' && camera.manufacturer !== 'unknown'){
-		menuHtml += "<a href = \"javascript:cameraMotion('" + camera._id + "')\">[ motion ]</a> | ";	
+		var motion_status_class = "green";
+		menuHtml += "<a href = \"javascript:cameraMotion('" + camera._id + "')\">[<span class=\"status " + motion_status_class + "\"></span> motion ]</a> | ";	
 	}
 	menuHtml += "<a href = \"javascript:deleteCamera('" + camera._id + "')\">[ remove ]</a>";
    
@@ -166,14 +169,14 @@ var addCameraItem = function( camera ) {
         html: '<div class="camera-item-rtsp">' + camera.status + '</div>'
     }).appendTo("#camera-item-"+camera._id);
 
-	switchHtml = '' +
-		'<input type="checkbox" id="switch-'+camera._id+'" name="switch-'+camera._id+'" class="switch" value="1"/>' +
-		'<label for="switch-'+camera._id+'">off/on</label>';
+	// switchHtml = '' +
+	// 	'<input type="checkbox" id="switch-'+camera._id+'" name="switch-'+camera._id+'" class="switch" value="1"/>' +
+	// 	'<label for="switch-'+camera._id+'">off/on</label>';
 
-	$("<div>", {
-		class: "camera-item-switch",
-		html: switchHtml
-	}).appendTo("#camera-item-"+camera._id);
+	// $("<div>", {
+	// 	class: "camera-item-switch",
+	// 	html: switchHtml
+	// }).appendTo("#camera-item-"+camera._id);
 
 	$("<div>", {
 		id: "thumb-" + camera._id,
@@ -182,20 +185,20 @@ var addCameraItem = function( camera ) {
            
 	console.log( camera );
 
-	if (camera.enabled == "1") {
-		$("#switch-"+camera._id).attr('checked', true);
-	} else {
-		$("#switch-"+camera._id).attr('checked', false);
-	}
+	// if (camera.enabled == "1") {
+	// 	$("#switch-"+camera._id).attr('checked', true);
+	// } else {
+	// 	$("#switch-"+camera._id).attr('checked', false);
+	// }
 
-	$("#switch-"+camera._id).change( function() {
+	// $("#switch-"+camera._id).change( function() {
 
-		if ( $("#switch-"+camera._id).is(':checked') ) {
-			startRecording(camera._id);
-		} else {
-			stopRecording(camera._id);
-		}
-	});
+	// 	if ( $("#switch-"+camera._id).is(':checked') ) {
+	// 		startRecording(camera._id);
+	// 	} else {
+	// 		stopRecording(camera._id);
+	// 	}
+	// });
 
 	
 	for (var s in camera.streams) {
@@ -228,41 +231,41 @@ var addCameraItem = function( camera ) {
 };
 
 
-var startRecording = function(camId) {
+// var startRecording = function(camId) {
 
-    $.ajax({
-        url: "/cameras/"+camId+"/start_recording",
-        success: function(data) {
-            if (data.error || data.success === false) {
-                $("#switch-"+camId).attr('checked', false);
-            } else {
-                $("#switch-"+camId).attr('checked', true);
-            }
-        }, 
-        error: function() {
-            $("#switch-"+camId).attr('checked', false);
-        }
+//     $.ajax({
+//         url: "/cameras/"+camId+"/start_recording",
+//         success: function(data) {
+//             if (data.error || data.success === false) {
+//                 $("#switch-"+camId).attr('checked', false);
+//             } else {
+//                 $("#switch-"+camId).attr('checked', true);
+//             }
+//         }, 
+//         error: function() {
+//             $("#switch-"+camId).attr('checked', false);
+//         }
     
-	});
-};
+// 	});
+// };
 
 
-var stopRecording = function(camId) {
-    $.ajax({
-        url: "/cameras/"+camId+"/stop_recording",
-        success: function(data) {
-            if (data.error || data.success === false) {
-                console.log(  $("#switch-"+camId).is(':checked') );
-                $("#switch-"+camId).attr('checked', true);
-            } else {
-                $("#switch-"+camId).attr('checked', false);
-            }
-        }, 
-        error: function() {
-            $("#switch-"+camId).attr('checked', true);
-        }
-    });
-};
+// var stopRecording = function(camId) {
+//     $.ajax({
+//         url: "/cameras/"+camId+"/stop_recording",
+//         success: function(data) {
+//             if (data.error || data.success === false) {
+//                 console.log(  $("#switch-"+camId).is(':checked') );
+//                 $("#switch-"+camId).attr('checked', true);
+//             } else {
+//                 $("#switch-"+camId).attr('checked', false);
+//             }
+//         }, 
+//         error: function() {
+//             $("#switch-"+camId).attr('checked', true);
+//         }
+//     });
+// };
 
 
 var addCamera = function(camera, cb) {

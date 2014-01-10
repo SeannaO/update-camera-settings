@@ -386,28 +386,28 @@ module.exports = function( app, passport, camerasController ) {
 	});
 	// - - -
 
-	// - - -
-	// starts recording
-	// TODO: should be only via post
-	app.get('/cameras/:id/start_recording', passport.authenticate('basic', {session: false}), function(req, res) {
-		startRecording(req, res);
-	});
-	app.post('/cameras/:id/start_recording', passport.authenticate('basic', {session: false}), function(req, res) {
-		startRecording(req, res);
-	});
-	// - - -
-	//
+	// // - - -
+	// // starts recording
+	// // TODO: should be only via post
+	// app.get('/cameras/:id/start_recording', passport.authenticate('basic', {session: false}), function(req, res) {
+	// 	startRecording(req, res);
+	// });
+	// app.post('/cameras/:id/start_recording', passport.authenticate('basic', {session: false}), function(req, res) {
+	// 	startRecording(req, res);
+	// });
+	// // - - -
+	// //
 
-	// - - -
-	// stops recording
-	// TODO: should be only via post
-	app.post('/cameras/:id/stop_recording', passport.authenticate('basic', {session: false}), function(req, res) {
-		stopRecording( req, res );
-	});
-	app.get('/cameras/:id/stop_recording', passport.authenticate('basic', {session: false}), function(req, res) {
-		stopRecording( req, res );
-	});
-	// - - -
+	// // - - -
+	// // stops recording
+	// // TODO: should be only via post
+	// app.post('/cameras/:id/stop_recording', passport.authenticate('basic', {session: false}), function(req, res) {
+	// 	stopRecording( req, res );
+	// });
+	// app.get('/cameras/:id/stop_recording', passport.authenticate('basic', {session: false}), function(req, res) {
+	// 	stopRecording( req, res );
+	// });
+	// // - - -
 
 	// - - -
 	// gets hls stream for finite length video
@@ -449,32 +449,32 @@ module.exports = function( app, passport, camerasController ) {
 
 	// - - -
 	// end recording abstraction
-	var startRecording = function(req, res) {
-		var camId = req.params.id;
+	// var startRecording = function(req, res) {
+	// 	var camId = req.params.id;
 
-		camerasController.startRecording( camId, function(err) {
-			if ( err ) {
-				res.json({ success: false, error: err });
-			} else {
-				res.json({ success: true });
-			}
-		});
-	};
+	// 	camerasController.startRecording( camId, function(err) {
+	// 		if ( err ) {
+	// 			res.json({ success: false, error: err });
+	// 		} else {
+	// 			res.json({ success: true });
+	// 		}
+	// 	});
+	// };
 
 
 	// - - -
 	// stop recording abstraction
-	var stopRecording = function( req, res ) {
-		var camId = req.params.id;
+	// var stopRecording = function( req, res ) {
+	// 	var camId = req.params.id;
 
-		camerasController.stopRecording( camId, function(err) {
-			if (err || cam.length === 0) {
-				res.json({ success: false, error: err });
-			} else {
-				res.json({ success: true });
-			}
-		});
-	};
+	// 	camerasController.stopRecording( camId, function(err) {
+	// 		if (err || cam.length === 0) {
+	// 			res.json({ success: false, error: err });
+	// 		} else {
+	// 			res.json({ success: true });
+	// 		}
+	// 	});
+	// };
 	// end of stopRecording
 	// - - -
 	
