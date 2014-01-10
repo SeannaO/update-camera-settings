@@ -250,6 +250,7 @@ app.use('/img', express.static(__dirname + '/assets/img'));
 // - - -
 // API
 require('./api/cameras.js')( app, passport, camerasController );			// cameras
+require('./api/device.js')( app, passport);			// device
 
 // usage: append subnet prefix in the form xxx.xxx.xxx
 // TODO: we need to configure the subnet that camera should scan
