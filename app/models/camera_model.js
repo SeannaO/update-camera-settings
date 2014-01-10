@@ -46,19 +46,19 @@ function Camera( cam, videosFolder ) {
 	});
 
 	// motion detection test -- TESTS ONLY
-	self.setMotionDetection( function() {
-		self.startMotionDetection();
-	});
+	//self.setMotionDetection( function() {
+	//	self.startMotionDetection();
+	//});
 	//
 	
 	if ( !cam.deleted ) {	// starts camera if it's not being deleted
-		console.log(cam.schedule);
+		//console.log(cam.schedule);
 		this.schedule = new WeeklySchedule(cam.schedule);
-		console.log(this.schedule.toJSON());
+		//console.log(this.schedule.toJSON());
 		this.schedule_enabled = cam.enableSchedule;
 		
 		if ( !fs.existsSync( this.videosFolder) ){
-			console.log(this.videosFolder);
+			//console.log(this.videosFolder);
 			fs.mkdirSync( this.videosFolder );
 		}
 
@@ -112,7 +112,8 @@ Camera.prototype.addStream = function( stream ) {
 	stream.url = this.api.getRtspUrl({
 		resolution: stream.resolution,
 		framerate: stream.framerate,
-		quality: stream.quality
+		quality: stream.quality,
+		suggested_url: stream.url
 	});
 
 	stream.recordModel = new RecordModel( this, stream );
@@ -264,7 +265,7 @@ Camera.prototype.updateStream = function( stream ) {
 
 	// these are the parameters that requires restarting the recorder when they change,
 	// because the rtsp url changes.
-	var restartParams = ['resolution', 'framerate', 'quality'];
+	var restartParams = ['resolution', 'framerate', 'quality', 'url'];
 
 	// iterates through restart params, checks if any of them changed, 
 	// sets restarting if needed
@@ -322,7 +323,9 @@ Camera.prototype.restartAllStreams = function() {
  */
 Camera.prototype.restartStream = function( streamId ) {
 
+	console.log("############################");
 	console.log('*** restartStream: restarting stream ' + streamId);
+	console.log("############################");
 
 	var self = this;
 
@@ -338,7 +341,8 @@ Camera.prototype.restartStream = function( streamId ) {
 	self.streams[streamId].rtsp = self.streams[streamId].url = self.api.getRtspUrl({
 		resolution: stream.resolution,
 		framerate: stream.framerate,
-		quality: stream.quality
+		quality: stream.quality,
+		suggested_url: self.streams[streamId].url
 	});
 	
 	self.streams[streamId].recordModel = new RecordModel( self, self.streams[streamId] );

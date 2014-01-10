@@ -41,14 +41,15 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 passport.use(new BasicStrategy( function(username,password,done){
 		
 		console.log('[passport basicStrategy] environment: ' + process.env['NODE_ENV']);
-		
-		// stores lifeline auth in memory for later usage
-		process.env['USER'] = username;
-		process.env['PASSWORD'] = password;
-		
+				
 		// bypasses auth for development mode
 		if (process.env['NODE_ENV'] === 'development') {
 			process.nextTick(function() {
+				
+				// stores lifeline auth in memory for later usage
+				process.env['USER'] = username;
+				process.env['PASSWORD'] = password;
+
 				return done( null, true );
 			});	
 			return;
@@ -68,7 +69,18 @@ passport.use(new BasicStrategy( function(username,password,done){
 				},
 			}, function( error, response, body) {
 				if (error){ return done(error); }
-				if (body){ return body === "true" ? done(null,true) : done(null,false); }
+				if (body) { 
+
+					if (body === 'true') {
+						// stores lifeline auth in memory for later usage
+						process.env['USER'] = username;
+						process.env['PASSWORD'] = password;
+						
+						return done(null,true);
+					} else {
+						return done(null, false);
+					}
+				}
 			}
 			);
 		});

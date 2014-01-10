@@ -23,7 +23,7 @@ exports.getApi = function( manufacturer ) {
 	if ( api_list[ manufacturer ] ){
 		api = require( './' + api_list[ manufacturer ] );
 	} else {
-		api = require( './axis.js' );
+		api = require( './generic.js' );
 	}
 
 	return ( new api() );

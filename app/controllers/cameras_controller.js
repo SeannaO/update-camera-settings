@@ -496,6 +496,10 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 			cam.streams[s].id = generateUUID();
 		}
 		streamsHash[ cam.streams[s].id ] = cam.streams[s];
+
+		console.log("##########");
+		console.log(streamsHash);
+		console.log("##########");
 	}
 	
     self.db.update({ _id: cam._id }, { 
