@@ -411,7 +411,7 @@ module.exports = function( app, passport, camerasController ) {
 
 	// - - -
 	// gets hls stream for finite length video
-	app.get('/cameras/:id/video.hls', passport.authenticate('basic', {session: false}), function(req, res) {
+	app.get('/cameras/:id/video.m3u8', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		var camId = req.params.id;
 		var begin = parseInt( req.query.begin, 10 );

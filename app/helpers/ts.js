@@ -13,9 +13,11 @@ function deliverTsFile( camId, streamId, file, res ) {
     fs.exists(fileUriWithDate, function( exists ) {
 
         if (exists) {
-            res.writeHead(200, { "Content-Type": "video/MP2T" });
-            var fileStream = fs.createReadStream( fileUriWithDate );
-            fileStream.pipe(res);
+            //res.writeHead(200, { "Content-Type": "video/MP2T" });
+			res.sendfile(fileUriWithDate);
+            //var fileStream = fs.createReadStream( fileUriWithDate,
+			//	{ bufferSize: 64 * 1024 });
+            //fileStream.pipe(res);
         } 
         else {
 			fs.exists(fileUri, function( exists ) {
