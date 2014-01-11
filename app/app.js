@@ -243,6 +243,7 @@ scheduler.setupListeners( camerasController );
 app.use('/css', express.static(__dirname + '/assets/css'));		
 app.use('/js', express.static(__dirname + '/assets/js'));
 app.use('/img', express.static(__dirname + '/assets/img'));
+app.use('/swf', express.static(__dirname + '/assets/swf'));
 // end of static files
 // - - -
 
@@ -267,11 +268,10 @@ app.get('/cameras', passport.authenticate('basic', {session: false}), function(r
 });
 // - - -
 
-
 // - - -
 // gets ts segment
 // TODO: get authentication to work with HLS video tag
-app.get('/ts/:cam_id/:stream_id/:file', function(req, res) {
+app.get('/cameras/:cam_id/ts/:stream_id/:file', function(req, res) {
     
     var camId = req.params.cam_id;
 	var streamId = req.params.stream_id;
@@ -280,20 +280,6 @@ app.get('/ts/:cam_id/:stream_id/:file', function(req, res) {
     tsHandler.deliverTsFile( camId, streamId, file, res );
 });
 // - - -
-
-// - - -
-// gets ts segment
-// TODO: get authentication to work with HLS video tag
-app.get('/cameras/ts/:cam_id/:stream_id/:file', function(req, res) {
-    
-    var camId = req.params.cam_id;
-	var streamId = req.params.stream_id;
-    var file = req.params.file;
-
-    tsHandler.deliverTsFile( camId, streamId, file, res );
-});
-// - - -
-
 
 // - - -
 //	gets hls live stream

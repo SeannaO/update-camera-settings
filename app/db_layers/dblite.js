@@ -86,6 +86,12 @@ Dblite.prototype.sortByStartTimeAsc = function(a, b) {
  */
 Dblite.prototype.searchVideosByInterval = function( start, end, cb ) {
 
+
+	if ( isNaN( start ) || isNaN( end ) )  {
+		console.log( "[Dblite.searchVideosByInterval] invalid interval error: " + start + " : " + end );
+		return;
+	}
+
     var fileList = this.db.query('SELECT start, end, file FROM videos WHERE start < ? AND end > ? ORDER BY start ASC', 
             [end+500, start-500], 
             ['start', 'end', 'file'], 

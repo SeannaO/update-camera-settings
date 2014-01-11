@@ -13,20 +13,31 @@ function deliverTsFile( camId, streamId, file, res ) {
     fs.exists(fileUriWithDate, function( exists ) {
 
         if (exists) {
-            //res.writeHead(200, { "Content-Type": "video/MP2T" });
-			res.sendfile(fileUriWithDate);
-            //var fileStream = fs.createReadStream( fileUriWithDate,
-			//	{ bufferSize: 64 * 1024 });
-            //fileStream.pipe(res);
+			console.log("...delivering file...");
+			//res.sendfile(fileUriWithDate);
+
+			fs.stat(fileUriWithDate, function(err, stat) {
+							
+				res.writeHead(200, { 
+					'Content-Type': 'video/MP2T',
+					'Content-Length': stat.size
+				});
+
+				var fileStream = fs.createReadStream( fileUriWithDate );
+				fileStream.pipe(res);
+			});
         } 
         else {
 			fs.exists(fileUri, function( exists ) {
 				if (exists) {
-					res.writeHead(200, { "Content-Type": "video/MP2T" });
-					var fileStream = fs.createReadStream( fileUri );
-					fileStream.pipe(res);
+					console.log("...delivering file...");
+					res.sendfile(fileUri);
+					//res.writeHead(200, { "Content-Type": "video/MP2T" });
+					//var fileStream = fs.createReadStream( fileUri );
+					//fileStream.pipe(res);
 				}
 				else {
+					console.log("!!!!!!can't find file!!!!!!");
 					res.writeHead(200, { "Content-Type": "text" });
 					res.end("file not found: " + fileUriWithDate);
 				}

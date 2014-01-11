@@ -19,6 +19,7 @@ var livePlaylist = function( videos, targetDuration, mediaSequence, cb ) {
     for ( var i = 0; i < videos.length; i++ ) {
 		
 		var duration = (videos[i].end - videos[i].start)/1000.0;
+		duration = 10;
         content = content + "#EXTINF:" + duration + ",\n";
         content = content + "/ts/" + path.basename(videos[i].file) + "\n";
     }
@@ -35,17 +36,16 @@ var generatePlaylist = function( camId, streamId, videos, targetDuration, mediaS
     
 
     var content = "#EXTM3U\n" +
-                  "#EXT-X-VERSION:3\n" +        
-                  "#EXT-X-PLAYLIST-TYPE:VOD\n" +   
+                  "#EXT-X-VERSION:3\n" +         
                   "#EXT-X-ALLOW-CACHE:YES\n" +
-                  "#EXT-X-TARGETDURATION:" + targetDuration + "\n" +
-                  "#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n";
+                  "#EXT-X-TARGETDURATION: 10\n" +
+                  "#EXT-X-MEDIA-SEQUENCE:0\n";
 
     for ( var i = 0; i < videos.length; i++ ) {
 		
-		var duration = (videos[i].end - videos[i].start)/1000.0;		
+		var duration = (videos[i].end - videos[i].start)/1000.0;
         content = content + "#EXTINF:" + duration + ",\n";
-        content = content + "/ts/" + camId + "/" + streamId + "/" + path.basename(videos[i].file) + "\n";
+        content = content + "ts/" + streamId + "/" + path.basename(videos[i].file) + "\n";
     }
 
     if ( closed ) {

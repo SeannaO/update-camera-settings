@@ -30,6 +30,64 @@ var populateStreamSelector = function(streams) {
 	}
 };
 
-var getRtsp = function() {
+var getRtsp = function( options ) {
 	return('#stream-selector').val();	
+};
+
+
+var launchNativePlayer = function( url ) {
+
+	$("#nativePlayer").show();
+	$("#nativePlayer").attr("src", url);
+};
+
+
+var launchStrobePlayer = function( options ) {
+
+	$("#StrobeMediaPlayback").show();
+
+	options.url = encodeURIComponent( options.url );
+
+	var parameters = {
+		src: options.url,
+		autoPlay: options.autoplay,
+		verbose: true,
+		controlBarAutoHide: "true",
+		controlBarPosition: "bottom",
+		poster: "",
+		plugin_hls: "/swf/HLSDynamicPlugin.swf"
+	};
+
+	var wmodeValue = "direct";
+	var wmodeOptions = ["direct", "opaque", "transparent", "window"];
+	if (parameters.hasOwnProperty("wmode"))
+	{
+		if (wmodeOptions.indexOf(parameters.wmode) >= 0)
+		{
+			wmodeValue = parameters.wmode;
+		}	            	
+		delete parameters.wmode;
+	}
+
+	// Embed the player SWF:	            
+	swfobject.embedSWF(
+			"/swf/StrobeMediaPlayback.swf"
+			, "StrobeMediaPlayback"
+			, 640
+			, 480
+			, "10.1.0"
+			, "/swf/expressInstall.swf"
+			, parameters
+			, {
+				allowFullScreen: "true",
+				wmode: wmodeValue
+			}
+			, {
+				name: "StrobeMediaPlayback"
+			}
+	);
+};
+
+var canPlayHLS = function() {
+	return document.createElement('video').canPlayType('application/vnd.apple.mpegURL') === 'maybe';
 };
