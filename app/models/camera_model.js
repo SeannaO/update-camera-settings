@@ -34,8 +34,6 @@ function Camera( cam, videosFolder ) {
 	this.streams = {};
 
 	this.recording = false;					// is the camera recording?
-    this.enabled = cam.enabled;				// is the camera enabled?
-	
 
 	this.api = require('../helpers/camera_scanner/cam_api/api.js').getApi( this.manufacturer );
 
@@ -55,7 +53,7 @@ function Camera( cam, videosFolder ) {
 		//console.log(cam.schedule);
 		this.schedule = new WeeklySchedule(cam.schedule);
 		//console.log(this.schedule.toJSON());
-		this.schedule_enabled = cam.enableSchedule;
+		this.schedule_enabled = cam.schedule_enabled;
 		
 		if ( !fs.existsSync( this.videosFolder) ){
 			//console.log(this.videosFolder);
@@ -684,8 +682,7 @@ Camera.prototype.startRecording = function() {
 		for (var i in self.streams) {
 			this.streams[i].recordModel.startRecording();
 		}
-		this.recording = true;	
-		this.enabled = true;		
+		this.recording = true;
     }
 };
 // end of startRecording
@@ -703,7 +700,6 @@ Camera.prototype.stopRecording = function() {
     if (this.recording) { // avoids calling stopRecording twice
         console.log(this.name + " will stop recording...");
         this.recording = false;
-		this.enabled = false;
 		for (var i in self.streams) {
 			this.streams[i].recordModel.stopRecording();
 		}
@@ -842,7 +838,7 @@ Camera.prototype.toJSON = function() {
     info.name = this.name;
     info.ip = this.ip;
     info._id = this._id;
-    info.enabled = this.enabled;
+    info.schedule_enabled = this.schedule_enabled;
     info.status = this.status;
     info.type = this.type;
     info.manufacturer = this.manufacturer;

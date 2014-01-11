@@ -401,8 +401,7 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
 	console.log(cam);
 
-    cam.schedule_enabled = false;
-    cam.enabled = false;
+    cam.schedule_enabled = true;
     cam.schedule = {"sunday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"monday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"tuesday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"wednesday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"thursday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"friday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"saturday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}}};
 
     self.db.insert( cam, function( err, newDoc ) {
@@ -629,61 +628,61 @@ CamerasController.prototype.updateCameraMotion = function(params, cb) {
 };
 
 
-CamerasController.prototype.startRecording = function (camId, cb) {
+// CamerasController.prototype.startRecording = function (camId, cb) {
 
-    var self = this;
+//     var self = this;
 
-    refresh( function(err) {
-        if (err) {
-            cb( err );
-            return false;
-        }
+//     refresh( function(err) {
+//         if (err) {
+//             cb( err );
+//             return false;
+//         }
 
-        cam = self.findCameraById(camId).cam;
+//         cam = self.findCameraById(camId).cam;
            
-        if (cam) {
-            cam.startRecording();  
-            self.db.update({ _id: cam._id }, { $set: { enabled: cam.enabled } }, { multi: true }, function (err, numReplaced) {
-                if (err) {
-                    cb(err);
-                } else {
-                    cb(false);
-                }
-            });
-        } else {
-            console.log("this camera doesn't exist.");
-            cb(true);
-        }
-    });
-};
+//         if (cam) {
+//             cam.startRecording();  
+//             self.db.update({ _id: cam._id }, { $set: { enabled: cam.enabled } }, { multi: true }, function (err, numReplaced) {
+//                 if (err) {
+//                     cb(err);
+//                 } else {
+//                     cb(false);
+//                 }
+//             });
+//         } else {
+//             console.log("this camera doesn't exist.");
+//             cb(true);
+//         }
+//     });
+// };
 
 
-CamerasController.prototype.stopRecording = function (camId, cb) {
+// CamerasController.prototype.stopRecording = function (camId, cb) {
 
-    var self = this;
+//     var self = this;
 
-    refresh( function(err) {
-        if (err) {
-            cb( err );
-            return false;
-        }
+//     refresh( function(err) {
+//         if (err) {
+//             cb( err );
+//             return false;
+//         }
 
-        cam = self.findCameraById(camId).cam;
-        if (cam) {
-            cam.stopRecording();  
-            self.db.update({ _id: cam._id }, { $set: { enabled: cam.enabled } }, { multi: true }, function (err, numReplaced) {
-                if (err) {
-                    cb(err);
-                } else {
-                    cb(false);
-                }
-            });
-        } else {
-            console.log("this camera doesn't exist.");
-            cb(true);
-        }
-    });
-};
+//         cam = self.findCameraById(camId).cam;
+//         if (cam) {
+//             cam.stopRecording();  
+//             self.db.update({ _id: cam._id }, { $set: { enabled: cam.enabled } }, { multi: true }, function (err, numReplaced) {
+//                 if (err) {
+//                     cb(err);
+//                 } else {
+//                     cb(false);
+//                 }
+//             });
+//         } else {
+//             console.log("this camera doesn't exist.");
+//             cb(true);
+//         }
+//     });
+// };
 
 
 CamerasController.prototype.findCameraByLifelineId = function( lifelineId ) {
