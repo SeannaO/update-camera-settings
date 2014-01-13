@@ -9,6 +9,7 @@
         <link rel="stylesheet" href="/css/bootstrap.min.css">
         <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
         <link rel="stylesheet" href="/css/camera.css">
+        <link rel="stylesheet" href="/css/spinner.css">        
         <link rel="stylesheet" href="/css/bootstrap-timepicker.css">
         <script src="/js/bootstrap.min.js"></script>
         <script src="/js/d3.v3.min.js"></script>
@@ -28,18 +29,20 @@
             });
             */
             socket.on('cameraStatus', function(data) {
+                var $camitem = $("#camera-item-"+data.cam_id);
+                $camitem.find('.camera-item-status').html(data.status);
 				if (data.status === 'offline' || data.status === 'disconnected') {
 					console.log("#timeline-"+data.cam_id);
 					//if (data.status === 'disconnected') alert( data.cam_id + " disconnected");
-					$("#camera-item-"+data.cam_id).animate({
+					$camitem.animate({
 						backgroundColor: "rgb(243, 255, 102)"
 					}, 1000);
-					} else if (data.status === 'online' || data.status === 'connected') {
-						//if (data.status === 'connected') alert( data.cam_id + " connected" );
-						$("#camera-item-"+data.cam_id).animate({
-							backgroundColor: "none"
-						}, 1000);
-					}
+				} else if (data.status === 'online' || data.status === 'connected') {
+					//if (data.status === 'connected') alert( data.cam_id + " connected" );
+					$camitem.animate({
+						backgroundColor: "none"
+					}, 1000);
+				}
 			});
             
         </script>
@@ -156,12 +159,15 @@
 									<label for="camera-password">password</label>
 									<input name="camera[password]" type="password" id="camera-password" class="form-control">
 								</div>
+                                <div id="camera-auth-status" class="col-xs-4">
+                                    
+                                </div>
 								<br>
 							</div>
 							
 							<hr>
 
-                            <div style = 'width: 100%;'>
+                            <div id="camera-streams-tabs" style = 'width: 100%; display: none;'>
 								
 								<button type="button" class="btn btn-default btn-sm" id="add-stream">add stream</button>
 								<br><br>
@@ -370,7 +376,30 @@
                 });
             });
 
+            $("#camera-username, #camera-password").blur(function(){
+                var manufacturer = $("#camera-manufacturer").val();
+                if (manufacturer && manufacturer != 'unknown'){
+                    setConstraintsOnStreamFields(function(error){
+                        if (error){
+                            // credentials are correct and can connect to camera
+                            $("#camera-auth-status").html("error");
+                            $("#camera-streams-tabs").hide();
+                        }else{
+                            $("#camera-auth-status").html("success");
+                            $("#camera-streams-tabs").show();
+                            if ($('#stream-panes').children().length === 0){
+                                addStream(function(){
+                                    setConstraintsOnStreamFields(function(error){
 
+                                    });
+                                });
+                            }
+                        }
+                    });
+                }else{
+                    $("#camera-streams-tabs").show();
+                }
+            });
 
             // - - -
             var openAddCameraDialog = function() {
@@ -382,6 +411,8 @@
                 $dialog.find("#camera-ip").prop('disabled', false);
                 $("#stream-tabs").html("");
                 $("#stream-panes").html("");
+
+
                 $dialog.modal('show');
             }
             // - -
@@ -392,27 +423,6 @@
                 $("#add-new-camera").show();
             });
             // - - -
-
-			// var addCamToScanList = function( cam ) {
-
-			// 	console.log( cam );
-
-			// 	var html = '';
-			// 	html += '<b>ip:</b> ' + cam.ip;
-			// 	html += ' | <b>type:</b> ' + cam.type;
-				
-			// 	if (cam.status === 'needs_authentication') {
-			// 		html += ' | <i>needs authentication</i>';
-			// 	} else if (cam.status === 'not_supported') {
-			// 		html += ' | <i>doesn\'t support basic onvif actions';
-			// 	}
-
-			// 	var camItem = $('<div>', {
-			// 		id: 'cam_' +cam.ip,
-			// 		html: html ,
-			// 		class: 'scan-list-item'
-			// 	}).appendTo('#scan-list');
-			// };
 
         </script>
     </body>

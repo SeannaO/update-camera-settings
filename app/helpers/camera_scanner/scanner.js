@@ -130,11 +130,11 @@ var onvifScan = function( prefix, cb ) {
 				var status = '';
 
 				if (response.indexOf('upported') !== -1) {
-					status = 'not_supported';
+					status = 'not supported';
 				} else if (response.indexOf('uthorized') !== -1) {
 					status = 'unauthorized';
 				} else {
-					status = 'ok';
+					status = 'missing camera stream(s)';
 				}
 
 				var new_cam = {

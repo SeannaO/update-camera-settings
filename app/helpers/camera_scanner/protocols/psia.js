@@ -19,9 +19,9 @@ var testIpForPsiaCamera = function( ip, cb ) {
                 cb( error, 'unauthorized', ip );
             } else if ( !error && body.indexOf("psialliance-org") > -1 ) {
                 console.log(ip);
-                console.log('psia');
+                console.log('missing camera stream(s)');
                 console.log(body);
-				cb( error, 'psia', ip );
+				cb( error, 'missing camera stream(s)', ip );
 			} else {
                 cb( error, '', ip );
             }

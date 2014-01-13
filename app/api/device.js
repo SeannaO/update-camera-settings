@@ -28,7 +28,7 @@ module.exports = function( app, passport) {
 			timeout: 5000
 			}, function (error, response, body) {
 				if (error){
-					res.json({ success: false, error: error });
+					res.status(422).json({ success: false, error: error });
 				}else{
 					res.writeHead(200, {'Content-Type': 'application/json'});
 					res.end(body)
@@ -47,7 +47,7 @@ module.exports = function( app, passport) {
 			timeout: 5000
 			}, function (error, response, body) {
 				if (error){
-					res.json({ success: false, error: error });
+					res.status(422).json({ success: false, error: error });
 				}else{
 					res.writeHead(200, {'Content-Type': 'application/json'});
 					res.end(body)
