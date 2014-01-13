@@ -42,6 +42,9 @@ var showImage = function(url) {
 
 var getSnapshot = function(time) {
 
+	$("#nativePlayer").hide();
+	$("#StrobeMediaPlayback").hide();
+
 	$("#snapshot").html("<h5 class = 'text-muted lead video-box-message'> loading... </h5>").show();
 
 	$.ajax({
