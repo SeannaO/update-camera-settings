@@ -288,6 +288,7 @@ module.exports = function( app, passport, camerasController ) {
 	app.get('/cameras/:id/snapshot', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		var camId = req.params.id;
+		
 		camerasController.requestSnapshot( camId, req, res );
 	});
 	// - - -

@@ -69,6 +69,8 @@
 
         <div id = "video" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px;" class = "shadow">
 			
+			<div id = "snapshot" style="display:hidden"></div>
+
 			<video id="nativePlayer" src = "" style = "display:none" controls autoplay width="640px" height="480px"></video>
 
 			<div id="StrobeMediaPlayback" style="display:none">
@@ -134,41 +136,9 @@
                 
             });
 
-           
-    
-            var getSnapshot = function(time) {
-                
-                $("#video").html("<h5 class = 'text-muted lead video-box-message'> loading... </h5>");
-
-                $.ajax({
-                    url: "/cameras/"+camId+"/snapshot?time="+time,
-                    success: function(data, status, xhr) {
-                        var ct = xhr.getResponseHeader("content-type") || "";
-                        if (ct.indexOf('image') > -1) {                        
-                            showImage( "/cameras/"+camId+"/snapshot?time="+time );
-                        }
-                        else {
-                            $("#video").html("<h5 class = 'text-muted lead video-box-message'>" + data + "</h5>"); 
-                        }
-                    }, 
-                    error: function(err) {
-                        console.log("error");
-                        $("#video").html("<h5 class = 'text-muted lead'>there was an error: " + err + "</h5>");
-                    }
-                });
-                
-            }
-
         </script>
 
         <script>
-            // injects image tag
-            var showImage = function(url) {
-
-                var imageHtml = "<a href = '"+url+"'><img src='"+url+"' width='640' height='480'/></a>";
-                $("#video").html(imageHtml);
-            }
-
 
             var showLiveStream = function(url) {
 

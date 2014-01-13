@@ -99,7 +99,7 @@ CamerasController.prototype.getCameraOptions = function(params, cb){
 	});
 };
 
-// TODO: specify a stream
+
 CamerasController.prototype.takeSnapshot = function( camId, req, res, cb ) {
 
 	var self = this;
@@ -109,17 +109,15 @@ CamerasController.prototype.takeSnapshot = function( camId, req, res, cb ) {
 		var firstStreamId;
 
 		if (cam) {
-			firstStreamId = Object.keys(cam.streams)[0];
+			streamId = req.query.stream || Object.keys(cam.streams)[0];
 		}
 
-        if ( err || !cam || !cam.streams || !cam.streams[firstStreamId]) {
+        if ( err || !cam || !cam.streams || !cam.streams[streamId]) {
             res.json( { error: err } );
 			if (cb) cb();
         } else {
-			// TODO: specify a stream
-			// for now, just select one of the streams
 			
-            self.mp4Handler.takeSnapshot( cam.streams[firstStreamId].db, cam, req, res, function() {
+            self.mp4Handler.takeSnapshot( cam.streams[streamId].db, cam, req, res, function() {
 				if (cb) {
 					cb();
 				}
