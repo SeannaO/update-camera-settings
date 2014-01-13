@@ -63,6 +63,8 @@
             <button id = "get-snapshot" class = 'btn btn-xs btn-default'>get a snapshot</button>
             <button id = "get-livestream" class = 'btn btn-xs btn-default'>livestream</button>
 
+			<button id = "download" class = 'btn btn-xs btn-default'>download video</button>
+
         </div>
 
         <div id = "video" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px;" class = "shadow">
@@ -86,6 +88,17 @@
                 $("#end_date").datetimepicker({
                     timeFormat: 'HH:mm:ss',
                 });
+				
+				$("#download").click(function() {
+					var stream = $("#stream-selector").val();
+					var begin = 1000*moment( $("#begin_date").val() ).unix();
+                    var end = 1000*moment( $("#end_date").val() ).unix();
+					
+					var url = window.location.origin + "/cameras/"+camId+"/download?begin="+begin+"&end="+end+"&stream="+stream;
+					
+					window.location = url;
+				});
+
                 $("#search").click(function() {
                     $("#file-list").html("<span class='subtle'>loading...</span>");
 
@@ -173,10 +186,12 @@
 			getStreamsInfo( camId );
 			
 			if (!hlsEnabled) {
+				/*
 				launchStrobePlayer({
 						url: "",
 						autoplay: false
 				});
+				*/
 			} else {
 			}
 

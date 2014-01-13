@@ -347,7 +347,7 @@ module.exports = function( app, passport, camerasController ) {
 				//for (var stream in cam.streams){
 				// in case the streamId is invalid or not specified
 				if (!cam.streams[stream]) {
-					console.log("########## no such stream ");
+					console.log("[cameras.js : /video.json] no such stream ");
 					for (var s in cam.streams){
 						stream = s;
 						break;
@@ -364,19 +364,29 @@ module.exports = function( app, passport, camerasController ) {
 
 	// - - -
 	// gets inMem mp4 video
-	app.get('/cameras/:id/memvideo', passport.authenticate('basic', {session: false}), function(req, res) {
+	app.get('/cameras/:id/download', passport.authenticate('basic', {session: false}), function(req, res) {
 		//	res.end('feature under construction');
 
 		var camId = req.params.id;
 		var begin = parseInt( req.query.begin, 10 );
 		var end = parseInt( req.query.end, 10 );
+		var stream = req.query.stream;
 
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err) {
 				res.json( { error: err } );
 			} else {
+
+				// in case the streamId is invalid or not specified
+				if (!cam.streams[stream]) {
+					console.log("[cameras.js : /download] no such stream ");
+					for (var s in cam.streams){
+						stream = s;
+						break;
+					}
+				}
+
 				for (var stream in cam.streams){
-					console.log(cam.streams[stream].db);
 					camerasController.mp4Handler.inMemoryMp4Video( cam.streams[stream].db, cam, begin, end, req, res );
 					break;
 				}
