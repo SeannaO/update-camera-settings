@@ -442,6 +442,69 @@ CamerasController.prototype.pushCamera = function( cam ) {
 };
 
 
+CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
+    
+	var self = this;
+    var camera = this.findCameraById( camId );
+	
+    if (!camera || !camera.cam) {
+        cb( "camera not found" );
+        return;
+    }	
+	camera = camera.cam;
+	if ( !camera.streams || !camera.streams[streamId] ) {
+		cb('stream not found');
+		return;
+	}
+
+	var streamsHash;
+
+	self.db.find({ _id : camId  }, function(err, docs ) {
+
+		if (!err) {
+
+			if (!docs[0]) {
+				console.log('camera not found on db');
+				return;
+			}
+
+			streamsHash = docs[0].streams;	
+
+			console.log( streamsHash );
+
+			if (!streamsHash || !streamsHash[streamId]) {
+				cb('stream not found on db');
+				return;
+			}
+
+			streamsHash[streamId].toBeDeleted = true;
+
+			self.db.update({ _id : camId  }, { 
+				$set: { 
+					streams: streamsHash
+				} 
+			}, { multi: false }, function (err, numReplaced) {
+				if (err) {
+					console.log('*** update camera db error: ');
+					console.log(err);
+					cb(err);
+				} else {
+					camera.removeStream( streamId );
+					self.db.loadDatabase();
+					cb();
+				}
+			});
+
+		} else {
+			cb('camera not found on db');		
+			return;
+		}
+	});
+
+
+};
+
+
 CamerasController.prototype.removeCamera = function( camId, cb ) {
 
     var self = this;

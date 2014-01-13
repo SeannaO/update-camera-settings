@@ -219,8 +219,7 @@ var addCameraItem = function( camera ) {
 				$("#thumb-"+camera._id).html( $(this) );
 			}).error(function(){
 				console.log("unable to load image")
-			});
-			
+			});	
 			
 			break;
 		}
@@ -416,6 +415,7 @@ var editCamera = function(camId) {
                     
 					for (var i in data.camera.streams) {
 						var stream = data.camera.streams[i];
+						stream.camId = camId;
 						addStream( stream );
 					}
                 }
@@ -772,6 +772,12 @@ var addStream = function( stream ) {
 			html: 'check stream'
 		});
 
+		var remove_stream_button = $('<button>', {
+			id: 'remove-stream-button-'+new_stream_tab_id,
+			class: 'btn btn-danger btn-sm remove-stream',
+			html: 'remove stream'
+		});
+
 		var spinner = $('<div class="spinner" id="check-stream-spinner-'+new_stream_tab_id+'">' +
 						'<div class="bounce1"></div>' +
 						'<div class="bounce2"></div>' +
@@ -781,7 +787,7 @@ var addStream = function( stream ) {
 		spinner.hide();
 
 		var check_stream_status = $('<div>',{
-			id: 'check-stream-status-'+new_stream_tab_id,
+			id: 'check-stream-status-' + new_stream_tab_id,
 			class: 'check-stream-status'
 		});	
 
@@ -791,9 +797,16 @@ var addStream = function( stream ) {
 		$('#'+new_stream_tab_id).append(spinner);
 		$('#'+new_stream_tab_id).append(check_stream_status);	
 		
+		$('#'+new_stream_tab_id).append(remove_stream_button);	
+
 		check_stream_button.click( function( e ) {
 			e.preventDefault();
 			checkH264( stream.url, new_stream_tab_id );
+		});
+
+		remove_stream_button.click( function( e ) {
+			e.preventDefault();
+			removeStream( stream );
 		});
 
 		for (var attr in stream) {
@@ -803,6 +816,28 @@ var addStream = function( stream ) {
 	});
 };
 
+
+var removeStream = function( stream ) {
+	
+	console.log( "remove stream: " + stream.id + " from camera: " + stream.camId );
+
+	if ( confirm("are you sure you want to remove this stream?") ) {
+		// console.log("remove!"); 
+		$.ajax({
+			type: 'DELETE',
+			url: '/cameras/' + stream.camId + '/streams/' + stream.id,
+			success: function(data) {
+				if (data.error) {
+					alert(error);
+				} else {
+					location.reload();
+				}
+			}
+		});
+
+	} else {
+	}
+};
 
 var checkH264 = function( url, new_stream_tab_id ) {
 

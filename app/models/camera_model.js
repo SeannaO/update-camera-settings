@@ -32,6 +32,7 @@ function Camera( cam, videosFolder ) {
 	this.videosFolder = videosFolder + "/" + this._id;
 
 	this.streams = {};
+	this.streamsToBeDeleted = {};
 
 	this.recording = false;					// is the camera recording?
 
@@ -106,29 +107,31 @@ Camera.prototype.addStream = function( stream ) {
 	var self = this;
 
 	stream.db = new Dblite( this.videosFolder + '/db_'+stream.id+'.sqlite' );
-	
-	stream.url = this.api.getRtspUrl({
-		resolution: stream.resolution,
-		framerate: stream.framerate,
-		quality: stream.quality,
-		suggested_url: stream.url
-	});
 
-	stream.recordModel = new RecordModel( this, stream );
+	if (!stream.toBeDeleted) {
+		stream.url = this.api.getRtspUrl({
+			resolution: stream.resolution,
+			framerate: stream.framerate,
+			quality: stream.quality,
+			suggested_url: stream.url
+		});
 
-	self.streams[stream.id] = stream;
+		self.streams[stream.id] = stream;
+		stream.recordModel = new RecordModel( this, stream );
 
-	if ( this.shouldBeRecording() ) {
-		stream.recordModel.startRecording();
+		if ( this.shouldBeRecording() ) {
+			stream.recordModel.startRecording();
+		}
+
+		stream.recordModel.on( 'new_chunk', function(data) {
+			self.emit( 'new_chunk', data);
+		});
+		stream.recordModel.on('camera_status', function(data) {
+			self.emit('camera_status', { cam_id: self._id, status: data.status } );
+		});
+	} else {
+		self.streamsToBeDeleted[stream.id] = stream;
 	}
-
-	stream.recordModel.on( 'new_chunk', function(data) {
-		self.emit( 'new_chunk', data);
-	});
-	stream.recordModel.on('camera_status', function(data) {
-		self.emit('camera_status', { cam_id: self._id, status: data.status } );
-	});
-	
 	
 };
 // end of addStream
@@ -221,7 +224,6 @@ Camera.prototype.updateAllStreams = function( new_streams ) {
 
 /**
  * Removes stream
- *	TODO: marking stream for deletion and storing 'stream.deleted = true' on the db
  *
  * @param { streamId } string
  */
@@ -230,12 +232,16 @@ Camera.prototype.removeStream  = function( streamId ) {
 	var self = this;
 
 	if ( !self.streams[streamId] ) return;
-
-	self.streams[streamId].recordModel.stopRecording();
+	
+	if ( self.streams[streamId].recordModel ) {
+		self.streams[streamId].recordModel.stopRecording();
+	}
 	delete self.streams[streamId].recordModel;
+	
+	self.streamsToBeDeleted[streamId] = self.streams[streamId];
+	self.streamsToBeDeleted[streamId].toBeDeleted = true;
 	delete self.streams[streamId];
 
-	//TODO: mark stream for deletion and store it on db
 	//TODO: delete stream files
 };
 // end of removeStream
@@ -778,11 +784,15 @@ Camera.prototype.indexPendingFiles = function( streamList, cb ) {
 		self.indexing = true;				// we're indexing now
 		var streamId = streamList.shift();
 		
-		// index pending files on a stream
-		this.streams[streamId].recordModel.indexPendingFiles( function() {
-														// done indexing on that stream
-			self.indexPendingFiles( streamList, cb );	// recursive call, index pending files on the next stream
-		});
+		if ( this.streams[streamId] && 	this.streams[streamId].recordModel) {
+			// index pending files on a stream
+			this.streams[streamId].recordModel.indexPendingFiles( function() {
+															// done indexing on that stream
+				self.indexPendingFiles( streamList, cb );	// recursive call, index pending files on the next stream
+			});
+		} else {
+			self.indexPendingFiles( streamList, cb );
+		}
 	}
 };
 // indexPendingFiles

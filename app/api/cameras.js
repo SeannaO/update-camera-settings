@@ -121,6 +121,37 @@ module.exports = function( app, passport, camerasController ) {
 	// end of delete camera
 	// - - -
 
+	// - - -
+	// delete stream
+	app.delete('/cameras/:camera_id/streams/:stream_id', passport.authenticate('basic', {session: false}), function(req, res) {
+
+		var camId = req.params.camera_id;
+		var streamId = req.params.stream_id;
+
+		var cam = camerasController.findCameraById( camId ).cam;
+		if (!cam) {
+			res.json({success: false, error: 'camera not found'});
+			return;
+		} 
+
+		var stream = cam.streams[ streamId ];
+		if (!stream) {
+			res.json({success: false, error: 'stream not found'});
+			return;
+		}
+
+		camerasController.removeStream( camId, streamId, function( err ) {
+			if (err) {
+				res.json({success: false, error: err});
+			} else if (cam) {
+				res.json({success: true, _id: req.params.id});
+			}
+		});
+	});
+	// end of delete camera
+	// - - -
+
+	
 	// - - 
 	// 
 	app.get('/cameras/:id/schedule.json', passport.authenticate('basic', {session: false}), function(req, res) {
