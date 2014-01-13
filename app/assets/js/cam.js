@@ -34,9 +34,41 @@ var getRtsp = function( options ) {
 	return('#stream-selector').val();	
 };
 
+var showImage = function(url) {
+
+	var imageHtml = "<a href = '"+url+"'><img src='"+url+"' width='640' height='480'/></a>";
+	$("#snapshot").html(imageHtml);
+};
+
+var getSnapshot = function(time) {
+
+	$("#nativePlayer").hide();
+	$("#StrobeMediaPlayback").hide();
+
+	$("#snapshot").html("<h5 class = 'text-muted lead video-box-message'> loading... </h5>").show();
+
+	$.ajax({
+		url: "/cameras/"+camId+"/snapshot?time="+time,
+		success: function(data, status, xhr) {
+			var ct = xhr.getResponseHeader("content-type") || "";
+			if (ct.indexOf('image') > -1) {                        
+				showImage( "/cameras/"+camId+"/snapshot?time="+time );
+			}
+			else {
+				$("#snapshot").html("<h5 class = 'text-muted lead video-box-message'>" + data + "</h5>"); 
+			}
+		}, 
+		error: function(err) {
+			console.log("error");
+			$("#snapshot").html("<h5 class = 'text-muted lead'>there was an error: " + err + "</h5>");
+		}
+	});
+};
+
 
 var launchNativePlayer = function( url ) {
 
+	$("#snapshot").hide();
 	$("#nativePlayer").show();
 	$("#nativePlayer").attr("src", url);
 };
@@ -44,6 +76,7 @@ var launchNativePlayer = function( url ) {
 
 var launchStrobePlayer = function( options ) {
 
+	$("#snapshot").hide();
 	$("#StrobeMediaPlayback").show();
 
 	options.url = encodeURIComponent( options.url );

@@ -218,8 +218,7 @@ var addCameraItem = function( camera ) {
 				$("#thumb-"+camera._id).html( $(this) );
 			}).error(function(){
 				console.log("unable to load image")
-			});
-			
+			});	
 			
 			break;
 		}
@@ -411,6 +410,7 @@ var editCamera = function(camId) {
                     
 					for (var i in data.camera.streams) {
 						var stream = data.camera.streams[i];
+						stream.camId = camId;
 						addStream( stream );
 					}
                 }else{
@@ -812,7 +812,29 @@ var addStream = function( stream, cb) {
 };
 
 
-var checkH264 = function(new_stream_id ) {
+var removeStream = function( stream ) {
+	
+	console.log( "remove stream: " + stream.id + " from camera: " + stream.camId );
+
+	if ( confirm("are you sure you want to remove this stream?") ) {
+		// console.log("remove!"); 
+		$.ajax({
+			type: 'DELETE',
+			url: '/cameras/' + stream.camId + '/streams/' + stream.id,
+			success: function(data) {
+				if (data.error) {
+					alert(error);
+				} else {
+					location.reload();
+				}
+			}
+		});
+
+	} else {
+	}
+};
+
+var checkH264 = function( url, new_stream_tab_id ) {
 
 	var button = $('#check-stream-button-'+new_stream_id);
 	var spinner = $('#check-stream-spinner-'+new_stream_id);

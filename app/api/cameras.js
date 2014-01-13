@@ -121,6 +121,37 @@ module.exports = function( app, passport, camerasController ) {
 	// end of delete camera
 	// - - -
 
+	// - - -
+	// delete stream
+	app.delete('/cameras/:camera_id/streams/:stream_id', passport.authenticate('basic', {session: false}), function(req, res) {
+
+		var camId = req.params.camera_id;
+		var streamId = req.params.stream_id;
+
+		var cam = camerasController.findCameraById( camId ).cam;
+		if (!cam) {
+			res.json({success: false, error: 'camera not found'});
+			return;
+		} 
+
+		var stream = cam.streams[ streamId ];
+		if (!stream) {
+			res.json({success: false, error: 'stream not found'});
+			return;
+		}
+
+		camerasController.removeStream( camId, streamId, function( err ) {
+			if (err) {
+				res.json({success: false, error: err});
+			} else if (cam) {
+				res.json({success: true, _id: req.params.id});
+			}
+		});
+	});
+	// end of delete camera
+	// - - -
+
+	
 	// - - 
 	// 
 	app.get('/cameras/:id/schedule.json', passport.authenticate('basic', {session: false}), function(req, res) {
@@ -271,6 +302,7 @@ module.exports = function( app, passport, camerasController ) {
 	app.get('/cameras/:id/snapshot', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		var camId = req.params.id;
+		
 		camerasController.requestSnapshot( camId, req, res );
 	});
 	// - - -
@@ -330,7 +362,7 @@ module.exports = function( app, passport, camerasController ) {
 				//for (var stream in cam.streams){
 				// in case the streamId is invalid or not specified
 				if (!cam.streams[stream]) {
-					console.log("########## no such stream ");
+					console.log("[cameras.js : /video.json] no such stream ");
 					for (var s in cam.streams){
 						stream = s;
 						break;
@@ -347,19 +379,29 @@ module.exports = function( app, passport, camerasController ) {
 
 	// - - -
 	// gets inMem mp4 video
-	app.get('/cameras/:id/memvideo', passport.authenticate('basic', {session: false}), function(req, res) {
+	app.get('/cameras/:id/download', passport.authenticate('basic', {session: false}), function(req, res) {
 		//	res.end('feature under construction');
 
 		var camId = req.params.id;
 		var begin = parseInt( req.query.begin, 10 );
 		var end = parseInt( req.query.end, 10 );
+		var stream = req.query.stream;
 
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err) {
 				res.json( { error: err } );
 			} else {
+
+				// in case the streamId is invalid or not specified
+				if (!cam.streams[stream]) {
+					console.log("[cameras.js : /download] no such stream ");
+					for (var s in cam.streams){
+						stream = s;
+						break;
+					}
+				}
+
 				for (var stream in cam.streams){
-					console.log(cam.streams[stream].db);
 					camerasController.mp4Handler.inMemoryMp4Video( cam.streams[stream].db, cam, begin, end, req, res );
 					break;
 				}

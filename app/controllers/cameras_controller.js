@@ -100,7 +100,7 @@ CamerasController.prototype.getCameraOptions = function(params, cb){
 	});
 };
 
-// TODO: specify a stream
+
 CamerasController.prototype.takeSnapshot = function( camId, req, res, cb ) {
 
 	var self = this;
@@ -110,17 +110,15 @@ CamerasController.prototype.takeSnapshot = function( camId, req, res, cb ) {
 		var firstStreamId;
 
 		if (cam) {
-			firstStreamId = Object.keys(cam.streams)[0];
+			streamId = req.query.stream || Object.keys(cam.streams)[0];
 		}
 
-        if ( err || !cam || !cam.streams || !cam.streams[firstStreamId]) {
+        if ( err || !cam || !cam.streams || !cam.streams[streamId]) {
             res.json( { error: err } );
 			if (cb) cb();
         } else {
-			// TODO: specify a stream
-			// for now, just select one of the streams
 			
-            self.mp4Handler.takeSnapshot( cam.streams[firstStreamId].db, cam, req, res, function() {
+            self.mp4Handler.takeSnapshot( cam.streams[streamId].db, cam, req, res, function() {
 				if (cb) {
 					cb();
 				}
@@ -495,6 +493,69 @@ CamerasController.prototype.pushCamera = function( cam ) {
     cam.on('camera_status', function( data ) {
         self.emit('camera_status', data);
     });
+};
+
+
+CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
+    
+	var self = this;
+    var camera = this.findCameraById( camId );
+	
+    if (!camera || !camera.cam) {
+        cb( "camera not found" );
+        return;
+    }	
+	camera = camera.cam;
+	if ( !camera.streams || !camera.streams[streamId] ) {
+		cb('stream not found');
+		return;
+	}
+
+	var streamsHash;
+
+	self.db.find({ _id : camId  }, function(err, docs ) {
+
+		if (!err) {
+
+			if (!docs[0]) {
+				console.log('camera not found on db');
+				return;
+			}
+
+			streamsHash = docs[0].streams;	
+
+			console.log( streamsHash );
+
+			if (!streamsHash || !streamsHash[streamId]) {
+				cb('stream not found on db');
+				return;
+			}
+
+			streamsHash[streamId].toBeDeleted = true;
+
+			self.db.update({ _id : camId  }, { 
+				$set: { 
+					streams: streamsHash
+				} 
+			}, { multi: false }, function (err, numReplaced) {
+				if (err) {
+					console.log('*** update camera db error: ');
+					console.log(err);
+					cb(err);
+				} else {
+					camera.removeStream( streamId );
+					self.db.loadDatabase();
+					cb();
+				}
+			});
+
+		} else {
+			cb('camera not found on db');		
+			return;
+		}
+	});
+
+
 };
 
 
