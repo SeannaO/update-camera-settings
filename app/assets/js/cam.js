@@ -1,3 +1,5 @@
+var streams = [];
+
 var getStreamsInfo = function(camId) {
 
 	console.log('get streams');
@@ -9,6 +11,7 @@ var getStreamsInfo = function(camId) {
 			if (!data.camera.streams) {
 				return;
 			} else {
+				streams = data.camera.streams;
 				populateStreamSelector( data.camera.streams );	
 			}
 		},
@@ -31,7 +34,17 @@ var populateStreamSelector = function(streams) {
 };
 
 var getRtsp = function( options ) {
-	return('#stream-selector').val();	
+	
+	var streamId = $("#stream-selector").val();
+
+	for (var s in streams) {
+		if (streams[s].id === streamId) {
+			return streams[s];
+		} 
+	}
+
+	return '';
+
 };
 
 var showImage = function(url) {
@@ -42,6 +55,7 @@ var showImage = function(url) {
 
 var getSnapshot = function(time) {
 
+	$("#live-player").hide();		
 	$("#nativePlayer").hide();
 	$("#StrobeMediaPlayback").hide();
 
@@ -68,9 +82,30 @@ var getSnapshot = function(time) {
 
 var launchNativePlayer = function( url ) {
 
+	$("#live-player").hide();	
 	$("#snapshot").hide();
 	$("#nativePlayer").show();
 	$("#nativePlayer").attr("src", url);
+};
+
+
+var showLiveStream = function() {
+	
+	$("#snapshot").hide();
+	$("#nativePlayer").hide();
+	
+	var url = getRtsp().url;
+
+	var html = '<object type="application/x-vlc-plugin" data="' + url + '" width="640" height="480" id="video1">';
+	html += '<param name="movie" value="'+ url +'"/>';
+	html += '<embed type="application/x-vlc-plugin" name="video1"';
+	html += 'autoplay="no" loop="no" width="640" height="480"';
+	html += 'target="'+ url +'" /> </object>';
+
+	$("#live-player").html( html );
+
+	$("#live-player").show();
+
 };
 
 

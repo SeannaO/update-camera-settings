@@ -78,10 +78,12 @@
 					( this player requires flash. check if it's enabled and make sure your browser supports flash )
 				</p>
 			</div>
+
+			<div style="width: 640px; height: 360px; display: none" id="live-player"></div>
+
 		</div>
 
-		<div style="width: 640px; height: 360px;" id="player"></div>
-				
+						
         <script>
             $(function() {
                 $("#begin_date").datetimepicker({
@@ -134,37 +136,16 @@
                     
                 });
                 
+				$("#get-livestream").click(function() {
+					showLiveStream();
+				});
             });
 
         </script>
 
-        <script>
-
-            var showLiveStream = function(url) {
-
-                var html = '<object type="application/x-vlc-plugin" data="'+url+'" width="640" height="480" id="video1">';
-                    html += '<param name="movie" value="'+ getRtsp() +'"/>';
-                    html += '<embed type="application/x-vlc-plugin" name="video1"';
-                    html += 'autoplay="no" loop="no" width="640" height="480"';
-                    html += 'target="'+rtsp+'" /> </object>';
-
-                    $("#video").html( html );
-            }
-        </script>
 
 		<script>
 			getStreamsInfo( camId );
-			
-			if (!hlsEnabled) {
-				/*
-				launchStrobePlayer({
-						url: "",
-						autoplay: false
-				});
-				*/
-			} else {
-			}
-
 		</script>
 		
     </body>
