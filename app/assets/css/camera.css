@@ -10,7 +10,7 @@ body {
     margin:0px;
     width:150px;
 }
-#header dl dd{
+#header dl dt{
     float: left;
 }
 #storage-info{

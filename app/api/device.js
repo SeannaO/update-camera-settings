@@ -28,8 +28,8 @@ module.exports = function( app, passport) {
 			uri: device_url,
 			timeout: 5000
 			}, function (error, response, body) {
-				if (error){
-					res.status(422).json({ success: false, error: error });
+				if (error || body.error){
+					res.status(422).json({ success: false, error: body.error });
 				}else{
 					res.writeHead(200, {'Content-Type': 'application/json'});
 					res.end(body)
@@ -48,8 +48,8 @@ module.exports = function( app, passport) {
 			uri: storage_url,
 			timeout: 5000
 			}, function (error, response, body) {
-				if (error){
-					res.status(422).json({ success: false, error: error });
+				if (error || body.error){
+					res.status(422).json({ success: false, error: body.error });
 				}else{
 					res.writeHead(200, {'Content-Type': 'application/json'});
 					res.end(body)
