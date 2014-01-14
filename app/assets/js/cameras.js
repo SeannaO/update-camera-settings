@@ -823,7 +823,8 @@ var removeStream = function( stream ) {
 			url: '/cameras/' + stream.camId + '/streams/' + stream.id,
 			success: function(data) {
 				if (data.error) {
-					alert(error);
+					alert(data.error);
+					location.reload();
 				} else {
 					location.reload();
 				}
