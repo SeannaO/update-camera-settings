@@ -25,6 +25,14 @@ body {
 	color: #8F8F8F;
 }
 
+#camera-auth-status{
+	margin-top: 32px;
+}
+
+#camera-auth-status .glyphicon{
+	font-size: 1.4em;
+}
+
 .status{
 	width:12px;
 	height:12px;
