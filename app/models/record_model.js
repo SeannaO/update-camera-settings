@@ -482,6 +482,10 @@ RecordModel.prototype.recordContinuously = function() {
 
     var self = this;
 
+	if (!self.rtsp) {
+		console.log('[RecordModel.recordContinuously] : error : empty rtsp string');
+		return;
+	}
 	// the recording processess 
 	// are being executed as high priority processess (nice -20)
 	// which means the cpu will allocate longer time shares to them

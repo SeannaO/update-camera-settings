@@ -26,7 +26,18 @@ var populateStreamSelector = function(streams) {
 	
 	
 	for (var s in streams) {
-		var text = ( streams[s].name || '' ) + ' - ' + streams[s].resolution;
+
+		var text = '';
+
+		if ( streams[s].name ) {
+			text = text + streams[s].name + ' - ';
+		} if ( streams[s].resolution ) {
+			text = text + streams[s].resolution;
+		} else {
+			text = text + ' ' + streams[s].url;
+		}
+//		var text = ( streams[s].name || '' ) + ' - ' + streams[s].resolution;
+		
 		$('#stream-selector')
           .append($('<option>', { value: streams[s].id })
           .text( text ));		
@@ -95,12 +106,18 @@ var showLiveStream = function() {
 	$("#nativePlayer").hide();
 	
 	var url = getRtsp().url;
-
+/*
 	var html = '<object type="application/x-vlc-plugin" data="' + url + '" width="640" height="480" id="video1">';
 	html += '<param name="movie" value="'+ url +'"/>';
 	html += '<embed type="application/x-vlc-plugin" name="video1"';
 	html += 'autoplay="no" loop="no" width="640" height="480"';
 	html += 'target="'+ url +'" /> </object>';
+*/
+
+	var html = '<embed type="application/x-vlc-plugin"' +
+				'name="102"' +
+				'autoplay="yes" width="640" height="480"' +
+				'target="'+url+'" />';
 
 	$("#live-player").html( html );
 
