@@ -32,10 +32,9 @@ function Camera( cam, videosFolder ) {
 	this.videosFolder = videosFolder + "/" + this._id;
 
 	this.streams = {};
+	this.streamsToBeDeleted = {};
 
 	this.recording = false;					// is the camera recording?
-    this.enabled = cam.enabled;				// is the camera enabled?
-	
 
 	this.api = require('../helpers/camera_scanner/cam_api/api.js').getApi( this.manufacturer );
 
@@ -46,17 +45,19 @@ function Camera( cam, videosFolder ) {
 	});
 
 	// motion detection test -- TESTS ONLY
-	self.setMotionDetection( function() {
-		self.startMotionDetection();
-	});
+	//self.setMotionDetection( function() {
+	//	self.startMotionDetection();
+	//});
 	//
 	
-	if ( !cam.deleted ) {	// starts camera if it's not being deleted					
+	if ( !cam.deleted ) {	// starts camera if it's not being deleted
+		//console.log(cam.schedule);
 		this.schedule = new WeeklySchedule(cam.schedule);
-		this.schedule_enabled = cam.enableSchedule;
+		//console.log(this.schedule.toJSON());
+		this.schedule_enabled = cam.schedule_enabled;
 		
 		if ( !fs.existsSync( this.videosFolder) ){
-			console.log(this.videosFolder);
+			//console.log(this.videosFolder);
 			fs.mkdirSync( this.videosFolder );
 		}
 
@@ -106,28 +107,31 @@ Camera.prototype.addStream = function( stream ) {
 	var self = this;
 
 	stream.db = new Dblite( this.videosFolder + '/db_'+stream.id+'.sqlite' );
-	
-	stream.url = this.api.getRtspUrl({
-		resolution: stream.resolution,
-		framerate: stream.framerate,
-		quality: stream.quality
-	});
 
-	stream.recordModel = new RecordModel( this, stream );
+	if (!stream.toBeDeleted) {
+		stream.url = this.api.getRtspUrl({
+			resolution: stream.resolution,
+			framerate: stream.framerate,
+			quality: stream.quality,
+			suggested_url: stream.url
+		});
 
-	self.streams[stream.id] = stream;
+		self.streams[stream.id] = stream;
+		stream.recordModel = new RecordModel( this, stream );
 
-	if ( this.shouldBeRecording() ) {
-		stream.recordModel.startRecording();
+		if ( this.shouldBeRecording() ) {
+			stream.recordModel.startRecording();
+		}
+
+		stream.recordModel.on( 'new_chunk', function(data) {
+			self.emit( 'new_chunk', data);
+		});
+		stream.recordModel.on('camera_status', function(data) {
+			self.emit('camera_status', { cam_id: self._id, status: data.status } );
+		});
+	} else {
+		self.streamsToBeDeleted[stream.id] = stream;
 	}
-
-	stream.recordModel.on( 'new_chunk', function(data) {
-		self.emit( 'new_chunk', data);
-	});
-	stream.recordModel.on('camera_status', function(data) {
-		self.emit('camera_status', { cam_id: self._id, status: data.status } );
-	});
-	
 	
 };
 // end of addStream
@@ -220,7 +224,6 @@ Camera.prototype.updateAllStreams = function( new_streams ) {
 
 /**
  * Removes stream
- *	TODO: marking stream for deletion and storing 'stream.deleted = true' on the db
  *
  * @param { streamId } string
  */
@@ -229,12 +232,16 @@ Camera.prototype.removeStream  = function( streamId ) {
 	var self = this;
 
 	if ( !self.streams[streamId] ) return;
-
-	self.streams[streamId].recordModel.stopRecording();
+	
+	if ( self.streams[streamId].recordModel ) {
+		self.streams[streamId].recordModel.stopRecording();
+	}
 	delete self.streams[streamId].recordModel;
+	
+	self.streamsToBeDeleted[streamId] = self.streams[streamId];
+	self.streamsToBeDeleted[streamId].toBeDeleted = true;
 	delete self.streams[streamId];
 
-	//TODO: mark stream for deletion and store it on db
 	//TODO: delete stream files
 };
 // end of removeStream
@@ -262,7 +269,7 @@ Camera.prototype.updateStream = function( stream ) {
 
 	// these are the parameters that requires restarting the recorder when they change,
 	// because the rtsp url changes.
-	var restartParams = ['resolution', 'framerate', 'quality'];
+	var restartParams = ['resolution', 'framerate', 'quality', 'url'];
 
 	// iterates through restart params, checks if any of them changed, 
 	// sets restarting if needed
@@ -271,7 +278,7 @@ Camera.prototype.updateStream = function( stream ) {
 		var param = restartParams[i];
 
 		if ( stream[param] && self.streams[id][param] !== stream[param] ) {
-
+					
 			self.streams[id][param] = stream[param];
 			need_restart = true;
 		}
@@ -320,7 +327,9 @@ Camera.prototype.restartAllStreams = function() {
  */
 Camera.prototype.restartStream = function( streamId ) {
 
+	console.log("############################");
 	console.log('*** restartStream: restarting stream ' + streamId);
+	console.log("############################");
 
 	var self = this;
 
@@ -336,7 +345,8 @@ Camera.prototype.restartStream = function( streamId ) {
 	self.streams[streamId].rtsp = self.streams[streamId].url = self.api.getRtspUrl({
 		resolution: stream.resolution,
 		framerate: stream.framerate,
-		quality: stream.quality
+		quality: stream.quality,
+		suggested_url: self.streams[streamId].url
 	});
 	
 	self.streams[streamId].recordModel = new RecordModel( self, self.streams[streamId] );
@@ -573,6 +583,7 @@ Camera.prototype.addChunk = function( streamId, chunk ) {
 	}
 	
 	this.streams[ streamId ].db.insertVideo( chunk );
+	this.streams[ streamId ].latestThumb = video.start;	
 };
 // end of addChunk
 //
@@ -677,8 +688,7 @@ Camera.prototype.startRecording = function() {
 		for (var i in self.streams) {
 			this.streams[i].recordModel.startRecording();
 		}
-		this.recording = true;	
-		this.enabled = true;		
+		this.recording = true;
     }
 };
 // end of startRecording
@@ -696,7 +706,6 @@ Camera.prototype.stopRecording = function() {
     if (this.recording) { // avoids calling stopRecording twice
         console.log(this.name + " will stop recording...");
         this.recording = false;
-		this.enabled = false;
 		for (var i in self.streams) {
 			this.streams[i].recordModel.stopRecording();
 		}
@@ -775,11 +784,15 @@ Camera.prototype.indexPendingFiles = function( streamList, cb ) {
 		self.indexing = true;				// we're indexing now
 		var streamId = streamList.shift();
 		
-		// index pending files on a stream
-		this.streams[streamId].recordModel.indexPendingFiles( function() {
-														// done indexing on that stream
-			self.indexPendingFiles( streamList, cb );	// recursive call, index pending files on the next stream
-		});
+		if ( this.streams[streamId] && 	this.streams[streamId].recordModel) {
+			// index pending files on a stream
+			this.streams[streamId].recordModel.indexPendingFiles( function() {
+															// done indexing on that stream
+				self.indexPendingFiles( streamList, cb );	// recursive call, index pending files on the next stream
+			});
+		} else {
+			self.indexPendingFiles( streamList, cb );
+		}
 	}
 };
 // indexPendingFiles
@@ -812,7 +825,8 @@ Camera.prototype.getStreamsJSON = function() {
 			quality: s.quality,
 			framerate: s.framerate,
 			name: s.name,
-			id: id
+			id: id,
+			latestThumb: s.latestThumb
 		}); 
 	}
 
@@ -834,7 +848,7 @@ Camera.prototype.toJSON = function() {
     info.name = this.name;
     info.ip = this.ip;
     info._id = this._id;
-    info.enabled = this.enabled;
+    info.schedule_enabled = this.schedule_enabled;
     info.status = this.status;
     info.type = this.type;
     info.manufacturer = this.manufacturer;

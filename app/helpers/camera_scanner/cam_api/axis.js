@@ -320,22 +320,22 @@ Axis.prototype.getResolutionOptions = function (cb) {
 				if (!err){
 					
 					try {
-					console.log(result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry);
-					var output = result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry.map(function(element){
-						console.log({value:element['$'].value, name:element['$'].niceValue});
-						element['$'].niceValue
-						return {value: re.exec(element['$'].niceValue)[0]  , name:element['$'].niceValue}
-					});
-					cb(output);
+						console.log(result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry);
+						var output = result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry.map(function(element){
+							console.log({value:element['$'].value, name:element['$'].niceValue});
+							element['$'].niceValue
+							return {value: re.exec(element['$'].niceValue)[0]  , name:element['$'].niceValue}
+						});
+						cb(null, output);
 					} catch( e ) {
-						cb('error: not authorized');
+						cb('not authorized', []);
 					}
 				}else{
-					cb(err);
+					cb(err, []);
 				}
 			});
 		}else{
-			cb(null);
+			cb(error, []);
 		}
 	}
 	);

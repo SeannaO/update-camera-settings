@@ -1,20 +1,18 @@
 var hls = require('./../helpers/hls');
 
-function generateFinitePlaylist( db, camId, begin, end, cb ) {
-   
-    console.log("generate finite play list");
+function generateFinitePlaylist( db, camId, streamId, begin, end, cb ) {
 
-    db.searchVideosByInterval( camId, begin, end, function( err, videoList, offset ) {
+    db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
         
-        var fileList = videoList.map( function(video) {
-            return video.file;
-        });
+        //var fileList = videoList.map( function(video) {
+        //    return video.file;
+        //});
 
-        hls.calculateLengths( fileList, function(videos) {
-            hls.generatePlaylist( camId, videos, 20, 0, true, function(playlist) {
+        //hls.calculateLengths( fileList, function(videos) {
+            hls.generatePlaylist( camId, streamId, videoList, 20, 0, true, function(playlist) {
                 cb( playlist );
             });
-        });
+       // });
     });
 }
 
@@ -24,7 +22,6 @@ function generateLivePlaylist( db, req, res ) {
     var begin = 0;
     var end = Date.now();
     
-    console.log( Date.now() );
     if ( isNaN( begin ) ) {
         res.end("invalid time");
         return;

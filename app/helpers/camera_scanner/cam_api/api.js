@@ -4,7 +4,7 @@ var api_list = {
 };
 
 // The bosch api is not ready yet once it works it can be added to the list
-// 	'bosch':	'bosch.js'
+//	'bosch':	'bosch.js'
 
 exports.api_list = api_list;
 
@@ -23,7 +23,7 @@ exports.getApi = function( manufacturer ) {
 	if ( api_list[ manufacturer ] ){
 		api = require( './' + api_list[ manufacturer ] );
 	} else {
-		api = require( './axis.js' );
+		api = require( './generic.js' );
 	}
 
 	return ( new api() );

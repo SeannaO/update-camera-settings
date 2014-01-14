@@ -52,7 +52,7 @@ var detectCamByHttpResponse = function( ip, response, cb ) {
 		if (encoding === 'gzip') {
 			res.pipe( gunzip );	
 		} else {
-			if (cb) cb('u');
+			if (cb) cb('unknown');
 		}		
 	});
 
@@ -70,11 +70,11 @@ var detectCamByHttpResponse = function( ip, response, cb ) {
 			}
 		}		
 
-		if (cb) cb('unknwown');
+		if (cb) cb('unknown');
 
         }
 	).on("error", function(e) {
-            if(cb) cb('unknwown');
+            if(cb) cb('unknown');
         }
 	);
 };
@@ -84,8 +84,16 @@ var scan = function(prefix, cb ) {
 	
 	var camList = [];
 	psiaScan( prefix, function(psia) {
-		camList = camList.concat(psia);
 		onvifScan( prefix, function(onvif) {
+			for(var i in psia){
+			   var shared = false;
+			   for (var j in onvif)
+			       if (onvif[j].ip == psia[i].ip) {
+			           shared = true;
+			           break;
+			       }
+			   if(!shared) camList.push(psia[i])
+			}
 			camList = camList.concat(onvif);
 			if (cb) {
 				cb(camList);
@@ -122,11 +130,11 @@ var onvifScan = function( prefix, cb ) {
 				var status = '';
 
 				if (response.indexOf('upported') !== -1) {
-					status = 'not_supported';
+					status = 'not supported';
 				} else if (response.indexOf('uthorized') !== -1) {
 					status = 'unauthorized';
 				} else {
-					status = 'ok';
+					status = 'missing camera stream(s)';
 				}
 
 				var new_cam = {

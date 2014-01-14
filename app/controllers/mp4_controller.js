@@ -124,12 +124,14 @@ function sendMp4VideoForDownload( file, req, res ) {
 }
 
 
-function generateMp4Video( db, cam, begin, end, cb ) {
+function generateMp4Video( db, cam, streamId, begin, end, cb ) {
 
     var camId = cam._id;
     
-    console.log("generateMp4Video");
+    console.log("-- generateMp4Video");
     console.log("camId: " + camId);
+	console.log("streamId: " + streamId);
+	console.log("--");
 
     begin = parseInt( begin, 10 );
     end = parseInt( end, 10 );
@@ -140,21 +142,17 @@ function generateMp4Video( db, cam, begin, end, cb ) {
         return;
     }
 
-    var fileName = cam.videosFolder + "/" + camId + "_" + begin + "_" + end + ".mp4";
+    var fileName = cam.videosFolder + "/" + streamId + "/tmp/" + begin + "_" + end + ".mp4";
 
     fs.exists( fileName, function(exists) {
         if (exists) {
             var response = { success: true, file: fileName };
             cb( response );
         } else {
-            console.log(begin);
-            console.log(end);
-            console.log(db);
+            
             db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
                 
                 console.log(videoList);
-                console.log("** offset **");
-                console.log(offset);
 
                 if (videoList.length === 0) {
                     
@@ -168,10 +166,6 @@ function generateMp4Video( db, cam, begin, end, cb ) {
                     var fileList = videoList.map( function(video) {
                         return video.file;
                     });
-
-                console.log(fileList);
-                console.log(fileName);
-                console.log(offset);
 
                     ffmpeg.stitch( fileList, fileName, offset, function(mergedFile, error) {
                         console.log(mergedFile);
@@ -209,9 +203,6 @@ function takeSnapshot( db, cam, req, res, cb ) {
 		};
 	}
 
-	console.log(":::::::::::::::::::");
-	console.log( options );
-
     var camId = cam._id;
 
     if ( isNaN(time) ) {
@@ -226,16 +217,8 @@ function takeSnapshot( db, cam, req, res, cb ) {
         
         fs.exists(file, function(exists) {
             if (exists) {
-					/*
-					ffmpeg.smartSnapshot( file, cam.videosFolder + "/tmp", offset, options, function(fileName, error) {
-						res.sendfile( fileName,
-							{},
-							function() {
-								fs.unlink( fileName );
-							});
-					});
-					*/
-					inMemorySnapshot(file, offset, res, function() {
+
+				inMemorySnapshot(file, offset, res, function() {
 						if (cb) cb();
 					});
                 } else {

@@ -9,6 +9,7 @@
         <link rel="stylesheet" href="/css/bootstrap.min.css">
         <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
         <link rel="stylesheet" href="/css/camera.css">
+        <link rel="stylesheet" href="/css/spinner.css">        
         <link rel="stylesheet" href="/css/bootstrap-timepicker.css">
         <script src="/js/bootstrap.min.js"></script>
         <script src="/js/d3.v3.min.js"></script>
@@ -28,26 +29,72 @@
             });
             */
             socket.on('cameraStatus', function(data) {
+                var $camitem = $("#camera-item-"+data.cam_id);
+                $camitem.find('.camera-item-status').html(data.status);
 				if (data.status === 'offline' || data.status === 'disconnected') {
 					console.log("#timeline-"+data.cam_id);
 					//if (data.status === 'disconnected') alert( data.cam_id + " disconnected");
-					$("#camera-item-"+data.cam_id).animate({
+					$camitem.animate({
 						backgroundColor: "rgb(243, 255, 102)"
 					}, 1000);
-					} else if (data.status === 'online' || data.status === 'connected') {
-						//if (data.status === 'connected') alert( data.cam_id + " connected" );
-						$("#camera-item-"+data.cam_id).animate({
-							backgroundColor: "none"
-						}, 1000);
-					}
+				} else if (data.status === 'online' || data.status === 'connected') {
+					//if (data.status === 'connected') alert( data.cam_id + " connected" );
+					$camitem.animate({
+						backgroundColor: "none"
+					}, 1000);
+				}
 			});
             
         </script>
+        <style>
+        #header .title{
+            padding:10px 0px;
+        }
+        #header dl {
+            float: right;
+            margin:0px;
+        }
+        #header dl dd,#header dl dt{
+            display:inline;
+        }
+        #storage-info{
+            float:right;
+            margin-left:10px;
+        }
+        </style>
     </head>
 
     <body>
- 
-        <h1>cameras</h1>
+        <div id="header">
+            <div>
+                <dl>
+                    <div>
+                        <dt>IP Address:</dt>
+                            <dd class="ip_address"></dd>
+                    </div>
+                    <div>
+                        <dt>Model:</dt>
+                            <dd class="model"></dd>
+                    </div>
+                    <div>
+                        <dt>Version:</dt>
+                            <dd class="version"></dd>
+                    </div>
+                </dl>
+
+                <h1 class="title">Loading...</h1>
+            </div>
+
+            <div style ="position:relative;">
+                <span id="storage-info"></span>
+                <div id="storage-space">
+                    <div  class="progress">
+                    </div>
+                </div>                    
+            </div>
+
+        </div>
+        <div style="clear:both"></div>
 		<p>
 			<a href="javascript:openAddCameraDialog()">[ add new camera ]</a> 
             | <a href="javascript:scanForCameras()">[ scan for cameras ]</a> <img style="display:none" height="20" width="20" id= "scan-spinner" src="/img/spinner.gif"/>
@@ -89,17 +136,16 @@
 								<input name="camera[manufacturer]" type="hidden" id="camera-manufacturer"-->
 								<!-- TEMPORARY, DEVELOPMENT ONLY -->
 								<div class="form-group  col-xs-6">
-									<label for="camera-manufacturer">manufacturer (tests only)</label>
+									<label for="camera-manufacturer">manufacturer</label>
 									<select id = 'camera-manufacturer' name="camera[manufacturer]" class="form-control" >
 										<option value="axis">Axis</option> 
 										<option value="arecont" selected>Arecont</option>
-										<option value="bosch">Bosch</option>
-										<option value="unknown">just another manufacturer</option>
+                                        <option value="unknown" selected>Other</option>
 									</select>
 								</div>
 
 								<div class="form-group  col-xs-4">
-									<label for="camera-ip">camera ip (tests only)</label>
+									<label for="camera-ip">camera ip</label>
 									<input type="text" class="form-control" id="camera-ip" placeholder="camera ip" name="camera[ip]">
 								</div>
 								<!-- end of TEMPORARY, DEVELOPMENT ONLY -->
@@ -113,12 +159,15 @@
 									<label for="camera-password">password</label>
 									<input name="camera[password]" type="password" id="camera-password" class="form-control">
 								</div>
+                                <div id="camera-auth-status" class="col-xs-4">
+                                    
+                                </div>
 								<br>
 							</div>
 							
 							<hr>
 
-                            <div style = 'width: 100%;'>
+                            <div id="camera-streams-tabs" style = 'width: 100%;'>
 								
 								<button type="button" class="btn btn-default btn-sm" id="add-stream">add stream</button>
 								<br><br>
@@ -218,13 +267,40 @@
         </div><!-- /.modal -->  
 
         <script>
+
+            $.ajax({
+                type: "GET",
+                url: '/device.json',
+                success: function( data ) {
+                    $("#header .title").html(data.name);
+                    $("#header .ip_address").html(data.ip);
+                    $("#header .model").html(data.model);
+                    $("#header .version").html(data.version);
+                },
+                error: function( data ) {
+
+                }
+            });
+
+            $.ajax({
+                type: "GET",
+                url: '/device/storage.json',
+                success: function( data ) {
+                    var percent = data.used/data.size;
+                    $("#storage-space .progress").append("<div class=\"progress-bar progress-bar-info\" role=\"progressbar\" aria-valuenow=\""+ data.used +"\" aria-valuemin=\"0\" aria-valuemax=\"" + data.size + "\" style=\"width: " + percent + "%\"><span class=\"sr-only\">"+percent+"% Full</span></div>")
+                    $("#storage-info").html(Math.round(data.used/1000000000) + " of " + Math.round(data.size/1000000000) + " GB used");
+                },
+                error: function( data ) {
+
+                }
+            });
 			
             //
 			//var timeline = new Timeline("body");
 			var timelines = [];
             
             $('#camera-schedule-dialog .form-control').timepicker({
-                showMeridian: true
+                showMeridian: false
             });
 
 			var updateTimelines = function( data, options ) {
@@ -289,7 +365,8 @@
                 $("#add-new-camera").show();
 
                 addCamera( camera, function(data) {
-                    $("#add-new-camera-dialog").modal('hide');
+                    $dialog = $("#add-new-camera-dialog");
+                    $dialog.modal('hide');
                     addCameraItem( data );
 					console.log(data);
                     for (var i in data.streams) {
@@ -299,13 +376,39 @@
                 });
             });
 
+            $("#camera-username, #camera-password").blur(function(){
+                var manufacturer = $("#camera-manufacturer").val();
+                if (manufacturer && manufacturer != 'unknown'){
+                    setConstraintsOnStreamFields(function(error){
+                        if (error){
+                            // credentials are correct and can connect to camera
+                            $("#camera-auth-status").html("error");
+                        }else{
+                            $("#camera-auth-status").html("success");
+                            if ($('#stream-panes').children().length === 0){
+                                addStream(function(){
+                                    setConstraintsOnStreamFields(function(error){
 
+                                    });
+                                });
+                            }
+                        }
+                    });
+                }else{
+                }
+            });
 
             // - - -
             var openAddCameraDialog = function() {
                 $("#update-camera").hide();
                 $("#add-new-camera").show();
-                $("#add-new-camera-dialog").modal('show');
+                var $dialog = $("#add-new-camera-dialog")
+                $dialog.find('.modal-title').html("add new camera");
+                $dialog.find("#camera-manufacturer").prop('disabled', false);
+                $dialog.find("#camera-ip").prop('disabled', false);
+                $("#stream-tabs").html("");
+                $("#stream-panes").html("");
+                $dialog.modal('show');
             }
             // - -
             //
@@ -315,27 +418,6 @@
                 $("#add-new-camera").show();
             });
             // - - -
-
-			// var addCamToScanList = function( cam ) {
-
-			// 	console.log( cam );
-
-			// 	var html = '';
-			// 	html += '<b>ip:</b> ' + cam.ip;
-			// 	html += ' | <b>type:</b> ' + cam.type;
-				
-			// 	if (cam.status === 'needs_authentication') {
-			// 		html += ' | <i>needs authentication</i>';
-			// 	} else if (cam.status === 'not_supported') {
-			// 		html += ' | <i>doesn\'t support basic onvif actions';
-			// 	}
-
-			// 	var camItem = $('<div>', {
-			// 		id: 'cam_' +cam.ip,
-			// 		html: html ,
-			// 		class: 'scan-list-item'
-			// 	}).appendTo('#scan-list');
-			// };
 
         </script>
     </body>

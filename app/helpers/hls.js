@@ -17,12 +17,14 @@ var livePlaylist = function( videos, targetDuration, mediaSequence, cb ) {
                   "#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n";
 
     for ( var i = 0; i < videos.length; i++ ) {
-        content = content + "#EXTINF:" + videos[i].duration + ",\n";
-        content = content + "/ts/" + path.basename(videos[i].url) + "\n";
+		
+		var duration = (videos[i].end - videos[i].start)/1000.0;
+		duration = 10;
+        content = content + "#EXTINF:" + duration + ",\n";
+        content = content + "/ts/" + path.basename(videos[i].file) + "\n";
     }
     
     cb( content );
-    console.log( content );
 };
 
 
@@ -30,27 +32,25 @@ var livePlaylist = function( videos, targetDuration, mediaSequence, cb ) {
  * generatePlaylist
  *
  */
-var generatePlaylist = function( camId, videos, targetDuration, mediaSequence, closed, cb ) {
+var generatePlaylist = function( camId, streamId, videos, targetDuration, mediaSequence, closed, cb ) {
     
-    console.log("generate playlist");
 
     var content = "#EXTM3U\n" +
-                  "#EXT-X-VERSION:3\n" +        
-                  "#EXT-X-PLAYLIST-TYPE:VOD\n" +   
+                  "#EXT-X-VERSION:3\n" +         
                   "#EXT-X-ALLOW-CACHE:YES\n" +
-                  "#EXT-X-TARGETDURATION:" + targetDuration + "\n" +
-                  "#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n";
+                  "#EXT-X-TARGETDURATION: 10\n" +
+                  "#EXT-X-MEDIA-SEQUENCE:0\n";
 
     for ( var i = 0; i < videos.length; i++ ) {
-        content = content + "#EXTINF:" + videos[i].duration + ".0,\n";
-        content = content + "/ts/" + camId + "/" + path.basename(videos[i].url) + "\n";
+		
+		var duration = (videos[i].end - videos[i].start)/1000.0;
+        content = content + "#EXTINF:" + duration + ",\n";
+        content = content + "ts/" + streamId + "/" + path.basename(videos[i].file) + "\n";
     }
 
     if ( closed ) {
         content = content + "#EXT-X-ENDLIST\n";
     }
-
-    console.log( content );
 
     cb( content );
 };
@@ -85,16 +85,22 @@ var sortVideosByName = function( a, b ) {
 
 
 var calculateLengthsAsync = function(files, list, cb) {
+
     var file = files.shift();     
+
     if (file) {
-        ffmpeg.calcDuration( file, function(duration, f) {
-            list.push({
-                url: path.basename(f),
-                duration: duration/1000.0
-            });
-            
+        //ffmpeg.calcDuration( file, function(duration, f) {
+        //    list.push({
+        //        url: f,
+        //        duration: duration/1000.0
+        //    });
+        
+		list.push({
+			url: file,
+			duration: 15
+		});
             calculateLengthsAsync(files, list, cb);
-        });
+        
     } else {
         cb( list.sort( sortVideosByName ) );
     }

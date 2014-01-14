@@ -48,7 +48,15 @@ Arecont.prototype.cameraUrl = function () {
 };
 
 Arecont.prototype.getResolutionOptions = function (cb) {
-	cb([{value:'full',name:'Full'},{value:'half', name:'Half'}]);
+	// Basically just checking to see if the username and password are correct
+	this.isMotionEnabled(function(error, enabled){
+		if (error){
+			cb(error, []);
+		}else{
+			cb(null, [{value:'full',name:'Full'},{value:'half', name:'Half'}]);
+		}
+	});
+	
 };
 
 Arecont.prototype.getFrameRateRange = function () {
@@ -179,15 +187,17 @@ Arecont.prototype.getParam = function(name, cb){
 	}, function( error, response, body) {
 		
 			if (!error && body) {
-//				console.log(body.toString());
-				// console.log(body);
+
 				var ele = body.toString().split("=");
 
-				value = ele[1];
-				// console.log(value);
-				cb(value);
+				try {
+					value = ele[1];
+				} catch( e ) {
+				}
+				
+				cb(error, value);
 			}else{
-
+				cb(error, '');
 			}
 		}
 	);	
@@ -211,28 +221,52 @@ Arecont.prototype.setParam = function(key, value, cb){
 
 Arecont.prototype.getMotionParams = function(cb){
 	var self = this;
-	self.getParam("mdlevelthreshold",function(threshold){
-		self.getParam("mdsensitivity",function(sensitivity){
-			self.isMotionEnabled(function(enabled){
-				cb({enabled: enabled, threshold: parseInt(threshold), sensitivity: parseInt(sensitivity)})
+	self.getParam("mdlevelthreshold",function(error, threshold){
+		if (error){
+			console.log(error);
+			cb(error);
+			return;	// avoids trigerring multiple callbacks 
+					// (multiple callbacks may crash the code depending on where it's being called)
+		}
+		self.getParam("mdsensitivity",function(error, sensitivity){
+			if (error){
+				console.log(error);
+				cb(error);
+				return;	// avoids triggering multiple callbacks
+			}
+			self.isMotionEnabled(function(error, enabled){
+				cb({
+					enabled: enabled, 
+					threshold: parseInt(threshold), 
+					sensitivity: parseInt(sensitivity)
+				});
 			});
 		});
 	});
 };
 
 Arecont.prototype.isMotionEnabled = function(cb) {
-	this.getParam("motiondetect",function(value){
-		cb(value == "on" ? true : false);
+	this.getParam("motiondetect",function(error, value){
+		if (error){
+			console.log(error);
+			cb(error, false);
+		}else{
+			cb(null, value == "on" ? true : false);
+		}
 	});
 };
 
 Arecont.prototype.setupMotionDetection = function(){
 	setParam("mdzonesize", 2, function(error, body){
-
+		if (error){
+			console.log(error);	
+		}
 	});
 
 	setParam("mddetail", 2, function(error, body){
-
+		if (error){
+			console.log(error);	
+		}
 	});
 	setMotionParams({enabled: true});
 };
@@ -243,10 +277,14 @@ Arecont.prototype.startListeningForMotionDetection = function(cb){
 	console.log(self.cameraUrl() + "/get?" + 'mdresult');
 	
 	self.process_id = setInterval(function(){
-		self.getParam('mdresult',function(result){
-			
-			if (result && result !== 'no motion'){
+		self.getParam('mdresult',function(error, result){
+			if (error){
+				console.log(error);
+				cb(error);
+			}else if (result && result !== 'no motion'){
 				cb(result);
+			}else{
+				cb('no motion');
 			}
 		});
 	},100);

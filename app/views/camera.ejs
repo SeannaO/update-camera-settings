@@ -15,10 +15,13 @@
 
         <script src="/js/bootstrap.min.js"></script>
         <script src="/js/d3.v3.min.js"></script>
-        <script src="/js/d3-timeline.js"></script>        
+        <script src="/js/d3-timeline.js"></script>    
+
+		<script type="text/javascript" src="/js/swfobject.js"></script>
+
         <script>
-            var camId = "<%= id %>";
-            var rtsp = "<%= streams[0].url %>"
+            var camId = "<%= _id %>";
+			var hlsEnabled = canPlayHLS();
         </script>
 
         <style>
@@ -45,19 +48,40 @@
     <body style = "margin: 10px">
         <h2 class = 'text-muted'> <a href ="/cameras">cameras</a> | <%= name %> </h2> 
         <hr>
+		
+		<div id = 'stream-selector-container' style = 'width: 300px; height: 70px;'>
+			<label for="stream-selector">streams</label>
+			<select id = 'stream-selector' class="form-control col-xs-4 input-sm">
+			</select>
+		</div>
+
         <div id = "search-bar" class="form-inline">
             <input id="begin_date" type="text" placeholder="start time" ></input>
             <input id="end_date" placeholder="end time" ></input>
-            <button id = "search" class = 'btn btn-xs btn-info'>get mp4 video</button>
-            <!--button id = "get-hls" class = 'btn btn-xs btn-info'>get hls video</button-->
+            <button id = "search" class = 'btn btn-xs btn-info'>watch video</button>
+
             <button id = "get-snapshot" class = 'btn btn-xs btn-default'>get a snapshot</button>
             <button id = "get-livestream" class = 'btn btn-xs btn-default'>livestream</button>
 
+			<button id = "download" class = 'btn btn-xs btn-default'>download video</button>
+
         </div>
 
-        <div id = "video" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px" class = "shadow">
-        </div>
+        <div id = "video" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px;" class = "shadow">
+			
+			<div id = "snapshot" style="display:hidden"></div>
 
+			<video id="nativePlayer" src = "" style = "display:none" controls autoplay width="640px" height="480px"></video>
+
+			<div id="StrobeMediaPlayback" style="display:none">
+				<p>
+					( this player requires flash. check if it's enabled and make sure your browser supports flash )
+				</p>
+			</div>
+		</div>
+
+		<div style="width: 640px; height: 360px;" id="player"></div>
+				
         <script>
             $(function() {
                 $("#begin_date").datetimepicker({
@@ -66,6 +90,17 @@
                 $("#end_date").datetimepicker({
                     timeFormat: 'HH:mm:ss',
                 });
+				
+				$("#download").click(function() {
+					var stream = $("#stream-selector").val();
+					var begin = 1000*moment( $("#begin_date").val() ).unix();
+                    var end = 1000*moment( $("#end_date").val() ).unix();
+					
+					var url = window.location.origin + "/cameras/"+camId+"/download?begin="+begin+"&end="+end+"&stream="+stream;
+					
+					window.location = url;
+				});
+
                 $("#search").click(function() {
                     $("#file-list").html("<span class='subtle'>loading...</span>");
 
@@ -74,17 +109,19 @@
                     var begin = 1000*moment( $("#begin_date").val() ).unix(); //.add("minutes", moment().zone()).unix();
                     var end = 1000*moment( $("#end_date").val() ).unix(); //.add("minutes", moment().zone()).unix();
 
-                    queryVideo(begin, end);
-                });
+					var stream = $("#stream-selector").val();
 
-
-                $("#get-hls").click(function() {
-                    // converts local time to gmt and then to unix format
-                    
-                    var begin = 1000*moment( $("#begin_date").val() ).unix(); //.add("minutes", moment().zone()).unix();
-                    var end = 1000*moment( $("#end_date").val() ).unix(); //.add("minutes", moment().zone()).unix();
-                    
-                    showHls(begin, end);
+					var url = window.location.origin + "/cameras/"+camId+"/video.m3u8?begin="+begin+"&end="+end+"&stream="+stream;
+					
+					if (!hlsEnabled) {
+						launchStrobePlayer({
+							url: url,
+							autoplay: true
+						});
+					} else {
+						launchNativePlayer( url );
+					}
+						
                 });
                 
 
@@ -96,101 +133,17 @@
                     getSnapshot(time);
                     
                 });
-
-                $("#get-livestream").click( function() {
-                    showLiveStream(rtsp);
-                });
                 
             });
 
-            // 'begin' and 'end' should be on unix format
-            var queryVideo = function(begin, end) {
-                
-                $("#video").html("<h5 class = 'text-muted lead video-box-message'> loading... </h5>");
-
-                $.ajax({
-                    url: "/cameras/"+camId+"/video.json?begin="+begin+"&end="+end,
-                    success: function(data, status, xhr) {
-                        if(data.success) {
-                             showVideo( "/cameras/"+camId+"/video?begin="+begin+"&end="+end );
-                        }
-                        else {
-                            $("#video").html("<h5 class = 'text-muted lead video-box-message'>" + data.error +"</h5>"); 
-                        }
-                    }, 
-                    error: function(err) {
-                        console.log("error");
-                        $("#video").html("<h5 class = 'text-muted lead'>there was an error: " + err +"</h5>");
-                    }
-                });
-            }
-
-
-            // 'begin' and 'end' should be on unix format
-            var showHls = function(begin, end) {
-                
-                //$("#video").html("<h5 class = 'text-muted lead video-box-message'> loading... </h5>");
-                var html = "<video controls " +
-                ' src="/cameras/'+camId+'/video.hls?begin='+begin+'&end='+end+'"' +
-                ' height="480" width="640"' +
-                ' ></video>';
-
-                $("#video").html( html );
-            }
-
-
-    
-            var getSnapshot = function(time) {
-                
-                $("#video").html("<h5 class = 'text-muted lead video-box-message'> loading... </h5>");
-
-                $.ajax({
-                    url: "/cameras/"+camId+"/snapshot?time="+time,
-                    success: function(data, status, xhr) {
-                        var ct = xhr.getResponseHeader("content-type") || "";
-                        if (ct.indexOf('image') > -1) {                        
-                            showImage( "/cameras/"+camId+"/snapshot?time="+time );
-                        }
-                        else {
-                            $("#video").html("<h5 class = 'text-muted lead video-box-message'>" + data + "</h5>"); 
-                        }
-                    }, 
-                    error: function(err) {
-                        console.log("error");
-                        $("#video").html("<h5 class = 'text-muted lead'>there was an error: " + err + "</h5>");
-                    }
-                });
-                
-            }
-
         </script>
 
         <script>
-            // injects video tag
-            var showVideo = function(url) {
-
-                var videoHtml = "<video controls autoplay width='640' height='480'>" +
-                "<source src=\"" + url + "\" type=\"video/mp4; codecs=\"avc1.42E01E, mp4a.40.2\"\">" +
-                "Your browser does not support the <code>video</code> element." +
-                "</video>";
-                $("#video").html(videoHtml);
-            }
-
-        </script>
-
-        <script>
-            // injects image tag
-            var showImage = function(url) {
-
-                var imageHtml = "<a href = '"+url+"'><img src='"+url+"' width='640' height='480'/></a>";
-                $("#video").html(imageHtml);
-            }
-
 
             var showLiveStream = function(url) {
 
                 var html = '<object type="application/x-vlc-plugin" data="'+url+'" width="640" height="480" id="video1">';
-                    html += '<param name="movie" value="'+rtsp+'"/>';
+                    html += '<param name="movie" value="'+ getRtsp() +'"/>';
                     html += '<embed type="application/x-vlc-plugin" name="video1"';
                     html += 'autoplay="no" loop="no" width="640" height="480"';
                     html += 'target="'+rtsp+'" /> </object>';
@@ -199,5 +152,20 @@
             }
         </script>
 
+		<script>
+			getStreamsInfo( camId );
+			
+			if (!hlsEnabled) {
+				/*
+				launchStrobePlayer({
+						url: "",
+						autoplay: false
+				});
+				*/
+			} else {
+			}
+
+		</script>
+		
     </body>
 </html>

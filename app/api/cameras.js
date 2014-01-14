@@ -1,5 +1,6 @@
 var path = require('path');												// for parsing path urls
 var fs = require('fs');													// for sending files
+var hlsHandler = require('../controllers/hls_controller.js');
 
 module.exports = function( app, passport, camerasController ) {
 
@@ -14,7 +15,7 @@ module.exports = function( app, passport, camerasController ) {
 			});
 
 			if (err) {
-				res.end("{ 'error': '" + JSON.stringify(err) + "'}");
+				res.status(422).end("{ 'error': '" + JSON.stringify(err) + "'}");
 			} else {
 				res.json(list);
 			}
@@ -29,7 +30,7 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err || !cam || cam.length === 0) {
-				res.json({ success: false, error: err });
+				res.status(422).json({ success: false, error: err });
 			} else {
 				res.json({ success: true, camera: cam.toJSON() });
 			}
@@ -49,7 +50,7 @@ module.exports = function( app, passport, camerasController ) {
 				console.log("*** updateCamera error: ");
 				console.log( err );
 				console.log("* * *");
-				res.json({success: false, error: err});
+				res.status(422).json({success: false, error: err});
 			} else {
 				res.json({success: true});
 			}
@@ -65,7 +66,7 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.insertNewCamera( req.body, function( err, newDoc ) {
 			if (err) {
-				res.json({ sucess: false, error: err  });
+				res.status(422).json({ sucess: false, error: err  });
 			} else {
 				res.json( newDoc );
 			}
@@ -81,7 +82,7 @@ module.exports = function( app, passport, camerasController ) {
 		camerasController.updateCameraSchedule(params, function(err) {
 			if (err) {
 				console.log( err ) ;
-				res.json({success: false, error: err});
+				res.status(422).json({success: false, error: err});
 			} else {
 				res.json({success: true});
 			}
@@ -94,7 +95,7 @@ module.exports = function( app, passport, camerasController ) {
 		camerasController.updateCameraMotion(params, function(err) {
 			if (err) {
 				console.log( err ) ;
-				res.json({success: false, error: err});
+				res.status(422).json({success: false, error: err});
 			} else {
 				res.json({success: true});
 			}
@@ -110,7 +111,7 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.removeCamera( req.params.id, function( err, numRemoved ) {
 			if (err) {
-				res.json({success: false, error: err});
+				res.status(422).json({success: false, error: err});
 			} else if (cam) {
 				res.json({success: true, _id: req.params.id});
 			}
@@ -120,6 +121,37 @@ module.exports = function( app, passport, camerasController ) {
 	// end of delete camera
 	// - - -
 
+	// - - -
+	// delete stream
+	app.delete('/cameras/:camera_id/streams/:stream_id', passport.authenticate('basic', {session: false}), function(req, res) {
+
+		var camId = req.params.camera_id;
+		var streamId = req.params.stream_id;
+
+		var cam = camerasController.findCameraById( camId ).cam;
+		if (!cam) {
+			res.json({success: false, error: 'camera not found'});
+			return;
+		} 
+
+		var stream = cam.streams[ streamId ];
+		if (!stream) {
+			res.json({success: false, error: 'stream not found'});
+			return;
+		}
+
+		camerasController.removeStream( camId, streamId, function( err ) {
+			if (err) {
+				res.json({success: false, error: err});
+			} else if (cam) {
+				res.json({success: true, _id: req.params.id});
+			}
+		});
+	});
+	// end of delete camera
+	// - - -
+
+	
 	// - - 
 	// 
 	app.get('/cameras/:id/schedule.json', passport.authenticate('basic', {session: false}), function(req, res) {
@@ -127,9 +159,9 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err || !cam || cam.length === 0) {
-				res.json({ success: false, error: err });
+				res.status(422).json({ success: false, error: err });
 			} else {
-				console.log(cam);
+				console.log(cam.schedule.toJSON());
 				res.json({ success: true, schedule_enabled: cam.schedule_enabled, schedule: cam.schedule.toJSON() });
 			}
 		});
@@ -141,12 +173,12 @@ module.exports = function( app, passport, camerasController ) {
 	// 
 	app.get('/cameras/:id/motion.json', passport.authenticate('basic', {session: false}), function(req, res) {
 		var camId = req.params.id;
-		console.log(camId);
+		
 		camerasController.getMotion( camId, function(err, motion_params) {
 			if (err || !motion_params || motion_params.length === 0) {
-				res.json({ success: false, error: err });
+				res.status(422).json({ success: false, error: err });
 			} else {
-				console.log(motion_params);
+				
 				res.json({ success: true, camera: {motion: motion_params}});
 			}
 		});
@@ -163,9 +195,8 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err || cam.length === 0) {
-				res.end("couldn't find this camera");
+				res.status(422).end({success:false, error: "couldn't find this camera"});
 			} else {
-				// console.log( cam.deleteOldestChunks(10) );
 				res.render('camera', cam.toJSON());
 			}
 		});
@@ -191,7 +222,7 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.listVideosByCamera( camId, streamId, req.query.start, req.query.end, function(err, fileList, offset) {
 			if (err) {
-				res.json({error: err, success: false});
+				res.status(422).json({error: err, success: false});
 			} else {
 				res.json({success: true, offset: offset, videos: fileList});
 			}
@@ -199,6 +230,42 @@ module.exports = function( app, passport, camerasController ) {
 	});
 	// - - -
 
+
+	// - - -
+	// gets most recent thumb
+	app.get('/cameras/:cam_id/streams/:id/thumb.json', passport.authenticate('basic', {session: false}), function(req, res) {
+
+		var camId = req.params.cam_id;
+		var streamId = req.params.id;
+		
+		camerasController.getCamera( camId, function(err, cam) {
+			if (err) {
+				res.status(422).json( { error: err } );
+			} else {
+				
+				var stream = cam.streams[streamId];
+				
+				if (stream) {
+					if (stream.latestThumb) {
+						res.json({
+							img: stream.latestThumb
+						});
+					} else {
+						res.status(422).json({
+							error: 'this stream does not have any thumbnail yet'
+						});
+					}
+				} else {
+					res.status(422).json({
+						error: 'invalid stream id ' + streamId
+					});
+				}
+			}
+		});
+	});
+	// - - -
+	
+	
 
 	// - - -
 	// gets thumbnail
@@ -211,7 +278,7 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err) {
-				res.json( { error: err } );
+				res.status(422).json( { error: err } );
 			} else {
 
 				var file = cam.videosFolder + "/" + streamId + "/thumbs/"+thumb+".jpg";
@@ -231,27 +298,11 @@ module.exports = function( app, passport, camerasController ) {
 
 
 	// - - -
-	// gets camera configurations
-	app.get('/cameras/:id/configuration', passport.authenticate('basic', {session: false}), function(req, res) {
-		var camera = req.query.camera;
-		camera._id = req.params.id;
-		camerasController.getCameraOptions( camera, function(err, data) {
-			if (err) {
-				res.json( { error: err } );
-			} else {
-				data.success = true;
-				res.json(data);
-			}
-		});
-	});
-	// - - -
-
-
-	// - - -
 	// requests snapshot, returns jpeg
 	app.get('/cameras/:id/snapshot', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		var camId = req.params.id;
+		
 		camerasController.requestSnapshot( camId, req, res );
 	});
 	// - - -
@@ -265,22 +316,30 @@ module.exports = function( app, passport, camerasController ) {
 		var camId = req.params.id;
 		var begin = parseInt( req.query.begin, 10 );
 		var end = parseInt( req.query.end, 10 );
+		var stream = req.query.stream;
 
 		camerasController.getCamera( camId, function(err, cam) {
+			
 			if (err) {
-				res.json( { error: err } );
+				res.status(422).json( { error: err } );
 			} else {
-				for (stream in cam.streams){
-					console.log(cam.streams[stream].db);
-					camerasController.mp4Handler.generateMp4Video( cam.streams[stream].db, cam, begin, end, function( response ) {
-						if(response.success) {
-							camerasController.mp4Handler.sendMp4Video( response.file, req, res );
-						} else {
-							res.end( response.error );
-						}
-					});
-					break;
+
+				// in case the streamId is invalid or not specified
+				if (!cam.streams[stream]) {
+					console.log("########## no such stream ");
+					for (var s in cam.streams){
+						stream = s;
+						break;
+					}
 				}
+				
+				camerasController.mp4Handler.generateMp4Video( cam.streams[stream].db, cam, stream, begin, end, function( response ) {
+					if(response.success) {
+						camerasController.mp4Handler.sendMp4Video( response.file, req, res );
+					} else {
+						res.end( response.error );
+					}
+				});
 			}
 		});
 	});
@@ -293,20 +352,26 @@ module.exports = function( app, passport, camerasController ) {
 		var camId = req.params.id;
 		var begin = parseInt( req.query.begin, 10 );
 		var end = parseInt( req.query.end, 10 );
+		var stream = req.query.stream;
 
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err) {
 				res.json( { error: err } );
 			} else {
 				
-				for (stream in cam.streams){
-					console.log(cam.streams[stream].db);
-					camerasController.mp4Handler.generateMp4Video( cam.streams[stream].db, cam, begin, end, function( response ) {
-						console.log(response);
-						res.json( response );
-					});
-					break;
+				//for (var stream in cam.streams){
+				// in case the streamId is invalid or not specified
+				if (!cam.streams[stream]) {
+					console.log("[cameras.js : /video.json] no such stream ");
+					for (var s in cam.streams){
+						stream = s;
+						break;
+					}
 				}
+
+				camerasController.mp4Handler.generateMp4Video( cam.streams[stream].db, cam, stream, begin, end, function( response ) {
+					res.json( response );
+				});
 			}
 		});
 	});
@@ -314,19 +379,29 @@ module.exports = function( app, passport, camerasController ) {
 
 	// - - -
 	// gets inMem mp4 video
-	app.get('/cameras/:id/memvideo', passport.authenticate('basic', {session: false}), function(req, res) {
+	app.get('/cameras/:id/download', passport.authenticate('basic', {session: false}), function(req, res) {
 		//	res.end('feature under construction');
 
 		var camId = req.params.id;
 		var begin = parseInt( req.query.begin, 10 );
 		var end = parseInt( req.query.end, 10 );
+		var stream = req.query.stream;
 
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err) {
 				res.json( { error: err } );
 			} else {
-				for (stream in cam.streams){
-					console.log(cam.streams[stream].db);
+
+				// in case the streamId is invalid or not specified
+				if (!cam.streams[stream]) {
+					console.log("[cameras.js : /download] no such stream ");
+					for (var s in cam.streams){
+						stream = s;
+						break;
+					}
+				}
+
+				for (var stream in cam.streams){
 					camerasController.mp4Handler.inMemoryMp4Video( cam.streams[stream].db, cam, begin, end, req, res );
 					break;
 				}
@@ -337,81 +412,44 @@ module.exports = function( app, passport, camerasController ) {
 	// - - -
 
 	// - - -
-	// starts recording
-	// TODO: should be only via post
-	app.get('/cameras/:id/start_recording', passport.authenticate('basic', {session: false}), function(req, res) {
-		startRecording(req, res);
-	});
-	app.post('/cameras/:id/start_recording', passport.authenticate('basic', {session: false}), function(req, res) {
-		startRecording(req, res);
-	});
-	// - - -
-	//
-
-	// - - -
-	// stops recording
-	// TODO: should be only via post
-	app.post('/cameras/:id/stop_recording', passport.authenticate('basic', {session: false}), function(req, res) {
-		stopRecording( req, res );
-	});
-	app.get('/cameras/:id/stop_recording', passport.authenticate('basic', {session: false}), function(req, res) {
-		stopRecording( req, res );
-	});
-	// - - -
-
-	// - - -
 	// gets hls stream for finite length video
-	app.get('/cameras/:id/video.hls', passport.authenticate('basic', {session: false}), function(req, res) {
+	app.get('/cameras/:id/video.m3u8', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		var camId = req.params.id;
 		var begin = parseInt( req.query.begin, 10 );
 		var end = parseInt( req.query.end, 10 );
-		for (stream in cam.streams){
-			console.log(cam.streams[stream].db);
-			hlsHandler.generateFinitePlaylist( cam.streams[stream].db, camId, begin, end, function( playlist ) {
+		var streamId = req.query.stream;
 
-				res.writeHead(200, { 
-					"Content-Type":"application/x-mpegURL",
-					'content-length': playlist.length 
+		camerasController.getCamera( camId, function(err, cam) {
+			if (err) {
+				res.json( { error: err } );
+			} else {
+
+				//for (var stream in cam.streams){
+				// in case the streamId is invalid or not specified
+				if (!cam.streams[streamId]) {
+					for (var s in cam.streams){
+						streamId = s;
+						break;
+					}
+				}
+
+
+				hlsHandler.generateFinitePlaylist( cam.streams[streamId].db, camId, streamId, begin, end, function( playlist ) {
+
+					res.writeHead(200, { 
+						"Content-Type":"application/x-mpegURL",
+						'content-length': playlist.length 
+					});
+
+					res.end(playlist);    
 				});
-
-				res.end(playlist);    
+			}
 			});
-			break;
-		}
-	});
-	// - - -
-
-	// - - -
-	// end recording abstraction
-	var startRecording = function(req, res) {
-		var camId = req.params.id;
-
-		camerasController.startRecording( camId, function(err) {
-			if ( err ) {
-				res.json({ success: false, error: err });
-			} else {
-				res.json({ success: true });
-			}
 		});
-	};
-
-
 	// - - -
-	// stop recording abstraction
-	var stopRecording = function( req, res ) {
-		var camId = req.params.id;
 
-		camerasController.stopRecording( camId, function(err) {
-			if (err || cam.length === 0) {
-				res.json({ success: false, error: err });
-			} else {
-				res.json({ success: true });
-			}
-		});
-	};
-	// end of stopRecording
-	// - - -
+
 	
 };
 

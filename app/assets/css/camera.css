@@ -1,5 +1,5 @@
 body {
-	margin: 30px;
+	margin: 0px 30px;
 }
 
 .timeline-start-time {
@@ -8,6 +8,25 @@ body {
 	left: -10px;
 	color: #8F8F8F;
 }
+
+.status{
+	width:12px;
+	height:12px;
+	background-repeat: no-repeat;
+	background-color: transparent;
+	margin:0px 2px;
+	display:inline-block;
+}
+.status.red{
+	background-image: url("../img/redstatus.png");
+}
+.status.green{
+	background-image: url("../img/greenstatus.png");
+}
+.status.gray{
+	background-image: url("../img/graystatus.png");
+}
+
 
 .timeline-end-time {
 	position: absolute;
@@ -50,7 +69,7 @@ body {
 	font-size:13pt;
 }
 
-.camera-item-rtsp {
+.camera-item-status {
 	position: absolute;
 	left: 180px;
 	top: 55px;
@@ -143,13 +162,25 @@ input.switch:checked ~ label:after
 	text-align: center;
 }
 
+.check-stream-status {
+	margin: 5px;
+	margin-top: 5px;
+}
+
 .check-stream {
 	float: left;
+	margin: 5px;
+}
+
+.remove-stream {
+	float: left;
+	margin: 5px;
 }
 
 .check-stream-status {
+	
 	float: left;
-	margin: 5px;
+	margin: 8px;
 	color: #555;
 }
 
@@ -159,4 +190,13 @@ input.switch:checked ~ label:after
 
 .stream-ok {
 	color: #0a0;
+}
+
+.camera-streams-retention{
+	width:85%;
+}
+.retention-unit{
+	width:10%;
+	float:right;
+	margin-top:5px;
 }

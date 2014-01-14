@@ -162,42 +162,34 @@ var inMemoryStitch = function( files, offset, req, res ) {
 			'-y', 
 			'-i', fileList, 
 			'-ss', offset.begin/1000, 
-			'-t', offset.duration/1000, 
+			'-t', offset.duration/1000,
+			'-fflags', '+igndts',
+			'-loglevel', 'quiet',
 			'-c', 'copy', 
 			'-f', 'mp4',
 			'-frag_duration', '3600', 
 			'-']);
 
-	res.writeHead(200, {'Content-Type': ''});
+	res.writeHead(200, {
+		'Content-Type': 'video/mp4',
+		'Content-disposition': 'attachment',
+		'filename': 'vms_' + Date.now() + '.mp4'
+	});
 	
-	var vData = new Buffer(50000000);
-	var l = 0;
+	//var vData = new Buffer(50000000);
+	//var l = 0;
 
-	//child.stdout.pipe( vData );
+	child.stdout.pipe( res );
 
 	child.stderr.on('data', function(data) {
 		
-
-		/// vData = Buffer.concat( [vData, data] );
-			//console.log(data.toString());
-		//console.log("error");
+		//console.log(data.toString());
 	});
 
-		
+	
 	child.stdout.on('data', function(data) {
-		//vData = Buffer.concat( [ vData, data ] );
-		
-		//var newBuffer = Buffer.concat([vData, data]);
-		//vData = newBuffer;
-			data.copy( vData, l );
-			l += data.length;
-
-		//console.log(data.length);
-		//vData.push(data.toString());
-		//vData = vData + data.toString();
-		//vData = Buffer.concat( [vData, data] );
 	});
-
+/*
 	child.stdout.on('end', function(data) {
 //			vData = Buffer.concat( [vData, data] );
 		//res.end("ok");
@@ -207,7 +199,7 @@ var inMemoryStitch = function( files, offset, req, res ) {
 	child.on('close', function(code) {
 		console.log( 'ffmpeg stitch process closed with code: ' + code );
 //		res.end( vData );
-//		res.end();
+		res.end();
 	});
 
 		
@@ -227,6 +219,7 @@ var inMemoryStitch = function( files, offset, req, res ) {
 			child.kill();
 		}
 	});
+	*/
 };
 // - - end of inMemStitch
 // - - - - - - - - - - - - - - - - - - - -
@@ -451,6 +444,8 @@ var sendMp4Stream = function(file, offset, req, res) {
 var checkH264 = function( url, cb ) {
 	var self = this;
 	var timeout = 10000;
+	
+	console.log( '[ffmpeg.js:checkH264] checking stream ' + url );
 
 	var ffmpegProcess = spawn('ffmpeg', [
 			'-i', url
