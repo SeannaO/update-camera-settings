@@ -52,7 +52,7 @@ passport.use(new BasicStrategy({
 		process.nextTick(function(){
 			var digest = new Buffer(username + ":" + password).toString('base64');
 			// 127.0.0.1
-			var url = "https://" + username + ":" + password + "@192.168.215.153/cp/UserVerify?v=2&login=" + username + "&password=" + password;
+			var url = "https://" + username + ":" + password + "@127.0.0.1/cp/UserVerify?v=2&login=" + username + "&password=" + password;
 			request({ 
 				url: url,
 				strictSSL: false,

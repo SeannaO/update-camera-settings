@@ -57,9 +57,9 @@ gboolean isSecurityEnabled(){
 
 gboolean enableSecurity(){
 	CPSecurityEnable_t security;
-	security.login = "Administrator";
-	security.password = "password";
-	security.fullname = "Administrator";
+	security.login = APPUSERADMINLOGIN;
+	security.password = APPUSERADMINPASSWORD;
+	security.fullname = APPUSERADMINNAME;
 	security.encryptlocal = CP_SECENC_ALWAYS;
 	security.encryptremote = CP_SECENC_ALWAYS;
 	CPResult_t res;
@@ -86,6 +86,85 @@ gboolean userCreate(){
 	}
 	return TRUE;
 }
+
+
+void PoolAvailableDrives(CPPoolsDrivesInfo_t **ret){
+	CPResult_t res;
+	CPStatus_t status = cpPoolAvailableDrives(&res, "", TRUE, ret);
+	if (status != ME_OK){
+		syslog(LOG_DEBUG, "Error when calling cpPoolAvailableDrives on field [%s]: %s", res.field, res.description);
+	}
+}
+
+void getPrimaryPoolId(gchar ** pool_id){
+	CPResult_t res;
+	GList* pools, *elem;
+	CPStatus_t status = cpPools(&res, &pools);
+	if (status != ME_OK){
+		syslog(LOG_DEBUG, "Error when calling cpPools on field [%s]: %s", res.field, res.description);
+	}
+	long current_max_size = 0;
+	char* tmp_pool_id = NULL;
+	*pool_id = NULL;
+	CPDrivePool_t* item;
+	for(elem = pools; elem; elem = elem->next) {
+		item = (CPDrivePool_t*)elem->data;
+		syslog(LOG_DEBUG, "Id:[%s] Name:[%s] size:[%ld] rawsize:[%ld] allocated:[%ld] protection:[%d] Status:[%d] Flags:[%d] PercentComplete[%d]", item->id, item->name, item->size, item->rawsize, item->allocated, item->protection, item->status, item->flags, item->percentcomplete);
+		if (current_max_size > item->size){
+			current_max_size = item->size;
+			tmp_pool_id = item->id;
+		}
+	}
+	if (tmp_pool_id != NULL){
+		*pool_id = (gchar *)malloc((strlen(tmp_pool_id)+1)*sizeof(gchar));
+		strcpy(*pool_id, tmp_pool_id);
+	}
+	// clean up
+	cpDrivePoolListFree(pools);
+	return;
+}
+
+char * systemStoragePoolCreate(){
+	CPDrivePool_t pool;
+	CPPoolsDrivesInfo_t *drives_info;
+
+	pool.name = APPSTORAGEPOOLNAME;
+	GList* elem = NULL;
+	PoolAvailableDrives(&drives_info);
+	CPDriveDrive_t* drive_item = NULL;
+	for(elem = drives_info->raidtypes; elem; elem = elem->next) {
+		drive_item = (CPDriveDrive_t*)elem->data;
+		syslog(LOG_DEBUG, "Position:[%d] Size:[%ld] ishdd:[%d] description:[%s] firmware:[%s] pool:[%s] Status:[%d]", drive_item->position, drive_item->size, (int)drive_item->ishdd, drive_item->description, drive_item->firmware, drive_item->pool, drive_item->status);
+		if (drive_item->ishdd){
+    			pool.drives = g_list_append(pool.drives, GINT_TO_POINTER(drive_item->position));
+		}
+	}
+	CPDriveRaid_t* raid_item = NULL;
+	for(elem = drives_info->drives; elem; elem = elem->next) {
+		raid_item = (CPDriveRaid_t*)elem->data;
+		syslog(LOG_DEBUG, "Protection:[%d] Sizecalc:[%d] Flags:[%d]", raid_item->protection, raid_item->sizecalc, raid_item->flags);
+	  /* do something with item */
+	}
+
+	// Check for the supported protections	
+	pool.protection = CP_PROTECTION_PARITY;
+	pool.flags = CP_POOLFLAG_CONSISTENCY | CP_POOLFLAG_CACHE;
+	// Check for the supported flags
+
+	// Use all of the drives
+	gchar * ret;
+	CPResult_t res;
+	CPStatus_t status = cpPoolCreate(&res, &pool, &ret);
+	if (status != ME_OK){
+		syslog(LOG_DEBUG, "Error when calling systemStoragePoolCreate on field [%s]: %s", res.field, res.description);
+	}
+	gchar *pool_id = (gchar *)malloc((strlen(ret)+1)*sizeof(gchar));
+	strcpy(pool_id, ret);
+
+	cpPoolsDrivesInfoFree(drives_info);
+	return pool_id;
+}
+
 
 gboolean userExists(){
 	CPResult_t res;
@@ -232,6 +311,7 @@ void setupAndLaunchServer(){
 	CPSessionUser_t * user = NULL;
 	syslog(LOG_DEBUG, "Checking if admin is logged in...");
 	if(getCurrentUser(&user) ){//&& (user->flags & CP_LOGIN_ISADMIN)){
+		//syslog(LOG_DEBUG, "Setting thread context for user: %s.", user->login);
 		//cpSessionUserFree(user);
 		syslog(LOG_DEBUG, "Administrator is logged in!");
 	}else{
@@ -257,7 +337,17 @@ void setupAndLaunchServer(){
 	}
 	loginAdmin("Administrator", "password");
 	cpIpcSetThreadUser("Administrator");
-	//syslog(LOG_DEBUG, "Checking drive share...");
+
+	// gchar * pool_id;
+	// syslog(LOG_DEBUG, "Checking if Pool exists and selecting the primary pool...");
+	// getPrimaryPoolId(&pool_id);
+	// if (pool_id != NULL){
+	// 	syslog(LOG_DEBUG, "Pool does not exist creating pool...");
+	// 	pool_id = systemStoragePoolCreate();
+	// }
+
+
+	syslog(LOG_DEBUG, "Checking drive share...");
 	//if (shareExists()){
 		//syslog(LOG_DEBUG, "Share doesn't exist. Creating share...");
 		if (shareCreate()){

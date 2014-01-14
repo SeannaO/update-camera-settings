@@ -21,6 +21,8 @@ typedef struct _ErrorInfo {
  * Mutex and counter to control the application running time
  */
 
+
+gboolean isServerRunning();
 int launchServer();
 
 void applicationUninstall();
