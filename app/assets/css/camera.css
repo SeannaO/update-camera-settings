@@ -10,7 +10,7 @@ body {
     margin:0px;
     width:150px;
 }
-#header dl dd{
+#header dl dt{
     float: left;
 }
 #storage-info{
@@ -23,6 +23,14 @@ body {
 	top: 28px;
 	left: -10px;
 	color: #8F8F8F;
+}
+
+#camera-auth-status{
+	margin-top: 32px;
+}
+
+#camera-auth-status .glyphicon{
+	font-size: 1.4em;
 }
 
 .status{
