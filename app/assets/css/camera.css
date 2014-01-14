@@ -178,25 +178,13 @@ input.switch:checked ~ label:after
 	text-align: center;
 }
 
-.check-stream-status {
-	margin: 5px;
-	margin-top: 5px;
-}
-
 .check-stream {
 	float: left;
-	margin: 5px;
-}
-
-.remove-stream {
-	float: left;
-	margin: 5px;
 }
 
 .check-stream-status {
-	
 	float: left;
-	margin: 8px;
+	margin: 5px;
 	color: #555;
 }
 

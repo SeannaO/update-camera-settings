@@ -737,7 +737,6 @@ var addStreamFieldset = function( cb ) {
 		html: 'check stream'
 	});
 
-<<<<<<< HEAD
 	var spinner = $('<div class="spinner" id="check-stream-spinner-'+current_stream_id+'">' +
 					'<div class="bounce1"></div>' +
 					'<div class="bounce2"></div>' +
@@ -766,8 +765,6 @@ var addStreamFieldset = function( cb ) {
         $(this).parent().remove();
     });
 	
-=======
->>>>>>> f9dcd62de9a958fe8be891a88caf960b098a1beb
     current_number_of_streams++;
 
     cb( fieldset, current_stream_id);
@@ -783,7 +780,7 @@ var addStream = function( stream, cb) {
         $('li.active').removeClass('active');
 		var stream_name = 'new stream';
         if (stream && stream.name){
-			stream_name = stream.name;
+        	stream_name = stream.name;
         }
 
 		var new_stream_tab_id = 'new-stream-' + current_stream_id;
@@ -791,52 +788,12 @@ var addStream = function( stream, cb) {
 		$('#stream-panes').append('<div class="tab-pane" id="' + new_stream_tab_id + '"></div>');
 		$('#'+new_stream_tab_id).append(fieldset);
 		$('#stream-tabs a:last').tab('show');
-
-		var check_stream_button = $('<button>', {
-			id: 'check-stream-button-'+current_stream_id,
-			class: 'btn btn-info btn-sm check-stream',
-			html: 'check stream'
-		});		
-
-		var remove_stream_button = $('<button>', {
-			id: 'remove-stream-button-'+new_stream_tab_id,
-			class: 'btn btn-danger btn-sm remove-stream',
-			html: 'remove stream'
-		});
-		
-		var spinner = $('<div class="spinner" id="check-stream-spinner-'+current_stream_id+'">' +
-				'<div class="bounce1"></div>' +
-				'<div class="bounce2"></div>' +
-				'<div class="bounce3"></div>' +
-				'</div>');
-
-		spinner.hide();
-
-		var check_stream_status = $('<div>',{
-			id: 'check-stream-status-' + current_stream_id,
-			class: 'check-stream-status'
-		});        
-
-		$('#'+new_stream_tab_id).append(check_stream_button);  		
-		$('#'+new_stream_tab_id).append(remove_stream_button); 
-		$('#'+new_stream_tab_id).append(spinner);
-		$('#'+new_stream_tab_id).append(check_stream_status);  
-
-		check_stream_button.click( function( e ) {
-			e.preventDefault();
-			checkH264( current_stream_id );
-		});
-
-		remove_stream_button.click( function( e ) {
-			e.preventDefault();
-			removeStream( stream );
-		});
 		
 		for (var attr in stream) {
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).val( stream[attr] );
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).attr( 'data-'+attr, stream[attr] );
 		}
-		if (typeof cb === 'function' ){
+		if (typeof cb != "undefined"){
 			cb();
 		}
 	});
@@ -854,8 +811,7 @@ var removeStream = function( stream ) {
 			url: '/cameras/' + stream.camId + '/streams/' + stream.id,
 			success: function(data) {
 				if (data.error) {
-					alert(data.error);
-					location.reload();
+					alert(error);
 				} else {
 					location.reload();
 				}
@@ -866,14 +822,11 @@ var removeStream = function( stream ) {
 	}
 };
 
-var checkH264 = function( new_stream_id ) {
+var checkH264 = function(new_stream_id ) {
 
 	var button = $('#check-stream-button-'+new_stream_id);
 	var spinner = $('#check-stream-spinner-'+new_stream_id);
 	var stream_status = $('#check-stream-status-'+new_stream_id);
-
-	console.log(new_stream_id);
-	console.log(stream_status);
 
 	stream_status.html("");
 

@@ -187,14 +187,12 @@ Arecont.prototype.getParam = function(name, cb){
 	}, function( error, response, body) {
 		
 			if (!error && body) {
-
+//				console.log(body.toString());
+				// console.log(body);
 				var ele = body.toString().split("=");
 
-				try {
-					value = ele[1];
-				} catch( e ) {
-				}
-				
+				value = ele[1];
+				// console.log(value);
 				cb(error, value);
 			}else{
 				cb(error, '');
@@ -225,21 +223,14 @@ Arecont.prototype.getMotionParams = function(cb){
 		if (error){
 			console.log(error);
 			cb(error);
-			return;	// avoids trigerring multiple callbacks 
-					// (multiple callbacks may crash the code depending on where it's being called)
 		}
 		self.getParam("mdsensitivity",function(error, sensitivity){
 			if (error){
 				console.log(error);
 				cb(error);
-				return;	// avoids triggering multiple callbacks
 			}
 			self.isMotionEnabled(function(error, enabled){
-				cb({
-					enabled: enabled, 
-					threshold: parseInt(threshold), 
-					sensitivity: parseInt(sensitivity)
-				});
+				cb({enabled: enabled, threshold: parseInt(threshold), sensitivity: parseInt(sensitivity)})
 			});
 		});
 	});
