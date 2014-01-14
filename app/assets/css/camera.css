@@ -2,6 +2,22 @@ body {
 	margin: 0px 30px;
 }
 
+#header .title{
+    padding:10px 0px;
+}
+#header dl {
+    float: right;
+    margin:0px;
+    width:150px;
+}
+#header dl dd{
+    float: left;
+}
+#storage-info{
+    float:right;
+    margin-left:10px;
+}
+
 .timeline-start-time {
 	position: absolute;
 	top: 28px;
@@ -187,4 +203,11 @@ input.switch:checked ~ label:after
 	width:10%;
 	float:right;
 	margin-top:5px;
+}
+
+.unknown #check-stream-container{
+	margin-top:40px;
+}
+.unknown #check-stream-container .btn.check-stream{
+	margin-left:10px;
 }

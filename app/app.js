@@ -58,7 +58,7 @@ passport.use(new BasicStrategy( function(username,password,done){
 		process.nextTick(function(){
 			var digest = new Buffer(username + ":" + password).toString('base64');
 			
-			var url = "https://" + username + ":" + password + "@192.168.215.129/cp/UserVerify?v=2&login=" + username + "&password=" + password;
+			var url = "https://" + username + ":" + password + "@localhost/cp/UserVerify?v=2&login=" + username + "&password=" + password;
 			request({ 
 				url: url,
 				strictSSL: false,
@@ -244,6 +244,7 @@ app.use('/css', express.static(__dirname + '/assets/css'));
 app.use('/js', express.static(__dirname + '/assets/js'));
 app.use('/img', express.static(__dirname + '/assets/img'));
 app.use('/swf', express.static(__dirname + '/assets/swf'));
+app.use('/fonts', express.static(__dirname + '/assets/fonts'));
 // end of static files
 // - - -
 

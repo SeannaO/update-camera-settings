@@ -46,22 +46,6 @@
 			});
             
         </script>
-        <style>
-        #header .title{
-            padding:10px 0px;
-        }
-        #header dl {
-            float: right;
-            margin:0px;
-        }
-        #header dl dd,#header dl dt{
-            display:inline;
-        }
-        #storage-info{
-            float:right;
-            margin-left:10px;
-        }
-        </style>
     </head>
 
     <body>
@@ -160,7 +144,7 @@
 									<input name="camera[password]" type="password" id="camera-password" class="form-control">
 								</div>
                                 <div id="camera-auth-status" class="col-xs-4">
-                                    
+                                    <span class="glyphicon"></span>
                                 </div>
 								<br>
 							</div>
@@ -379,12 +363,13 @@
             $("#camera-username, #camera-password").blur(function(){
                 var manufacturer = $("#camera-manufacturer").val();
                 if (manufacturer && manufacturer != 'unknown'){
+                    $("#camera-auth-status span").removeClass("glyphicon-remove-circle glyphicon-ok-circle");
                     setConstraintsOnStreamFields(function(error){
                         if (error){
                             // credentials are correct and can connect to camera
-                            $("#camera-auth-status").html("error");
+                            $("#camera-auth-status span").addClass("glyphicon-remove-circle");
                         }else{
-                            $("#camera-auth-status").html("success");
+                            $("#camera-auth-status span").addClass("glyphicon-ok-circle");
                             if ($('#stream-panes').children().length === 0){
                                 addStream(function(){
                                     setConstraintsOnStreamFields(function(error){

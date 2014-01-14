@@ -404,13 +404,18 @@ var editCamera = function(camId) {
                 $("#add-new-camera-dialog #camera-username").val(data.camera.username || '');
                 $("#add-new-camera-dialog #camera-password").val(data.camera.password || '');
                 
+				if ( data.camera.streams ){
 
-				current_number_of_streams = 0;
-				for (var i in data.camera.streams) {
-					var stream = data.camera.streams[i];
-					stream.camId = camId;
-					addStream( stream );
-				}
+					current_number_of_streams = 0;
+                    
+					for (var i in data.camera.streams) {
+						var stream = data.camera.streams[i];
+						stream.camId = camId;
+						addStream( stream );
+					}
+                }else{
+                	$("#camera-streams-tabs").hide();
+                }
                 
                 $("#update-camera").unbind();
                 $("#update-camera").click( function() {
@@ -423,7 +428,12 @@ var editCamera = function(camId) {
                     });
                 });
                 setConstraintsOnStreamFields(function(error){
-
+                	if (error){
+						$("#camera-streams-tabs").hide();
+                	}else{
+                		$("#camera-streams-tabs").show();
+                		// show the add streams button
+                	}
                 });
 
                 $("#add-stream").unbind();
@@ -447,6 +457,8 @@ var editCamera = function(camId) {
 
 
 var setConstraintsOnStreamFields = function(cb){
+	
+	console.log("stream fields: " + camId);
 
 	getCameraOptions(function(data){
 		if (data && data.resolutions && $.isArray(data.resolutions) && data.resolutions.length > 0){
@@ -580,6 +592,10 @@ var addStreamFieldset = function( cb ) {
 	
 	var current_stream_id = current_number_of_streams;
 
+	var fieldset = $('<fieldset>', {
+		class: 'recording-profile-fields'
+	});
+
 	//
 	// hidden id field
 	var camera_stream_id = $('<input>', {
@@ -590,10 +606,6 @@ var addStreamFieldset = function( cb ) {
     // end of hidden id field
 	//
 	var manufacturer = $("#camera-manufacturer").val();
-	var defined_class = manufacturer == 'unknown' ? 'unknown' : 'defined';
-	var fieldset = $('<fieldset>', {
-		class: 'recording-profile-fields ' + defined_class
-	});
 
 	//
 	// name field
@@ -749,11 +761,11 @@ var addStreamFieldset = function( cb ) {
 		class: 'check-stream-status'
 	});	
 
-	var check_stream_container = $('<div>', {id:"check-stream-container"}).append(check_stream_button).append(spinner).append(check_stream_status);
-
 		//check_stream_status.hide();
 
-	fieldset.append(check_stream_container);
+	fieldset.append(check_stream_button);			
+	fieldset.append(spinner);
+	fieldset.append(check_stream_status);
 
 	check_stream_button.click( function( e ) {
 		e.preventDefault();
@@ -789,6 +801,52 @@ var addStream = function( stream, cb) {
 		$('#'+new_stream_tab_id).append(fieldset);
 		$('#stream-tabs a:last').tab('show');
 		
+<<<<<<< HEAD
+=======
+		var check_stream_button = $('<button>', {
+			id: 'check-stream-button-'+new_stream_tab_id,
+			class: 'btn btn-info btn-sm check-stream',
+			html: 'check stream'
+		});
+
+		var remove_stream_button = $('<button>', {
+			id: 'remove-stream-button-'+new_stream_tab_id,
+			class: 'btn btn-danger btn-sm remove-stream',
+			html: 'remove stream'
+		});
+
+		var spinner = $('<div class="spinner" id="check-stream-spinner-'+new_stream_tab_id+'">' +
+						'<div class="bounce1"></div>' +
+						'<div class="bounce2"></div>' +
+						'<div class="bounce3"></div>' +
+						'</div>');
+
+		spinner.hide();
+
+		var check_stream_status = $('<div>',{
+			id: 'check-stream-status-' + new_stream_tab_id,
+			class: 'check-stream-status'
+		});	
+
+		//check_stream_status.hide();
+
+		$('#'+new_stream_tab_id).append(check_stream_button);			
+		$('#'+new_stream_tab_id).append(spinner);
+		$('#'+new_stream_tab_id).append(check_stream_status);	
+		
+		$('#'+new_stream_tab_id).append(remove_stream_button);	
+
+		check_stream_button.click( function( e ) {
+			e.preventDefault();
+			checkH264( stream.url, new_stream_tab_id );
+		});
+
+		remove_stream_button.click( function( e ) {
+			e.preventDefault();
+			removeStream( stream );
+		});
+
+>>>>>>> 3c7a9e58285918e6c9bf098418273b08c166ee33
 		for (var attr in stream) {
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).val( stream[attr] );
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).attr( 'data-'+attr, stream[attr] );
@@ -800,6 +858,9 @@ var addStream = function( stream, cb) {
 };
 
 
+<<<<<<< HEAD
+var checkH264 = function(new_stream_id ) {
+=======
 var removeStream = function( stream ) {
 	
 	console.log( "remove stream: " + stream.id + " from camera: " + stream.camId );
@@ -822,7 +883,8 @@ var removeStream = function( stream ) {
 	}
 };
 
-var checkH264 = function(new_stream_id ) {
+var checkH264 = function( url, new_stream_tab_id ) {
+>>>>>>> 3c7a9e58285918e6c9bf098418273b08c166ee33
 
 	var button = $('#check-stream-button-'+new_stream_id);
 	var spinner = $('#check-stream-spinner-'+new_stream_id);
@@ -837,7 +899,7 @@ var checkH264 = function(new_stream_id ) {
 	var manufacturer = $("#camera-manufacturer").val();
 	
 	var params = {}
-	if (manufacturer == 'unknown'){
+	if (typeof manufacturer == 'unknown'){
 		params['url'] = $('#camera-streams-' + new_stream_id + '-url').val();
 	}else{
 		var camera = {};

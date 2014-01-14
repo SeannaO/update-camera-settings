@@ -48,6 +48,8 @@ module.exports = function( app, passport, prefix ) {
 					res.json({ framerate_range: api.getFrameRateRange(), resolutions: resolutions, quality_range: api.getVideoQualityRange()});
 				}
 			});
+		}else{
+			res.status(422).json( { error: "invalid request" } );
 		}
 
 	});
