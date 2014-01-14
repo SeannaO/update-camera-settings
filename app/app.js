@@ -38,18 +38,12 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 // - - -
 
 
-passport.use(new BasicStrategy( function(username,password,done){
-		
-		console.log('[passport basicStrategy] environment: ' + process.env['NODE_ENV']);
-				
+passport.use(new BasicStrategy({
+	},function(username,password,done){
+
 		// bypasses auth for development mode
 		if (process.env['NODE_ENV'] === 'development') {
 			process.nextTick(function() {
-				
-				// stores lifeline auth in memory for later usage
-				process.env['USER'] = username;
-				process.env['PASSWORD'] = password;
-
 				return done( null, true );
 			});	
 			return;
@@ -57,8 +51,8 @@ passport.use(new BasicStrategy( function(username,password,done){
 
 		process.nextTick(function(){
 			var digest = new Buffer(username + ":" + password).toString('base64');
-			
-			var url = "https://" + username + ":" + password + "@localhost/cp/UserVerify?v=2&login=" + username + "&password=" + password;
+			// 127.0.0.1
+			var url = "https://" + username + ":" + password + "@127.0.0.1/cp/UserVerify?v=2&login=" + username + "&password=" + password;
 			request({ 
 				url: url,
 				strictSSL: false,
@@ -69,18 +63,7 @@ passport.use(new BasicStrategy( function(username,password,done){
 				},
 			}, function( error, response, body) {
 				if (error){ return done(error); }
-				if (body) { 
-
-					if (body === 'true') {
-						// stores lifeline auth in memory for later usage
-						process.env['USER'] = username;
-						process.env['PASSWORD'] = password;
-						
-						return done(null,true);
-					} else {
-						return done(null, false);
-					}
-				}
+				if (body){ return body === "true" ? done(null,true) : done(null,false); }
 			}
 			);
 		});
@@ -117,21 +100,21 @@ io.set('log level', 1);
 // - - -
 
 app.configure(function() {
-	app.use(express.static('public'));
-	app.use(express.cookieParser());				// cookies middleware
-	// - - - -
-	// express config
-	app.use(express.bodyParser());  // middleware for parsing request body contents
+  app.use(express.static('public'));
+  app.use(express.cookieParser());				// cookies middleware
+  // - - - -
+  // express config
+  app.use(express.bodyParser());  // middleware for parsing request body contents
 								// this must come before app.all
-	app.use(express.session({secret: 'solink'}));	// for session storage
-	app.use(passport.initialize());
-	//app.use(passport.session());
-	app.use(express.logger());  
-	app.use(logrequest);
-	app.use(app.router);
-	//app.use(passport.initialize());
-	app.set('view engine', 'ejs');					// rendering engine (like erb)
-	// - - -  
+  app.use(express.session({secret: 'solink'}));	// for session storage
+  app.use(passport.initialize());
+  // app.use(passport.session());
+  app.use(express.logger());  
+  app.use(logrequest);
+  app.use(app.router);
+  app.use(passport.initialize());
+  app.set('view engine', 'ejs');					// rendering engine (like erb)
+  // - - -  
 });
 
 
@@ -155,8 +138,6 @@ if ( process.argv.length > 2 ) {
 	process.exit();
 }
 // - - -
-process.env['BASE_FOLDER'] = baseFolder;
-
 
 // - - - - -
 // sets environment mode 
@@ -271,24 +252,26 @@ app.get('/cameras', passport.authenticate('basic', {session: false}), function(r
 // - - -
 
 // - - -
+
+
+// - - -
 // gets ts segment
-// TODO: get authentication to work with HLS video tag
-app.get('/cameras/:cam_id/ts/:stream_id/:file', function(req, res) {
+app.get('/ts/:id/:file', passport.authenticate('basic', {session: false}), function(req, res) {
     
-    var camId = req.params.cam_id;
-	var streamId = req.params.stream_id;
+    var camId = req.params.id;
     var file = req.params.file;
 
-    tsHandler.deliverTsFile( camId, streamId, file, res );
+    tsHandler.deliverTsFile( camId, file, res );
 });
 // - - -
+
 
 // - - -
 //	gets hls live stream
 //	TODO: not yet implemented
-//app.get('/live', passport.authenticate('basic', {session: false}), function(req, res) {
-//    hlsHandler.generateLivePlaylist( db, req, res );       
-//});
+app.get('/live', passport.authenticate('basic', {session: false}), function(req, res) {
+    hlsHandler.generateLivePlaylist( db, req, res );       
+});
 // - - -
 
 // - - -

@@ -15,42 +15,69 @@
 #include <libsoup/soup-value-utils.h>
 
 
-pid_t getNodePId()
+char* getNodePId()
 {
-	char line[LEN];
-	FILE *cmd = popen("pidof node", "r");
-	fgets(line, LEN, cmd);
-	syslog(LOG_DEBUG, "Node pid: %s", line);
-	pid_t pid = strtoul(line, NULL, 10);
-	syslog(LOG_DEBUG, "Node pid after strtoul: %llu", (long long unsigned int)pid);
-	pclose(cmd);	
-	return pid;
+	char buf[600];
+	char cwd[100];
+	getcwd(cwd, sizeof cwd);
+	snprintf(buf, sizeof buf, "sh cd %s; PATH=$PATH:%s ./node_modules/forever/bin/forever list |grep app.js&", cwd, cwd);
+	FILE *cmd = popen(buf, "r");
+	if (cmd == NULL){
+		return NULL;	
+	}else{
+		char *line = malloc( sizeof(char) * (LEN + 1 ) );
+		fgets(line, LEN, cmd);
+		syslog(LOG_DEBUG, "Forever Node: %s", line);
+		pclose(cmd);
+		return line;
+	}
 }
 
 gboolean isServerRunning()
 {
-	pid_t pid = getNodePId();
-	if (pid > 0){
-		return TRUE;
-	}else{
+	char* pid = getNodePId();
+	syslog(LOG_DEBUG, "Forever Node(%d): %s", (int)strlen(pid), pid);
+	syslog(LOG_DEBUG, "Forever Node: %c %c", pid[0], pid[1]);
+	if (pid == NULL){
 		return FALSE;
+	}else{
+		if ((int)strlen(pid) < 10){
+			free(pid);
+			return FALSE;
+		}else{
+			free(pid);
+			return TRUE;
+		}
 	}
 }
 
-int launchServer(const char* share_path)
+int killServer()
 {
 	char buf[400];
 	char cwd[100];
 	getcwd(cwd, sizeof cwd);
-	snprintf(buf, sizeof buf, "sh cd %s; PATH=$PATH:%s ./node_modules/forever/bin/forever app.js %s -l forever.log -o application.log&", cwd, cwd, share_path);
+	snprintf(buf, sizeof buf, "sh cd %s; PATH=$PATH:%s ./node_modules/forever/bin/forever stopall&", cwd, cwd);
+	syslog(LOG_DEBUG, "system call: %s", buf);
+	system(buf);
+	system(buf);
+	syslog(LOG_DEBUG, "killing node application");
+	return system("sh kill -9 $(pidof node)&");
+}
+
+
+int launchServer(const char* share_path)
+{
+	char buf[600];
+	char cwd[100];
+	getcwd(cwd, sizeof cwd);
+	snprintf(buf, sizeof buf, "sh cd %s; PATH=$PATH:%s ./node_modules/forever/bin/forever -l forever.log -o stdout.log -e stderr.log -a app.js %s&", cwd, cwd, share_path);
 	syslog(LOG_DEBUG, "system call: %s", buf);
 	return system(buf);
 }
 
 void applicationUninstall()
 {
-	pid_t pid = getNodePId();
-	kill(pid, SIGKILL);
+	killServer();
 	return;
 }
 

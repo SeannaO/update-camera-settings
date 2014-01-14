@@ -24,6 +24,7 @@ typedef struct _ErrorInfo {
 
 gboolean isServerRunning();
 int launchServer();
+int killServer();
 
 void applicationUninstall();
 
