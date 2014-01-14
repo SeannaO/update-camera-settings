@@ -404,18 +404,13 @@ var editCamera = function(camId) {
                 $("#add-new-camera-dialog #camera-username").val(data.camera.username || '');
                 $("#add-new-camera-dialog #camera-password").val(data.camera.password || '');
                 
-				if ( data.camera.streams ){
 
-					current_number_of_streams = 0;
-                    
-					for (var i in data.camera.streams) {
-						var stream = data.camera.streams[i];
-						stream.camId = camId;
-						addStream( stream );
-					}
-                }else{
-                	$("#camera-streams-tabs").hide();
-                }
+				current_number_of_streams = 0;
+				for (var i in data.camera.streams) {
+					var stream = data.camera.streams[i];
+					stream.camId = camId;
+					addStream( stream );
+				}
                 
                 $("#update-camera").unbind();
                 $("#update-camera").click( function() {
@@ -428,12 +423,7 @@ var editCamera = function(camId) {
                     });
                 });
                 setConstraintsOnStreamFields(function(error){
-                	if (error){
-						$("#camera-streams-tabs").hide();
-                	}else{
-                		$("#camera-streams-tabs").show();
-                		// show the add streams button
-                	}
+
                 });
 
                 $("#add-stream").unbind();
@@ -457,8 +447,6 @@ var editCamera = function(camId) {
 
 
 var setConstraintsOnStreamFields = function(cb){
-	
-	console.log("stream fields: " + camId);
 
 	getCameraOptions(function(data){
 		if (data && data.resolutions && $.isArray(data.resolutions) && data.resolutions.length > 0){
@@ -834,7 +822,7 @@ var removeStream = function( stream ) {
 	}
 };
 
-var checkH264 = function( url, new_stream_tab_id ) {
+var checkH264 = function(new_stream_id ) {
 
 	var button = $('#check-stream-button-'+new_stream_id);
 	var spinner = $('#check-stream-spinner-'+new_stream_id);
@@ -849,7 +837,7 @@ var checkH264 = function( url, new_stream_tab_id ) {
 	var manufacturer = $("#camera-manufacturer").val();
 	
 	var params = {}
-	if (typeof manufacturer == 'unknown'){
+	if (manufacturer == 'unknown'){
 		params['url'] = $('#camera-streams-' + new_stream_id + '-url').val();
 	}else{
 		var camera = {};

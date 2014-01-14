@@ -49,11 +49,11 @@ Arecont.prototype.cameraUrl = function () {
 
 Arecont.prototype.getResolutionOptions = function (cb) {
 	// Basically just checking to see if the username and password are correct
-	self.isMotionEnabled(function(error, enabled){
+	this.isMotionEnabled(function(error, enabled){
 		if (error){
-			cb(null, [{value:'full',name:'Full'},{value:'half', name:'Half'}]);
-		}else{
 			cb(error, []);
+		}else{
+			cb(null, [{value:'full',name:'Full'},{value:'half', name:'Half'}]);
 		}
 	});
 	

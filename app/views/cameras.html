@@ -167,7 +167,7 @@
 							
 							<hr>
 
-                            <div id="camera-streams-tabs" style = 'width: 100%; display: none;'>
+                            <div id="camera-streams-tabs" style = 'width: 100%;'>
 								
 								<button type="button" class="btn btn-default btn-sm" id="add-stream">add stream</button>
 								<br><br>
@@ -383,10 +383,8 @@
                         if (error){
                             // credentials are correct and can connect to camera
                             $("#camera-auth-status").html("error");
-                            $("#camera-streams-tabs").hide();
                         }else{
                             $("#camera-auth-status").html("success");
-                            $("#camera-streams-tabs").show();
                             if ($('#stream-panes').children().length === 0){
                                 addStream(function(){
                                     setConstraintsOnStreamFields(function(error){
@@ -397,7 +395,6 @@
                         }
                     });
                 }else{
-                    $("#camera-streams-tabs").show();
                 }
             });
 
@@ -411,8 +408,6 @@
                 $dialog.find("#camera-ip").prop('disabled', false);
                 $("#stream-tabs").html("");
                 $("#stream-panes").html("");
-
-
                 $dialog.modal('show');
             }
             // - -

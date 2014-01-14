@@ -17,7 +17,7 @@ module.exports = function( app, passport, prefix ) {
 		if (req.body.url){
 			var url = req.body.url;
 			checkH264(url, function(isH264) { 
-				res.status(422).json({ success:true, h264: isH264 });
+				res.json({ success:true, h264: isH264 });
 			});
 		}else if (req.body.camera && req.body.stream && req.body.camera.manufacturer){
 			var api = require('../helpers/camera_scanner/cam_api/api.js').getApi( req.body.camera.manufacturer );
@@ -45,7 +45,6 @@ module.exports = function( app, passport, prefix ) {
 				if (err) {
 					res.status(422).json( { error: err } );
 				} else {
-					data.success = true;
 					res.json({ framerate_range: api.getFrameRateRange(), resolutions: resolutions, quality_range: api.getVideoQualityRange()});
 				}
 			});
