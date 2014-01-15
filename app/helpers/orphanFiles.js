@@ -130,17 +130,21 @@ OrphanFilesChecker.prototype.periodicallyCheckForOrphanFiles = function( periodi
 
 	var self = this;
 
-	if (!periodicity) periodicity = 60 * 60 * 1000;
+	console.log("*** checking for orphan files...");
+
+	if (!periodicity) periodicity = 15 * 60 * 1000;
 	
 	self.checkForOrphanCameras( function( found ) {
 		if (found) {
-			setTimeout( function() {
+			clearTimeout( self.checkTimeout );
+			self.checkTimeout = setTimeout( function() {
 				self.periodicallyCheckForOrphanFiles( periodicity );
 			}, periodicity);
 		} else {
 			fs.readdir( process.env['BASE_FOLDER'], function(err, files) {
 				self.checkForOrphanStreams( files, function( found ) {
-					setTimeout( function() {
+					clearTimeout( self.checkTimeout );
+					self.checkTimeout = setTimeout( function() {
 						self.periodicallyCheckForOrphanFiles( periodicity );
 					}, periodicity);
 				});
