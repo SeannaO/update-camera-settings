@@ -8,7 +8,6 @@ var EventEmitter = require('events').EventEmitter;				// events
 
 function Camera( cam, videosFolder ) {
 
-	console.log("initializing camera " + cam._id);
 
     var self = this;
 
@@ -33,7 +32,7 @@ function Camera( cam, videosFolder ) {
 
 	this.streams = {};
 	this.streamsToBeDeleted = {};
-
+	this.schedule_enabled = cam.schedule_enabled;
 	this.recording = false;					// is the camera recording?
 
 	this.api = require('../helpers/camera_scanner/cam_api/api.js').getApi( this.manufacturer );
@@ -51,13 +50,9 @@ function Camera( cam, videosFolder ) {
 	//
 	
 	if ( !cam.deleted ) {	// starts camera if it's not being deleted
-		//console.log(cam.schedule);
 		this.schedule = new WeeklySchedule(cam.schedule);
-		//console.log(this.schedule.toJSON());
-		this.schedule_enabled = cam.schedule_enabled;
 		
 		if ( !fs.existsSync( this.videosFolder) ){
-			//console.log(this.videosFolder);
 			fs.mkdirSync( this.videosFolder );
 		}
 
@@ -69,10 +64,10 @@ function Camera( cam, videosFolder ) {
 		this.setupEvents();
 
 		if (!this.recording && this.shouldBeRecording()) {
-			console.log("starting camera " + this.name);
+			console.log("starting camera " + (this.name || this.ip));
 			this.startRecording();
 		} else {
-			console.log("stopping camera " + this.name);
+			console.log("stopping camera " + (this.name || this.ip));
 			this.stopRecording();
 		}
 	} else {	// if camera is being deleted, starts deletion process 
@@ -99,10 +94,6 @@ util.inherits(Camera, EventEmitter);
  *     stream should contain: { resolution, framerate, quality }
  */
 Camera.prototype.addStream = function( stream ) {
-
-	console.log('[Camera.prototype.addStream] ');
-	console.log(stream);
-	console.log('* * *');
 
 	var self = this;
 
@@ -327,10 +318,6 @@ Camera.prototype.restartAllStreams = function() {
  */
 Camera.prototype.restartStream = function( streamId ) {
 
-	console.log("############################");
-	console.log('*** restartStream: restarting stream ' + streamId);
-	console.log("############################");
-
 	var self = this;
 
 	// for safety reasons; avoids dealing with wrong stream ids
@@ -366,8 +353,7 @@ Camera.prototype.restartStream = function( streamId ) {
  * @return {boolean} 'true' iff camera should be recording
  */
 Camera.prototype.shouldBeRecording = function() {
-
-    return ( ( this.schedule_enabled && this.schedule.isOpen() ) || ( !this.schedule_enabled && this.enabled ) );
+    return ( this.schedule_enabled && this.schedule.isOpen() );
 };
 // end of shouldBeRecording
 //
@@ -682,9 +668,9 @@ Camera.prototype.startRecording = function() {
     var self = this;
 
     if (this.recording) {	// avoids calling startRecording twice
-        console.log(this.name + " is already recording.");
+        console.log( (this.name || this.ip) + " is already recording.");
     } else {
-        console.log("* * * " + this.name + " will start recording...");
+        console.log("* * * " + (this.name || this.ip) + " will start recording...");
 		for (var i in self.streams) {
 			this.streams[i].recordModel.startRecording();
 		}
@@ -704,13 +690,13 @@ Camera.prototype.stopRecording = function() {
 	var self = this;
 
     if (this.recording) { // avoids calling stopRecording twice
-        console.log(this.name + " will stop recording...");
+        console.log((this.name || this.ip) + " will stop recording...");
         this.recording = false;
 		for (var i in self.streams) {
 			this.streams[i].recordModel.stopRecording();
 		}
     } else { 
-        console.log( this.name + " is already stopped.");
+        console.log( (this.name || this.ip) + " is already stopped.");
     }
 };
 // stopRecording

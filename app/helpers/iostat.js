@@ -4,8 +4,6 @@ var util = require('util');
 
 
 function Iostat() {
-
-	console.log("- - - cpu usage module - - -");
 	this.iostatProcess = -1;
 }
 

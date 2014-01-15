@@ -22,8 +22,6 @@ var list = function() {
             $("#camera-list").html("no cameras have been added<br>");
         }
 
-        console.log(data);
-
         for (var i = 0; i < data.length; i++) {
             cameras.push( data[i] );
             addCameraItem(data[i]);
@@ -35,8 +33,6 @@ var list = function() {
 
 
 var addCameraItem = function( camera ) {
-    console.log(camera);
-    console.log(camera.name);
 
     var row = "<tr id = '" + camera.id + "'>";
         row += "<td>";
@@ -167,7 +163,6 @@ var editCamera = function(camId) {
         url: "lifeline/cameras/" + camId,
         contentType: 'application/json',
         success: function(data) {
-            console.log(data);
             if (data.success) {
                 $("#add-new-camera-dialog #camera-name").val(data.camera.name);
                 $("#add-new-camera-dialog #camera-ip").val(data.camera.ip);
@@ -177,7 +172,6 @@ var editCamera = function(camId) {
                 $("#update-camera").unbind();
                 $("#update-camera").click( function() {
                     updateCamera( camId, function(data) {
-                        //console.log(data);
                         if (data.success) {
                             location.reload();
                         } else {

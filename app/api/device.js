@@ -21,7 +21,6 @@ module.exports = function( app, passport) {
 	// - - -
 	// gets json device info
 	app.get('/device.json', passport.authenticate('basic', {session: false}), function(req, res) {
-		console.log("/device.json :" + device_url);
 		request({ 
 			method: 'GET',
 			strictSSL: false,
@@ -29,6 +28,9 @@ module.exports = function( app, passport) {
 			timeout: 5000
 			}, function (error, response, body) {
 				if (error){
+					console.error("*** getCamera within device.json: ");
+					console.error( err ) ;
+					console.error("* * *");
 					res.status(422).json({ success: false, error: error });
 				}else{
 					res.writeHead(200, {'Content-Type': 'application/json'});
@@ -41,7 +43,6 @@ module.exports = function( app, passport) {
 	// - - -
 	// gets json device info
 	app.get('/device/storage.json', passport.authenticate('basic', {session: false}), function(req, res) {
-		console.log('/device/storage.json' + storage_url);
 		request({ 
 			method: 'GET',
 			strictSSL: false,
@@ -49,6 +50,9 @@ module.exports = function( app, passport) {
 			timeout: 5000
 			}, function (error, response, body) {
 				if (error){
+					console.error("*** getCamera within /device/storage.json: ");
+					console.error( err ) ;
+					console.error("* * *");
 					res.status(422).json({ success: false, error: error });
 				}else{
 					res.writeHead(200, {'Content-Type': 'application/json'});

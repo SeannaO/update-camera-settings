@@ -15,8 +15,6 @@ var listAllParamsUrl = baseUrl + 'list';
 var listResolutionsUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&group=ImageSource.I0.Sensor.CaptureMode"
 
 var Axis = function() {
-	console.log("[Axis] initializing API...");	
-	
 	this.cam = {};
 };
 
@@ -35,8 +33,6 @@ Axis.prototype.checkForExistingProfile = function( profileName, cb ) {
 		.replace('{pass}', self.cam.password)
 		.replace('{ip}', self.cam.ip) + 
 		'list';
-
-	console.log(listUrl);
 
 	request({ 
 		url: listUrl,
@@ -79,8 +75,6 @@ Axis.prototype.isProfileH264 = function( profileId, cb ){
 		.replace('{pass}', self.cam.password)
 		.replace('{ip}', self.cam.ip)
 		.replace('{group_name}', 'StreamProfile.' + profileId);
-
-	console.log( url );
 
 	request({ 
 		url: url,
@@ -181,7 +175,6 @@ Axis.prototype.updateProfile = function(profileId, profile, cb) {
 			'User-Agent': 'nodejs'
 		}
 	}, function( error, response, body) {
-		console.log( body );
 		if (!error) {
 			cb( profileId );
 		} else {
@@ -199,29 +192,29 @@ Axis.prototype.getRtspUrl = function ( profile ) {
 	var self = this;
 
 	if ( !profile ) {
-		console.log('[Axis.getRtspUrl] ERROR - empty profile');
+		console.error('[Axis.getRtspUrl] ERROR - empty profile');
 		return;
 	}
 
 	profile.name = 'solink';
 
-	console.log('[Axis.getRtspUrl] checking for existing profiles');
+	// console.log('[Axis.getRtspUrl] checking for existing profiles');
 
 	self.checkForExistingProfile( profile.name, function( profileId ) {
-		console.log('[Axis.getRtspUrl] profile id: ' + profileId);
+		// console.log('[Axis.getRtspUrl] profile id: ' + profileId);
 		if (profileId > -1) {
 			self.isProfileH264(profileId, function(isH264) {
 				if (!isH264) {
-					console.log('[Axis.getRtspUrl] profile is not h264; I will change that');
+					// console.log('[Axis.getRtspUrl] profile is not h264; I will change that');
 					self.updateProfile( profileId, profile, function(id) {
-						console.log('[Axis.getRtspUrl] now this profile is h264');
+						// console.log('[Axis.getRtspUrl] now this profile is h264');
 					});
 				} 
 			});
 		} else {
-			console.log('[Axis.getRtspUrl] the camera does not have our profile yet. I will create a new one');
+			// console.log('[Axis.getRtspUrl] the camera does not have our profile yet. I will create a new one');
 			self.createNewProfile( profile, function(id) {
-				console.log('[Axis.getRtspUrl] new profile created');
+				// console.log('[Axis.getRtspUrl] new profile created');
 			});
 		}
 	});
@@ -238,8 +231,7 @@ Axis.prototype.getRtspUrl = function ( profile ) {
 
 Axis.prototype.setCameraParams = function(params) {
 	
-	console.log("[Axis] Updating camera params");
-	console.log( params );
+	// console.log("[Axis] Updating camera params");
 	this.cam.ip = params.ip || this.cam.ip;
 	this.cam.user = params.user || params.username || this.cam.user;
 	this.cam.password = params.password || this.cam.password;
@@ -303,7 +295,6 @@ Axis.prototype.getResolutionOptions = function (cb) {
 		.replace('{user}', self.cam.user || '')
 		.replace('{pass}', self.cam.password || '')
 		.replace('{ip}', self.cam.ip);
-	console.log(url);
 	var digest = new Buffer(self.cam.user + ":" + self.cam.password).toString('base64');
 	request({ 
 		url: url,
@@ -313,16 +304,15 @@ Axis.prototype.getResolutionOptions = function (cb) {
 			'Authorization': 'Basic ' + digest			
 		},
 	}, function( error, response, body) {
-		console.log(body);
 		if (!error && body){
 			var re = /(\d+)x(\d+)/
 			xml2js(body, function(err,result){
 				if (!err){
 					
 					try {
-						console.log(result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry);
+						// console.log(result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry);
 						var output = result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry.map(function(element){
-							console.log({value:element['$'].value, name:element['$'].niceValue});
+							// console.log({value:element['$'].value, name:element['$'].niceValue});
 							element['$'].niceValue
 							return {value: re.exec(element['$'].niceValue)[0]  , name:element['$'].niceValue}
 						});

@@ -65,7 +65,6 @@ function setup( app, camerasController, mp4Handler, hlsHandler ) {
     app.get('/lifeline/cameras.json', function(req, res) {
 
         camerasController.listCameras( function(err, list) {
-            console.log(list);
             if (err) {
                 res.end("{ 'error': '" + JSON.stringify(err) + "'}");
             } else {
@@ -114,9 +113,6 @@ function setup( app, camerasController, mp4Handler, hlsHandler ) {
     // - -
     //
     app.post('/lifeline/cameras', function(req, res) {
-
-        console.log("app: insert camera: ");
-        console.log(req.body);
 
         camerasController.insertNewCamera( req.body, function( err, newDoc ) {
             if (err) {

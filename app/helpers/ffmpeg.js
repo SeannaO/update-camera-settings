@@ -15,10 +15,6 @@ var spawn = require('child_process').spawn;
  *
  */
 var convertFromTsToMp4 = function( tsFile, cb ) {
-    
-    console.log("- - - convertFromTsToMp4 - - -");
-    console.log("file: " + tsFile);
-    console.log("- - -");
 
     var exec = require('child_process').exec;
 
@@ -53,7 +49,7 @@ var makeThumb = function ( file, folder, resolution, cb ) {
                  if (error !== null) {
                      error = true;
                      console.error('FFmpeg\'s  exec error: ' + error);
-                     console.log(stderr);
+                     console.error(stderr);
                  }
                  cb( out, error );
             });
@@ -73,7 +69,7 @@ var snapshot = function ( file, outFolder, offset, cb ) {
     if (ext == ".ts") {
         convertFromTsToMp4( file, function( mp4file, error ) {
             if (error) {
-                console.log("error while trying to take snapshot: " + snapshot);
+                console.error("error while trying to take snapshot: " + snapshot);
             } else {
                 snapshot(mp4file, offset, cb);
             }
@@ -94,11 +90,10 @@ var snapshot = function ( file, outFolder, offset, cb ) {
               }, outFolder, function(err, filenames) {
                 if(err){
                     cb("");
-                    console.log(err.message);
+                    console.error(err.message);
                 }
                 else {
                     cb( filenames[0] );
-                     console.log('snapshots were saved');
                 }
             });    
             
@@ -120,8 +115,6 @@ var smartSnapshot = function( file, outFolder, offset, options, cb ) {
 
 	if (options.size) {
 		size = ' -s ' + options.size.width + 'x' + options.size.height;
-		console.log(size);
-
 	}
 
     var exec = require('child_process').exec;
@@ -135,7 +128,7 @@ var smartSnapshot = function( file, outFolder, offset, options, cb ) {
 			if (error !== null) {
 				error = true;
 				console.error('FFmpeg\'s  exec error: ' + error);
-				console.log(stderr);
+				console.error(stderr);
 			}
 			cb( out, error );
 		}
@@ -148,10 +141,6 @@ var smartSnapshot = function( file, outFolder, offset, options, cb ) {
  *
  */
 var inMemoryStitch = function( files, offset, req, res ) {
-    
-    console.log("- - - in mem stitch - - -");
-    console.log("offset: " + offset);
-    console.log("- - -");
 
     var spawn = require('child_process').spawn;
 
@@ -183,43 +172,11 @@ var inMemoryStitch = function( files, offset, req, res ) {
 
 	child.stderr.on('data', function(data) {
 		
-		//console.log(data.toString());
 	});
 
 	
 	child.stdout.on('data', function(data) {
 	});
-/*
-	child.stdout.on('end', function(data) {
-//			vData = Buffer.concat( [vData, data] );
-		//res.end("ok");
-	});
-
-	
-	child.on('close', function(code) {
-		console.log( 'ffmpeg stitch process closed with code: ' + code );
-//		res.end( vData );
-		res.end();
-	});
-
-		
-	child.on('exit', function(code) {
-		console.log( 'ffmpeg stitch process exited with code: ' + code );
-//		console.log( l );
-		res.end(vData);
-		res.end();
-
-//		res.end( vData );
-	});
-
-	req.on('close', function() {
-		console.log('connection closed');
-		if( child ) {
-			console.log('killing ffmpeg stitch process');
-			child.kill();
-		}
-	});
-	*/
 };
 // - - end of inMemStitch
 // - - - - - - - - - - - - - - - - - - - -
@@ -231,26 +188,17 @@ var inMemoryStitch = function( files, offset, req, res ) {
  *
  */
 var stitch = function( files, out, offset, cb ) {
-    
-    console.log("- - - stitch - - -");
-    console.log("offset: " + offset);
-    console.log("out: " + out);
-    console.log("- - -");
 
     var exec = require('child_process').exec;
 
     var fileList = files.join('|');
     fileList = "concat:" + fileList;
-    
-    console.log(fileList);
-    console.log(offset);
 
     var child = exec('ffmpeg -y -i "' + fileList + '" -ss ' + offset.begin/1000 + ' -t ' + offset.duration/1000 + ' -c copy ' + out,
             function (error, stdout, stderr) {
                 if (error !== null) {
                     error = true;
                     console.error('FFmpeg\'s  exec error: ' + error);
-                    console.log(stderr);
                 }
                 cb( out, error );
             });
@@ -333,7 +281,7 @@ var sendWebMStream = function(req, res) {
             if (!error){
                 console.log('file has been converted succesfully',retcode);
             }else{
-                console.log('file conversion error',error);
+                console.error('file conversion error',error);
             }
         });
 };
@@ -347,11 +295,6 @@ var sendWebMStream = function(req, res) {
  */
 var sendMp4File = function(file, offset, req, res) {
     
-    console.log("- - - sendMp4VFile - - -");
-    console.log("offset: " + offset);
-    console.log("file: " + file);
-    console.log("- - -");
-    
     fs.exists(file, function(exists) {
         if (!exists) {
             console.log("sendStream: couldn't find video " + file + "." );
@@ -360,9 +303,6 @@ var sendMp4File = function(file, offset, req, res) {
         else {
 
             var stat = fs.stat(file+"", function(err, stat) { 
-				var total = parseInt( stat.size, 10 );
-
-				console.log('ALL: ' + total);
 				//res.writeHead(200, { 'Content-Length': total, 'Content-Type': 'video/mp4' });
 				//fs.createReadStream(file).pipe(res);
 				res.sendfile(file);
@@ -380,11 +320,6 @@ var sendMp4File = function(file, offset, req, res) {
  *
  */
 var sendMp4Stream = function(file, offset, req, res) {
-    
-    console.log("- - - sendMp4Stream - - -");
-    console.log("offset: " + offset);
-    console.log("file: " + file);
-    console.log("- - -");
     
     fs.exists(file, function(exists) {
         if (!exists) {
@@ -408,8 +343,6 @@ var sendMp4Stream = function(file, offset, req, res) {
 
                 var chunksize = (end-start)+1;
 
-                console.log('RANGE: ' + start + ' - ' + end + ' = ' + chunksize);
-
                 var fileStream = fs.createReadStream(file, {start: start, end: end});
 
                 res.writeHead(206, { 
@@ -420,13 +353,13 @@ var sendMp4Stream = function(file, offset, req, res) {
                 });
 
                 fileStream.pipe(res, function() {
-                    console.log("pipe finished");
+                    // console.log("pipe finished");
                 });
 
 
 
             } else {
-                console.log('ALL: ' + total);
+                // console.log('ALL: ' + total);
                 res.writeHead(200, { 'Content-Length': total, 'Content-Type': 'video/mp4' });
                 fs.createReadStream(file).pipe(res);
             }
@@ -444,15 +377,13 @@ var sendMp4Stream = function(file, offset, req, res) {
 var checkH264 = function( url, cb ) {
 	var self = this;
 	var timeout = 10000;
-	
-	console.log( '[ffmpeg.js:checkH264] checking stream ' + url );
 
 	var ffmpegProcess = spawn('ffmpeg', [
 			'-i', url
 	]);
 
 	var ffmpegTimeout = setTimeout( function() {
-		console.log('[ffmpeg.js:checkH264] H264 detection timed out');
+		console.error('[ffmpeg.js:checkH264] H264 detection timed out');
 		ffmpegProcess.kill();
 		cb( false );
 	}, timeout);
@@ -460,7 +391,6 @@ var checkH264 = function( url, cb ) {
 	ffmpegProcess.stderr.on('data', function(data) {
 		var msg = data.toString();
 		if ( msg.indexOf('h264') > -1 ) {
-			console.log('[ffmpeg.js:checkH264] detected h264 stream');
 			clearTimeout( ffmpegTimeout );
 			cb( true );
 			ffmpegProcess.kill();

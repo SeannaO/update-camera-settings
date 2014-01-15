@@ -69,11 +69,8 @@ var sortVideosByIndex = function( a, b ) {
 
 var sortVideosByName = function( a, b ) {
     
-    //console.log("sorting by name");
     var aName = path.basename(a.url);
     var bName = path.basename(b.url);
-    //console.log(aName + " < " + bName + " : " + (aName < bName));
-
     if (aName < bName) {
         return -1;
     } else if (aName > bName) {

@@ -181,8 +181,6 @@ var addCameraItem = function( camera ) {
 		id: "thumb-" + camera._id,
 		class: "thumb-container"
 	}).appendTo("#camera-item-"+camera._id);
-           
-	console.log( camera );
 
 	// if (camera.enabled == "1") {
 	// 	$("#switch-"+camera._id).attr('checked', true);
@@ -321,8 +319,6 @@ var updateCamera = function(id, cb) {
     
     var params = $('#camera-form').serializeObject();
 
-	console.log(params);
-
     $.ajax({
         type: "PUT",
         url: "/cameras/" + id,
@@ -354,7 +350,6 @@ var updateSchedule = function(id, cb) {
     		params.schedule[i].close = timeStringToHourAndMinutes(params.schedule[i].close);    		
     	}
     }
-	console.log( params );
     $.ajax({
         type: "PUT",
         url: "/cameras/" + id + "/schedule",
@@ -369,7 +364,6 @@ var updateSchedule = function(id, cb) {
 var updateMotion = function(id, cb) {
 
     var params = $('#camera-motion').serializeObject();
-	console.log( params );
     $.ajax({
         type: "PUT",
         url: "/cameras/" + id + "/motion",
@@ -393,7 +387,6 @@ var editCamera = function(camId) {
         url: "/cameras/" + camId + "/json",
         contentType: 'application/json',
         success: function(data) {
-            console.log(data.camera);
             if (data.success) {
 
 				current_camera = data.camera;
@@ -510,7 +503,6 @@ scanForCameras = function() {
                     addCamera( data[idx], function(result) {
                         if (result && result._id){
                             addCameraItem( result );
-                            console.log(result);
                             for (var j in result.streams) {
                                 timelineSetup(result._id, result.streams[j].id, result.streams[j].name);
                             }
@@ -801,8 +793,6 @@ var addStream = function( stream, cb) {
 
 
 var removeStream = function( stream ) {
-	
-	console.log( "remove stream: " + stream.id + " from camera: " + stream.camId );
 
 	if ( confirm("are you sure you want to remove this stream?") ) {
 		// console.log("remove!"); 
@@ -890,7 +880,6 @@ var cameraSchedule = function(camId) {
         url: "/cameras/" + camId + "/schedule.json",
         contentType: 'application/json',
         success: function(data) {
-            console.log(data);
             if (data.success) {
                 $('#camera-schedule-enable').prop('checked', data.schedule_enabled == "1").change( function() {
 
@@ -953,7 +942,6 @@ var cameraMotion = function(camId) {
         url: "/cameras/" + camId + "/motion.json",
         contentType: 'application/json',
         success: function(data) {
-            console.log(data);
             if (data.success && data.camera.motion) {
                 $('#camera-motion-enable').prop('checked', data.camera.motion.enabled == "1").change( function() {
 

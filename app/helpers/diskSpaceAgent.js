@@ -17,8 +17,6 @@ DiskSpaceAgent.prototype.launch = function() {
 	var self = this;
 
 	self.process = setInterval( function() {
-
-			console.log('checking disk space...');
 			self.check();
 		}, 1*5*1000
 	);
@@ -55,7 +53,7 @@ DiskSpaceAgent.prototype.check = function() {
 			}
 		} else {
 
-			console.log( error );
+			console.error( error );
 		}
 	});
 };

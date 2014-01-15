@@ -38,11 +38,6 @@ function RecordModel( camera, stream ) {
 
 	// watcher will watch for new chunks on tmp folder
     this.watcher = new Watcher( self.folder + '/videos/tmp', 'ts');
-
-    console.log("record constructor");    
-    console.log("camera: " + camera.name);
-    console.log("folder: " + this.folder);
-    console.log("rtsp: " + this.rtsp);  
 }
 // end of constructor
 //
@@ -205,11 +200,10 @@ RecordModel.prototype.indexPendingFiles = function( cb ) {
  */
 RecordModel.prototype.startRecording = function() {    
 
-	console.log(" - - - record model start recording - - - ");
 	
     var self = this;
 	if (this.status === RECORDING) {
-		console.log('-- already recording! --');	// avoids start recording twice,
+													// avoids start recording twice,
 													// which would launch multiple watchers,
 													// which in turn would cause multiple events 
 													// being triggered when a new chunk arrives
@@ -349,7 +343,7 @@ RecordModel.prototype.calcDuration = function( file, cb ) {
     fs.stat( file, function( err, fileInfo ) {
 		
 		if ( err ) { 
-			console.log( err );
+			console.error( err );
 			cb();
 			return;
 		}
@@ -429,7 +423,7 @@ RecordModel.prototype.moveFile = function( video, cb ) {
 			fs.mkdir(toFolder, function(e) {
 				fs.rename( from, to, function(err) { 
 					if (err) {
-						console.log("[RecordModel.moveFile]: error when moving file: " + err);
+						console.error("[RecordModel.moveFile]: error when moving file: " + err);
 						if (cb) cb(err);
 					}
 					else {
@@ -483,7 +477,7 @@ RecordModel.prototype.recordContinuously = function() {
     var self = this;
 
 	if (!self.rtsp) {
-		console.log('[RecordModel.recordContinuously] : error : empty rtsp string');
+		console.error('[RecordModel.recordContinuously] : error : empty rtsp string');
 		return;
 	}
 	// the recording processess 

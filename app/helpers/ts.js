@@ -13,7 +13,6 @@ function deliverTsFile( camId, streamId, file, res ) {
     fs.exists(fileUriWithDate, function( exists ) {
 
         if (exists) {
-			console.log("...delivering file...");
 			//res.sendfile(fileUriWithDate);
 
 			fs.stat(fileUriWithDate, function(err, stat) {
@@ -30,14 +29,13 @@ function deliverTsFile( camId, streamId, file, res ) {
         else {
 			fs.exists(fileUri, function( exists ) {
 				if (exists) {
-					console.log("...delivering file...");
 					res.sendfile(fileUri);
 					//res.writeHead(200, { "Content-Type": "video/MP2T" });
 					//var fileStream = fs.createReadStream( fileUri );
 					//fileStream.pipe(res);
 				}
 				else {
-					console.log("!!!!!!can't find file!!!!!!");
+					console.error("!!!!!!can't find file!!!!!!");
 					res.writeHead(200, { "Content-Type": "text" });
 					res.end("file not found: " + fileUriWithDate);
 				}

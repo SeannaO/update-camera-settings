@@ -11,7 +11,6 @@ function Scheduler( interval ) {
 
 
 Scheduler.prototype.launchForAllCameras = function( cameras ) {
-    console.log("--------------launchForAllCameras-------------");
     for (var i = 0; i < cameras.length; i++) {
         this.launchForCamera(cameras[i]);
     }   
@@ -19,12 +18,12 @@ Scheduler.prototype.launchForAllCameras = function( cameras ) {
 
 Scheduler.prototype.launchForCamera = function( camera ) {
 
-    if ( !(camera._id in this.processes) && camera.schedule_enabled ){
+    if ( !(camera._id in this.processes)){
 
-        console.log("Launching Scheduler for camera:" + camera.name);
+        // console.log("Launching Scheduler for camera:" + camera.name);
         this.processes[camera._id] = setInterval( function(){
 
-            console.log("Checking Schedule for camera:" + camera.name);
+            // console.log("Checking Schedule for camera:" + camera.name);
             // self.emit("recording", { cameraId: camera._id, scheduled: schedule.isOpen() }))
             if (!camera.isRecording() && camera.shouldBeRecording()){
 				console.log("Starting camera:" + camera.name);
@@ -52,7 +51,7 @@ Scheduler.prototype.clearAll = function( ) {
 };
 
 Scheduler.prototype.clearForCamera = function( camera ) {
-    console.log("Clearing Scheduler for camera:" + camera.name);
+    // console.log("Clearing Scheduler for camera:" + camera.name);
     clearInterval(this.processes[camera._id]);
     delete this.processes[camera._id];
 };
@@ -60,12 +59,12 @@ Scheduler.prototype.clearForCamera = function( camera ) {
 Scheduler.prototype.setupListeners = function( emitter ) {
     var scheduler = this
 	emitter.on('create', function(camera) {
-		console.log("camera created calling launchForCamera on scheduler");
+		// console.log("camera created calling launchForCamera on scheduler");
 		scheduler.launchForCamera(camera);
 	});
 
 	emitter.on('delete', function(camera) {
-		console.log("camera deleted, removing scheduler");
+		// console.log("camera deleted, removing scheduler");
 		scheduler.clearForCamera(camera);
 	});
 
