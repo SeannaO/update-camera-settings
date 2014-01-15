@@ -5,10 +5,14 @@ body {
 #header .title{
     padding:10px 0px;
 }
+
+#header dl .info-item{
+	text-align:right;
+}
 #header dl {
     float: right;
     margin:0px;
-    width:150px;
+    width:200px;
 }
 #header dl dt{
     float: left;

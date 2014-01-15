@@ -366,8 +366,7 @@ Camera.prototype.restartStream = function( streamId ) {
  * @return {boolean} 'true' iff camera should be recording
  */
 Camera.prototype.shouldBeRecording = function() {
-
-    return ( ( this.schedule_enabled && this.schedule.isOpen() ) || ( !this.schedule_enabled && this.enabled ) );
+    return ( this.schedule_enabled && this.schedule.isOpen() );
 };
 // end of shouldBeRecording
 //
