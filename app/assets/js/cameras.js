@@ -723,36 +723,6 @@ var addStreamFieldset = function( cb ) {
 		fieldset.append( camera_stream_retention_group );
 	}
 
-	var check_stream_button = $('<button>', {
-		id: 'check-stream-button-'+current_stream_id,
-		class: 'btn btn-info btn-sm check-stream',
-		html: 'check stream'
-	});
-
-	var spinner = $('<div class="spinner" id="check-stream-spinner-'+current_stream_id+'">' +
-					'<div class="bounce1"></div>' +
-					'<div class="bounce2"></div>' +
-					'<div class="bounce3"></div>' +
-					'</div>');
-	spinner.hide();
-
-	var check_stream_status = $('<div>',{
-		id: 'check-stream-status-'+current_stream_id,
-		class: 'check-stream-status'
-	});	
-
-	var check_stream_container = $('<div>', {id:"check-stream-container"}).append(check_stream_button).append(spinner).append(check_stream_status);
-
-		//check_stream_status.hide();
-
-	fieldset.append(check_stream_container);
-
-	check_stream_button.click( function( e ) {
-		e.preventDefault();
-		checkH264(current_stream_id );
-	});
-
-
     fieldset.find("#remove-stream-" + current_stream_id).click(function(){
         $(this).parent().remove();
     });
@@ -771,16 +741,58 @@ var addStream = function( stream, cb) {
         $('div.active').removeClass('active').removeClass('in');
         $('li.active').removeClass('active');
 		var stream_name = 'new stream';
-        if (stream && stream.name){
-        	stream_name = stream.name;
+        
+		if (stream && stream.name){
+			stream_name = stream.name;
         }
-
+	
 		var new_stream_tab_id = 'new-stream-' + current_stream_id;
 		$('#stream-tabs').append('<li><a href="#' + new_stream_tab_id + '" data-toggle="tab">' + stream_name + '</a></li>');
 		$('#stream-panes').append('<div class="tab-pane" id="' + new_stream_tab_id + '"></div>');
 		$('#'+new_stream_tab_id).append(fieldset);
 		$('#stream-tabs a:last').tab('show');
-		
+
+		var check_stream_button = $('<button>', {
+			id: 'check-stream-button-'+current_stream_id,
+			class: 'btn btn-info btn-sm check-stream',
+			html: 'check stream'
+		});                
+
+		var remove_stream_button = $('<button>', {
+			id: 'remove-stream-button-'+new_stream_tab_id,
+			class: 'btn btn-danger btn-sm remove-stream',
+			html: 'remove stream'
+		});
+
+		var spinner = $('<div class="spinner" id="check-stream-spinner-'+current_stream_id+'">' +
+				'<div class="bounce1"></div>' +
+				'<div class="bounce2"></div>' +
+				'<div class="bounce3"></div>' +
+				'</div>');
+
+		spinner.hide();
+
+		var check_stream_status = $('<div>',{
+			id: 'check-stream-status-' + current_stream_id,
+			class: 'check-stream-status'
+		});        
+
+		$('#'+new_stream_tab_id).append(check_stream_button);                  
+		$('#'+new_stream_tab_id).append(remove_stream_button); 
+		$('#'+new_stream_tab_id).append(spinner);
+		$('#'+new_stream_tab_id).append(check_stream_status);  
+
+		check_stream_button.click( function( e ) {
+			e.preventDefault();
+			checkH264( current_stream_id );
+		});
+
+		remove_stream_button.click( function( e ) {
+			e.preventDefault();
+			removeStream( stream );
+		});	
+
+
 		for (var attr in stream) {
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).val( stream[attr] );
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).attr( 'data-'+attr, stream[attr] );
@@ -795,13 +807,14 @@ var addStream = function( stream, cb) {
 var removeStream = function( stream ) {
 
 	if ( confirm("are you sure you want to remove this stream?") ) {
-		// console.log("remove!"); 
+		
 		$.ajax({
 			type: 'DELETE',
 			url: '/cameras/' + stream.camId + '/streams/' + stream.id,
 			success: function(data) {
 				if (data.error) {
 					alert(error);
+					location.reload();		
 				} else {
 					location.reload();
 				}

@@ -192,11 +192,12 @@ input.switch:checked ~ label:after
 
 .check-stream {
 	float: left;
+	margin: 5px;
 }
 
 .check-stream-status {
 	float: left;
-	margin: 5px;
+	margin: 8px;
 	color: #555;
 }
 
@@ -206,6 +207,11 @@ input.switch:checked ~ label:after
 
 .stream-ok {
 	color: #0a0;
+}
+
+.remove-stream {
+	float: left;
+	margin: 5px;
 }
 
 .camera-streams-retention{
