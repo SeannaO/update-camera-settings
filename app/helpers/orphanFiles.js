@@ -25,7 +25,7 @@ OrphanFilesChecker.prototype.recursiveDeleteFiles = function(folder, cb) {
 			fs.rmdir(dir, function(err) {
 				if (err) {
 				} else {
-					console.log( 'orphan folder deleted: ' + dir );
+					console.log( '*** orphan folder deleted: ' + dir );
 					counter++;
 				}
 			});
@@ -34,7 +34,7 @@ OrphanFilesChecker.prototype.recursiveDeleteFiles = function(folder, cb) {
 			fs.unlink(dir, function(err) {
 				if (err) {
 				} else {
-					console.log( 'orphan file deleted: ' + dir );
+					console.log( '*** orphan file deleted: ' + dir );
 					counter++;
 				}
 			});
@@ -108,7 +108,7 @@ OrphanFilesChecker.prototype.checkForOrphanStreams = function( folders, cb ) {
 		for (var f in files) {
 			var streamId = files[f];
 			var sql_file_match = sqliteRegex.exec( streamId );
-			
+
 			var should_be_deleted = !cam.streams || ( cam.streams.length === 0 ) || ( !sql_file_match && cam.streams && !cam.streams[streamId] );
 
 			if ( should_be_deleted ) {			
@@ -121,42 +121,10 @@ OrphanFilesChecker.prototype.checkForOrphanStreams = function( folders, cb ) {
 				return;
 			}
 		}
-		if (cb) cb( false );
-	});
-};
-
-
-OrphanFilesChecker.prototype.checkForOrphanCameras = function( cb ) {
-	
-	var self = this;
-
-	fs.readdir( process.env['BASE_FOLDER'], function(err, files) {
 		
-		var found = false;
-
-		if (err) {
-			console.error( err );
-			return;
-		} else {
-			for (var f in files) {
-
-				if ( !self.camerasController.findCameraById( files[f] ) ) {
-					self.recursiveDeleteFiles( process.env['BASE_FOLDER'] + '/' + files[f], function() {
-						if (cb) {
-							cb(true);
-						}
-					});
-					return;
-				}
-			}
-		}
-	
-		if (cb) {
-			cb( false );
-		}
+		self.checkForOrphanStreams( folders, cb );
 	});
 };
-
 
 OrphanFilesChecker.prototype.periodicallyCheckForOrphanFiles = function( periodicity ) {
 
