@@ -4,6 +4,8 @@ var EventEmitter = require('events').EventEmitter;	//
 var util = require('util');							// for inheritance
 var checkH264 = require('../helpers/ffmpeg.js').checkH264;
 var find = require('findit');
+var fs = require('fs');
+var OrphanFilesChecker = require('../helpers/orphanFiles.js');
 
 function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 
@@ -15,7 +17,11 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
     this.db = new Datastore({ filename: filename });
 
     this.db.loadDatabase( function(err) {
-		self.setup( function(err) {} );
+		self.setup( function(err) {
+			this.orphanFilesChecker = new OrphanFilesChecker( self );
+			this.orphanFilesChecker.periodicallyCheckForOrphanFiles( 5000 ); 
+		});
+
 		if (cb) {
 			cb();
 		}
@@ -31,7 +37,7 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 	self.checkSnapshotQ();	
 	self.periodicallyDeleteChunksOnQueue();
 	self.periodicallyCheckForExpiredChunks();
-	// self.periodicallyCheckForOrphanFiles(); 
+	
 }
 
 util.inherits(CamerasController, EventEmitter);
@@ -204,6 +210,7 @@ CamerasController.prototype.getCamera = function(camId, cb) {
     });
 };
 
+
 CamerasController.prototype.getMotion = function(camId, cb) {
 
     var self = this;
@@ -218,49 +225,6 @@ CamerasController.prototype.getMotion = function(camId, cb) {
 				console.log(motion_params);
 				cb( err, motion_params );
 			});
-		}
-	});
-};
-
-
-CamerasController.prototype.periodicallyCheckForOrphanFiles = function() {
-
-	// !!! under construction !!!
-	
-	var self = this;
-
-	var finder = find( process.env['BASE_FOLDER'] );
-
-	var cam_folder_regex = new RegExp( process.env['BASE_FOLDER'] + '/([\\w.\\-]+)$' );
-
-	var counter = 0;
-
-	finder.on('end', function() {
-		console.log(":::: end :::::");
-		setTimeout( function() {
-				self.periodicallyCheckForOrphanFiles();
-		}, 5000);
-	});
-
-	finder.on('directory', function(dir, stat, stop) {
-
-		var match = cam_folder_regex.exec( dir );
-		if (match) {
-			 var cam = self.findCameraById( match[1] );
-			 if (!cam) {
-				 console.log( match[1] + ' no camera!' );
-			 } else {
-				 console.log( match[1] + ' ok!' ); 
-			 }
-			 counter++;
-		}
-
-		if (counter > 5000) {
-			stop();
-			finder.stop();
-			setTimeout( function() {
-				self.periodicallyCheckForOrphanFiles();
-			}, 5000);
 		}
 	});
 };
