@@ -19,7 +19,7 @@ Scheduler.prototype.launchForAllCameras = function( cameras ) {
 
 Scheduler.prototype.launchForCamera = function( camera ) {
 
-    if ( !(camera._id in this.processes) && camera.schedule_enabled ){
+    if ( !(camera._id in this.processes)){
 
         console.log("Launching Scheduler for camera:" + camera.name);
         this.processes[camera._id] = setInterval( function(){

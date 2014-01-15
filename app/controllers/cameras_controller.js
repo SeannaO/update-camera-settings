@@ -732,19 +732,23 @@ CamerasController.prototype.updateCameraSchedule = function(params, cb) {
         return;
     }
 	
+    var update_params = {schedule_enabled: params.schedule_enabled};
+    if (params.schedule){
+    	update_params = params.schedule;
+    }
+
 
     self.db.update({ _id: params._id }, { 
-        $set: {
-            schedule_enabled: ( params.schedule_enabled === '1'),
-            "schedule": params.schedule
-        } 
+        $set: update_params
     }, { multi: false }, function (err, numReplaced) {
         if (err) {
             cb(err);
         } else {
 			self.db.loadDatabase();
-            camera.cam.schedule_enabled = params.schedule_enabled === '1';
-            camera.cam.setRecordingSchedule(params.schedule);
+            camera.cam.schedule_enabled = params.schedule_enabled;
+            if (params.schedule){
+            	camera.cam.setRecordingSchedule(params.schedule);
+            }
             camera.cam.updateRecorder();
             self.emit("schedule_update", camera.cam);
             cb(err);

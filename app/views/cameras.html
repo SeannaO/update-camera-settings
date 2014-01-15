@@ -194,6 +194,7 @@
                     <div class="modal-body">
                         <form id="camera-schedule" role="form">
                             <div class="camera-schedule-switch">
+<input type="hidden" name="schedule_enabled" value="0">
 <input type="checkbox" id="camera-schedule-enable" name="schedule_enabled" class="switch" value="1"><label for="camera-schedule-enable">off/on</label></div>
 							<div id = 'schedule-table'>
 							</div>
@@ -270,7 +271,7 @@
                 type: "GET",
                 url: '/device/storage.json',
                 success: function( data ) {
-                    var percent = data.used/data.size;
+                    var percent = (data.used/data.size)*100;
                     $("#storage-space .progress").append("<div class=\"progress-bar progress-bar-info\" role=\"progressbar\" aria-valuenow=\""+ data.used +"\" aria-valuemin=\"0\" aria-valuemax=\"" + data.size + "\" style=\"width: " + percent + "%\"><span class=\"sr-only\">"+percent+"% Full</span></div>")
                     $("#storage-info").html(Math.round(data.used/1000000000) + " of " + Math.round(data.size/1000000000) + " GB used");
                 },

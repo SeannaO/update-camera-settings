@@ -79,6 +79,7 @@ module.exports = function( app, passport, camerasController ) {
 	app.put('/cameras/:id/schedule', passport.authenticate('basic', {session: false}), function(req, res) {
 		var params = req.body;
 		params._id = req.params.id;
+		params.schedule_enabled	= (params.schedule_enabled || '1') === '1';
 		camerasController.updateCameraSchedule(params, function(err) {
 			if (err) {
 				console.log( err ) ;

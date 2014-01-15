@@ -33,7 +33,7 @@ function Camera( cam, videosFolder ) {
 
 	this.streams = {};
 	this.streamsToBeDeleted = {};
-
+	this.schedule_enabled = cam.schedule_enabled;
 	this.recording = false;					// is the camera recording?
 
 	this.api = require('../helpers/camera_scanner/cam_api/api.js').getApi( this.manufacturer );
@@ -54,7 +54,6 @@ function Camera( cam, videosFolder ) {
 		//console.log(cam.schedule);
 		this.schedule = new WeeklySchedule(cam.schedule);
 		//console.log(this.schedule.toJSON());
-		this.schedule_enabled = cam.schedule_enabled;
 		
 		if ( !fs.existsSync( this.videosFolder) ){
 			//console.log(this.videosFolder);
@@ -366,6 +365,8 @@ Camera.prototype.restartStream = function( streamId ) {
  * @return {boolean} 'true' iff camera should be recording
  */
 Camera.prototype.shouldBeRecording = function() {
+	console.log(this.schedule_enabled);
+	console.log(this.schedule.isOpen());
     return ( this.schedule_enabled && this.schedule.isOpen() );
 };
 // end of shouldBeRecording
