@@ -4,7 +4,6 @@ var EventEmitter = require('events').EventEmitter;	//
 var util = require('util');							// for inheritance
 var checkH264 = require('../helpers/ffmpeg.js').checkH264;
 var find = require('findit');
-var fs = require('fs');
 var OrphanFilesChecker = require('../helpers/orphanFiles.js');
 
 function CamerasController( mp4Handler, filename, videosFolder, cb ) {
