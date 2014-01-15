@@ -47,9 +47,9 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.updateCamera( cam, function(err) {
 			if (err) {
-				console.log("*** updateCamera error: ");
-				console.log( err );
-				console.log("* * *");
+				console.error("*** updateCamera error: ");
+				console.error( err );
+				console.error("* * *");
 				res.status(422).json({success: false, error: err});
 			} else {
 				res.json({success: true});
@@ -82,7 +82,9 @@ module.exports = function( app, passport, camerasController ) {
 		params.schedule_enabled	= (params.schedule_enabled || '1') === '1';
 		camerasController.updateCameraSchedule(params, function(err) {
 			if (err) {
-				console.log( err ) ;
+				console.error("*** updateCameraSchedule error: ");
+				console.error( err ) ;
+				console.error("* * *");
 				res.status(422).json({success: false, error: err});
 			} else {
 				res.json({success: true});
@@ -95,7 +97,9 @@ module.exports = function( app, passport, camerasController ) {
 		params._id = req.params.id;
 		camerasController.updateCameraMotion(params, function(err) {
 			if (err) {
-				console.log( err ) ;
+				console.error("*** updateCameraMotion error: ");
+				console.error( err ) ;
+				console.error("* * *");
 				res.status(422).json({success: false, error: err});
 			} else {
 				res.json({success: true});
@@ -112,6 +116,9 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.removeCamera( req.params.id, function( err, numRemoved ) {
 			if (err) {
+				console.error("*** removeCamera error: ");
+				console.error( err ) ;
+				console.error("* * *");
 				res.status(422).json({success: false, error: err});
 			} else if (cam) {
 				res.json({success: true, _id: req.params.id});
@@ -131,18 +138,23 @@ module.exports = function( app, passport, camerasController ) {
 
 		var cam = camerasController.findCameraById( camId ).cam;
 		if (!cam) {
+			console.error("*** DELETE Stream: camera " + camId + " not found: ");
 			res.json({success: false, error: 'camera not found'});
 			return;
 		} 
 
 		var stream = cam.streams[ streamId ];
 		if (!stream) {
+			console.error("*** DELETE Stream: stream " + streamId + " not found: ");
 			res.json({success: false, error: 'stream not found'});
 			return;
 		}
 
 		camerasController.removeStream( camId, streamId, function( err ) {
 			if (err) {
+				console.error("*** removeStream error: ");
+				console.error( err ) ;
+				console.error("* * *");
 				res.json({success: false, error: err});
 			} else if (cam) {
 				res.json({success: true, _id: req.params.id});
@@ -160,9 +172,11 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err || !cam || cam.length === 0) {
+				console.error("*** getCamera within GET Schedule error: ");
+				console.error( err ) ;
+				console.error("* * *");				
 				res.status(422).json({ success: false, error: err });
 			} else {
-				console.log(cam.schedule.toJSON());
 				res.json({ success: true, schedule_enabled: cam.schedule_enabled, schedule: cam.schedule.toJSON() });
 			}
 		});
@@ -174,12 +188,13 @@ module.exports = function( app, passport, camerasController ) {
 	// 
 	app.get('/cameras/:id/motion.json', passport.authenticate('basic', {session: false}), function(req, res) {
 		var camId = req.params.id;
-		console.log(camId);
 		camerasController.getMotion( camId, function(err, motion_params) {
 			if (err || !motion_params || motion_params.length === 0) {
+				console.error("*** getMotion error: ");
+				console.error( err ) ;
+				console.error("* * *");
 				res.status(422).json({ success: false, error: err });
 			} else {
-				console.log(motion_params);
 				res.json({ success: true, camera: {motion: motion_params}});
 			}
 		});
@@ -196,6 +211,9 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err || cam.length === 0) {
+				console.error("*** getCamera error: ");
+				console.error( err ) ;
+				console.error("* * *");
 				res.status(422).end({success:false, error: "couldn't find this camera"});
 			} else {
 				res.render('camera', cam.toJSON());
@@ -223,6 +241,9 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.listVideosByCamera( camId, streamId, req.query.start, req.query.end, function(err, fileList, offset) {
 			if (err) {
+				console.error("*** listVideosByCamera error: ");
+				console.error( err ) ;
+				console.error("* * *");
 				res.status(422).json({error: err, success: false});
 			} else {
 				res.json({success: true, offset: offset, videos: fileList});
@@ -241,6 +262,9 @@ module.exports = function( app, passport, camerasController ) {
 		
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err) {
+				console.error("*** getCamera within stream thumbnail error: ");
+				console.error( err ) ;
+				console.error("* * *");
 				res.status(422).json( { error: err } );
 			} else {
 				
@@ -252,11 +276,13 @@ module.exports = function( app, passport, camerasController ) {
 							img: stream.latestThumb
 						});
 					} else {
+						console.error("*** StreamThumbnail: this stream does not have any thumbnail yet");
 						res.status(422).json({
 							error: 'this stream does not have any thumbnail yet'
 						});
 					}
 				} else {
+					console.error("*** StreamThumbnail: invalid stream id " + streamId);
 					res.status(422).json({
 						error: 'invalid stream id ' + streamId
 					});
@@ -279,6 +305,9 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err) {
+				console.error("*** getCamera within stream thumbnail " + thumb + ": ");
+				console.error( err ) ;
+				console.error("* * *");
 				res.status(422).json( { error: err } );
 			} else {
 
@@ -322,12 +351,15 @@ module.exports = function( app, passport, camerasController ) {
 		camerasController.getCamera( camId, function(err, cam) {
 			
 			if (err) {
+				console.error("*** getCamera within mp4 video: ");
+				console.error( err ) ;
+				console.error("* * *");
 				res.status(422).json( { error: err } );
 			} else {
 
 				// in case the streamId is invalid or not specified
 				if (!cam.streams[stream]) {
-					console.log("########## no such stream ");
+					error.error("*** stream " + stream + " on camera " + camId + " not found");
 					for (var s in cam.streams){
 						stream = s;
 						break;
@@ -357,13 +389,16 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err) {
-				res.json( { error: err } );
+				console.error("*** getCamera within mp4 video: ");
+				console.error( err ) ;
+				console.error("* * *");
+				res.status(422).json( { error: err } );
 			} else {
 				
 				//for (var stream in cam.streams){
 				// in case the streamId is invalid or not specified
 				if (!cam.streams[stream]) {
-					console.log("[cameras.js : /video.json] no such stream ");
+					console.error("[cameras.js : /video.json] no such stream ");
 					for (var s in cam.streams){
 						stream = s;
 						break;
@@ -390,12 +425,15 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err) {
+				console.error("*** getCamera within mp4 inMem download: ");
+				console.error( err ) ;
+				console.error("* * *");		
 				res.json( { error: err } );
 			} else {
 
 				// in case the streamId is invalid or not specified
 				if (!cam.streams[stream]) {
-					console.log("[cameras.js : /download] no such stream ");
+					console.error("[/cameras/:id/download] no such stream ");
 					for (var s in cam.streams){
 						stream = s;
 						break;
@@ -423,6 +461,9 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err) {
+				console.error("*** getCamera within video.m3u8: ");
+				console.error( err ) ;
+				console.error("* * *");
 				res.json( { error: err } );
 			} else {
 

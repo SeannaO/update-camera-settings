@@ -25,11 +25,9 @@ var Dblite = function( db_path, cb ) {
 Dblite.prototype.deleteVideo = function( id, cb ) {
 
 	var query = 'DELETE FROM videos WHERE id = ' + parseInt(id);
-	//console.log(query);
 
 	this.db.query( query,
 		function(err, rows) {
-			//console.log("chunk " + id + " deleted");
 			cb( err );		
 		}
 	);
@@ -42,13 +40,13 @@ Dblite.prototype.deleteVideo = function( id, cb ) {
 Dblite.prototype.insertVideo = function( data ) {
 	
     if (!this.db) {
-        console.log("db is not ready yet");
+        console.error("db is not ready yet");
     }
 
     if ( !data || (typeof data !== 'object') || !data.file || !data.start || !data.end ) {
-		console.log("!!! attempt to insert invalid data to database !!!");
-		console.log( data );
-		console.log("!!!");
+		console.error("!!! attempt to insert invalid data to database !!!");
+		console.error( data );
+		console.error("!!!");
         return;
     }
 
@@ -88,7 +86,7 @@ Dblite.prototype.searchVideosByInterval = function( start, end, cb ) {
 
 
 	if ( isNaN( start ) || isNaN( end ) )  {
-		console.log( "[Dblite.searchVideosByInterval] invalid interval error: " + start + " : " + end );
+		console.error( "[Dblite.searchVideosByInterval] invalid interval error: " + start + " : " + end );
 		return;
 	}
 
@@ -129,8 +127,6 @@ Dblite.prototype.getExpiredChunks = function( expirationDate, numberOfChunks, cb
             [expirationDate, numberOfChunks], 
             ['id', 'file', 'start'], 
             function(err, data) {
-				console.log('get expired chunks: ');
-				console.log( data );
                 if (!data || data.length === 0) {
                      cb( [] );
                 } else {
@@ -178,12 +174,6 @@ Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
                     cb(data[0].file, offset);
                 }
             });
-    
-    //console.log("- - - - - - - - - -");
-    //console.log("search video by time");
-    //console.log( camId + " : " + startTime );
-    //console.log("- - - - - - - - - -");
-   
 };
 // - - end of searchVideoByTime
 // - - - - - - - - - - - - - - - - - - - -

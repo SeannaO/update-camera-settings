@@ -106,10 +106,9 @@ Smart.prototype.scan = function( cb ) {
 	}
 
 	exec( command, function(error, stdout, stderr) {
-		
-		console.log(stdout);
-		console.log(error);
-		console.log(command);
+
+		// console.log(command);		
+		// console.log(stdout);
 
 		if (!error) {
 
@@ -126,6 +125,8 @@ Smart.prototype.scan = function( cb ) {
 					self.hdds_list.push( parsedOutput[0] );
 				}
 			}
+		}else{
+			console.error(error);
 		}
 
 		cb();

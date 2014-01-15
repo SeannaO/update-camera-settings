@@ -1,8 +1,5 @@
 var CamerasHelper = function( camerasController ) {
     this.camerasController = camerasController;
-    console.log("---");
-    console.log(this.camerasController);
-    console.log("---");
 };
 
 CamerasHelper.prototype.startRecording = function(req, res) {

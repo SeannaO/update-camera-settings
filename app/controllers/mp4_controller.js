@@ -5,8 +5,6 @@ var spawn = require('child_process').spawn;
 
 
 function inMemorySnapshot( file, offset, res, options, cb) {
-	
-	console.log("-- in-memory snapshot --");
 
 	//	var child = spawn('ffmpeg', ['-y', '-i', file, '-vframes', '1', '-ss', '1', '-f', 'image2', '-loglevel', 'quiet', '-']);
 
@@ -22,8 +20,6 @@ function inMemorySnapshot( file, offset, res, options, cb) {
 	if (options.size) {
 		size = ' -s ' + options.size.width + 'x' + options.size.height;
 	}
-
-	console.log( "snapshot for file: " + file );
 
 	var child = spawn( 'ffmpeg', 
 				['-y',
@@ -57,7 +53,6 @@ function inMemorySnapshot( file, offset, res, options, cb) {
 		if( child ) {
 			child.kill();
 		}
-		console.log("connection closed");
 	});
 }	
 
@@ -66,9 +61,6 @@ function inMemorySnapshot( file, offset, res, options, cb) {
 function inMemoryMp4Video( db, cam, begin, end, req, res ) {
     var camId = cam._id;
     
-    console.log("-- in-memory mp4 video --");
-    console.log("camId: " + camId);
-
     begin = parseInt( begin, 10 );
     end = parseInt( end, 10 );
 
@@ -79,9 +71,6 @@ function inMemoryMp4Video( db, cam, begin, end, req, res ) {
     }
 
 	db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
-		
-		console.log("** offset **");
-		console.log(offset);
 
 		if (videoList.length === 0) {
 			
@@ -127,11 +116,6 @@ function sendMp4VideoForDownload( file, req, res ) {
 function generateMp4Video( db, cam, streamId, begin, end, cb ) {
 
     var camId = cam._id;
-    
-    console.log("-- generateMp4Video");
-    console.log("camId: " + camId);
-	console.log("streamId: " + streamId);
-	console.log("--");
 
     begin = parseInt( begin, 10 );
     end = parseInt( end, 10 );
@@ -151,8 +135,6 @@ function generateMp4Video( db, cam, streamId, begin, end, cb ) {
         } else {
             
             db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
-                
-                console.log(videoList);
 
                 if (videoList.length === 0) {
                     
@@ -168,7 +150,6 @@ function generateMp4Video( db, cam, streamId, begin, end, cb ) {
                     });
 
                     ffmpeg.stitch( fileList, fileName, offset, function(mergedFile, error) {
-                        console.log(mergedFile);
                         if ( !error ) {
                             var response = { success: true, file: mergedFile };
                             cb( response );
@@ -213,7 +194,6 @@ function takeSnapshot( db, cam, req, res, cb ) {
     db.searchVideoByTime( time, function( file, offset ) {
         
         offset = Math.round( offset );
-        console.log( "taking snapshot of: " + file );
         
         fs.exists(file, function(exists) {
             if (exists) {

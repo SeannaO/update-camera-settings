@@ -17,7 +17,7 @@ Arecont.prototype.getRtspUrl = function (profile ) {
 	var self = this;
 
 	if (!profile) {
-		console.log("[Arecont] ERROR - empty profile");
+		console.error("[Arecont] ERROR - empty profile");
 		return;
 	}
 	
@@ -86,7 +86,6 @@ Arecont.prototype.setCameraParams = function(params) {
 Arecont.prototype.setMotionThreshold = function(threshold, cb){
 	var range = this.getThresholdRange();
 	if (threshold > range.max && threshold < range.min){
-		console.log("Error: threshold is out of range.");
 		cb("Error: threshold is out of range.");
 	}else{
 		this.setParam("mdlevelthreshold", threshold, function(error, body){
@@ -98,7 +97,6 @@ Arecont.prototype.setMotionThreshold = function(threshold, cb){
 Arecont.prototype.setMotionSensitivity = function(sensitivity, cb){
 	var range = this.getSensitivityRange();
 	if (sensitivity > range.max && sensitivity < range.min){
-		console.log("Error: sensitivity is out of range.");
 		cb("Error: sensitivity is out of range.");
 	}else{
 		this.setParam("mdsensitivity", sensitivity, function(error, body){
@@ -187,15 +185,12 @@ Arecont.prototype.getParam = function(name, cb){
 	}, function( error, response, body) {
 		
 			if (!error && body) {
-//				console.log(body.toString());
-				// console.log(body);
 				var ele = body.toString().split("=");
 
 				value = ele[1];
-				// console.log(value);
 				cb(error, value);
 			}else{
-				cb(error, '');
+				cb(error);
 			}
 		}
 	);	
@@ -221,12 +216,10 @@ Arecont.prototype.getMotionParams = function(cb){
 	var self = this;
 	self.getParam("mdlevelthreshold",function(error, threshold){
 		if (error){
-			console.log(error);
 			cb(error);
 		}
 		self.getParam("mdsensitivity",function(error, sensitivity){
 			if (error){
-				console.log(error);
 				cb(error);
 			}
 			self.isMotionEnabled(function(error, enabled){
@@ -239,7 +232,6 @@ Arecont.prototype.getMotionParams = function(cb){
 Arecont.prototype.isMotionEnabled = function(cb) {
 	this.getParam("motiondetect",function(error, value){
 		if (error){
-			console.log(error);
 			cb(error, false);
 		}else{
 			cb(null, value == "on" ? true : false);
@@ -250,13 +242,13 @@ Arecont.prototype.isMotionEnabled = function(cb) {
 Arecont.prototype.setupMotionDetection = function(){
 	setParam("mdzonesize", 2, function(error, body){
 		if (error){
-			console.log(error);	
+			console.error(error);
 		}
 	});
 
 	setParam("mddetail", 2, function(error, body){
 		if (error){
-			console.log(error);	
+			console.error(error);	
 		}
 	});
 	setMotionParams({enabled: true});
@@ -265,12 +257,9 @@ Arecont.prototype.setupMotionDetection = function(){
 Arecont.prototype.startListeningForMotionDetection = function(cb){
 	var self = this;
 	
-	console.log(self.cameraUrl() + "/get?" + 'mdresult');
-	
 	self.process_id = setInterval(function(){
 		self.getParam('mdresult',function(error, result){
 			if (error){
-				console.log(error);
 				cb(error);
 			}else if (result && result !== 'no motion'){
 				cb(result);

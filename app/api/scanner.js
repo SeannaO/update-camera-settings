@@ -4,8 +4,6 @@ module.exports = function( app, passport, prefix ) {
 	
 	app.get('/scan.json', passport.authenticate('basic', {session: false}), function( req, res ) {
 		scan(prefix, function( camlist ) {
-			console.log('camera scanner: ');
-			console.log( camlist );
 			res.json( camlist );
 		});
 	});
@@ -43,6 +41,9 @@ module.exports = function( app, passport, prefix ) {
 			api.setCameraParams(camera);
 			api.getResolutionOptions(function(err, resolutions){
 				if (err) {
+					console.error("*** getResolutionOptions for " + camera.manufacturer + ": ");
+					console.error( err ) ;
+					console.error("* * *");
 					res.status(422).json( { error: err } );
 				} else {
 					res.json({ framerate_range: api.getFrameRateRange(), resolutions: resolutions, quality_range: api.getVideoQualityRange()});

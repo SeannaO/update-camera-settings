@@ -87,13 +87,11 @@ CamerasController.prototype.checkSnapshotQ = function() {
 CamerasController.prototype.getCameraOptions = function(params, cb){
     var self = this;
     var camId = params._id;
-    console.log(params);
 	this.getCamera( camId, function(err, cam) {
 		if (err || !cam || cam.length === 0) {
 			cb( err, null );
 		} else {
 			cam.api.setCameraParams(params);
-			console.log(cam.api);
 			cam.api.getResolutionOptions(function(err, resolutions){
 				cb( err, { framerate_range: cam.api.getFrameRateRange(), resolutions: resolutions, quality_range: cam.api.getVideoQualityRange()});
 			});
@@ -147,7 +145,6 @@ CamerasController.prototype.listVideosByCamera = function( camId, streamId, star
 
     cam.streams[streamId].db.searchVideosByInterval( start, end, function(err, fileList, offset) {
         if (err) {
-            console.log("error while trying to list videos by camera: " + err);
             cb(err);
         } else {
             cb(err, fileList, offset);
@@ -210,12 +207,9 @@ CamerasController.prototype.getMotion = function(camId, cb) {
 
 	this.getCamera( camId, function(err, cam) {
 		if (err || !cam || cam.length === 0) {
-			console.log(err);
 			cb( err, null );
 		} else {
-			console.log(cam);
 			cam.api.getMotionParams(function(motion_params){
-				console.log(motion_params);
 				cb( err, motion_params );
 			});
 		}
@@ -236,7 +230,6 @@ CamerasController.prototype.periodicallyCheckForOrphanFiles = function() {
 	var counter = 0;
 
 	finder.on('end', function() {
-		console.log(":::: end :::::");
 		setTimeout( function() {
 				self.periodicallyCheckForOrphanFiles();
 		}, 5000);
@@ -268,8 +261,6 @@ CamerasController.prototype.periodicallyCheckForOrphanFiles = function() {
 
 CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_ids_list ) {
 	
-	console.log('*** checking for expired chunks...');
-
 	var maxChunksPerCamera = 100;			// limits query to 100 chunks per camera
 											// to avoid having a large array in memory
 
@@ -329,9 +320,10 @@ CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_id
 CamerasController.prototype.addChunksToDeletionQueue = function( chunk_list ) {
 
 	var self = this;
-
-	console.log( 'new chunks to be deleted: ' );
-	console.log( chunk_list );
+	if (chunk_list.length > 0){
+		console.log( 'new chunks to be deleted: ' );
+		console.log( chunk_list );
+	}
 
 	for (var c in chunk_list) {
 		self.deletionQueue.push( chunk_list[c] );
@@ -377,7 +369,8 @@ CamerasController.prototype.deleteChunk = function( chunk, cb ) {
 				if (cb) cb( data );
 			});
 		} else {
-			console.log( err );
+			console.error( err );
+			cb(err);
 		}
 	});
 };
@@ -453,7 +446,6 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
     cam.schedule_enabled = true;
     cam.schedule = {"sunday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"monday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"tuesday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"wednesday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"thursday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"friday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"saturday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}}};
 
-	console.log(cam);
 
 	var streamsHash = {};
 	var original_streams = cam.streams;
@@ -473,7 +465,7 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
 	self.db.insert( cam, function( err, newDoc ) {
 		if (err) {
-			console.log("##### error when inserting camera: " + err);
+			console.error("##### error when inserting camera: " + err);
 			cb( err, "{ success: false }" );
 		} else {
 			var c = new Camera(newDoc, self.videosFolder );
@@ -502,7 +494,6 @@ CamerasController.prototype.pushCamera = function( cam ) {
     self.cameras.push( cam );
 
     cam.on('new_chunk', function( data ) {
-		console.log('new_chunk');
         self.emit('new_chunk', data );
     });
 
@@ -540,8 +531,6 @@ CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
 
 			streamsHash = docs[0].streams;	
 
-			console.log( streamsHash );
-
 			if (!streamsHash || !streamsHash[streamId]) {
 				cb('stream not found on db');
 				return;
@@ -555,8 +544,8 @@ CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
 				} 
 			}, { multi: false }, function (err, numReplaced) {
 				if (err) {
-					console.log('*** update camera db error: ');
-					console.log(err);
+					console.error('*** update camera db error: ');
+					console.error(err);
 					cb(err);
 				} else {
 					camera.removeStream( streamId );
@@ -630,10 +619,6 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
         cb( "{error: 'camera not found'}" );
         return;
     }
-    
-	console.log('*** update camera');
-	console.log(cam);
-	console.log('* * *');
 
 	var streamsHash = {};
 	if (cam.streams.length > 0){
@@ -722,8 +707,6 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 
 CamerasController.prototype.updateCameraSchedule = function(params, cb) {
 
-    console.log("*** updating camera schedule:" );
-    console.log(params);
     var self = this;
     var camera = this.findCameraById( params._id );
     
@@ -760,8 +743,6 @@ CamerasController.prototype.updateCameraSchedule = function(params, cb) {
 
 CamerasController.prototype.updateCameraMotion = function(params, cb) {
 
-    console.log("*** updating camera motion:" );
-    console.log(params);
     var self = this;
     var camera = this.findCameraById( params._id ).cam;
     
@@ -771,13 +752,10 @@ CamerasController.prototype.updateCameraMotion = function(params, cb) {
     }
 	
 	params.camera.motion.enabled = (params.camera.motion.enabled === '1') ? true : false
-	console.log(params);
 	camera.api.setMotionParams(params.camera.motion, function(error, body){
 		if (!error && body) {
 			self.emit("motion_update", {camera: camera, motion: params.camera.motion});
-
 		}else{
-			console.log(error);
 		}
 		cb(error, body);
 	}); 

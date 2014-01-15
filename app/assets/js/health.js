@@ -48,8 +48,6 @@ var setupHealth = function() {
 
 
 var updateSensors = function( data ) {
-	
-	//console.log( data );
 
 	var table = $('#sensors-table');
 	table.html('');

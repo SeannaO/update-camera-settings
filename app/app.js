@@ -39,8 +39,6 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 
 
 passport.use(new BasicStrategy( function(username,password,done){
-		
-		console.log('[passport basicStrategy] environment: ' + process.env['NODE_ENV']);
 				
 		// bypasses auth for development mode
 		if (process.env['NODE_ENV'] === 'development') {
@@ -164,7 +162,7 @@ process.env['BASE_FOLDER'] = baseFolder;
 // ... or -development
 // usage:	node app.js /my/folder -development
 //			node app.js /my/foder		(production by default)
-if ( process.argv.indexOf('-development') > -1 ) {
+if ( process.env['NODE_ENV'] === 'development' || process.argv.indexOf('-development') > -1 ) {
 	process.env['NODE_ENV'] = 'development';
 	console.log("*** development mode");
 } else {
@@ -193,9 +191,8 @@ var diskSpaceAgent = new DiskSpaceAgent( baseFolder );
 diskSpaceAgent.launch();
 diskSpaceAgent.on('disk_usage', function(usage) {
 	var nCameras = camerasController.getAllCameras().length;
-	console.log( "usage: " + usage + "%");
 	if (usage > usageThreshold) {	// usage in %
-		
+		console.log( "usage: " + usage + "%");
 		console.log('freeing disk space...');
 		camerasController.deleteOldestChunks( 10 * nCameras, function(data) {
 			console.log( "added old files to deletion queue" );

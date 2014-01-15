@@ -2,12 +2,9 @@ var streams = [];
 
 var getStreamsInfo = function(camId) {
 
-	console.log('get streams');
-
 	$.ajax({
 		url: '/cameras/' + camId + '/json',
 		success: function(data) {
-			console.log(data.camera);
 			if (!data.camera.streams) {
 				return;
 			} else {
@@ -84,7 +81,6 @@ var getSnapshot = function(time) {
 			}
 		}, 
 		error: function(err) {
-			console.log("error");
 			$("#snapshot").html("<h5 class = 'text-muted lead'>there was an error: " + err + "</h5>");
 		}
 	});
