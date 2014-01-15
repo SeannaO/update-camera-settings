@@ -136,7 +136,7 @@ OrphanFilesChecker.prototype.periodicallyCheckForOrphanFiles = function( periodi
 		if (found) {
 			setTimeout( function() {
 				self.periodicallyCheckForOrphanFiles( periodicity );
-			}, 5000);
+			}, periodicity);
 		} else {
 			fs.readdir( process.env['BASE_FOLDER'], function(err, files) {
 				self.checkForOrphanStreams( files, function( found ) {
