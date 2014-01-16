@@ -12,7 +12,20 @@ var parametersString = "videocodec=h264&framerate={framerate}&resolution={resolu
 var rtspUrl = 'rtsp://{user}:{pass}@{ip}/axis-media/media.amp?{profile_name}&framerate={framerate}&resolution={resolution}';
 var listParamsUrl = baseUrl + 'list&group={group_name}';
 var listAllParamsUrl = baseUrl + 'list';
-var listResolutionsUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&group=ImageSource.I0.Sensor.CaptureMode"
+var listResolutionsUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&group=ImageSource.I0.Sensor.CaptureMode";
+
+var setMotionWindowUrl = 'http://{cam_ip}/axis-cgi/param.cgi?action=add&template=motion&group=Motion&Motion.M.Name=Solink%20Window&Motion.M.ImageSource=0&Motion.M.Left=0&Motion.M.Right=9999&Motion.M.Top=0&Motion.M.Bottom=9999&Motion.M.WindowType=include&Motion.M.Sensitivity={sensitivity}&Motion.M.History={motion_history}&Motion.M.ObjectSize={object_size}';
+
+var setupRecipientPayload = '<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:aa="http://www.axis.com/vapix/ws/action1" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:soap="http://www.w3.org/2003/05/soap-envelope"><soap:Body><aa:AddRecipientConfiguration xmlns="http://www.axis.com/vapix/ws/action1"><NewRecipientConfiguration><TemplateToken>com.axis.recipient.tcp</TemplateToken><Name>solink2</Name><Parameters><Parameter Name="host" Value="{ip}"></Parameter><Parameter Name="port" Value="{port}"></Parameter><Parameter Name="qos" Value="0"></Parameter></Parameters></NewRecipientConfiguration></aa:AddRecipientConfiguration></soap:Body></soap:Envelope>';
+
+// post to:
+// /vapix/services?timestamp=1389871957192
+//
+// headers:
+// SOAPAction: http://www.axis.com/vapix/ws/action1/AddRecipientConfiguration
+// Authorization:Digest username="root", realm="AXIS_00408CE8314F", nonce="000768b2Y5798222dfb9c0651d64b73edae7037f150898", uri="/vapix/services?timestamp=1389871957192", response="2e6f5ca055b72e1a0c6d5b0b9eececa7", qop=auth, nc=00000001, cnonce="6320fc1746f2f3d7"
+//
+
 
 var Axis = function() {
 	this.cam = {};
@@ -23,6 +36,10 @@ Axis.server = net.createServer(function(c) {
 Axis.server.listen(8000, function() { 
 });
 
+
+Axis.prototype.apiName = function() {
+	return 'Axis';
+};
 
 Axis.prototype.checkForExistingProfile = function( profileName, cb ) {
 
@@ -243,6 +260,8 @@ Axis.prototype.setMotionParams = function(params, cb){
 
 	var self = this;
 	self.motion_enabled = params.enabled;
+
+
 	self.threshold = params.threshold || 50;
 	self.sensitivity = params.sensitivity || 50;
 

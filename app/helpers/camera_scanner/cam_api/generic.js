@@ -1,6 +1,9 @@
 var Generic = function() {
 };
 
+Generic.prototype.apiName = function() {
+	return 'generic';
+};
 
 Generic.prototype.checkForExistingProfile = function( profileName, cb ) {
 };

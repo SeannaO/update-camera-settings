@@ -29,7 +29,7 @@ module.exports = function( app, passport) {
 			}, function (error, response, body) {
 				if (error){
 					console.error("*** getCamera within device.json: ");
-					console.error( err ) ;
+					console.error( error ) ;
 					console.error("* * *");
 					res.status(422).json({ success: false, error: error });
 				}else{
@@ -51,7 +51,7 @@ module.exports = function( app, passport) {
 			}, function (error, response, body) {
 				if (error){
 					console.error("*** getCamera within /device/storage.json: ");
-					console.error( err ) ;
+					console.error( error ) ;
 					console.error("* * *");
 					res.status(422).json({ success: false, error: error });
 				}else{
