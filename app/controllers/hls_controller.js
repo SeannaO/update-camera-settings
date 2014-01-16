@@ -3,7 +3,10 @@ var hls = require('./../helpers/hls');
 function generateFinitePlaylist( db, camId, streamId, begin, end, cb ) {
 
     db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
-        
+        if (err){
+            console.log("searchVideosByInterval");
+            console.log(err);
+        }
         //var fileList = videoList.map( function(video) {
         //    return video.file;
         //});
@@ -34,7 +37,10 @@ function generateLivePlaylist( db, req, res ) {
     res.writeHead( 200, { "Content-Type":"application/x-mpegURL" } );
 
     db.searchVideosByInterval( begin, end, function( err, videoList, offset ) {
-                        
+        if(err){
+            console.log("searchVideosByInterval");
+            console.log(err);
+        }
         var fileList = videoList.map( function(video) {
             return video.file;
         });

@@ -8,19 +8,19 @@ var dblite = require('dblite');
 var format = require('util').format;
 var path = require('path');
 var fs = require('fs');
+var FileBackup = require('../helpers/file_backup.js');
 
 var Dblite = function( db_path, cb ) {
 
 	var self = this;
-    this.db = dblite( db_path );
-
-    this.db.query('CREATE TABLE IF NOT EXISTS videos (id INTEGER PRIMARY KEY, start INTEGER, end INTEGER, file TEXT)', function() {
-		self.db.query('.show');
-		if (cb) cb();
-	});
-    //this.db.query('.show');
+    this.db_path = db_path;
+    this.db = dblite( self.db_path );
+    this.createTableIfNotExists(function(){
+        self.backup = new FileBackup(db_path);
+        self.backup.launch();
+        if(cb) cb();
+    });
 };
-
 
 Dblite.prototype.deleteVideo = function( id, cb ) {
 
@@ -31,6 +31,20 @@ Dblite.prototype.deleteVideo = function( id, cb ) {
 			cb( err );		
 		}
 	);
+};
+
+Dblite.prototype.createTableIfNotExists = function( cb ) {
+    var self = this;
+    fs.exists(self.db_path, function(exist) {        
+        if (typeof self.db === 'undefined' || !exist){
+            self.db = dblite( self.db_path );
+        }
+        var query = 'CREATE TABLE IF NOT EXISTS videos (id INTEGER PRIMARY KEY, start INTEGER, end INTEGER, file TEXT)';
+        self.db.query(query, function() {
+            self.db.query('.show');
+            if (cb) cb();
+        });
+    });
 };
 
 /**
@@ -101,6 +115,11 @@ Dblite.prototype.searchVideosByInterval = function( start, end, cb ) {
                         duration: 0
                     };
 
+                if (err){
+                    console.log("searchVideosByInterval");
+                    console.log(err);
+                }
+
                 if (!data || data.length === 0) {
                     cb(err, [], offset);
                 } else {
@@ -119,14 +138,17 @@ Dblite.prototype.searchVideosByInterval = function( start, end, cb ) {
 
 
 Dblite.prototype.getExpiredChunks = function( expirationDate, numberOfChunks, cb ) {
-
-	var query = 'SELECT id, file, start FROM videos WHERE start < ? ORDER BY id ASC LIMIT ?';
+    var self = this;
+	var query = 'SELECT * FROM videos WHERE start < ? ORDER BY id ASC LIMIT ?';
 
     var fileList = this.db.query(
 			query, 
             [expirationDate, numberOfChunks], 
             ['id', 'file', 'start'], 
-            function(err, data) {
+            function(error, data) {
+                if (error){
+                    cb([]);
+                }
                 if (!data || data.length === 0) {
                      cb( [] );
                 } else {
@@ -136,24 +158,37 @@ Dblite.prototype.getExpiredChunks = function( expirationDate, numberOfChunks, cb
 		);
 };
 
+Dblite.prototype.getChunks = function( options, cb ) {
 
-Dblite.prototype.getOldestChunks = function( numberOfChunks, cb ) {
-
-	var query = 'SELECT id, file, start FROM videos WHERE id in (SELECT id FROM videos ORDER BY id ASC LIMIT ?)';
+    var limit = options.limit || 10;
+    var sort = options.sort || "ASC";
+    var query = 'SELECT id, file, start, end FROM videos WHERE id in (SELECT id FROM videos ORDER BY end ? LIMIT ?)';
 
     var fileList = this.db.query(
-			query, 
-            [numberOfChunks], 
-            ['id', 'file', 'start'], 
-            function(err, data) {
-
-                if (!data || data.length === 0) {
-                     cb( [] );
-                } else {
-                    cb(data);
-                }
+        query, 
+        [numberOfChunks], 
+        ['id', 'file', 'start', 'end'], 
+        function(err, data) {
+            if (err){
+                console.log("getChunks");
+                console.log(err);
             }
-		);
+            if (!data || data.length === 0) {
+                 cb( [] );
+            } else {
+                cb(data);
+            }
+        }
+    );
+};
+
+
+Dblite.prototype.getOldestChunks = function( numberOfChunks, cb ) {
+    this.getChunks({limit:numberOfChunks, sort: "ASC"}, cb);
+};
+
+Dblite.prototype.getNewestChunks = function( numberOfChunks, cb ) {
+    this.getChunks({limit:numberOfChunks, sort: "DESC"}, cb);
 };
 
 /**
@@ -166,7 +201,10 @@ Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
             [startTime+1500, startTime-1500], 
             ['start', 'end', 'file'], 
             function(err, data) {
-
+                if (err){
+                    console.log("searchVideoByTime");
+                    console.log(err);
+                }
                 if (!data || data.length === 0) {
                      cb( "", 0 );
                 } else {

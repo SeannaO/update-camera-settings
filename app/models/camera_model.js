@@ -4,7 +4,8 @@ var RecordModel = require('./record_model');					// recorder
 var Dblite = require('../db_layers/dblite.js');					// sqlite layer
 var util = require('util');										// for inheritance
 var EventEmitter = require('events').EventEmitter;				// events
-
+var find = require('findit');
+var path = require('path');
 
 function Camera( cam, videosFolder ) {
 
@@ -96,8 +97,92 @@ util.inherits(Camera, EventEmitter);
 Camera.prototype.addStream = function( stream ) {
 
 	var self = this;
-
 	stream.db = new Dblite( this.videosFolder + '/db_'+stream.id+'.sqlite' );
+
+	stream.db.db.on('error', function (err) {
+        console.error(err.toString());
+        var msg = err.toString();
+        if (msg.indexOf('disk image is malformed') !== -1){
+        	// delete the old database file
+        	// recreate the database
+        	stream.db.backup.restore(function(err, backup){
+				var storedVideosFolder = self.videosFolder + "/" + stream.id + "/videos";
+        		if (err){
+        			if (err === "empty"){
+			        	fs.unlink(self.videosFolder + '/db_'+stream.id+'.sqlite', function (err) {
+							if (err){
+								console.log(err);
+								console.error("unable to delete corrupt sqlite file");	
+							}else{
+								// create the database
+								stream.db.createTableIfNotExists(function(err){
+									if (err){
+										console.log(err);
+										console.error("unable to recreate table.");	
+									}else{
+										var finder = find(storedVideosFolder);
+										finder.on('file', function (file, stat) {
+											stream.recordModel.addFileToIndexInDatabase(file);
+											// stream.recordModel.indexFileInDatabase(file);
+										});
+									}
+								});
+								stream.recordModel.indexPendingFilesAfterCorruptDatabase(function(){
+								
+								});
+							}
+						});
+        			}else{
+        				console.error(err);
+        			}
+        		}else{
+					stream.db.getNewestChunks(1,function(rows){
+						if (rows && rows.length > 0){
+							var last_recorded_timestamp = rows[0].end;
+							var last_recorded_date = new Date(last_recorded_timestamp);
+							
+							fs.stat(rows[0].file, function(err, stats){
+								var most_recent_dir = path.dirname(rows[0].file);
+								var lastFileStored = stats.mtime;
+								// finish indexing the folder that the last file was recorded in
+								var finder = find(most_recent_dir);
+								finder.on('file', function (file, stats) {
+									if (stats.mtime > lastFileStored){
+										stream.recordModel.addFileToIndexInDatabase(file);
+										// stream.recordModel.indexFileInDatabase(file);
+									}
+								});
+							});
+							// finish indexing all the folders after the last indexed file
+							fs.readdir(storedVideosFolder, function(err, list){
+								var unindexed_folders = [];
+								var re = /([\d]+)-([\d]+)-([\d]+)/
+								for (var idx in list){
+									var matches = re.exec(list[idx]);
+									if (matches && matches.length == 4){
+										var year = parseInt(matches[1]);
+										var month = parseInt(matches[2])-1;
+										var day = parseInt(matches[3]);
+										var dirdate = new Date(year, month, day);
+										if (dirdate > last_recorded_date){
+											var finder = find(storedVideosFolder + "/" + list[idx]);
+											finder.on('file', function (file, stat) {
+												stream.recordModel.addFileToIndexInDatabase(file);
+												// stream.recordModel.indexFileInDatabase(file);
+											});
+										}
+									}
+								}
+							});
+							stream.recordModel.indexPendingFilesAfterCorruptDatabase(function(){
+								
+							});
+						}
+					});
+        		}
+        	});
+        }
+    });
 
 	if (!stream.toBeDeleted) {
 		stream.url = this.api.getRtspUrl({
@@ -421,7 +506,6 @@ Camera.prototype.getExpiredChunksFromStream = function( streamId, nChunks, cb ) 
 // end of getExpiredChunksFromStream
 //
 
-
 /**
  * Gets expired chunks from all streams, one stream at a time,
  *	returning the chunks in an array as a callback param.
@@ -544,7 +628,6 @@ Camera.prototype.getOldestChunksFromStream = function( streamId, numberOfChunks,
 	}
 	
 	var self = this;
-	
 	self.streams[streamId].db.getOldestChunks( numberOfChunks, function( data ) {
 		cb( data );
 	});
@@ -743,7 +826,6 @@ Camera.prototype.indexPendingFiles = function( streamList, cb ) {
 	//console.log("####### indexPendingFiles");
 
 	var self = this;
-	
 	// checks if method is being called for the first time
 	// or if it's a recursive call
 	if ( !streamList || typeof streamList === 'function' ) {

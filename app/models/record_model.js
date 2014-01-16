@@ -38,6 +38,7 @@ function RecordModel( camera, stream ) {
 
 	// watcher will watch for new chunks on tmp folder
     this.watcher = new Watcher( self.folder + '/videos/tmp', 'ts');
+    filesToIndex = [];
 }
 // end of constructor
 //
@@ -163,6 +164,30 @@ RecordModel.prototype.setStatus = function( status ) {
 };
 // end of setStatus
 //
+
+
+
+
+/**
+ * Index files on peding list
+ *
+ * @param { function } Callback that is called when all files have been indexed
+ *
+ */
+RecordModel.prototype.indexPendingFilesAfterCorruptDatabase = function( cb ) {
+
+    var self = this;
+
+	if (self.filesToIndex.length == 0) {
+		if (cb) cb();	// we're done					
+	} else {
+		var file = self.filesToIndex.shift();	// next file
+		self.indexFileInDatabase( file, function() {
+			self.indexPendingFilesAfterCorruptDatabase( cb );// recursive call
+		});
+    }
+};
+
 
 
 /**
@@ -312,10 +337,13 @@ RecordModel.prototype.moveAndIndexFile = function( file, cb ) {
 
     var self = this;
 
-    self.calcDuration( file, function( video ) {	// first, calculates duration
+    self.calcDuration( file, function( err, video ) {	// first, calculates duration
 													// video object contains start, end times 
 													// and also the file path
-
+		if (err){
+			console.error("calcDuration in moveAndIndexFile:");
+			console.error(err);
+		}
         self.moveFile( video, function() {			// creates thumb,
 													// moves chunk to definitive folder
 													// and indexes it
@@ -328,6 +356,67 @@ RecordModel.prototype.moveAndIndexFile = function( file, cb ) {
 };
 // end of moveAndIndexFile
 //
+
+RecordModel.prototype.addFileToIndexInDatabase = function(file){
+	this.filesToIndex.push(file);
+}
+
+RecordModel.prototype.indexFileInDatabase = function(file, cb){
+	var self = this;
+	var ext = file.split('.').pop();
+	if (ext === 'ts'){
+		this.calcDurationFromFile(file, function(err, videoChunk){								
+			if (videoChunk){
+				self.db.insertVideo(videoChunk);
+				if (cb) cb(null, videoChunk);
+			}else{
+				self.calcDurationWithFileInfo(file, stat, function(err, videoChunk){
+					if (videoChunk){
+						self.db.insertVideo(videoChunk);
+						if (cb) cb(null, videoChunk);
+					}else{
+						console.error("Unable to insert video into database after being corrupted: " + file);
+						console.error(err);
+						if (cb) cb(err);
+					}
+				});
+			}
+		});
+	}else{
+		if (cb) cb("not a .ts file");
+	}
+};
+
+
+/**
+ * Calculates chunk duration by parsing a previously stored file for recovery
+ *  
+ *  @param { file } string File path
+ *  @param { cb } function Callback function that receives chunk object as parameter
+ */
+RecordModel.prototype.calcDurationFromFile = function( file, cb ) {
+
+	var self = this;
+	var re = /([\d]+)_([\d]+).ts/;
+	var matches = re.exec(file);
+		
+	if (matches && matches.length == 3){
+		var start =  parseInt(matches[1]);
+		var end = start + parseInt(matches[2]);
+
+		video = {
+			cam: self.camId,
+			stream: self.stream.id,		// appends stream id to the chunk
+			start: start,
+			end: end,
+			file: file
+		};
+
+		cb(null, video );
+	}else{
+		cb("file does not have start time and duration", null );
+	}
+};
 
 
 /**
@@ -347,12 +436,28 @@ RecordModel.prototype.calcDuration = function( file, cb ) {
 			cb();
 			return;
 		}
+		self.calcDurationWithFileInfo(file, fileInfo, cb);
+	});
+};
+// end of calcDuration
+//
 
-		var lastModified = ( new Date(fileInfo.mtime) ).getTime();	// mtime: last modified time
-																	// getTime: converts to Unix millis
 
-		ffmpeg.calcDuration( file, function(duration) {
 
+/**
+ * Calculates chunk duration using file system stats and ffmpeg
+ *  
+ *  @param { file } string File path
+ *  @param { cb } function Callback function that receives chunk object as parameter
+ */
+RecordModel.prototype.calcDurationWithFileInfo = function( file, fileInfo, cb ) {
+
+	var self = this;
+
+	var lastModified = ( new Date(fileInfo.mtime) ).getTime();	// mtime: last modified time
+																// getTime: converts to Unix millis
+	ffmpeg.calcDuration( file, function(err, duration) {
+		if (duration){
 			var start =  lastModified - duration;		
 			var end = lastModified;
 
@@ -364,13 +469,15 @@ RecordModel.prototype.calcDuration = function( file, cb ) {
 				file: file
 			};
 
-			cb( video );
-		});
+			cb(null, video );
+		}else{
+			cb(err, null );
+		}
+
 	});
 };
 // end of calcDuration
 //
-
 
 /**
  * TODO: check if this method is really necessary
@@ -416,7 +523,7 @@ RecordModel.prototype.moveFile = function( video, cb ) {
 	var toFolder = self.folder + '/videos/' + dateString;
 
 	var from = self.folder + "/videos/tmp/" + path.basename( video.file );
-    var to = toFolder + '/' + video.start + path.extname( video.file );
+    var to = toFolder + '/' + video.start + "_" + (video.end - video.start) + path.extname( video.file );
  
     fs.exists( from, function(exists) {
 		//if (exists) {
@@ -431,7 +538,6 @@ RecordModel.prototype.moveFile = function( video, cb ) {
 						video.file = to;	// updates file path after moving it
 
 						ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() { 
-							
 							self.camera.addChunk( self.stream.id, video );	// the chunk will be indexed by the camera
 							
 							if (cb) {

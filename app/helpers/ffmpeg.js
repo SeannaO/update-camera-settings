@@ -226,11 +226,23 @@ function calcDuration(input, cb) {
 
     //fs.exists(input, function(exists) {
     //    if(exists) {
+        try{
             var metaObject = new Metalib(input, function(metadata, err) {
-                
+                if (err){
+                    console.error("* * *Error in ffmpeg calcDuration:");
+                    console.error(err);
+                    console.error("* * *:");
+                }
                 var duration = 1000 * parseFloat( metadata.durationraw.split(':')[2] );
-                cb( duration, input );
-            });
+                cb(err, duration, input );
+            });            
+        }catch(err){
+            console.error("* * *Error in ffmpeg calcDuration:");
+            console.error(err);
+            console.error("* * *:");
+            cb(err, null, input);
+        }
+
      //   } else {
      //       cb( 0, input );
      //   }

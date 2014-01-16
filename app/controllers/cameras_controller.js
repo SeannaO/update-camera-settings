@@ -15,7 +15,16 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
     this.db = new Datastore({ filename: filename });
 
     this.db.loadDatabase( function(err) {
-		self.setup( function(err) {} );
+    	if (err){
+    		console.log("loadDatabase");
+    		console.log(err);
+    	}
+		self.setup( function(err) {
+			if (err){
+    			console.log("camera controller setup");
+    			console.log(err);
+    		}
+		} );
 		if (cb) {
 			cb();
 		}
