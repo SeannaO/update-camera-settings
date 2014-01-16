@@ -19,6 +19,10 @@ var Dblite = function( db_path, cb ) {
 		if (cb) cb();
 	});
     //this.db.query('.show');
+	//
+	this.db.on('error', function (err) {
+		console.error(err.toString());
+	});
 };
 
 

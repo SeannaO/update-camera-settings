@@ -41,6 +41,7 @@ function Camera( cam, videosFolder ) {
 	this.username = this.username ? this.username : '';
 
 	this.api.setCameraParams({
+		id: this._id,
 		ip: this.ip,
 		password: this.password,
 		username: this.username

@@ -34,6 +34,7 @@ var localIp = "";
 
 require('dns').lookup(require('os').hostname(), function (err, add, fam) {
     localIp = add;
+	process.env['IP'] = localIp;
 });
 // - - -
 

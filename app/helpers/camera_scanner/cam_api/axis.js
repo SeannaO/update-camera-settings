@@ -2,6 +2,8 @@ var request = require('request');
 var xml2js = require('xml2js').parseString;
 var net = require('net');
 
+var axis_motion = require('./axis_motion.js');
+
 var baseUrl = 'http://{user}:{pass}@{ip}/axis-cgi/param.cgi?action=';
 var createProfileUrl = baseUrl + 'add&template=streamprofile&group=StreamProfile';
 var configureStreamUrl = baseUrl 
@@ -13,18 +15,6 @@ var rtspUrl = 'rtsp://{user}:{pass}@{ip}/axis-media/media.amp?{profile_name}&fra
 var listParamsUrl = baseUrl + 'list&group={group_name}';
 var listAllParamsUrl = baseUrl + 'list';
 var listResolutionsUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&group=ImageSource.I0.Sensor.CaptureMode";
-
-var setMotionWindowUrl = 'http://{cam_ip}/axis-cgi/param.cgi?action=add&template=motion&group=Motion&Motion.M.Name=Solink%20Window&Motion.M.ImageSource=0&Motion.M.Left=0&Motion.M.Right=9999&Motion.M.Top=0&Motion.M.Bottom=9999&Motion.M.WindowType=include&Motion.M.Sensitivity={sensitivity}&Motion.M.History={motion_history}&Motion.M.ObjectSize={object_size}';
-
-var setupRecipientPayload = '<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:aa="http://www.axis.com/vapix/ws/action1" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:soap="http://www.w3.org/2003/05/soap-envelope"><soap:Body><aa:AddRecipientConfiguration xmlns="http://www.axis.com/vapix/ws/action1"><NewRecipientConfiguration><TemplateToken>com.axis.recipient.tcp</TemplateToken><Name>solink2</Name><Parameters><Parameter Name="host" Value="{ip}"></Parameter><Parameter Name="port" Value="{port}"></Parameter><Parameter Name="qos" Value="0"></Parameter></Parameters></NewRecipientConfiguration></aa:AddRecipientConfiguration></soap:Body></soap:Envelope>';
-
-// post to:
-// /vapix/services?timestamp=1389871957192
-//
-// headers:
-// SOAPAction: http://www.axis.com/vapix/ws/action1/AddRecipientConfiguration
-// Authorization:Digest username="root", realm="AXIS_00408CE8314F", nonce="000768b2Y5798222dfb9c0651d64b73edae7037f150898", uri="/vapix/services?timestamp=1389871957192", response="2e6f5ca055b72e1a0c6d5b0b9eececa7", qop=auth, nc=00000001, cnonce="6320fc1746f2f3d7"
-//
 
 
 var Axis = function() {
@@ -148,16 +138,25 @@ Axis.prototype.isMotionEnabled = function() {
 	return self.motion_enabled;
 };
 
+
 Axis.prototype.getMotionParams = function(cb) {
 	
 	var self = this;
-
-	cb({
-		enabled: self.isMotionEnabled(), 
-		threshold: self.threshold, 
-		sensitivity: self.sensitivity
+	
+	axis_motion.getMotionInfo( self.cam.ip, self.cam.user, self.cam.password, function( err, info ) {
+		if (err) {
+			cb({ enabled: self.isMotionEnabled() });
+		} else {
+			cb({
+				enabled: self.isMotionEnabled(), 
+				threshold: info.object_size, 
+				sensitivity: info.sensitivity,
+				x:0
+			});
+		}
 	});
 };
+
 
 Axis.prototype.updateProfile = function(profileId, profile, cb) {
 
@@ -247,11 +246,11 @@ Axis.prototype.getRtspUrl = function ( profile ) {
 
 
 Axis.prototype.setCameraParams = function(params) {
-	
-	// console.log("[Axis] Updating camera params");
+
+	this.cam.id = params.id || this.cam.id;
 	this.cam.ip = params.ip || this.cam.ip;
-	this.cam.user = params.user || params.username || this.cam.user;
-	this.cam.password = params.password || this.cam.password;
+	this.cam.user = params.user || params.username || this.cam.user || '';
+	this.cam.password = params.password || this.cam.password || '';
 
 };
 
@@ -262,10 +261,20 @@ Axis.prototype.setMotionParams = function(params, cb){
 	self.motion_enabled = params.enabled;
 
 
-	self.threshold = params.threshold || 50;
-	self.sensitivity = params.sensitivity || 50;
+	self.object_size = self.threshold = params.threshold || 15;
+	self.sensitivity = self.sensitivity = params.sensitivity || 50;
 
-	if (cb) cb();
+	var motion_params = {
+		object_size: self.object_size,
+		sensitivity: self.sensitivity
+	};
+
+	axis_motion.configureMotion( self.cam.ip, self.cam.user, self.cam.password, self.cam.id, motion_params, function( err ) {
+		if (err) { 
+			console.error( '[Axis.setMotionParams] error: ' + err );
+		}
+		if (cb) cb( err );
+	});
 
 };
 
@@ -329,9 +338,7 @@ Axis.prototype.getResolutionOptions = function (cb) {
 				if (!err){
 					
 					try {
-						// console.log(result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry);
 						var output = result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry.map(function(element){
-							// console.log({value:element['$'].value, name:element['$'].niceValue});
 							element['$'].niceValue
 							return {value: re.exec(element['$'].niceValue)[0]  , name:element['$'].niceValue}
 						});
