@@ -683,12 +683,17 @@ CamerasController.prototype.updateCameraSchedule = function(params, cb) {
 	
     var update_params = {schedule_enabled: params.schedule_enabled};
     if (params.schedule){
-    	update_params = params.schedule;
+    	update_params = {
+			schedule: params.schedule,
+			schedule_enabled: params.schedule_enabled
+		}
     }
 
-
     self.db.update({ _id: params._id }, { 
-        $set: update_params
+        $set: {
+			schedule: params.schedule,
+			schedule_enabled: params.schedule_enabled
+		}
     }, { multi: false }, function (err, numReplaced) {
         if (err) {
             cb(err);
@@ -696,7 +701,7 @@ CamerasController.prototype.updateCameraSchedule = function(params, cb) {
 			self.db.loadDatabase();
             camera.cam.schedule_enabled = params.schedule_enabled;
             if (params.schedule){
-            	camera.cam.setRecordingSchedule(params.schedule);
+				camera.cam.setRecordingSchedule(params.schedule);
             }
             camera.cam.updateRecorder();
             self.emit("schedule_update", camera.cam);
@@ -717,10 +722,17 @@ CamerasController.prototype.updateCameraMotion = function(params, cb) {
         return;
     }
 	
-	params.camera.motion.enabled = (params.camera.motion.enabled === '1') ? true : false
+	var enabled = (params.camera.motion.enabled === '1');
+	params.camera.motion.enabled = enabled;
+
 	camera.api.setMotionParams(params.camera.motion, function(error, body){
-		if (!error && body) {
+		if (!error) {
 			self.emit("motion_update", {camera: camera, motion: params.camera.motion});
+			if (enabled) {
+				camera.startMotionDetection();
+			} else {
+				camera.stopMotionDetection();
+			}
 		}else{
 		}
 		cb(error, body);

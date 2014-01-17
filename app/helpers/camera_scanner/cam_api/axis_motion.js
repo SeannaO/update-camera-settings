@@ -134,7 +134,7 @@ var getWindowInfo = function( cam_ip, username, password, cb ) {
 				var object_size_match = object_size_regex.exec(body);
 				
 				info.sensitivity = sensitivity_match ? sensitivity_match[1] : default_sensitivity;
-				info.history = history_match ? history_match[1] : default_history_match;
+				info.history = history_match ? history_match[1] : default_motion_history;
 				info.object_size = object_size_match ? object_size_match[1] : default_object_size;
 
 				cb( null, info );
