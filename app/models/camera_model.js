@@ -142,14 +142,19 @@ Camera.prototype.setMotionDetection = function( cb ) {
 };
 
 
-Camera.prototype.startMotionDetection = function() {
+Camera.prototype.stopMotionDetection = function() {
 	
+	var self = this;
+	this.api.stopListeningForMotionDetection();
+};
+
+Camera.prototype.startMotionDetection = function() {
+		
 	var self = this;
 
 	this.api.startListeningForMotionDetection( function(data) {
 
-		// console.log("* * * motion " + Date.now() + " * * * " + self.manufacturer);
-		// console.log(data);
+		//console.log("*** start listenint for motion " + Date.now() + " * * * " + self.manufacturer);
 
 		if ( !self.recording ) {
 			self.startRecording();

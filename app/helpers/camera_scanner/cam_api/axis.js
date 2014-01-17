@@ -21,10 +21,11 @@ var Axis = function() {
 	this.cam = {};
 };
 
-Axis.server = net.createServer(function(c) { 
+Axis.server = net.createServer(function(socket) { 
 });
-Axis.server.listen(8000, function() { 
+Axis.server.listen(8001, function() { 
 });
+
 
 
 Axis.prototype.apiName = function() {
@@ -296,12 +297,14 @@ Axis.prototype.startListeningForMotionDetection = function(cb){
 	
 	self.motion_enabled = true;
 
-	//poll
-	//emit motion
 	Axis.server.on('connection', function( socket ) {
-		if ( socket.remoteAddress === self.cam.ip ) {
-			// console.log('[Axis.motionDetection] movement detected');
-			if(cb) cb() ;
+		try {
+			// console.log("==== " + socket.remoteAddress + " | " + self.cam.ip );
+			if ( socket.remoteAddress === self.cam.ip ) {
+				console.log('[Axis.motionDetection] movement detected');
+				if(cb) cb() ;
+			}
+		} catch(e) {
 		}
 	});	
 };

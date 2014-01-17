@@ -268,7 +268,7 @@ Arecont.prototype.startListeningForMotionDetection = function(cb){
 			}else if (result && result !== 'no motion'){
 				cb(result);
 			}else{
-				cb('no motion');
+				//cb('no motion'); -- only callback when there's motion
 			}
 		});
 	},100);
