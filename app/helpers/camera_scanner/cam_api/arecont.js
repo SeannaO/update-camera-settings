@@ -111,7 +111,7 @@ Arecont.prototype.setMotionSensitivity = function(sensitivity, cb){
 
 Arecont.prototype.setMotionParams = function(params, cb){
 	var self = this;
-	if (params.enabled === 'undefined'){
+	if (typeof params.enabled == 'undefined'){
 		if (params.threshold){
 			self.setMotionThreshold(params.threshold,function(error, body){
 				if (error){

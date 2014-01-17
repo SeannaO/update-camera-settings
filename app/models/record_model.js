@@ -210,8 +210,12 @@ RecordModel.prototype.indexPendingFiles = function( cb ) {
 		var file = self.pending.shift();	// next file
         
 		
-		self.moveAndIndexFile( file, function() {	// method to move and index a single file
-			self.indexPendingFiles( cb );			// recursive call
+		self.moveAndIndexFile( file, function(err) {	// method to move and index a single file
+			if (err){
+				cb(err);
+			}else{
+				self.indexPendingFiles( cb );			// recursive call
+			}
 		});
     }
 };
@@ -343,15 +347,20 @@ RecordModel.prototype.moveAndIndexFile = function( file, cb ) {
 		if (err){
 			console.error("calcDuration in moveAndIndexFile:");
 			console.error(err);
-		}
-        self.moveFile( video, function() {			// creates thumb,
-													// moves chunk to definitive folder
-													// and indexes it
-			self.emit('new_chunk', video );	
 			if ( cb ) {
+				// What do we do if we fail to move a chunk?
 				cb();								
 			}
-		});
+		}else{
+	        self.moveFile( video, function() {			// creates thumb,
+														// moves chunk to definitive folder
+														// and indexes it
+				self.emit('new_chunk', video );	
+				if ( cb ) {
+					cb();								
+				}
+			});
+		}
 	});
 };
 // end of moveAndIndexFile
@@ -433,7 +442,7 @@ RecordModel.prototype.calcDuration = function( file, cb ) {
 		
 		if ( err ) { 
 			console.error( err );
-			cb();
+			cb(err);
 			return;
 		}
 		self.calcDurationWithFileInfo(file, fileInfo, cb);
@@ -471,7 +480,7 @@ RecordModel.prototype.calcDurationWithFileInfo = function( file, fileInfo, cb ) 
 
 			cb(null, video );
 		}else{
-			cb(err, null );
+			cb(err);
 		}
 
 	});
@@ -516,39 +525,43 @@ RecordModel.prototype.checkForConnectionErrors = function() {
 RecordModel.prototype.moveFile = function( video, cb ) { 	
 
     var self = this;
+    if (video){
+    	var date = new Date(video.start);
+		var dateString = date.getUTCFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
 
-	var date = new Date(video.start);
-	var dateString = date.getUTCFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+		var toFolder = self.folder + '/videos/' + dateString;
 
-	var toFolder = self.folder + '/videos/' + dateString;
-
-	var from = self.folder + "/videos/tmp/" + path.basename( video.file );
-    var to = toFolder + '/' + video.start + "_" + (video.end - video.start) + path.extname( video.file );
- 
-    fs.exists( from, function(exists) {
-		//if (exists) {
-			fs.mkdir(toFolder, function(e) {
-				fs.rename( from, to, function(err) { 
-					if (err) {
-						console.error("[RecordModel.moveFile]: error when moving file: " + err);
-						if (cb) cb(err);
-					}
-					else {
-						
-						video.file = to;	// updates file path after moving it
-
-						ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() { 
-							self.camera.addChunk( self.stream.id, video );	// the chunk will be indexed by the camera
+		var from = self.folder + "/videos/tmp/" + path.basename( video.file );
+	    var to = toFolder + '/' + video.start + "_" + (video.end - video.start) + path.extname( video.file );
+	 
+	    fs.exists( from, function(exists) {
+			//if (exists) {
+				fs.mkdir(toFolder, function(e) {
+					fs.rename( from, to, function(err) { 
+						if (err) {
+							console.error("[RecordModel.moveFile]: error when moving file: " + err);
+							if (cb) cb(err);
+						}
+						else {
 							
-							if (cb) {
-								cb();
-							}
-						});
-					}                        
+							video.file = to;	// updates file path after moving it
+
+							ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() { 
+								self.camera.addChunk( self.stream.id, video );	// the chunk will be indexed by the camera
+								
+								if (cb) {
+									cb();
+								}
+							});
+						}                        
+					});
 				});
-			});
-		//}
-    });
+			//}
+	    });
+    }else{
+    	console.error("Cannot move video file since it is undefined");
+    }
+
 };
 // end of moveFile
 //

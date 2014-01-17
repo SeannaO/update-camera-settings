@@ -195,7 +195,7 @@
                         <form id="camera-schedule" role="form">
                             <div class="camera-schedule-switch">
 <input type="hidden" name="schedule_enabled" value="0">
-<input type="checkbox" id="camera-schedule-enable" name="schedule_enabled" class="switch" value="1"><label for="camera-schedule-enable">off/on</label></div>
+<input type="checkbox" id="camera-schedule-enable" name="schedule_enabled" class="switch" value="1"><label for="camera-schedule-enable">off/on</label></div><br />
 							<div id = 'schedule-table'>
 							</div>
 							<script>
@@ -337,48 +337,36 @@
             //
             $("#add-new-camera").click(function() {
 
-                var camera = {};
-                // clear the form                
+                var params = $('#camera-form').serializeObject();
 
-                // camera.name = $("#camera-name").val();
-                // camera.ip = $("#camera-ip").val();
-                // camera.rtsp = $("#rtsp-stream").val();
-				
-				console.log($("#camera-form").serializeArray());
-
-                $("#update-camera").hide();
-                $("#add-new-camera").show();
-
-                addCamera( camera, function(data) {
-                    $dialog = $("#add-new-camera-dialog");
-                    $dialog.modal('hide');
-                    addCameraItem( data );
-					console.log(data);
-                    for (var i in data.streams) {
-                        
-                        timelineSetup(data._id, data.streams[i].id, data.streams[i].name);
+                addCamera( params.camera, function(data) {
+                    if (data){
+                        var camera = data.camera;
+                        $dialog = $("#add-new-camera-dialog");
+                        $dialog.modal('hide');
+                        addCameraItem( camera );
+                        for (var i in camera.streams) {
+                            
+                            timelineSetup(camera._id, camera.streams[i].id, camera.streams[i].name);
+                        }
                     }
                 });
             });
 
-            $("#camera-username, #camera-password").blur(function(){
+
+            $("#add-stream").click(function(){
+                addStream();
+            })
+
+            $("#camera-username, #camera-password").keyup(function(){
                 var manufacturer = $("#camera-manufacturer").val();
                 if (manufacturer && manufacturer != 'unknown'){
-                    $("#camera-auth-status span").removeClass("glyphicon-remove-circle glyphicon-ok-circle");
-                    setConstraintsOnStreamFields(function(error){
-                        if (error){
-                            // credentials are correct and can connect to camera
-                            $("#camera-auth-status span").addClass("glyphicon-remove-circle");
-                        }else{
-                            $("#camera-auth-status span").addClass("glyphicon-ok-circle");
-                            if ($('#stream-panes').children().length === 0){
-                                addStream(function(){
-                                    setConstraintsOnStreamFields(function(error){
+                    getCameraOptions(function(data){
+                        setAuthStatus(data,function(){
+                            setConstraintsOnStreamFields(data, function(error){
 
-                                    });
-                                });
-                            }
-                        }
+                            });
+                        });
                     });
                 }else{
                 }
