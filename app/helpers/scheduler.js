@@ -29,7 +29,7 @@ Scheduler.prototype.launchForCamera = function( camera ) {
 				console.log("Starting camera:" + camera.name);
                 camera.startRecording();
 
-            }else if (camera.isRecording() && !camera.shouldBeRecording()){
+            } else if (camera.isRecording() && !camera.shouldBeRecording() && !camera.api.motion_enabled){
 
                 console.log("Stopping camera:" + camera.name);
                 camera.stopRecording();

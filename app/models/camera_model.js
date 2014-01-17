@@ -154,17 +154,19 @@ Camera.prototype.startMotionDetection = function() {
 
 	this.api.startListeningForMotionDetection( function(data) {
 
-		//console.log("*** start listenint for motion " + Date.now() + " * * * " + self.manufacturer);
+		// console.log("*** start listenint for motion " + Date.now() + " * * * " + self.manufacturer);
 
 		if ( !self.recording ) {
 			self.startRecording();
-			if (self.stopRecordingTimeout) {
-				clearTimeout( self.stopRecordingTimeout );
-			}
-			self.stopRecordingTimeout = setTimeout (function() {
-				self.stopRecording();
-			},30000);
 		}
+
+		if (self.stopRecordingTimeout) {
+			clearTimeout( self.stopRecordingTimeout );
+		}
+		self.stopRecordingTimeout = setTimeout (function() {
+			self.stopRecording();
+		}, 30000);
+
 	});
 };
 
