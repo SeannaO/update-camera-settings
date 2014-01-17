@@ -686,9 +686,10 @@ CamerasController.prototype.updateCameraSchedule = function(params, cb) {
     	update_params = params.schedule;
     }
 
-
     self.db.update({ _id: params._id }, { 
-        $set: update_params
+        $set: {
+			schedule: update_params
+		}
     }, { multi: false }, function (err, numReplaced) {
         if (err) {
             cb(err);

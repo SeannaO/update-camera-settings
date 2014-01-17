@@ -47,11 +47,6 @@ function Camera( cam, videosFolder ) {
 		username: this.username
 	});
 
-	// motion detection test -- TESTS ONLY
-	//self.setMotionDetection( function() {
-	//	self.startMotionDetection();
-	//});
-	//
 	
 	if ( !cam.deleted ) {	// starts camera if it's not being deleted
 		this.schedule = new WeeklySchedule(cam.schedule);
@@ -159,7 +154,7 @@ Camera.prototype.startMotionDetection = function() {
 		if ( !self.recording ) {
 			self.startRecording();
 			if (self.stopRecordingTimeout) {
-				clearInterval( self.stopRecordingTimeout );
+				clearTimeout( self.stopRecordingTimeout );
 			}
 			self.stopRecordingTimeout = setTimeout (function() {
 				self.stopRecording();
