@@ -7,7 +7,6 @@ var hlsHandler = require('./controllers/hls_controller');				// hls abstraction
 var mp4Handler = require('./controllers/mp4_controller');				// mp4 abstraction
 var CamerasController = require('./controllers/cameras_controller');	// cameras controller								
 var fs = require('fs');													// for sending files
-var lifeline = require('./helpers/lifeline_api.js');					// api layer for lifeline app
 var DiskSpaceAgent = require('./helpers/diskSpaceAgent.js');			// agent that periodically checks disk space
 
 var passport = require('passport');
@@ -296,13 +295,6 @@ app.get('/multiview', passport.authenticate('basic', {session: false}), function
 	res.sendfile(__dirname + '/views/multi.html');
 });
 // - - -
-
-
-/////////////////////
-/// lifeline  api ///
-////////////////////
-lifeline.setup( app, camerasController, mp4Handler, hlsHandler );
-////////////////////
 
 // server.listen(process.env.PORT || 8080);
 server.listen( 8080 );
