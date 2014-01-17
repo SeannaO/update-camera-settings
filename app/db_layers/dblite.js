@@ -159,14 +159,14 @@ Dblite.prototype.getExpiredChunks = function( expirationDate, numberOfChunks, cb
 };
 
 Dblite.prototype.getChunks = function( options, cb ) {
-
+    options = options || {};
     var limit = options.limit || 10;
     var sort = options.sort || "ASC";
     var query = 'SELECT id, file, start, end FROM videos WHERE id in (SELECT id FROM videos ORDER BY end ? LIMIT ?)';
 
     var fileList = this.db.query(
         query, 
-        [numberOfChunks], 
+        [sort, limit], 
         ['id', 'file', 'start', 'end'], 
         function(err, data) {
             if (err){

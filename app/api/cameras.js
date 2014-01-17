@@ -359,7 +359,7 @@ module.exports = function( app, passport, camerasController ) {
 
 				// in case the streamId is invalid or not specified
 				if (!cam.streams[stream]) {
-					error.error("*** stream " + stream + " on camera " + camId + " not found");
+					console.error("*** stream " + stream + " on camera " + camId + " not found");
 					for (var s in cam.streams){
 						stream = s;
 						break;

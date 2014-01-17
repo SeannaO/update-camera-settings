@@ -12,6 +12,10 @@ function Arecont( cam ){
 	}
 }
 
+Arecont.prototype.apiName = function() {
+	return 'Arecont';
+};
+
 Arecont.prototype.getRtspUrl = function (profile ) {
 
 	var self = this;
@@ -79,8 +83,8 @@ Arecont.prototype.getSensitivityRange = function () {
 Arecont.prototype.setCameraParams = function(params) {
 	
 	this.ip = params.ip 							|| this.ip;
-	this.username = params.username || params.user 	|| this.username;
-	this.password = params.password 				|| this.password;
+	this.username = params.username || params.user 	|| this.username || '';
+	this.password = params.password 				|| this.password || '';
 };
 
 Arecont.prototype.setMotionThreshold = function(threshold, cb){

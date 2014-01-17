@@ -38,7 +38,11 @@ function Camera( cam, videosFolder ) {
 
 	this.api = require('../helpers/camera_scanner/cam_api/api.js').getApi( this.manufacturer );
 
+	this.password = this.password ? this.password : '';
+	this.username = this.username ? this.username : '';
+
 	this.api.setCameraParams({
+		id: this._id,
 		ip: this.ip,
 		password: this.password,
 		username: this.username
@@ -232,10 +236,11 @@ Camera.prototype.startMotionDetection = function() {
 	
 	var self = this;
 
-	this.api.startListeningForMotionDetection( function() {
+	this.api.startListeningForMotionDetection( function(data) {
 
 		// console.log("* * * motion " + Date.now() + " * * * " + self.manufacturer);
-		
+		// console.log(data);
+
 		if ( !self.recording ) {
 			self.startRecording();
 			if (self.stopRecordingTimeout) {

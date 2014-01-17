@@ -2,6 +2,8 @@ var request = require('request');
 var xml2js = require('xml2js').parseString;
 var net = require('net');
 
+var axis_motion = require('./axis_motion.js');
+
 var baseUrl = 'http://{user}:{pass}@{ip}/axis-cgi/param.cgi?action=';
 var createProfileUrl = baseUrl + 'add&template=streamprofile&group=StreamProfile';
 var configureStreamUrl = baseUrl 
@@ -12,7 +14,8 @@ var parametersString = "videocodec=h264&framerate={framerate}&resolution={resolu
 var rtspUrl = 'rtsp://{user}:{pass}@{ip}/axis-media/media.amp?{profile_name}&framerate={framerate}&resolution={resolution}';
 var listParamsUrl = baseUrl + 'list&group={group_name}';
 var listAllParamsUrl = baseUrl + 'list';
-var listResolutionsUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&group=ImageSource.I0.Sensor.CaptureMode"
+var listResolutionsUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&group=ImageSource.I0.Sensor.CaptureMode";
+
 
 var Axis = function() {
 	this.cam = {};
@@ -23,6 +26,10 @@ Axis.server = net.createServer(function(c) {
 Axis.server.listen(8000, function() { 
 });
 
+
+Axis.prototype.apiName = function() {
+	return 'Axis';
+};
 
 Axis.prototype.checkForExistingProfile = function( profileName, cb ) {
 
@@ -131,16 +138,25 @@ Axis.prototype.isMotionEnabled = function() {
 	return self.motion_enabled;
 };
 
+
 Axis.prototype.getMotionParams = function(cb) {
 	
 	var self = this;
-
-	cb({
-		enabled: self.isMotionEnabled(), 
-		threshold: self.threshold, 
-		sensitivity: self.sensitivity
+	
+	axis_motion.getMotionInfo( self.cam.ip, self.cam.user, self.cam.password, function( err, info ) {
+		if (err) {
+			cb({ enabled: self.isMotionEnabled() });
+		} else {
+			cb({
+				enabled: self.isMotionEnabled(), 
+				threshold: info.object_size, 
+				sensitivity: info.sensitivity,
+				x:0
+			});
+		}
 	});
 };
+
 
 Axis.prototype.updateProfile = function(profileId, profile, cb) {
 
@@ -230,11 +246,11 @@ Axis.prototype.getRtspUrl = function ( profile ) {
 
 
 Axis.prototype.setCameraParams = function(params) {
-	
-	// console.log("[Axis] Updating camera params");
+
+	this.cam.id = params.id || this.cam.id;
 	this.cam.ip = params.ip || this.cam.ip;
-	this.cam.user = params.user || params.username || this.cam.user;
-	this.cam.password = params.password || this.cam.password;
+	this.cam.user = params.user || params.username || this.cam.user || '';
+	this.cam.password = params.password || this.cam.password || '';
 
 };
 
@@ -243,10 +259,22 @@ Axis.prototype.setMotionParams = function(params, cb){
 
 	var self = this;
 	self.motion_enabled = params.enabled;
-	self.threshold = params.threshold || 50;
-	self.sensitivity = params.sensitivity || 50;
 
-	if (cb) cb();
+
+	self.object_size = self.threshold = params.threshold || 15;
+	self.sensitivity = self.sensitivity = params.sensitivity || 50;
+
+	var motion_params = {
+		object_size: self.object_size,
+		sensitivity: self.sensitivity
+	};
+
+	axis_motion.configureMotion( self.cam.ip, self.cam.user, self.cam.password, self.cam.id, motion_params, function( err ) {
+		if (err) { 
+			console.error( '[Axis.setMotionParams] error: ' + err );
+		}
+		if (cb) cb( err );
+	});
 
 };
 
@@ -310,9 +338,7 @@ Axis.prototype.getResolutionOptions = function (cb) {
 				if (!err){
 					
 					try {
-						// console.log(result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry);
 						var output = result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry.map(function(element){
-							// console.log({value:element['$'].value, name:element['$'].niceValue});
 							element['$'].niceValue
 							return {value: re.exec(element['$'].niceValue)[0]  , name:element['$'].niceValue}
 						});
