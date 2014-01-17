@@ -194,6 +194,7 @@ Arecont.prototype.getParam = function(name, cb){
 				value = ele[1];
 				cb(error, value);
 			}else{
+				console.error(error);
 				cb(error);
 			}
 		}
@@ -221,15 +222,19 @@ Arecont.prototype.getMotionParams = function(cb){
 	self.getParam("mdlevelthreshold",function(error, threshold){
 		if (error){
 			cb(error);
+		}else{
+			self.getParam("mdsensitivity",function(error, sensitivity){
+				if (error){
+					console.error(error);
+					cb(error);
+				}else{
+					self.isMotionEnabled(function(error, enabled){
+						cb({enabled: enabled, threshold: parseInt(threshold), sensitivity: parseInt(sensitivity)})
+					});				
+				}
+			});			
 		}
-		self.getParam("mdsensitivity",function(error, sensitivity){
-			if (error){
-				cb(error);
-			}
-			self.isMotionEnabled(function(error, enabled){
-				cb({enabled: enabled, threshold: parseInt(threshold), sensitivity: parseInt(sensitivity)})
-			});
-		});
+
 	});
 };
 

@@ -38,7 +38,7 @@ function RecordModel( camera, stream ) {
 
 	// watcher will watch for new chunks on tmp folder
     this.watcher = new Watcher( self.folder + '/videos/tmp', 'ts');
-    filesToIndex = [];
+    this.filesToIndex = [];
 }
 // end of constructor
 //

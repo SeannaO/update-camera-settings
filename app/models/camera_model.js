@@ -659,7 +659,7 @@ Camera.prototype.addChunk = function( streamId, chunk ) {
 	}
 	
 	this.streams[ streamId ].db.insertVideo( chunk );
-	this.streams[ streamId ].latestThumb = video.start;	
+	this.streams[ streamId ].latestThumb = video.start + "_" + (video.end-video.start);	
 };
 // end of addChunk
 //

@@ -14,10 +14,10 @@ var Dblite = function( db_path, cb ) {
 
 	var self = this;
     this.db_path = db_path;
+    this.backup = new FileBackup(db_path);
+    this.backup.launch();
     this.db = dblite( self.db_path );
     this.createTableIfNotExists(function(){
-        self.backup = new FileBackup(db_path);
-        self.backup.launch();
         if(cb) cb();
     });
 };
@@ -162,7 +162,8 @@ Dblite.prototype.getChunks = function( options, cb ) {
     options = options || {};
     var limit = options.limit || 10;
     var sort = options.sort || "ASC";
-    var query = 'SELECT id, file, start, end FROM videos WHERE id in (SELECT id FROM videos ORDER BY end ? LIMIT ?)';
+    // var query = 'SELECT id, file, start, end FROM videos WHERE id in (SELECT id FROM videos ORDER BY end ? LIMIT ?)';
+    var query = 'SELECT id, file, start, end FROM videos ORDER BY end ? LIMIT ?';
 
     var fileList = this.db.query(
         query, 
@@ -188,7 +189,26 @@ Dblite.prototype.getOldestChunks = function( numberOfChunks, cb ) {
 };
 
 Dblite.prototype.getNewestChunks = function( numberOfChunks, cb ) {
-    this.getChunks({limit:numberOfChunks, sort: "DESC"}, cb);
+    var limit = numberOfChunks || 10;
+    // var query = 'SELECT id, file, start, end FROM videos WHERE id in (SELECT id FROM videos ORDER BY end ? LIMIT ?)';
+    var query = 'SELECT id, file, start, end FROM videos ORDER BY end DESC LIMIT ?';
+
+    var fileList = this.db.query(
+        query, 
+        [limit], 
+        ['id', 'file', 'start', 'end'], 
+        function(err, data) {
+            if (err){
+                console.log("getNewestChunks");
+                console.log(err);
+            }
+            if (!data || data.length === 0) {
+                 cb( [] );
+            } else {
+                cb(data);
+            }
+        }
+    );
 };
 
 /**

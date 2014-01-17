@@ -294,7 +294,7 @@
 
 				if (!timeline) return;
 				
-				var thumb = "/cameras/" + data.cam + "/streams/" + data.stream + "/thumb/"+data.start;
+				var thumb = "/cameras/" + data.cam + "/streams/" + data.stream + "/thumb/"+data.start + "_" + (data.end-data.start);
 
 				var img = new Image();
 			        

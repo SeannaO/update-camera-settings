@@ -215,7 +215,9 @@ CamerasController.prototype.getMotion = function(camId, cb) {
 		if (err || !cam || cam.length === 0) {
 			cb( err, null );
 		} else {
+			console.log(cam);
 			cam.api.getMotionParams(function(motion_params){
+				console.log(motion_params);
 				cb( err, motion_params );
 			});
 		}
