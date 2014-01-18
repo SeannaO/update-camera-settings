@@ -261,9 +261,13 @@ Axis.prototype.setMotionParams = function(params, cb){
 	var self = this;
 	self.motion_enabled = params.enabled;
 
+	if (!params.enabled) {
+		cb();
+		return;
+	}
 
-	self.object_size = self.threshold = params.threshold || 15;
-	self.sensitivity = self.sensitivity = params.sensitivity || 50;
+	self.object_size = self.threshold = params.threshold || self.object_size || 15;
+	self.sensitivity = self.sensitivity = params.sensitivity || self.sensitivity || 50;
 
 	var motion_params = {
 		object_size: self.object_size,
@@ -315,7 +319,7 @@ Axis.prototype.stopListeningForMotionDetection = function(){
 	//emit motion
 	// clear events
 	//
-	self.motion_enabled = false;
+	this.motion_enabled = false;
 };
 
 
