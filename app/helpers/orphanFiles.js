@@ -109,7 +109,12 @@ OrphanFilesChecker.prototype.checkForOrphanStreams = function( folders, cb ) {
 			var streamId = files[f];
 			var sql_file_match = sqliteRegex.exec( streamId );
 
-			var should_be_deleted = !cam.streams || ( cam.streams.length === 0 ) || ( !sql_file_match && cam.streams && !cam.streams[streamId] );
+			var should_be_deleted = !cam.streams || 
+									( cam.streams.length === 0 ) || 
+									( !sql_file_match && 
+									  cam.streams && 
+									  !cam.streams[streamId] &&
+									  streamId !== 'backup');
 
 			if ( should_be_deleted ) {			
 				var streamFolder = camFolder + '/' + streamId;

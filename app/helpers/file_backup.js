@@ -34,7 +34,10 @@ FileBackup.prototype.setup = function(cb) {
 					self.backups = list.map(function(v) { 
 						var re = /([\d]+).backup/;
 						matches = re.exec(v);
-						return { name:v, time: parseInt(matches[1] || "-1")}; 
+
+						// if matches is empty, 'matches[1]' will crash the code
+						var time = matches ? parseInt(matches[1], 10) : -1;
+						return { name:v, time: time }; 
 					}).sort(function(a, b) {
 						return a.time - b.time;
 					});
