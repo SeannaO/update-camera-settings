@@ -417,7 +417,7 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
 	var streamsHash = {};
 	var original_streams = cam.streams;
-	if (cam.streams > 0){
+	if (cam.streams.length > 0){
 		for (var s in cam.streams) {
 			if (!cam.streams[s].id) {
 				cam.streams[s].id = generateUUID();
@@ -440,7 +440,7 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 			newDoc.streams = original_streams;
 			self.pushCamera( c );
 			self.emit("create", c);
-			cb( err, newDoc );            
+			cb( null, c );            
 		}
 
 		//if (self.indexFilesInterval) {
@@ -724,13 +724,14 @@ CamerasController.prototype.updateCameraMotion = function(params, cb) {
         return;
     }
 	
-	var enabled = (params.camera.motion.enabled === '1');
-	params.camera.motion.enabled = enabled;
+	params.camera.motion.enabled = (params.camera.motion.enabled === '1');
 
 	camera.api.setMotionParams(params.camera.motion, function(error, body){
 		if (!error) {
 			self.emit("motion_update", {camera: camera, motion: params.camera.motion});
-			if (enabled) {
+			// Maybe we should really just be starting motion detection when scheduling is disabled or it is out of schedule
+			// this might allow the response to returned faster
+			if (params.camera.motion.enabled) {
 				camera.startMotionDetection();
 			} else {
 				camera.stopMotionDetection();
@@ -757,7 +758,6 @@ CamerasController.prototype.findCameraByLifelineId = function( lifelineId ) {
 function refresh( cb ) {
     cb( false );
 }
-
 
 CamerasController.prototype.setup = function( cb ) {
     

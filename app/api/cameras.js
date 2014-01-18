@@ -64,11 +64,13 @@ module.exports = function( app, passport, camerasController ) {
 	// posts new camera
 	app.post('/cameras/new', passport.authenticate('basic', {session: false}), function(req, res) {
 
-		camerasController.insertNewCamera( req.body, function( err, newDoc ) {
+		var params = req.body;
+
+		camerasController.insertNewCamera( params, function( err, cam ) {
 			if (err) {
-				res.status(422).json({ sucess: false, error: err  });
+				res.status(422).json({ success: false, error: err  });
 			} else {
-				res.json( newDoc );
+				res.json({success:true, camera: cam.toJSON() });
 			}
 		});
 	});
