@@ -212,7 +212,7 @@ module.exports = function( app, passport, camerasController ) {
 		var camId = req.params.id;
 
 		camerasController.getCamera( camId, function(err, cam) {
-			if (err || cam.length === 0) {
+			if (err || (cam && cam.length === 0)) {
 				console.error("*** getCamera error: ");
 				console.error( err ) ;
 				console.error("* * *");
