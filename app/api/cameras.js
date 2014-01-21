@@ -458,7 +458,7 @@ module.exports = function( app, passport, camerasController ) {
 
 		var camId = req.params.id;
 		var begin = parseInt( req.query.begin, 10 );
-		var end = parseInt( req.query.end, 10 );
+		var end = parseInt( (req.query.end || Date.now()), 10 );
 		var streamId = req.query.stream;
 
 		camerasController.getCamera( camId, function(err, cam) {
@@ -469,6 +469,8 @@ module.exports = function( app, passport, camerasController ) {
 				res.json( { error: err } );
 			} else {
 
+				// if no stream is not specified then just give the first stream
+
 				//for (var stream in cam.streams){
 				// in case the streamId is invalid or not specified
 				if (!cam.streams[streamId]) {
@@ -478,6 +480,7 @@ module.exports = function( app, passport, camerasController ) {
 					}
 				}
 
+				// if there are no videos in the specified time frame then try another stream
 
 				hlsHandler.generateFinitePlaylist( cam.streams[streamId].db, camId, streamId, begin, end, function( playlist ) {
 
@@ -488,6 +491,8 @@ module.exports = function( app, passport, camerasController ) {
 
 					res.end(playlist);    
 				});
+				// support so that a finite length is not required (ie no end variable)
+
 			}
 			});
 		});

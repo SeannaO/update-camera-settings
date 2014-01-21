@@ -417,7 +417,7 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
 	var streamsHash = {};
 	var original_streams = cam.streams;
-	if (cam.streams.length > 0){
+	if (cam.streams && cam.streams.length > 0){
 		for (var s in cam.streams) {
 			if (!cam.streams[s].id) {
 				cam.streams[s].id = generateUUID();
