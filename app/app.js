@@ -242,6 +242,7 @@ app.use('/js', express.static(__dirname + '/assets/js'));
 app.use('/img', express.static(__dirname + '/assets/img'));
 app.use('/swf', express.static(__dirname + '/assets/swf'));
 app.use('/fonts', express.static(__dirname + '/assets/fonts'));
+app.use(express.static(__dirname + '/assets/public'));
 // end of static files
 // - - -
 
