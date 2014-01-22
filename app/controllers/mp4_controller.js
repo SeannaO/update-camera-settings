@@ -188,6 +188,7 @@ function takeSnapshot( db, cam, req, res, cb ) {
 
     if ( isNaN(time) ) {
         res.end("invalid time");
+		if (cb) cb();
         return;
     }
 
