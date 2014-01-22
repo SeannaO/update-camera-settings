@@ -69,8 +69,9 @@ RecordModel.prototype.setupFolders = function() {
     this.setupFolderSync(this.folder + "/videos/tmp");
     this.setupFolderSync(this.folder + "/thumbs");
  
-    var tmpFolder = this.folder + "/videos/tmp";
+	this.cleanTmpFolder();
 
+	/*
 	// cleans up tmp folder
     fs.readdirSync(tmpFolder).forEach(function(file, index){
 
@@ -82,9 +83,31 @@ RecordModel.prototype.setupFolders = function() {
             fs.unlinkSync(curPath);
         }
     });
+	*/
 };
 // end of setupFolders
 //
+
+RecordModel.prototype.cleanTmpFolder = function() {
+	 
+	var tmpFolder = this.folder + "/videos/tmp";
+
+	fs.readdir(tmpFolder, function(err, files) {
+		if (!err && files) {
+			files.forEach(function(file, index){
+
+				var curPath = tmpFolder + "/" + file;
+
+				if(fs.statSync(curPath).isDirectory()) { 
+					deleteFolderRecursive(curPath);
+				} else { 
+					fs.unlinkSync(curPath);
+				}
+			});
+
+		}
+	});
+}
 
 
 /**
@@ -115,6 +138,8 @@ RecordModel.prototype.updateCameraInfo = function( camera, stream ) {
 RecordModel.prototype.stopRecording = function() {
 
 	console.log(" - - - record model stop recording - - - ");
+	
+	// this.cleanTmpFolder();
 
     this.status = STOPPING;							// didn't stop yet
 
@@ -237,7 +262,7 @@ RecordModel.prototype.startRecording = function() {
 	}
 
     this.status = RECORDING;
-    
+
 	this.lastChunkTime = Date.now();	// resets timer 
     this.watcher.startWatching();		// launches watcher
 	
@@ -632,8 +657,10 @@ RecordModel.prototype.recordContinuously = function() {
 
 				// ... and when it's not because it was stopped by the camera
 				if (self.status !== STOPPING && self.status !== STOPPED) {
+					
 					self.recordContinuously();			// ...attempts to restart it
 					self.checkForConnectionErrors();	// TODO: this call might be obsolete
+					
 				}
 			}, 500 );	// this timeout avoids that 
 						// the app tries to restart the process too frequently
