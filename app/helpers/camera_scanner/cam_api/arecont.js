@@ -190,12 +190,14 @@ Arecont.prototype.getParam = function(name, cb){
 		
 			if (!error && body) {
 				var ele = body.toString().split("=");
-
-				value = ele[1];
-				cb(error, value);
+				if (ele[1] && ele[1].length > 0){
+					cb(error, ele[1]);
+				}else{
+					cb("[arecont] no content");
+				}
 			}else{
-				console.error(error);
-				cb(error);
+				console.error("[arecont] no content");
+				cb("[arecont] no content");
 			}
 		}
 	);	
