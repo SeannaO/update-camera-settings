@@ -619,8 +619,8 @@ RecordModel.prototype.recordContinuously = function() {
 					// when error occurs, 
 					// and it's not because the process was killed
                     if (error !== null  && error.signal != 'SIGKILL' ) {
-						console.log("[ error ] RecordModel.recordContinuously: ffmpeg record error");
-						console.log( error );
+						console.error("[ error ] RecordModel.recordContinuously: ffmpeg record error");
+						console.error( error );
 						setTimeout( function() {
 							self.checkForConnectionErrors();	// TODO: this call might be obsolete
 						}, 500 );

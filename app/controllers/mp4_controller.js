@@ -198,7 +198,7 @@ function takeSnapshot( db, cam, req, res, cb ) {
         
         fs.exists(file, function(exists) {
             if (exists) {
-			inMemorySnapshot(file, offset, res, function() {
+				inMemorySnapshot(file, offset, res, function() {
 					if (cb) cb();
 				});
             } else {
