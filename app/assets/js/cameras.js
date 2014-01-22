@@ -239,7 +239,7 @@ var addCamera = function(camera, cb) {
         data: JSON.stringify( camera ),
         contentType: 'application/json',
         success: function(data) {
-            cb( data );
+            cb( data.camera );
         },
 		error: function( data ) {
 			console.log(data);

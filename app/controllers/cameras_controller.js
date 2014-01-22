@@ -124,6 +124,7 @@ CamerasController.prototype.takeSnapshot = function( camId, req, res, cb ) {
         } else {
 			
             self.mp4Handler.takeSnapshot( cam.streams[streamId].db, cam, req, res, function() {
+            	res.json();
 				if (cb) {
 					cb();
 				}
@@ -215,7 +216,6 @@ CamerasController.prototype.getMotion = function(camId, cb) {
 		if (err || !cam || cam.length === 0) {
 			cb( err, null );
 		} else {
-			console.log(cam);
 			cam.api.getMotionParams(function(motion_params){
 				console.log(motion_params);
 				cb( err, motion_params );

@@ -839,7 +839,6 @@ Camera.prototype.indexPendingFiles = function( streamList, cb ) {
 
 		if (self.indexing) {									// avoids calling the method
 																// while the camera is still indexing
-			console.log('*** this camera is already indexing');
 			return;
 		}
 
