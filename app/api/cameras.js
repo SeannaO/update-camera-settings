@@ -212,13 +212,13 @@ module.exports = function( app, passport, camerasController ) {
 		var camId = req.params.id;
 
 		camerasController.getCamera( camId, function(err, cam) {
-			if (err || (cam && cam.length === 0)) {
+			if (err || (cam && cam.length === 0) || !cam) {
 				console.error("*** getCamera error: ");
 				console.error( err ) ;
 				console.error("* * *");
 				res.status(422).end({success:false, error: "couldn't find this camera"});
 			} else {
-				res.render('camera', cam.toJSON());
+				res.render('camera', cam.toJSON());				
 			}
 		});
 	});
