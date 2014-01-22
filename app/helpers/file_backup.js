@@ -83,14 +83,13 @@ FileBackup.prototype.stop = function() {
 
 FileBackup.prototype.purgeOldBackup = function() {
 	var self = this;
-	console.log(self.backups.length - self.backupLimit);
 	if (self.backups.length > self.backupLimit){
 		self.purging = true
 		var backup = self.backups.shift();
 		console.log("purging: " + self.backupFolder + "/" + backup.name)
 		fs.unlink(self.backupFolder + "/" + backup.name, function(err){
 			if (err){
-				console.error("Error while purging backup: ");
+				console.log("Error while purging backup: ");
 				console.error(err);
 				self.backups.unshift(backup);
 			}

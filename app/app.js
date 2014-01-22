@@ -37,7 +37,7 @@ console.error = function(msg) {
 // - - -
 // stores machine ip
 var localIp = "";
-
+var hostname = require('os').hostname();
 require('dns').lookup(require('os').hostname(), function (err, add, fam) {
     localIp = add;
 	process.env['IP'] = localIp;
@@ -63,9 +63,9 @@ var lifelineAuthentication = function(username,password, done){
 				// stores lifeline auth in memory for later usage
 				process.env['USER'] = username;
 				process.env['PASSWORD'] = password;
-				
 				return done(null,true);
 			} else {
+				console.log("connect unauthorized");
 				return done("unauthorized", false);
 			}
 		}
@@ -130,7 +130,9 @@ io.set('log level', 1);
 io.configure(function (){
   io.set('authorization', function (handshakeData, callback) {
   	// extract the username and password from the handshakedata
-  	if (handshakeData.xdomain){
+  	console.log("hostname :" + hostname);
+  	console.log(handshakeData);
+  	if (localIp !== handshakeData.address.address){
   		console.log("XDomain SocketIO connection:" + JSON.stringify(handshakeData, null, 4));
 	  	var re = /Basic (.+)/;
 		var matches = re.exec(handshakeData.headers.authorization);
@@ -138,11 +140,21 @@ io.configure(function (){
 			var buf = new Buffer(matches[1], 'base64');
 			var credentials = buf.toString().split(":");
 			if (credentials && credentials.length == 2){
-				lifelineAuthentication(credentials[0],credentials[1], callback);
+				lifelineAuthentication(credentials[0],credentials[1], function(err, success){
+					if (!err){
+						console.log("successfully connected through socket.io");
+					}
+					callback(err, success);
+				});
 			}
 		}else if (handshakeData.query.username && handshakeData.query.password){
 			console.log("unauthorized: Bad username and password");
-			lifelineAuthentication(handshakeData.query.username,handshakeData.query.password, callback);
+			lifelineAuthentication(handshakeData.query.username,handshakeData.query.password, function(err, success){
+				if (!err){
+					console.log("successfully connected through socket.io");
+				}
+				callback(err, success);
+			});
 		}else{
 			console.log("unauthorized: Specify username and password");
 			callback("unauthorized: Specify username and password", false);
