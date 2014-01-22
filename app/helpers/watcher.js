@@ -66,6 +66,27 @@ Watcher.prototype.checkNewFile = function() {
     var removed = [];
     var files = [];
 
+	try {
+		files = fs.readdir( self.dir, function( err, files ) {
+			for (var i in files) {
+				var f = files[i];
+				if ( self.files.indexOf(f) == -1 && self.isValidExtension(f) ) {
+					added.push( f );
+				} 
+			}
+
+			self.files = files;
+
+			if (added.length > 0) {
+				self.emit('new_files', added);
+			}
+		});
+	} catch (err) {
+		console.log( err );
+	}
+
+	
+/*
     try {
         files = fs.readdirSync( self.dir );
     } catch (err) {
@@ -84,6 +105,7 @@ Watcher.prototype.checkNewFile = function() {
     if (added.length > 0) {
         self.emit('new_files', added);
     }
+	*/
 };
 
 module.exports = Watcher;
