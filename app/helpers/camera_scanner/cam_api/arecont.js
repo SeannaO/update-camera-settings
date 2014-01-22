@@ -196,7 +196,6 @@ Arecont.prototype.getParam = function(name, cb){
 					cb("[arecont] no content");
 				}
 			}else{
-				console.error("[arecont] no content");
 				cb("[arecont] no content");
 			}
 		}

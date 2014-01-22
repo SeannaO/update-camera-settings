@@ -43,7 +43,35 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 	process.env['IP'] = localIp;
 });
 // - - -
+var lifelineAuthentication = function(username,password, done){
+	var digest = new Buffer(username + ":" + password).toString('base64');
+	
+	var url = "https://" + username + ":" + password + "@localhost/cp/UserVerify?v=2&login=" + username + "&password=" + password;
+	request({ 
+		url: url,
+		strictSSL: false,
+		headers: {
+			'User-Agent': 'nodejs',
+			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+			'Authorization': 'Basic ' + digest	
+		},
+	}, function( error, response, body) {
+		if (error){ return done(error); }
+		if (body) { 
 
+			if (body === 'true') {
+				// stores lifeline auth in memory for later usage
+				process.env['USER'] = username;
+				process.env['PASSWORD'] = password;
+				
+				return done(null,true);
+			} else {
+				return done("unauthorized", false);
+			}
+		}
+	}
+	);
+}
 
 passport.use(new BasicStrategy( function(username,password,done){
 				
@@ -59,35 +87,8 @@ passport.use(new BasicStrategy( function(username,password,done){
 			});	
 			return;
 		}
-
 		process.nextTick(function(){
-			var digest = new Buffer(username + ":" + password).toString('base64');
-			
-			var url = "https://" + username + ":" + password + "@localhost/cp/UserVerify?v=2&login=" + username + "&password=" + password;
-			request({ 
-				url: url,
-				strictSSL: false,
-				headers: {
-					'User-Agent': 'nodejs',
-					'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-					'Authorization': 'Basic ' + digest	
-				},
-			}, function( error, response, body) {
-				if (error){ return done(error); }
-				if (body) { 
-
-					if (body === 'true') {
-						// stores lifeline auth in memory for later usage
-						process.env['USER'] = username;
-						process.env['PASSWORD'] = password;
-						
-						return done(null,true);
-					} else {
-						return done(null, false);
-					}
-				}
-			}
-			);
+			lifelineAuthentication(username,password, done);
 		});
 	})
 );
@@ -124,6 +125,34 @@ var io = require('socket.io');
 var server = require('http').createServer(app);
 io = io.listen(server);
 io.set('log level', 1);
+
+
+io.configure(function (){
+  io.set('authorization', function (handshakeData, callback) {
+  	// extract the username and password from the handshakedata
+  	if (handshakeData.xdomain){
+  		console.log("XDomain SocketIO connection:" + JSON.stringify(handshakeData, null, 4));
+	  	var re = /Basic (.+)/;
+		var matches = re.exec(handshakeData.headers.authorization);
+		if (matches && matches.length == 2){
+			var buf = new Buffer(matches[1], 'base64');
+			var credentials = buf.toString().split(":");
+			if (credentials && credentials.length == 2){
+				lifelineAuthentication(credentials[0],credentials[1], callback);
+			}
+		}else if (handshakeData.query.username && handshakeData.query.password){
+			console.log("unauthorized: Bad username and password");
+			lifelineAuthentication(handshakeData.query.username,handshakeData.query.password, callback);
+		}else{
+			console.log("unauthorized: Specify username and password");
+			callback("unauthorized: Specify username and password", false);
+		}
+  	}else{
+  		callback(null, true);
+  	}
+  });
+});
+
 // end of socket.io config
 // - - -
 
@@ -220,7 +249,7 @@ require('./controllers/health.js')( io );
 // - - -
 
 io.on('connection', function(socket) {
-	console.log("Socket Connection: ");
+	
 });
 
 // - - - -
