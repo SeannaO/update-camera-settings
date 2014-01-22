@@ -91,7 +91,6 @@ FileBackup.prototype.purgeOldBackup = function() {
 			if (err){
 				console.log("Error while purging backup: ");
 				console.error(err);
-				self.backups.unshift(backup);
 			}
 			self.purgeOldBackup();
 		});
