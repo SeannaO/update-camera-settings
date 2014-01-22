@@ -50,6 +50,9 @@ function inMemorySnapshot( file, offset, res, options, cb) {
 	});
 	
 	res.on('close', function() {
+		
+		if (cb) cb();
+
 		if( child ) {
 			child.kill();
 		}
