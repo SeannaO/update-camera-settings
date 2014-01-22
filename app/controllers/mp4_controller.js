@@ -197,15 +197,14 @@ function takeSnapshot( db, cam, req, res, cb ) {
         
         fs.exists(file, function(exists) {
             if (exists) {
-
-				inMemorySnapshot(file, offset, res, function() {
-						if (cb) cb();
-					});
-                } else {
-                    res.end( "sorry, no videos were recorded at " + (new Date(time)) );
+			inMemorySnapshot(file, offset, res, function() {
 					if (cb) cb();
-                }
-            });
+				});
+            } else {
+                res.end( "sorry, no videos were recorded at " + (new Date(time)) );
+				if (cb) cb();
+            }
+        });
     });
     
 }

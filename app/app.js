@@ -22,10 +22,17 @@ exec('killall smartctl', function( error, stdout, stderr) {});
 
 var logger = new (winston.Logger)({
 	transports: [
-		new (winston.transports.Console)(),
-		new (winston.transports.File)({filename: 'production.log'})
+		new (winston.transports.Console)({'timestamp':true, colorize: true, handleExceptions: true})
+		// new (winston.transports.File)({ filename: 'production.log', handleExceptions: true})
 	]
 });
+
+console.log = function(msg) {
+	logger.info(msg);
+};
+console.error = function(msg) {
+	logger.error(msg);
+};
 
 // - - -
 // stores machine ip
@@ -97,7 +104,13 @@ var logrequest = function(req, res, next) {
 		}
 	}
 	
-    logger.log("[" + auth_user + "] " + req.method + " " + req.url);
+    logger.info("[" + auth_user + "] " + req.method + " " + req.url);
+    if (req.params){
+    	logger.info("Params: " + JSON.stringify(req.params, null, 4) );
+    }
+    if (req.body && Object.keys(req.body).length > 0){
+    	logger.info("Body: " + JSON.stringify(req.body, null, 4));
+	}
     next(); // Passing the request to the next handler in the stack.
 };
 
@@ -172,7 +185,7 @@ if ( process.env['NODE_ENV'] === 'development' || process.argv.indexOf('-develop
 
 
 // instantiates camerasController, launching all cameras
-var camerasController = new CamerasController( mp4Handler, __dirname + '/db/cam_db', baseFolder);
+var camerasController = new CamerasController( mp4Handler, baseFolder + '/cam_db', baseFolder);
 
 
 app.all('/*', function(req, res, next) {
@@ -207,16 +220,21 @@ require('./controllers/health.js')( io );
 // - - -
 
 io.on('connection', function(socket) {
-
+	console.log("Socket Connection: ");
 });
 
 // - - - -
 // socket.io broadcasts setup
 camerasController.on('new_chunk', function( data ) {
-    io.sockets.emit( 'newChunk', data );
+	console.log("[new_chunk] " + JSON.stringify(data, null, 4));
 });
 
 camerasController.on('camera_status', function( data ) {
+	if (data.status === "disconnected" || data.status === "offline"){
+		console.error("[camera_status] " + data.cam_id + " is " + data.status);
+	}else{
+		console.log("[camera_status] " + data.cam_id + " is " + data.status);	
+	}
 	io.sockets.emit( 'cameraStatus', data );
 });
 // end of socket.io broadcasts setup
