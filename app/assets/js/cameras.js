@@ -60,7 +60,7 @@ var timelineSetup = function( cam_id, id, name ) {
 			id: "timeline-"+id,
 			class: "timeline-container"
 		}).appendTo("#camera-item-"+cam_id).mouseleave( function() {
-			$("#thumb").fadeOut();
+			$("#thumb").hide();
 		});
 
 	}
@@ -108,7 +108,7 @@ var showThumb = function( thumb ) {
 	}
 	*/
 
-	$("#thumb").fadeIn();
+	$("#thumb").show();
 
 	var dt = Date.now() - lastThumbRequest;
 
