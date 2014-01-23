@@ -12,6 +12,8 @@ var DiskSpaceAgent = require('./helpers/diskSpaceAgent.js');			// agent that per
 var passport = require('passport');
 var BasicStrategy = require('passport-http').BasicStrategy;
 
+var authCache = {};
+
 // - - -
 // kills any ffmpeg, iostat and smartctl processes that might be already running
 var exec = require('child_process').exec;
@@ -48,33 +50,46 @@ var lifelineAuthentication = function(username,password, done){
 	if (process.env['NODE_ENV'] === 'development') {
 		return done(null, true);
 	}
-	var digest = new Buffer(username + ":" + password).toString('base64');
-	
-	var url = "https://" + username + ":" + password + "@localhost/cp/UserVerify?v=2&login=" + username + "&password=" + password;
-	request({ 
-		url: url,
-		strictSSL: false,
-		headers: {
-			'User-Agent': 'nodejs',
-			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-			'Authorization': 'Basic ' + digest	
-		},
-	}, function( error, response, body) {
-		if (error){ return done(error); }
-		if (body) { 
 
-			if (body === 'true') {
-				// stores lifeline auth in memory for later usage
-				process.env['USER'] = username;
-				process.env['PASSWORD'] = password;
-				return done(null,true);
-			} else {
-				console.log("connect unauthorized");
-				return done("unauthorized", false);
+	if (!authCache.date || Date.now() - authCache.date > 15 * 60 * 1000) {	// auth cache expires every 15mini
+		var digest = new Buffer(username + ":" + password).toString('base64');
+		
+		var url = "https://" + username + ":" + password + "@localhost/cp/UserVerify?v=2&login=" + username + "&password=" + password;
+		request({ 
+			url: url,
+			strictSSL: false,
+			headers: {
+				'User-Agent': 'nodejs',
+				'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+				'Authorization': 'Basic ' + digest	
+			},
+		}, function( error, response, body) {
+			if (error){ return done(error); }
+			if (body) { 
+
+				if (body === 'true') {
+					// stores lifeline auth in memory for later use
+					process.env['USER'] = username;
+					process.env['PASSWORD'] = password;
+					
+					authCache.username = username;
+					authCache.password = password;
+					authCache.date = Date.now();
+					
+					return done(null,true);
+				} else {
+					console.log("connect unauthorized");
+					return done("unauthorized", false);
+				}
 			}
+		});
+	} else {
+		if ( username === authCache.username && password === authCache.password ) {
+			return done( null, true );
+		} else {
+			return( 'unauthorized', false );
 		}
 	}
-	);
 };
 
 passport.use(new BasicStrategy( function(username,password,done){
