@@ -272,9 +272,9 @@ camerasController.on('new_chunk', function( data ) {
 
 camerasController.on('camera_status', function( data ) {
 	if (data.status === "disconnected" || data.status === "offline"){
-		console.error("[camera_status] " + data.cam_id + " is " + data.status);
+		console.error("[camera_status] " + data.cam_id + " : " + data.stream_id + " is " + data.status);
 	}else{
-		console.log("[camera_status] " + data.cam_id + " is " + data.status);	
+		console.log("[camera_status] " + data.cam_id + " : " + data.stream_id + " is "+ data.status);	
 	}
 	io.sockets.emit( 'cameraStatus', data );
 });

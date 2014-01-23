@@ -107,7 +107,7 @@ RecordModel.prototype.cleanTmpFolder = function() {
 
 		}
 	});
-}
+};
 
 
 /**
@@ -139,7 +139,7 @@ RecordModel.prototype.stopRecording = function() {
 
 	console.log(" - - - record model stop recording - - - ");
 	
-	// this.cleanTmpFolder();
+	this.cleanTmpFolder();		// resets temp folder
 
     this.status = STOPPING;							// didn't stop yet
 
@@ -267,14 +267,14 @@ RecordModel.prototype.startRecording = function() {
     this.watcher.startWatching();		// launches watcher
 	
     this.watcher.on("new_files", function( files ) {
-		 
+
 		// console.log(files);
 		if (self.status === ERROR) {							// if status WAS ERROR,
-			self.emit('camera_status', {status: 'connected'});	// emits event telling that
+			self.emit('camera_status', {status: 'connected', stream_id: self.stream.id});	// emits event telling that
 																// we're ok now
 		} else {
 
-			self.emit('camera_status', {status: 'online'});		// 
+			self.emit('camera_status', {status: 'online', stream_id: self.stream.id});		// 
 		}
 
 		self.status = RECORDING;
@@ -321,6 +321,7 @@ RecordModel.prototype.launchMonitor = function() {
 			self.lastChunkTime = Date.now();	// refreshes timer
 
 			// restarts ffmpeg
+			console.log('[RecordModel] monitor: no new chunks in a while, will attempt to stop/start recording');
 			self.stopRecording();
 			setTimeout( function() {	// wait a few millis before starting ffmpeg again
 										// to avoid the cost of respawning a process
@@ -655,7 +656,7 @@ RecordModel.prototype.recordContinuously = function() {
 			
 			setTimeout( function() {
 
-				// ... and when it's not because it was stopped by the camera
+				// ... and when it's not because it was stopped by the camera model
 				if (self.status !== STOPPING && self.status !== STOPPED) {
 					
 					self.recordContinuously();			// ...attempts to restart it

@@ -466,7 +466,7 @@ CamerasController.prototype.pushCamera = function( cam ) {
     });
 
     cam.on('camera_status', function( data ) {
-        self.emit('camera_status', data);
+		self.emit('camera_status', data);
     });
 };
 

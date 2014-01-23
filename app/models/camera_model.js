@@ -61,7 +61,7 @@ function Camera( cam, videosFolder ) {
 			self.addStream( cam.streams[i] );
 		}
 	
-		this.setupEvents();
+		// this.setupEvents();
 
 		if (!this.recording && this.shouldBeRecording()) {
 			console.log("starting camera " + (this.name || this.ip));
@@ -184,6 +184,7 @@ Camera.prototype.addStream = function( stream ) {
     });
 
 	if (!stream.toBeDeleted) {
+
 		stream.url = this.api.getRtspUrl({
 			resolution: stream.resolution,
 			framerate: stream.framerate,
@@ -202,7 +203,8 @@ Camera.prototype.addStream = function( stream ) {
 			self.emit( 'new_chunk', data);
 		});
 		stream.recordModel.on('camera_status', function(data) {
-			self.emit('camera_status', { cam_id: self._id, status: data.status } );
+			console.log('emit: ' + stream.id);
+			self.emit('camera_status', { cam_id: self._id, status: data.status, stream_id: stream.id } );
 		});
 	} else {
 		self.streamsToBeDeleted[stream.id] = stream;
