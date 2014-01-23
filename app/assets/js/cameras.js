@@ -11,12 +11,12 @@ $(document).ready(function(){
 		if (mouseX < $(window).width()/2) { 
 			$("#thumb").css('left', mouseX+'px');
 		} else {
-			$("#thumb").css('left', (mouseX-300)+'px');
+			$("#thumb").css('left', (mouseX-170)+'px');
 		}
 		if (mouseY < $(window).height()/2) {
-			$("#thumb").css('top', (mouseY+15)+'px');
+			$("#thumb").css('top', (mouseY)+'px');
 		} else {
-			$("#thumb").css('top', (mouseY-250)+'px');
+			$("#thumb").css('top', (mouseY-130)+'px');
 		}
 	});
 

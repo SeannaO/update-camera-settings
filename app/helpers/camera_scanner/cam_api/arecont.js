@@ -1,7 +1,7 @@
 var request = require('request');
 
 var baseUrl = 'http://{user}:{pass}@{ip}';
-var rtspUrl = 'rtsp://{user}:{pass}@{ip}/h264.sdp?res={resolution}&fps={framerate}';
+var rtspUrl = 'rtsp://{user}:{pass}@{ip}/h264.sdp?res={resolution}&fps={framerate}&qp=32';
 
 function Arecont( cam ){
 
