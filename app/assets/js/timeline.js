@@ -9,13 +9,13 @@ var Timeline = function( el ) {
 	var chart = d3.select(el)
 		.append("svg")
 		.attr("width", "100%")
-		.attr("height", 80)
+		.attr("height", 30)
 		.attr("class", "chart")
 		.style("background", "none");
 
 	this.timeline = chart.append("g")
 		.attr("width", "100%")
-		.attr("height", 80)
+		.attr("height", 20)
 		.attr("class", "boxes");
 
 	this.timeline.append("g")
@@ -95,7 +95,7 @@ Timeline.prototype.append = function( data ) {
 		.attr("x", self.scaleX( data.start ) + "%")
 		.attr("y", 10)
 		.attr("width", self.scaleW(data.w) + "%" )
-		.attr("height", 20)
+		.attr("height", 15)
 		.style("fill", "rgb(100,100,200)")
 		.style("stroke", "rgb(100,100,200)")
 		.style("stroke-width", "2")

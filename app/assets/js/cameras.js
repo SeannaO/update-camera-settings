@@ -56,10 +56,18 @@ var timelineSetup = function( cam_id, id, name ) {
 	var count = 0;
 
 	if (id) {
-		$("<div>", {
+		var timelineContainer = $("<div>", {
 			id: "timeline-"+id,
 			class: "timeline-container"
-		}).appendTo("#camera-item-"+cam_id).mouseleave( function() {
+		});
+		var timelineName = $("<span>", {
+			id: "timeline-name-"+id,
+			class: "timeline-name",
+			html: (name)
+		})
+
+		timelineContainer.append(timelineName);
+		timelineContainer.appendTo("#camera-item-"+cam_id).mouseleave( function() {
 			$("#thumb").hide();
 		});
 
@@ -138,8 +146,18 @@ var list = function() {
             if (data[i]) {
                 cameras.push( data[i] );
                 addCameraItem(data[i]);
+
                 for (var j in data[i].streams) {
-                    timelineSetup(data[i]._id, data[i].streams[j].id, data[i].streams[j].name);
+					var text = '';
+					if ( data[i].streams[j].name ) {
+						text = data[i].streams[j].name;
+					}else if ( data[i].streams[j].resolution ) {
+						text = data[i].streams[j].resolution;
+					} else {
+						text = data[i].streams[j].url;
+					}
+
+                    timelineSetup(data[i]._id, data[i].streams[j].id, text);
                 }
             }
         }
@@ -520,7 +538,17 @@ scanForCameras = function() {
                         if (result && result._id){
                             addCameraItem( result );
                             for (var j in result.streams) {
-                                timelineSetup(result._id, result.streams[j].id, result.streams[j].name);
+
+								var text = '';
+								if ( streams[j].name ) {
+									text = streams[j].name;
+								}else if ( streams[j].resolution ) {
+									text = streams[j].resolution;
+								} else {
+									text = streams[j].url;
+								}
+
+                                timelineSetup(result._id, result.streams[j].id, text);
                             }
                         }
                     });                                
