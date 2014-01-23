@@ -2,6 +2,16 @@ body {
 	margin: 0px 30px;
 }
 
+#header{
+	/*height:105px;*/
+}
+
+#device-info dl{
+	display:none;
+	height:60px;
+	/*overflow:hidden;*/
+}
+
 #header .title{
     padding:10px 0px;
 }
@@ -20,13 +30,6 @@ body {
 #storage-info{
     float:right;
     margin-left:10px;
-}
-
-.timeline-start-time {
-	position: absolute;
-	top: 28px;
-	left: -10px;
-	color: #8F8F8F;
 }
 
 #camera-auth-status{
@@ -56,14 +59,6 @@ body {
 }
 
 
-.timeline-end-time {
-	position: absolute;
-	top: 28px;
-	right: 10px;
-	color: #8F8F8F;
-}
-
-
 .thumb-container {
 	position: absolute;
 	top: 0px;
@@ -72,6 +67,20 @@ body {
 
 .timeline-container {
 	position: relative
+}
+
+.timeline-end-time {
+	position: absolute;
+	top: 28px;
+	right: 0px;
+	color: #8F8F8F;
+}
+
+.timeline-start-time {
+	position: absolute;
+	top: 28px;
+	left: 0px;
+	color: #8F8F8F;
 }
 
 .camera-item {
