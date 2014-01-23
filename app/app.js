@@ -44,6 +44,10 @@ require('dns').lookup(require('os').hostname(), function (err, add, fam) {
 });
 // - - -
 var lifelineAuthentication = function(username,password, done){
+
+	if (process.env['NODE_ENV'] === 'development') {
+		return done(null, true);
+	}
 	var digest = new Buffer(username + ":" + password).toString('base64');
 	
 	var url = "https://" + username + ":" + password + "@localhost/cp/UserVerify?v=2&login=" + username + "&password=" + password;
@@ -71,7 +75,7 @@ var lifelineAuthentication = function(username,password, done){
 		}
 	}
 	);
-}
+};
 
 passport.use(new BasicStrategy( function(username,password,done){
 				
@@ -139,10 +143,14 @@ io.configure(function (){
 		if (matches && matches.length == 2){
 			var buf = new Buffer(matches[1], 'base64');
 			var credentials = buf.toString().split(":");
+
 			if (credentials && credentials.length == 2){
 				lifelineAuthentication(credentials[0],credentials[1], function(err, success){
 					if (!err){
 						console.log("successfully connected through socket.io");
+					} else {
+						console.error("socket.io auth error: ");
+						console.error(err);
 					}
 					callback(err, success);
 				});
@@ -268,6 +276,7 @@ io.on('connection', function(socket) {
 // socket.io broadcasts setup
 camerasController.on('new_chunk', function( data ) {
 	console.log("[new_chunk] " + JSON.stringify(data, null, 4));
+	io.sockets.emit( 'newChunk', data );	
 });
 
 camerasController.on('camera_status', function( data ) {
