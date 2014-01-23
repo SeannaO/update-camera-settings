@@ -340,8 +340,9 @@
                 var params = $('#camera-form').serializeObject();
 
                 addCamera( params.camera, function(data) {
+					console.log(data);
                     if (data){
-                        var camera = data.camera;
+                        var camera = data;
                         $dialog = $("#add-new-camera-dialog");
                         $dialog.modal('hide');
                         addCameraItem( camera );
