@@ -4,17 +4,17 @@ var Timeline = function( el ) {
 
 	this.width = 600;
 	this.totalTime = 30*60*1000;
-	this.dx = this.width / this.totalTime;
+	this.dx = 100 / this.totalTime;
 
 	var chart = d3.select(el)
 		.append("svg")
-		.attr("width", self.width)
+		.attr("width", "100%")
 		.attr("height", 80)
 		.attr("class", "chart")
 		.style("background", "none");
 
 	this.timeline = chart.append("g")
-		.attr("width", self.width)
+		.attr("width", "100%")
 		.attr("height", 80)
 		.attr("class", "boxes");
 
@@ -22,7 +22,7 @@ var Timeline = function( el ) {
 		.append("line")
 		.attr("x1", 0)
 		.attr("y1", 10)
-		.attr("x2", self.width)
+		.attr("x2", "100%")
 		.attr("y2", 10)
 		.attr("stroke", "lightgray");
 
@@ -94,7 +94,7 @@ Timeline.prototype.append = function( data ) {
 		.attr("data-thumb", data.thumb)
 		.attr("x", self.scaleX( data.start ))
 		.attr("y", 10)
-		.attr("width", self.scaleW(data.w) )
+		.attr("width", self.scaleW(data.w) + "%" )
 		.attr("height", 20)
 		.style("fill", "rgb(100,100,200)")
 		.style("stroke", "rgb(100,100,200)")

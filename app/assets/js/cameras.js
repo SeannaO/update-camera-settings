@@ -139,46 +139,14 @@ var list = function() {
 
 var addCameraItem = function( camera ) {
 
+	// start loading the image as soon as we can
+	var img = new Image();
 
-// <div class="btn-group camera-item-menu"><a class="btn btn-xs btn-default" href="javascript:editCamera('wPpo6OU3qOELaLB5')"><span class="glyphicon glyphicon-star"></span>edit</a><a class="btn btn-xs btn-default schedule" href="javascript:cameraSchedule('wPpo6OU3qOELaLB5')"><span class="status green"></span><span class="glyphicon glyphicon-star"></span>schedule</a><a class="btn btn-xs btn-default motion" href="javascript:cameraMotion('wPpo6OU3qOELaLB5')"><span class="status gray"></span><span class="glyphicon glyphicon-star"></span> motion</a><a class="btn btn-xs btn-default" href="javascript:deleteCamera('wPpo6OU3qOELaLB5')"><span class="glyphicon glyphicon-star"></span>remove</a></div>
-
-
-	var cameraItem = $("<div>", {
-		id: "camera-item-" + camera._id,
-		class: "camera-item"
-	}).prependTo("#camera-list");
-
-	var schedule_status_class = camera.schedule_enabled ? "green" : "red";
-
-	var menuHtml = "<a href = \"javascript:editCamera('" + camera._id + "')\">[ edit ]</a> | " +
-                "<a class=\"schedule\" href = \"javascript:cameraSchedule('" + camera._id + "')\">[<span class=\"status " + schedule_status_class + "\"></span>schedule ]</a> | ";
-	if (camera.manufacturer !== 'undefined' && camera.manufacturer !== 'unknown'){
-		menuHtml += "<a class=\"motion\" href = \"javascript:cameraMotion('" + camera._id + "')\">[<span class=\"status gray\"></span> motion ]</a> | ";	
-	}
-	menuHtml += "<a href = \"javascript:deleteCamera('" + camera._id + "')\">[ remove ]</a>";
-   
-	$("<div>", {
-		class: "camera-item-menu",
-		html: menuHtml
-	}).appendTo(cameraItem);
-
-	$("<div>", {
-		class: "camera-item-name",
-		html: '<a href = "/cameras/'+camera._id+'/">' + (camera.name || (camera.ip + " | " + camera.manufacturer)) + '</a>'
-	}).appendTo("#camera-item-"+camera._id);
-
-        $("<div>", {
-        class: "camera-item-status",
-        html:  camera.status
-    }).appendTo("#camera-item-"+camera._id);
-
-
-	$("<div>", {
+	var cameraItemThumbContainer = $("<div>", {
 		id: "thumb-" + camera._id,
 		class: "thumb-container"
-	}).appendTo("#camera-item-"+camera._id);
+	});
 
-	
 	for (var s in camera.streams) {
 
 		var thumb = camera.streams[s].latestThumb;
@@ -186,15 +154,13 @@ var addCameraItem = function( camera ) {
 		
 		if (thumb) {
 			var thumbUrl = '/cameras/' + camera._id + '/streams/' + streamId + '/thumb/' + thumb;
-			
-			var img = new Image();
 
 			$(img).attr({
 				src: thumbUrl,
 				width: "100%",
 				height: "100%"
 			}).load(function(){
-				$("#thumb-"+camera._id).html( $(this) );
+				cameraItemThumbContainer.html( $(this) );
 			}).error(function(){
 				console.log("unable to load image")
 			});	
@@ -202,6 +168,42 @@ var addCameraItem = function( camera ) {
 			break;
 		}
 	}
+
+	var cameraItem = $("<div>", {
+		id: "camera-item-" + camera._id,
+		class: "camera-item"
+	});
+
+	var cameraItemName = $("<h3>", {
+		class: "camera-item-name",
+		html: '<a href = "/cameras/'+camera._id+'/">' + (camera.name || (camera.ip + " | " + camera.manufacturer)) + '</a>'
+	})
+
+	var cameraItemStatus = $("<span>", {
+        class: "camera-item-status",
+        html:  camera.status
+    });
+
+	var schedule_status_class = camera.schedule_enabled ? "green" : "red";
+
+	var menuHtml = "<a class=\"btn btn-xs btn-default\" href = \"javascript:editCamera('" + camera._id + "')\"><span class=\"glyphicon glyphicon-edit\"></span>edit</a>" +
+                "<a class=\"btn btn-xs btn-default schedule\" href = \"javascript:cameraSchedule('" + camera._id + "')\"><span class=\"status " + schedule_status_class + "\"></span><span class=\"glyphicon glyphicon-calendar\"></span>schedule</a>";
+	if (camera.manufacturer !== 'undefined' && camera.manufacturer !== 'unknown'){
+		menuHtml += "<a class=\"btn btn-xs btn-default motion\" href = \"javascript:cameraMotion('" + camera._id + "')\"><span class=\"status gray\"></span>motion</a>";	
+	}
+	menuHtml += "<a class=\"btn btn-xs btn-default motion\" href=\"javascript:deleteCamera('" + camera._id + "')\"><span class=\"glyphicon glyphicon-remove\"></span>remove</a>";
+   
+	var cameraItemMenu = $("<div>", {
+		class: "camera-item-menu btn-group",
+		html: menuHtml
+	});
+
+	cameraItemName.append(cameraItemStatus);
+	cameraItem.append(cameraItemName);
+	cameraItem.append(cameraItemMenu);
+	cameraItem.append(cameraItemThumbContainer);
+	cameraItem.prependTo("#camera-list");
+
 	if (camera.manufacturer !== 'undefined' && camera.manufacturer !== 'unknown'){
 		$.ajax({
 			type: "GET",

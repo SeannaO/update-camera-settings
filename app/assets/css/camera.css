@@ -59,7 +59,7 @@ body {
 .timeline-end-time {
 	position: absolute;
 	top: 28px;
-	right: -20px;
+	right: 10px;
 	color: #8F8F8F;
 }
 
@@ -67,53 +67,39 @@ body {
 .thumb-container {
 	position: absolute;
 	top: 0px;
+	left: -180px;
 }
 
 .timeline-container {
-	position: absolute;
-	left: 180px;
-	top: 80px;
-}
-
-.thumb-container {
-	width: 150px;
-	height: 110px;
-	position: absolute;
-	left: 10px;
-	background: #eee;
+	position: relative
 }
 
 .camera-item {
 	position: relative;
-	margin-top: 40px;
+	margin: 20px 0px 20px 180px;
 	height: 130px;
-	padding: 5px;
+	/*padding: 5px;*/
 }
 
 .camera-item-name {
-	position: absolute;
-	left: 180px;
-	top: 30px;
-	font-size:13pt;
+	display:block;
+	height:25px;
 }
 
 .camera-item-status {
-	position: absolute;
-	left: 180px;
-	top: 55px;
+	margin-left: 10px;
+	font-size: 12pt;
+	display:inline;
 }
 
 .camera-item-menu {
-	position: relative;	
-	left: 180px;
-	top: 0px;
+
 }
 
-.camera-item-switch {
-	position: absolute;
-	top: 0px;
-	left: 735px;
+.camera-item-menu .glyphicon {
+	margin: 0px 3px;
 }
+
 .camera-motion-switch {
 	padding-bottom:40px;
 	margin-left:18px;
