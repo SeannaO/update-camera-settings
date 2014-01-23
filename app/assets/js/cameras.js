@@ -377,7 +377,7 @@ var setAuthStatus = function(data, cb){
             $("#camera-auth-status span").addClass("glyphicon-remove-circle").removeClass("glyphicon-ok-circle");    
         }
     }
-}
+};
 
 
 var editCamera = function(camId) {
@@ -648,9 +648,6 @@ var addStreamFieldset = function( cb ) {
 		fieldset.append( camera_stream_rtsp_group );
 		fieldset.append( camera_stream_retention_group );
 	}else{
-
-		// end of name field
-		//
 		
 		//
 		// resolution field
@@ -728,7 +725,7 @@ var addStreamFieldset = function( cb ) {
 };
 
 
-var addStream = function( stream, cb) {
+var addStream = function( stream, cb ) {
 
 	addStreamFieldset( function(fieldset, current_stream_id) {
 		var idx = current_number_of_streams-1;
@@ -784,7 +781,11 @@ var addStream = function( stream, cb) {
 
 		remove_stream_button.click( function( e ) {
 			e.preventDefault();
-			removeStream( stream );
+			if (!stream) {
+				$('#'+new_stream_tab_id).remove();
+			} else {
+				removeStream( stream );
+			}
 		});	
 
 
