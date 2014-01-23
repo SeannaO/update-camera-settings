@@ -739,7 +739,7 @@ var addStream = function( stream, cb ) {
         }
 	
 		var new_stream_tab_id = 'new-stream-' + current_stream_id;
-		$('#stream-tabs').append('<li><a href="#' + new_stream_tab_id + '" data-toggle="tab">' + stream_name + '</a></li>');
+		$('#stream-tabs').append('<li><a href="#' + new_stream_tab_id + '" data-toggle="tab" id="tab_'+new_stream_tab_id+'">' + stream_name + '</a></li>');
 		$('#stream-panes').append('<div class="tab-pane" id="' + new_stream_tab_id + '"></div>');
 		$('#'+new_stream_tab_id).append(fieldset);
 		$('#stream-tabs a:last').tab('show');
@@ -783,6 +783,7 @@ var addStream = function( stream, cb ) {
 			e.preventDefault();
 			if (!stream) {
 				$('#'+new_stream_tab_id).remove();
+				$('#tab_'+new_stream_tab_id).remove();
 			} else {
 				removeStream( stream );
 			}
