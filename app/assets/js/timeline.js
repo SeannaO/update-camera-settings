@@ -58,7 +58,7 @@ Timeline.prototype.refresh = function() {
 		if (x + w < 0) {
 			r.remove();
 		} else {
-			r.attr("x", self.scaleX( d ));
+			r.attr("x", self.scaleX( d ) + "%");
 		}
 	}
 
@@ -73,7 +73,7 @@ Timeline.prototype.refresh = function() {
 
 Timeline.prototype.scaleX = function( t ) {
 	var self = this;
-	var x = self.width - this.dx * ( Date.now() - 15000 - t );
+	var x = 100 - this.dx * ( Date.now() - 15000 - t );
 	
 	return x;
 };
@@ -92,7 +92,7 @@ Timeline.prototype.append = function( data ) {
 	self.boxes.append("rect")
 		.attr("data-start", data.start)
 		.attr("data-thumb", data.thumb)
-		.attr("x", self.scaleX( data.start ))
+		.attr("x", self.scaleX( data.start ) + "%")
 		.attr("y", 10)
 		.attr("width", self.scaleW(data.w) + "%" )
 		.attr("height", 20)
