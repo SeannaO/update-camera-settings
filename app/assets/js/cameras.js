@@ -139,6 +139,10 @@ var list = function() {
 
 var addCameraItem = function( camera ) {
 
+
+// <div class="btn-group camera-item-menu"><a class="btn btn-xs btn-default" href="javascript:editCamera('wPpo6OU3qOELaLB5')"><span class="glyphicon glyphicon-star"></span>edit</a><a class="btn btn-xs btn-default schedule" href="javascript:cameraSchedule('wPpo6OU3qOELaLB5')"><span class="status green"></span><span class="glyphicon glyphicon-star"></span>schedule</a><a class="btn btn-xs btn-default motion" href="javascript:cameraMotion('wPpo6OU3qOELaLB5')"><span class="status gray"></span><span class="glyphicon glyphicon-star"></span> motion</a><a class="btn btn-xs btn-default" href="javascript:deleteCamera('wPpo6OU3qOELaLB5')"><span class="glyphicon glyphicon-star"></span>remove</a></div>
+
+
 	var cameraItem = $("<div>", {
 		id: "camera-item-" + camera._id,
 		class: "camera-item"
@@ -586,7 +590,7 @@ var addStreamFieldset = function( cb ) {
 	// name field
 	var camera_stream_name_group = $('<div>', {
 		class: 'form-group',
-		html: '<label for="camera-stream-name">name</label>'
+		html: '<label for="camera-streams-' + current_stream_id + '-name">name</label>'
 	});
 
 	var camera_stream_name = $('<input>', {
@@ -602,7 +606,7 @@ var addStreamFieldset = function( cb ) {
 	// retention field
 	var camera_stream_retention_group = $('<div>', {
 		class: 'form-group  col-xs-4',
-		html: '<label for="camera-stream-retention">retention period</label>'
+		html: '<label for="camera-streams-' + current_stream_id + '-retention">retention period</label>'
 	});
 
 	var camera_stream_retention = $('<input>', {
@@ -631,7 +635,7 @@ var addStreamFieldset = function( cb ) {
 		}
 		var camera_stream_rtsp_group = $('<div>', {
 			class: 'form-group',
-			html: '<label for="camera-stream-rtsp">rtsp Stream</label>'
+			html: '<label for="camera-streams-' + current_stream_id + '-rtsp">rtsp Stream</label>'
 		});
 		
 		var camera_stream_rtsp = $('<input>', {
@@ -656,7 +660,7 @@ var addStreamFieldset = function( cb ) {
 		// resolution field
 		var camera_stream_resolution_group = $('<div>', {
 			class: 'form-group col-xs-3',
-			html: '<label for="camera-stream-resolution">resolution</label>'
+			html: '<label for="camera-streams-' + current_stream_id + '-resolution">resolution</label>'
 		});
 
 		var camera_stream_resolution = $('<select>', {
@@ -673,7 +677,7 @@ var addStreamFieldset = function( cb ) {
 		// framerate field
 		var camera_stream_framerate_group = $('<div>', {
 			class: 'form-group  col-xs-2',
-			html: '<label for="camera-stream-framerate">framerate</label>'
+			html: '<label for="camera-streams-' + current_stream_id + '-framerate">framerate</label>'
 		});
 
 		var camera_stream_framerate = $('<input>', {
@@ -693,7 +697,7 @@ var addStreamFieldset = function( cb ) {
 		// quality field
 		var camera_stream_quality_group = $('<div>', {
 			class: 'form-group  col-xs-2',
-			html: '<label for="camera-stream-quality">quality</label>'
+			html: '<label for="camera-streams-' + current_stream_id + '-quality">quality</label>'
 		});
 
 		var camera_stream_quality = $('<input>', {
