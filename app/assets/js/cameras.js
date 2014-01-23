@@ -251,21 +251,25 @@ var addCamera = function(camera, cb) {
 
 var deleteCamera = function(id) {
 
-    $.ajax({
-        type: "DELETE",
-        url: "/cameras/" + id,
-        contentType: 'application/json',
-        success: function(data) {
-            if (data.success) {
-                $("#camera-item-"+data._id).fadeOut();
-            } else {
-                alert("error: " + data.error);
-            }
-        },
-		error: function( data ) {
-			console.log(data);
-		}
-    });    
+
+	if ( confirm("are you sure you want to remove this camera?") ) {
+
+		$.ajax({
+			type: "DELETE",
+			url: "/cameras/" + id,
+			contentType: 'application/json',
+			success: function(data) {
+				if (data.success) {
+					$("#camera-item-"+data._id).fadeOut();
+				} else {
+					alert("error: " + data.error);
+				}
+			},
+			error: function( data ) {
+				console.log(data);
+			}
+		});
+	}
 };
 
 var getCameraOptions = function(cb) {
