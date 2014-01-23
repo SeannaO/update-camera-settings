@@ -11,12 +11,12 @@ $(document).ready(function(){
 		if (mouseX < $(window).width()/2) { 
 			$("#thumb").css('left', mouseX+'px');
 		} else {
-			$("#thumb").css('left', (mouseX-300)+'px');
+			$("#thumb").css('left', (mouseX-170)+'px');
 		}
 		if (mouseY < $(window).height()/2) {
-			$("#thumb").css('top', (mouseY+15)+'px');
+			$("#thumb").css('top', (mouseY)+'px');
 		} else {
-			$("#thumb").css('top', (mouseY-250)+'px');
+			$("#thumb").css('top', (mouseY-130)+'px');
 		}
 	});
 
@@ -255,21 +255,25 @@ var addCamera = function(camera, cb) {
 
 var deleteCamera = function(id) {
 
-    $.ajax({
-        type: "DELETE",
-        url: "/cameras/" + id,
-        contentType: 'application/json',
-        success: function(data) {
-            if (data.success) {
-                $("#camera-item-"+data._id).fadeOut();
-            } else {
-                alert("error: " + data.error);
-            }
-        },
-		error: function( data ) {
-			console.log(data);
-		}
-    });    
+
+	if ( confirm("are you sure you want to remove this camera?") ) {
+
+		$.ajax({
+			type: "DELETE",
+			url: "/cameras/" + id,
+			contentType: 'application/json',
+			success: function(data) {
+				if (data.success) {
+					$("#camera-item-"+data._id).fadeOut();
+				} else {
+					alert("error: " + data.error);
+				}
+			},
+			error: function( data ) {
+				console.log(data);
+			}
+		});
+	}
 };
 
 var getCameraOptions = function(cb) {
@@ -381,7 +385,7 @@ var setAuthStatus = function(data, cb){
             $("#camera-auth-status span").addClass("glyphicon-remove-circle").removeClass("glyphicon-ok-circle");    
         }
     }
-}
+};
 
 
 var editCamera = function(camId) {
@@ -652,9 +656,6 @@ var addStreamFieldset = function( cb ) {
 		fieldset.append( camera_stream_rtsp_group );
 		fieldset.append( camera_stream_retention_group );
 	}else{
-
-		// end of name field
-		//
 		
 		//
 		// resolution field
@@ -732,7 +733,7 @@ var addStreamFieldset = function( cb ) {
 };
 
 
-var addStream = function( stream, cb) {
+var addStream = function( stream, cb ) {
 
 	addStreamFieldset( function(fieldset, current_stream_id) {
 		var idx = current_number_of_streams-1;
@@ -746,7 +747,7 @@ var addStream = function( stream, cb) {
         }
 	
 		var new_stream_tab_id = 'new-stream-' + current_stream_id;
-		$('#stream-tabs').append('<li><a href="#' + new_stream_tab_id + '" data-toggle="tab">' + stream_name + '</a></li>');
+		$('#stream-tabs').append('<li><a href="#' + new_stream_tab_id + '" data-toggle="tab" id="tab_'+new_stream_tab_id+'">' + stream_name + '</a></li>');
 		$('#stream-panes').append('<div class="tab-pane" id="' + new_stream_tab_id + '"></div>');
 		$('#'+new_stream_tab_id).append(fieldset);
 		$('#stream-tabs a:last').tab('show');
@@ -788,7 +789,12 @@ var addStream = function( stream, cb) {
 
 		remove_stream_button.click( function( e ) {
 			e.preventDefault();
-			removeStream( stream );
+			if (!stream) {
+				$('#'+new_stream_tab_id).remove();
+				$('#tab_'+new_stream_tab_id).remove();
+			} else {
+				removeStream( stream );
+			}
 		});	
 
 

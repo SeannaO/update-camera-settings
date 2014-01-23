@@ -144,7 +144,7 @@
 									<input name="camera[password]" type="password" id="camera-password" class="form-control">
 								</div>
                                 <div id="camera-auth-status" class="col-xs-4">
-                                    <span class="glyphicon"></span>
+									<span class="glyphicon"></span>
                                 </div>
 								<br>
 							</div>
@@ -340,8 +340,9 @@
                 var params = $('#camera-form').serializeObject();
 
                 addCamera( params.camera, function(data) {
+					console.log(data);
                     if (data){
-                        var camera = data.camera;
+                        var camera = data;
                         $dialog = $("#add-new-camera-dialog");
                         $dialog.modal('hide');
                         addCameraItem( camera );

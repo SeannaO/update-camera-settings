@@ -44,7 +44,7 @@ var makeThumb = function ( file, folder, resolution, cb ) {
 
     var out = folder+"/" + path.basename(file, '.ts') + ".jpg"; 
      
-     var child = exec("ffmpeg -y -i " + file + " -vcodec mjpeg -vframes 1 -an -f rawvideo -t 2 -s 320x240 " + out,
+     var child = exec("ffmpeg -y -i " + file + " -vcodec mjpeg -vframes 1 -an -f rawvideo -t 2 -s 160x120 " + out,
              function( error, stdout, stderr ) {
                  if (error !== null) {
                      error = true;

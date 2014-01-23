@@ -504,7 +504,8 @@ CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
 				return;
 			}
 
-			streamsHash[streamId].toBeDeleted = true;
+			// streamsHash[streamId].toBeDeleted = true;
+			delete streamsHash[streamId];
 
 			self.db.update({ _id : camId  }, { 
 				$set: { 
