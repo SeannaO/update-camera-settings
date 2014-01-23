@@ -2,7 +2,7 @@
     <head>
         <script src = "/js/jquery.min.js"></script>        
         <script src = "/js/jquery-ui.min.js"></script>
-        <script src="/js/jquery-serialize-object.js"></script>
+        <script src = "/js/jquery-serialize-object.js"></script>
         <script src = "/js/cameras.js"></script>
 		<script src = "/js/timeline.js"></script>
 
@@ -320,13 +320,15 @@
 				  			
 				}
 
+				var showThumbWrapper = function(d) { 
+					showThumb(d.attr("data-thumb"));
+				};
+
 				timeline.append({
 					start:	data.start,
 					w: data.end - data.start,
 					thumb: thumb,
-					mouseover: function(d) {
-						showThumb(d.attr("data-thumb"));
-					}
+					mouseover: showThumbWrapper
 				});
 			}
 

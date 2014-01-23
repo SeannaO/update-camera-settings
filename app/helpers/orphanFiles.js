@@ -17,7 +17,7 @@ OrphanFilesChecker.prototype.recursiveDeleteFiles = function(folder, cb) {
 		
 		if( cb ) cb();
 		if (finder) finder.stop();
-	}, 15000);
+	}, 10000);	// limits deletion time to 10 seconds
 
 	finder.on('path', function(dir, stat) {
 
