@@ -316,12 +316,11 @@ describe('Camera', function(){
 			chunks = chunks.sort( function(a, b) {
 				return a.start - b.start;
 			});
-			// console.log(chunks);
 			
 			new_cam.getOldestChunks( numChunks, function(data) {
 				console.log(data);
 				for (var i in data) {
-					// assert(data[i].start !== chunks[i].start);
+					assert(data[i].start !== chunks[i].start);
 				}
 				done();
 			});
