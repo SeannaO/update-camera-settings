@@ -46,7 +46,7 @@
 
 
     <body style = "margin: 10px">
-        <h2 class = 'text-muted'> <a href ="/cameras">cameras</a> | <%= name %> </h2> 
+	<h2 class = 'text-muted'> <a href ="/cameras">cameras</a> | <span id='camera_name'><%= name %></span> </h2> 
         <hr>
 		
 		<div id = 'stream-selector-container' style = 'width: 300px; height: 70px;'>
@@ -86,6 +86,27 @@
 						
         <script>
             $(function() {
+				$("#begin_date").change( function() {
+					
+					var begin_date = $("#begin_date").val();
+					var end_date = $("#end_date").val();	 
+
+					if (begin_date > end_date) {
+						$("#end_date").val( begin_date );
+					}
+				});
+
+				$("#end_date").change( function() {
+					
+					var begin_date = $("#begin_date").val();
+					var end_date = $("#end_date").val();	 
+
+					if (end_date < begin_date) {
+						$("#begin_date").val(  end_date );
+					}
+				});
+				
+
                 $("#begin_date").datetimepicker({
                     timeFormat: 'HH:mm:ss',       
                 });

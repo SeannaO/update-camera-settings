@@ -79,8 +79,8 @@ describe('Camera', function(){
 				assert.equal( new_cam.name, cam.name );
 				assert.equal( new_cam.ip, cam.ip );
 				assert.equal( new_cam.rtsp, cam.rtsp );
-				assert.equal( new_cam.username, cam.username );
-				assert.equal( new_cam.password, cam.password );
+				assert.equal( new_cam.username, cam.username || '' );
+				assert.equal( new_cam.password, cam.password || '' );
 				assert.equal( new_cam.manufacturer, cam.manufacturer );
 			}
 		});
@@ -222,17 +222,6 @@ describe('Camera', function(){
 
 		it('should call db.insertVideo with correct param on corresponding stream', function() {
 
-					
-			for (var stream_id in new_cam.streams) {
-
-				var chunk = {
-					start: 1,
-					end: 10,
-					file: 'chunk_file'
-				};
-
-				new_cam.addChunk( stream_id, chunk );
-			}
 		});
 		
 	});
@@ -261,17 +250,19 @@ describe('Camera', function(){
 
 
 	describe('getOldestChunks', function() {
-
-		cam_with_streams._id = 'camera_test_getOldestChunks_'+Math.random();
-		var new_cam = new Camera( cam_with_streams, videosFolder );
-		var numChunks = 10;
-		
-		var nStreams = Object.keys(new_cam.streams).length;
+			
+		cam_with_streams.id = cam_with_streams._id = 'camera_test_getOldestChunks_'+Math.random();
+		var another_cam = new Camera( cam_with_streams, videosFolder );
+		var numChunks = 5;
+			
+		var nStreams = Object.keys(another_cam.streams).length;
 		var chunks = [];
+		var oldestChunks = [];
 
-		// adding some chunks on each stream
-		for (var stream_id in new_cam.streams) {
-			//( function() {	
+		before( function() {
+
+			// adding some chunks on each stream
+			for (var stream_id in another_cam.streams) {
 				for (var k = 1; k <= 10; k++) {
 					var chunk = {
 						start: k*10,
@@ -280,10 +271,11 @@ describe('Camera', function(){
 						stream_id: stream_id	// this param is being used only for this test
 					};
 					chunks.push( chunk );
-					new_cam.addChunk( stream_id, chunk );
+					if (k <= numChunks) oldestChunks.push( chunk );
+					another_cam.addChunk( stream_id, chunk );
 				}
-			//})();
-		}
+			}
+		});
 
 		it('should call db.getOldestChunks with correct params on each stream', function(done) {
 			done();
@@ -304,7 +296,7 @@ describe('Camera', function(){
 		});
 	
 		it('should return a maximum of numChunks * numStreams via callback', function(done) {
-			new_cam.getOldestChunks( numChunks, function(data) {
+			another_cam.getOldestChunks( numChunks, function(data) {
 				assert( data.length <= numChunks * nStreams );
 				done();
 			});
@@ -313,15 +305,16 @@ describe('Camera', function(){
 
 		it('should return the oldest chunks from the camera', function(done) {
 
-			chunks = chunks.sort( function(a, b) {
+			chunks = chunks.sort( function(a,b) {
 				return a.start - b.start;
 			});
-			console.log(chunks);
 			
-			new_cam.getOldestChunks( numChunks, function(data) {
+			console.log(oldestChunks);
+
+			another_cam.getOldestChunks( numChunks, function(data) {
 				console.log(data);
 				for (var i in data) {
-					assert(data[i].start !== chunks[i].start);
+					assert(data[i].start == oldestChunks[i].start);
 				}
 				done();
 			});

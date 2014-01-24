@@ -12,12 +12,12 @@ $(document).ready(function(){
 		mouseY = e.pageY;
 
 		if (mouseX < $(window).width()/2) { 
-			$("#thumb").css('left', mouseX+'px');
+			$("#thumb").css('left', (mouseX+10)+'px');
 		} else {
 			$("#thumb").css('left', (mouseX-170)+'px');
 		}
 		if (mouseY < $(window).height()/2) {
-			$("#thumb").css('top', (mouseY)+'px');
+			$("#thumb").css('top', (mouseY+10)+'px');
 		} else {
 			$("#thumb").css('top', (mouseY-130)+'px');
 		}

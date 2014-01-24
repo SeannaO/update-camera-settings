@@ -657,9 +657,9 @@ Camera.prototype.addChunk = function( streamId, chunk ) {
 		console.log('[error] cameraModel.addChunk: no stream with id ' + streamId);
 		return;
 	}
-	
+
 	this.streams[ streamId ].db.insertVideo( chunk );
-	this.streams[ streamId ].latestThumb = video.start + "_" + (video.end-video.start);	
+	this.streams[ streamId ].latestThumb = chunk.start + "_" + (chunk.end-chunk.start);	
 };
 // end of addChunk
 //
@@ -699,7 +699,7 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 							// notice that the thumb file has the same name as the chunk file
 							var thumb = chunk.file.replace('/videos', '/thumbs');
 							thumb = thumb.replace('.ts','.jpg');
-							fs.unlink(thumb);
+							fs.unlink(thumb, function() {});
 						} else {
 							console.log( err );
 						}
