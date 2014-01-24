@@ -10,6 +10,9 @@ var getStreamsInfo = function(camId) {
 			} else {
 				streams = data.camera.streams;
 				populateStreamSelector( data.camera.streams );	
+				if (!data.camera.name) {
+					$("#camera_name").html(data.camera.manufacturer);
+				}
 			}
 		},
 		error: function(err) {
