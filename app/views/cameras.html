@@ -98,6 +98,7 @@
         <br>
 
         <div id = "thumb" style = "display:none; position: absolute; z-index: 1000">
+			<div id = 'thumb-time' style='position:absolute;left:0px;top:0px;width:auto;height:auto;background:rgba(255,255,255,0.6);padding:1px'></div>
 			<img src = ""/>
         </div>
 
@@ -320,8 +321,23 @@
 				  			
 				}
 
+				var updateTime = function( time ) {
+					var t = new Date(time);
+					var hours = t.getHours();
+					var minutes = t.getMinutes();
+					var seconds = t.getSeconds();
+
+					if ( parseInt(seconds) < 10) seconds = '0' + seconds;
+					if ( parseInt(minutes) < 10) minutes = '0' + minutes;
+
+					var formattedTime = hours + ':' + minutes + ':' + seconds;
+					$('#thumb-time').html(formattedTime);
+				};
+
 				var showThumbWrapper = function(d) { 
 					showThumb(d.attr("data-thumb"));
+					
+					updateTime( parseInt(d.attr('data-start')) );
 				};
 
 				timeline.append({
