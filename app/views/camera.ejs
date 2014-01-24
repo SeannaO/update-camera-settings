@@ -86,6 +86,27 @@
 						
         <script>
             $(function() {
+				$("#begin_date").change( function() {
+					
+					var begin_date = $("#begin_date").val();
+					var end_date = $("#end_date").val();	 
+
+					if (begin_date > end_date) {
+						$("#end_date").val( begin_date );
+					}
+				});
+
+				$("#end_date").change( function() {
+					
+					var begin_date = $("#begin_date").val();
+					var end_date = $("#end_date").val();	 
+
+					if (end_date < begin_date) {
+						$("#begin_date").val(  end_date );
+					}
+				});
+				
+
                 $("#begin_date").datetimepicker({
                     timeFormat: 'HH:mm:ss',       
                 });
