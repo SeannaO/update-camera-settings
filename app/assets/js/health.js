@@ -58,12 +58,15 @@ var updateSensors = function( data ) {
 
 			var row = $('<tr>');
 			var column = $('<td>', {
+				id: sensor + "-" + type,
+				class: "sensor-label",
 				html: sensor + ' (' + type + ')'
 			});
 
 			row.append( column );
 
 			column = $('<td>', {
+				class: "sensor-value",
 				html: data[sensor][type].value
 			});
 

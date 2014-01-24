@@ -5,7 +5,7 @@ require 'spec_helper'
 describe 'CameraPage', :type => :request, :js => true do
 
 	def camera_page
-		"http://localhost:8080"
+		"http://Administrator:password@localhost:8080"
 	end
 	# def basic_auth
 	# 	name = "Administrator"

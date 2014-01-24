@@ -80,12 +80,12 @@
         </div>
         <div style="clear:both"></div>
         <div class="btn-group" style="float:right;">
-            <a href="/multiview" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-facetime-video"></span> Live</a>
-            <a href="/health" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-stats"></span> Device Health</a>
+            <a id="multiview-btn" href="/multiview" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-facetime-video"></span> Live</a>
+            <a id="health-btn" href="/health" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-stats"></span> Device Health</a>
         </div>
         <div class="btn-group">
-            <a href="javascript:openAddCameraDialog()" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-plus"></span> Add Camera</a>
-            <a href="javascript:scanForCameras()" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-refresh"></span> Scan For Cameras</a>
+            <a id="add-camera-btn" href="javascript:openAddCameraDialog()" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-plus"></span> Add Camera</a>
+            <a id="camera-scanner-btn" href="javascript:scanForCameras()" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-refresh"></span> Scan For Cameras</a>
         </div>
 
         <img style="display:none" height="20" width="20" id= "scan-spinner" src="/img/spinner.gif"/>
