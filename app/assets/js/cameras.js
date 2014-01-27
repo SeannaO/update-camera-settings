@@ -205,7 +205,7 @@ var addCameraItem = function( camera ) {
 
 	var cameraItemName = $("<h3>", {
 		class: "camera-item-name",
-		html: '<a href = "/cameras/'+camera._id+'/">' + (camera.name || (camera.ip + " | " + camera.manufacturer)) + '</a>'
+		html: '<a class="camera-item-link" href = "/cameras/'+camera._id+'/">' + (camera.name || (camera.ip + " | " + camera.manufacturer)) + '</a>'
 	})
 
 	var cameraItemStatus = $("<span>", {
@@ -215,12 +215,12 @@ var addCameraItem = function( camera ) {
 
 	var schedule_status_class = camera.schedule_enabled ? "green" : "red";
 
-	var menuHtml = "<a class=\"btn btn-xs btn-default\" href = \"javascript:editCamera('" + camera._id + "')\"><span class=\"glyphicon glyphicon-edit\"></span>edit</a>" +
+	var menuHtml = "<a class=\"btn btn-xs btn-default edit\" href = \"javascript:editCamera('" + camera._id + "')\"><span class=\"glyphicon glyphicon-edit\"></span>edit</a>" +
                 "<a class=\"btn btn-xs btn-default schedule\" href = \"javascript:cameraSchedule('" + camera._id + "')\"><span class=\"status " + schedule_status_class + "\"></span><span class=\"glyphicon glyphicon-calendar\"></span>schedule</a>";
 	if (camera.manufacturer !== 'undefined' && camera.manufacturer !== 'unknown'){
 		menuHtml += "<a class=\"btn btn-xs btn-default motion\" href = \"javascript:cameraMotion('" + camera._id + "')\"><span class=\"status gray\"></span>motion</a>";	
 	}
-	menuHtml += "<a class=\"btn btn-xs btn-default motion\" href=\"javascript:deleteCamera('" + camera._id + "')\"><span class=\"glyphicon glyphicon-remove\"></span>remove</a>";
+	menuHtml += "<a class=\"btn btn-xs btn-default remove\" href=\"javascript:deleteCamera('" + camera._id + "')\"><span class=\"glyphicon glyphicon-remove\"></span>remove</a>";
    
 	var cameraItemMenu = $("<div>", {
 		class: "camera-item-menu btn-group",

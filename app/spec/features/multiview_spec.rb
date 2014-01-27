@@ -28,6 +28,6 @@ describe 'Multiview', :type => :request, :js => true, :multiview => true do
 		visit multiview_page
 		click_link "cameras"
 		current_path.should == "/cameras"
-	end	
+	end
 
 end
