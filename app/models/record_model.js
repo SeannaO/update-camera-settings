@@ -97,11 +97,13 @@ RecordModel.prototype.cleanTmpFolder = function() {
 			files.forEach(function(file, index){
 
 				var curPath = tmpFolder + "/" + file;
-
-				if(fs.statSync(curPath).isDirectory()) { 
-					deleteFolderRecursive(curPath);
-				} else { 
-					fs.unlinkSync(curPath);
+				try {
+					if(fs.statSync(curPath).isDirectory()) { 
+						deleteFolderRecursive(curPath);
+					} else { 
+						fs.unlinkSync(curPath);
+					}
+				} catch (err) {
 				}
 			});
 

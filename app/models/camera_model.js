@@ -70,11 +70,8 @@ function Camera( cam, videosFolder ) {
 			console.log("stopping camera " + (this.name || this.ip));
 			this.stopRecording();
 		}
-	} else {	// if camera is being deleted, starts deletion process 
-
-		//TODO:	periodically push chunks to the deletion queue until db is empty
-		//		then recursively deletes cam folders 
-		//		and finally removes the camera from the cameras db
+	} else {	
+		// nothing to be done
 	}
 }
 // end of constructor
