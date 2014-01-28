@@ -72,7 +72,7 @@ Arecont.prototype.getThresholdRange = function () {
 };
 
 Arecont.prototype.getVideoQualityRange = function () {
-	return {min: 1, max: 21};
+	return {min: 16, max: 36};
 };
 
 Arecont.prototype.getSensitivityRange = function () {
