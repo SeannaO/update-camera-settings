@@ -2,130 +2,149 @@ var assert = require("assert");
 var sinon = require("sinon");
 
 var RecordModel = require('../models/record_model.js');
+var CameraModel = require('../models/camera_model.js');
+
 var fs = require('fs');
 var path = require('path');
 
+var cam_with_streams = {
+	_id: "abc",
+	name: "a name",
+	ip: "127.0.0.1",
+	manufacturer: 'a_manufacturer',
+	user: 'a_user',
+	password: 'a_password',
+	streams: {
+		stream_1 : {
+			id: 'stream_1',
+			resolution: '640x480',
+			framerate: '10',
+			quality: '5',
+			rtsp: 'rtsp://stream1_rtsp'
+		}, 
+		stream_2 : {
+			id: 'stream_2',
+			resolution: '1280x960',
+			framerate:	'20',
+			quality:	'30',
+			rtsp: 'rtsp://stream2_rtsp'
+		}
+	}
+};	
+
+var cam = new CameraModel( cam_with_streams, 'tests/videosFolder');
 
 describe('RecordModel', function() {
-/*
-	var cam = {
-		_id: "another_camera",
-		name: "a name",
-		ip: "127.0.0.1",
-		rtsp: "rtsp://hello.world",
-		db: {
-			insertVideo: function(v) {}
-		},
-		addChunk: function() {}
-	};
-	
-	var videosFolder =  "tests/videosFolder";
-	cam.videosFolder = videosFolder + '/' + cam._id;
 
-	var recordModel = new RecordModel( cam );
-
-	describe('new', function() {
-		
-		it('should correctly setup attributes passed by camera', function() {
-			
-			assert.equal(recordModel.rtsp, cam.rtsp);
-			assert.equal(recordModel.db, cam.db);
-			assert.equal(recordModel.camId, cam._id);
-		});
-
-		it('should create new watcher', function() {
-
-			assert( recordModel.watcher );
-			assert.equal( typeof recordModel.watcher, 'object' );
-		});
-
-		it('should initialize attributes', function() {
-			
-			assert.equal(recordModel.lastChunkTime, 0);
-			assert.equal(recordModel.lastErrorTime, 0);
-			assert.equal( typeof recordModel.pending, 'object');
-			assert.equal( recordModel.pending.length, 0);
-		});
+	describe('constructor', function() {			
 	});
 
-	
-	describe('setupFolders', function() {
-		
-		var folders = [
-			cam.videosFolder + '/tmp',
-			cam.videosFolder + '/videos/tmp',		
-			cam.videosFolder + '/videos',
-			cam.videosFolder + '/thumbs',
-			cam.videosFolder		
-		];
-		
-		it('should correctly initialize folder variable', function() {
+	describe('startRecording', function() {
 
-			assert.equal(recordModel.folder, cam.videosFolder);
+				
+		it('should start watcher, launchMonitor and call recordContinuously if not yet recording', function() {
+			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
+
+			sinon.spy(recordModel.watcher, 'startWatching');
+			sinon.spy(recordModel, 'recordContinuously');
+			sinon.spy(recordModel, 'launchMonitor');
+
+			recordModel.startRecording();
+			assert(recordModel.watcher.startWatching.calledOnce);
+			assert(recordModel.recordContinuously.calledOnce);
+			assert(recordModel.launchMonitor.calledOnce);
 		});
 
-		it('should initialize folders', function() {
-			
-			for (var f in folders) {
-				assert( fs.existsSync(folders[f]) );
-			}
+
+		it('should not start watcher again if already recording', function() {
+			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
+
+			sinon.spy(recordModel.watcher, 'startWatching');
+
+			recordModel.startRecording();
+			recordModel.startRecording();
+
+			assert(recordModel.watcher.startWatching.calledOnce);
 		});
-	});
 
 
-	describe('add new videos to pending list', function() {
+		it('should emit camera_status with correct stream_id on watcher new_files event', function( done ) {
 
-		it ('should push filenames with correct folder to pending array', function() {
+			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
+
+			recordModel.startRecording();
 			
-			var files = ['a_file.avi', 'another_file.format', 'a_third_file'];
-			
-			recordModel.pending = [];
-			recordModel.addNewVideosToPendingList( files );
-			
-			assert.equal( recordModel.pending.length, files.length);
-
-			for (var f in files) {
-				var file = recordModel.folder + '/videos/tmp/' + files[f];
-				assert( recordModel.pending.indexOf( file ) > -1 );
-			}
-		});
-	});
-
-
-	describe('move file', function() {
-
-		it('should move file in tmp folder to correct destination', function(done) {
-			
-			var video = {file: 'fake_file'};
-			
-			var from = recordModel.folder + "/videos/tmp/" + path.basename( video.file );
-			var to =  recordModel.folder + "/videos/" + video.start + path.extname( video.file );
-
-			fs.openSync(from, 'w');
-			recordModel.moveFile( video, function(err) {
-				assert( fs.existsSync(to) );
-				assert( !fs.exists(from) );
+			recordModel.on('camera_status', function(data) {
+				assert(data.stream_id === recordModel.stream.id);
 				done();
-			});			
+			});
+
+			var files = ['a', 'b', 'c'];
+			recordModel.watcher.emit('new_files', files);
 		});
 
-		it('should call camera.addChunk passing destination file', function(done) {
-			
-			var video = {file: 'fake_file'};
-			
-			var from = recordModel.folder + "/videos/tmp/" + path.basename( video.file );
-			var to =  recordModel.folder + "/videos/" + video.start + path.extname( video.file );
-	
-			sinon.spy( recordModel.camera, "addChunk" );
 
-			fs.openSync(from, 'w');
-			recordModel.moveFile( video, function(err) {
-				assert( recordModel.camera.addChunk.calledOnce );
-				//assert.equals( recordModel.db.insertVideo.getCall(0).args[0].file, to );
-				recordModel.camera.addChunk.restore();
-				done();
-			});			
+		it('should reset lastChunkTime and set status as RECORDING on new_files event', function( done ) {
+
+			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
+
+			recordModel.startRecording();
+			
+			var lastChunkTime_old = recordModel.lastChunkTime;
+			
+			recordModel.on('camera_status', function(data) {
+				setTimeout( function() {
+					assert( lastChunkTime_old != recordModel.lastChunkTime);
+					done();
+				}, 10);
+				assert( recordModel.status === 2 ); 	// IMPORTANT: please check if RECORDING is set to 2 in record_model.js
+			});
+
+			var files = ['a', 'b', 'c'];
+			recordModel.watcher.emit('new_files', files);
+		});
+
+
+		it('should call addNewIndexToPendingList with correct files on new_files event', function( done ) {
+
+			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
+
+			recordModel.startRecording();
+			
+			sinon.spy(recordModel, 'addNewVideosToPendingList');
+
+			var lastChunkTime_old = recordModel.lastChunkTime;
+
+			var files = ['a', 'b', 'c'];
+
+			recordModel.on('camera_status', function(data) {
+				setTimeout( function() {
+					assert( recordModel.addNewVideosToPendingList.calledOnce );
+					var args = recordModel.addNewVideosToPendingList.args[0][0];
+					assert( compareArrays( args, files ) );
+					done();
+				}, 10);
+			});
+
+			recordModel.watcher.emit('new_files', files);
 		});
 	});
-*/
-});
+
+
+	describe('stopRecording', function() {
+	});
+
+});	
+
+
+
+var compareArrays = function( a, b ) {
+	if (a.length == b.length && a.every(function(u, i) {
+				return u === b[i];
+			})
+		) {
+			return true;
+		} else {
+			return false;
+		}
+};

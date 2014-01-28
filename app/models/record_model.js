@@ -71,19 +71,6 @@ RecordModel.prototype.setupFolders = function() {
  
 	this.cleanTmpFolder();
 
-	/*
-	// cleans up tmp folder
-    fs.readdirSync(tmpFolder).forEach(function(file, index){
-
-        var curPath = tmpFolder + "/" + file;
-
-        if(fs.statSync(curPath).isDirectory()) { 
-            deleteFolderRecursive(curPath);
-        } else { 
-            fs.unlinkSync(curPath);
-        }
-    });
-	*/
 };
 // end of setupFolders
 //
