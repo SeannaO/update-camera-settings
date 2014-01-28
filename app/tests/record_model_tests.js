@@ -39,8 +39,8 @@ describe('RecordModel', function() {
 	describe('constructor', function() {			
 	});
 
-	describe('startRecording', function() {
 
+	describe('startRecording', function() {
 				
 		it('should start watcher, launchMonitor and call recordContinuously if not yet recording', function() {
 			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
@@ -129,10 +129,92 @@ describe('RecordModel', function() {
 			recordModel.watcher.emit('new_files', files);
 		});
 	});
+	// end of startRecording tests
+	//
 
 
 	describe('stopRecording', function() {
+				
+		it ('should set status as STOPPED', function( done ) {
+
+			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
+			recordModel.startRecording();
+
+			setTimeout( function() {
+				recordModel.stopRecording();
+				
+				setTimeout( function() {
+					assert( recordModel.status === 0 );
+					done();
+				}, 50);
+			}, 10);
+		});
+
+
+		it ('should call stopWatching on watcher', function( done ) {
+			
+			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
+			recordModel.startRecording();
+
+			sinon.spy(recordModel.watcher, 'stopWatching');
+
+			setTimeout( function() {
+				recordModel.stopRecording();
+
+				setTimeout( function() {
+					assert( recordModel.watcher.stopWatching.calledOnce );
+					done();
+				}, 50);
+			}, 10);
+		});
+
+
+		it ('should stop listening to new_files events', function( done ) {
+			
+			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
+			recordModel.startRecording();
+
+			setTimeout( function() {
+				recordModel.stopRecording();
+
+				recordModel.on('camera_status', function() {
+					assert(false);
+					done();	
+				});
+
+				recordModel.watcher.emit('new_files', ['a','b','c']);
+
+				setTimeout( function() {
+					done();
+				}, 100);
+
+			}, 10);
+		});
 	});
+	// end of stopRecording tests
+	//
+
+
+	describe('addNewVideosToPendingList', function() {
+
+		it ('should add all file names to pending array with correct path to tmp folder', function() {
+			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
+				
+			var files = ['a', 'b', 'c'];
+			var filesWithCorrectFolders = [];
+
+			for (var i in files) {
+				filesWithCorrectFolders.push( recordModel.folder + '/videos/tmp/' + files[i] );
+			}
+			
+			recordModel.addNewVideosToPendingList( files );
+
+			assert( compareArrays( recordModel.pending, filesWithCorrectFolders ) );			
+		});
+	});
+	// end of addNewVideosToPendingList tests
+	//
+
 
 });	
 
