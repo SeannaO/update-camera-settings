@@ -57,9 +57,12 @@ Scheduler.prototype.clearForCamera = function( camera ) {
 };
 
 Scheduler.prototype.setupListeners = function( emitter ) {
-    var scheduler = this
+    
+	var scheduler = this;
+
 	emitter.on('create', function(camera) {
-		// console.log("camera created calling launchForCamera on scheduler");
+		console.log("[scheduler.js]  camera created calling launchForCamera on scheduler");
+
 		scheduler.launchForCamera(camera);
 	});
 
@@ -69,7 +72,8 @@ Scheduler.prototype.setupListeners = function( emitter ) {
 	});
 
 	emitter.on('schedule_update', function(camera) {
-		console.log("camera scheduler updated, relaunching scheduler");
+		console.log("[scheduler.js]  camera scheduler updated, relaunching scheduler");
+		
 		scheduler.clearForCamera(camera);
 		scheduler.launchForCamera(camera);
 	});

@@ -69,10 +69,15 @@ Watcher.prototype.checkNewFile = function() {
 	try {
 		files = fs.readdir( self.dir, function( err, files ) {
 			for (var i in files) {
-				var f = files[i];
-				if ( self.files.indexOf(f) == -1 && self.isValidExtension(f) ) {
-					added.push( f );
-				} 
+				try {
+					var f = files[i];
+					if ( self.files.indexOf(f) == -1 && self.isValidExtension(f) ) {
+						added.push( f );
+					} 
+				}
+				catch(err) {
+					console.error('[watcher.js] : checkNewFile : error - undefined object in array');
+				}
 			}
 
 			self.files = files;

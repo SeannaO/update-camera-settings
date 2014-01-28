@@ -11,7 +11,10 @@ var configureStreamUrl = baseUrl
 + '&StreamProfile.{temp_profile}.Description={description}' 
 + '&StreamProfile.{temp_profile}.Parameters={parameters}';
 var parametersString = "videocodec=h264&framerate={framerate}&resolution={resolution}";
-var rtspUrl = 'rtsp://{user}:{pass}@{ip}/axis-media/media.amp?{profile_name}&framerate={framerate}&resolution={resolution}';
+//var rtspUrl = 'rtsp://{user}:{pass}@{ip}/axis-media/media.amp?{profile_name}&framerate={framerate}&resolution={resolution}';
+
+var rtspUrl = 'rtsp://{user}:{pass}@{ip}/axis-media/media.amp?streamprofile={profile_name}&fps={framerate}&resolution={resolution}&compression={compression}&videocodec=h264&videomaxbitrate={max_bitrate}';
+
 var listParamsUrl = baseUrl + 'list&group={group_name}';
 var listAllParamsUrl = baseUrl + 'list';
 var listResolutionsUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&group=ImageSource.I0.Sensor.CaptureMode";
@@ -242,7 +245,9 @@ Axis.prototype.getRtspUrl = function ( profile ) {
 		.replace('{profile_name}', profile.name)
 		.replace('{ip}', self.cam.ip)
 		.replace('{resolution}', profile.resolution)
-		.replace('{framerate}', profile.framerate);
+		.replace('{framerate}', profile.framerate)
+		.replace('{compression}', 40)
+		.replace('{max_bitrate}', 512);
 };
 
 
@@ -346,9 +351,12 @@ Axis.prototype.getResolutionOptions = function (cb) {
 					
 					try {
 						var output = result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry.map(function(element){
-							element['$'].niceValue
-							return {value: re.exec(element['$'].niceValue)[0]  , name:element['$'].niceValue}
+							return { value: re.exec(element['$'].niceValue)[0], name: element['$'].niceValue }
 						});
+						
+						output.push( {value: '800x600', name: 'small - 800x600'} );
+						console.log(output);
+
 						cb(null, output);
 					} catch( e ) {
 						cb('not authorized', []);
