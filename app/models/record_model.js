@@ -450,6 +450,11 @@ RecordModel.prototype.calcDuration = function( file, cb ) {
 
 	var self = this;
 
+	if (!file) {
+		cb( 'undefined file' );
+		return;
+	}
+
     fs.stat( file, function( err, fileInfo ) {
 		
 		if ( err ) { 
@@ -478,7 +483,7 @@ RecordModel.prototype.calcDurationWithFileInfo = function( file, fileInfo, cb ) 
 	var lastModified = ( new Date(fileInfo.mtime) ).getTime();	// mtime: last modified time
 																// getTime: converts to Unix millis
 	ffmpeg.calcDuration( file, function(err, duration) {
-		if (duration){
+		if (!err && duration){
 			var start =  lastModified - duration;		
 			var end = lastModified;
 
@@ -492,12 +497,13 @@ RecordModel.prototype.calcDurationWithFileInfo = function( file, fileInfo, cb ) 
 
 			cb(null, video );
 		}else{
+			if (!err && !duration) err = 'could not calculate duration for file ' + file;
 			cb(err);
 		}
 
 	});
 };
-// end of calcDuration
+// end of calcDurationWithFileInfo
 //
 
 /**
@@ -534,7 +540,7 @@ RecordModel.prototype.checkForConnectionErrors = function() {
  *
  *	TODO: we don't want to generate thumbs for all streams of the same camera
  */
-RecordModel.prototype.moveFile = function( video, cb ) { 	
+RecordModel.prototype.moveFile = function( video, cb ) {
 
     var self = this;
 
@@ -553,6 +559,12 @@ RecordModel.prototype.moveFile = function( video, cb ) {
 	var to = toFolder + '/' + video.start + "_" + (video.end - video.start) + path.extname( video.file );
 
 	fs.exists( from, function(exists) {
+		
+		if( !exists ) {
+			if (cb) cb('cannot move video file since it does not exist');
+			return;
+		}
+
 		fs.mkdir(toFolder, function(e) {
 			fs.rename( from, to, function(err) { 
 				if (err) {
