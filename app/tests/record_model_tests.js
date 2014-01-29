@@ -7,35 +7,36 @@ var CameraModel = require('../models/camera_model.js');
 var fs = require('fs');
 var path = require('path');
 
-var cam_with_streams = {
-	_id: "abc",
-	name: "a name",
-	ip: "127.0.0.1",
-	manufacturer: 'a_manufacturer',
-	user: 'a_user',
-	password: 'a_password',
-	streams: {
-		stream_1 : {
-			id: 'stream_1',
-			resolution: '640x480',
-			framerate: '10',
-			quality: '5',
-			rtsp: 'rtsp://stream1_rtsp'
-		}, 
-		stream_2 : {
-			id: 'stream_2',
-			resolution: '1280x960',
-			framerate:	'20',
-			quality:	'30',
-			rtsp: 'rtsp://stream2_rtsp'
-		}
-	}
-};	
-
-var cam = new CameraModel( cam_with_streams, 'tests/videosFolder');
 
 describe('RecordModel', function() {
 
+	var cam_with_streams = {
+		_id: "abc",
+		name: "a name",
+		ip: "127.0.0.1",
+		manufacturer: 'a_manufacturer',
+		user: 'a_user',
+		password: 'a_password',
+		streams: {
+			stream_1 : {
+				id: 'stream_1',
+				resolution: '640x480',
+				framerate: '10',
+				quality: '5',
+				rtsp: 'rtsp://stream1_rtsp'
+			}, 
+			stream_2 : {
+				id: 'stream_2',
+				resolution: '1280x960',
+				framerate:	'20',
+				quality:	'30',
+				rtsp: 'rtsp://stream2_rtsp'
+			}
+		}
+	};	
+
+	var cam = new CameraModel( cam_with_streams, 'tests/videosFolder');
+		
 	describe('constructor', function() {			
 	});
 
@@ -71,12 +72,15 @@ describe('RecordModel', function() {
 		it('should emit camera_status with correct stream_id on watcher new_files event', function( done ) {
 
 			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
+			var finished = false;
 
 			recordModel.startRecording();
 			
 			recordModel.on('camera_status', function(data) {
 				assert.equal(data.stream_id, recordModel.stream.id);
-				done();
+				if (!finished) done();
+				finished = true;
+				return;
 			});
 
 			var files = ['a', 'b', 'c'];
@@ -87,6 +91,7 @@ describe('RecordModel', function() {
 		it('should reset lastChunkTime and set status as RECORDING on new_files event', function( done ) {
 
 			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
+			var finished = false;
 
 			recordModel.startRecording();
 			
@@ -95,7 +100,9 @@ describe('RecordModel', function() {
 			recordModel.on('camera_status', function(data) {
 				setTimeout( function() {
 					assert( lastChunkTime_old != recordModel.lastChunkTime);
-					done();
+					if (!finished) done();
+					finished = true;
+					return;
 				}, 10);
 				assert.equal( recordModel.status, 2 ); 	// IMPORTANT: please check if RECORDING is set to 2 in record_model.js
 			});
@@ -383,7 +390,8 @@ describe('RecordModel', function() {
 						assert(err3);
 
 						setTimeout( function() {
-							assert( !recordModel.calcDurationWithFileInfo.called );
+							assert( !recordModel.calcDurationWithFileInfo.called,
+								'should return immediately and not call calcDurationWithFileInfo');
 							done();
 						}, 100);
 					});
@@ -454,6 +462,74 @@ describe('RecordModel', function() {
 	// 
 	
 
+	describe( 'moveAndIndexFile', function() {
+
+		it( 'should callback with errors in case of invalid/unexistent/undefined files', function( done ) {
+
+			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
+			
+			sinon.spy(recordModel, 'moveFile');
+
+			var file1;
+			var file2 = "";
+			var file3 = "this_file_does_not_exist";
+
+			recordModel.moveAndIndexFile( file1, function(err) {
+				assert(err);
+				recordModel.moveAndIndexFile(file2, function(err2) {
+					assert(err2);
+					recordModel.moveAndIndexFile(file3, function(err3) {
+						assert(err3);
+						setTimeout( function() {
+							assert( !recordModel.moveFile.called );
+							done();
+						}, 100);
+					});
+				});
+			});	
+		});
+
+
+		it( 'should emit new_chunk event after successfully moving a file', function( done ) {
+		
+			var recordModel = new RecordModel( cam, cam.streams['stream_2'] );
+			var file = __dirname+'/videosFolder/'+cam._id+'/stream_2/videos/tmp/chunk1.ts';
+			
+			fs.createReadStream(__dirname+'/fixtures/files/chunk_1.ts').pipe( fs.createWriteStream(file) );
+		
+			recordModel.on('new_chunk', function(data) {
+				done();
+			});
+			
+			
+			setTimeout( function() {
+				recordModel.moveAndIndexFile( file, function(err) {				
+					assert(!err);
+				});
+			}, 100);
+		});
+		
+	});
+	// end of moveAndIndexFile tests
+	//
+	
+	/*
+	describe( 'indexPendingFiles', function() {
+		
+		it('should just callback and not call moveAndIndexFile when pending list length is <= 1', function( done ) {
+			
+			var recordModel = new RecordModel( cam, cam.streams['stream_3'] );
+			
+			sinon.spy(recordModel, 'moveAndIndexFile');
+
+			recordModel.indexPendingDiles( function() {
+				assert( !moveAndIndexFile.called );
+				done();
+			});
+			
+		});
+	});
+	*/
 });
 
 

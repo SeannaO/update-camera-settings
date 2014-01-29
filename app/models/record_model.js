@@ -345,7 +345,7 @@ RecordModel.prototype.setupFolderSync = function(folder) {
 
 
 /**
- * Moves new chunks to definitive folder and indexes on db
+ * Moves new chunks to definitive folder and emits new_chunk event
  *  
  *  @param { file } string File name
  */
@@ -361,15 +361,18 @@ RecordModel.prototype.moveAndIndexFile = function( file, cb ) {
 			console.error(err);
 			if ( cb ) {
 				// What do we do if we fail to move a chunk?
-				cb();								
+				cb(err);								
 			}
-		}else{
-			self.moveFile( video, function() {			// creates thumb,
+		} else{
+			self.moveFile( video, function(err) {		// creates thumb,
 														// moves chunk to definitive folder
 														// and indexes it
 				self.emit('new_chunk', video );	
+
+				if (err) console.error( '[RecordModel] : moveAndIndexFile : ' + err );
+
 				if ( cb ) {
-					cb();								
+					cb(err);								
 				}
 			});
 		}
