@@ -22,15 +22,15 @@ describe('FileBackup', function(){
 			});
 	    })
 	});
-});
 
-describe(".launch and .stop", function(){
-	it("launches the purgeProcess", function(done){
-		var backup = new FileBackup( backup_file_fixture);
-			assert(!backup.isRunning());
-			backup.launch();
-			assert(backup.isRunning());
-			backup.stop();
-			done();
-	});
+	describe(".launch and .stop", function(){
+		it("launches the purgeProcess", function(done){
+			var backup = new FileBackup( backup_file_fixture);
+				assert(!backup.isRunning());
+				backup.launch();
+				assert(backup.isRunning());
+				backup.stop();
+				done();
+		});
+	});	
 });

@@ -10,10 +10,11 @@ function Scheduler( interval ) {
 
 
 
-Scheduler.prototype.launchForAllCameras = function( cameras ) {
+Scheduler.prototype.launchForAllCameras = function( cameras , cb) {
     for (var i = 0; i < cameras.length; i++) {
         this.launchForCamera(cameras[i]);
-    }   
+    }
+    if (cb) cb();
 };
 
 Scheduler.prototype.launchForCamera = function( camera ) {
@@ -38,16 +39,19 @@ Scheduler.prototype.launchForCamera = function( camera ) {
     }
 };
 
-Scheduler.prototype.clearForAllCameras = function( cameras ) {
+Scheduler.prototype.clearForAllCameras = function( cameras, cb) {
     for (var camera in cameras) {
         this.clearForCamera(camera);
-    }   
+    }
+    if (cb) cb();
 };
 
-Scheduler.prototype.clearAll = function( ) {
+Scheduler.prototype.clearAll = function(cb) {
     for (var process in this.processes) {
-        clearInterval(process);
-    }   
+        clearInterval(this.processes[process]);
+        delete this.processes[process];
+    }
+    if (cb) cb();
 };
 
 Scheduler.prototype.clearForCamera = function( camera ) {
