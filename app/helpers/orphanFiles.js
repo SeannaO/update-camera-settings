@@ -53,7 +53,7 @@ OrphanFilesChecker.prototype.checkForOrphanCameras = function( cb ) {
 	
 	var self = this;
 
-	fs.readdir( process.env['BASE_FOLDER'], function(err, files) {
+	fs.readdir( this.camerasController.videosFolder, function(err, files) {
 		
 		var found = false;
 
@@ -64,7 +64,7 @@ OrphanFilesChecker.prototype.checkForOrphanCameras = function( cb ) {
 			for (var f in files) {
 
 				if ( !self.camerasController.findCameraById( files[f] ) && files[f] !== "cam_db" ) {
-					self.recursiveDeleteFiles( process.env['BASE_FOLDER'] + '/' + files[f], function() {
+					self.recursiveDeleteFiles( self.camerasController.videosFolder + '/' + files[f], function() {
 						if (cb) {
 							cb(true);
 						}
@@ -100,7 +100,7 @@ OrphanFilesChecker.prototype.checkForOrphanStreams = function( folders, cb ) {
 
 	cam = cam.cam;
 
-	var camFolder = process.env['BASE_FOLDER'] + '/' + camId;
+	var camFolder = self.camerasController.videosFolder + '/' + camId;
 
 	var sqliteRegex = /.sqlite$/;
 
@@ -146,7 +146,7 @@ OrphanFilesChecker.prototype.periodicallyCheckForOrphanFiles = function( periodi
 				self.periodicallyCheckForOrphanFiles( periodicity );
 			}, periodicity);
 		} else {
-			fs.readdir( process.env['BASE_FOLDER'], function(err, files) {
+			fs.readdir( self.camerasController.videosFolder, function(err, files) {
 				self.checkForOrphanStreams( files, function( found ) {
 					clearTimeout( self.checkTimeout );
 					self.checkTimeout = setTimeout( function() {

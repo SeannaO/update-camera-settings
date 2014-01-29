@@ -6,6 +6,10 @@ var checkH264 = require('../helpers/ffmpeg.js').checkH264;
 var find = require('findit');
 var OrphanFilesChecker = require('../helpers/orphanFiles.js');
 
+
+// It seems that the mp4Handler should not be passed in as an argument. The mp4Handler is only used for taking snapshots and 
+// this logic should be happening outside of the CamerasController, especially since it has request handling as part of it
+
 function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 
     var self = this;
@@ -590,7 +594,7 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
     }
 
 	var streamsHash = {};
-	if (cam.streams.length > 0){
+	if (cam.streams && cam.streams.length > 0){
 		for (var s in cam.streams) {
 			if (typeof cam.streams[s].id == 'undefined' || !cam.streams[s].id || cam.streams[s].id.length <= 0) {
 				cam.streams[s].id = generateUUID();
@@ -668,7 +672,7 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 	        camera.cam.updateRecorder();
 
 	        self.emit("update", camera.cam);
-	        cb(err);
+	        cb(err, camera.cam);
 	    }
 	});
 };
@@ -708,7 +712,7 @@ CamerasController.prototype.updateCameraSchedule = function(params, cb) {
             }
             camera.cam.updateRecorder();
             self.emit("schedule_update", camera.cam);
-            cb(err);
+            cb(err, camera.cam);
         }
     });   
 
@@ -741,18 +745,6 @@ CamerasController.prototype.updateCameraMotion = function(params, cb) {
 		}
 		cb(error, body);
 	}); 
-};
-
-
-CamerasController.prototype.findCameraByLifelineId = function( lifelineId ) {
-
-    for (var i = 0; i < this.cameras.length; i++) { 
-        var cam = this.cameras[i];
-        if ( (cam.id && cam.id === lifelineId) || (!cam.id && cam._id === lifelineId) ) {
-            return { index: i, cam: cam };
-        }
-    }
-    return false;
 };
 
 

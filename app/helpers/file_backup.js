@@ -169,9 +169,4 @@ FileBackup.prototype.restore = function(cb) {
 
 };
 
-
-function escapeRegExp(str) {
-  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-}
-
 module.exports = FileBackup;
