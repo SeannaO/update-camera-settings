@@ -279,7 +279,7 @@ describe('Camera', function(){
 
 		it('should call db.getOldestChunks with correct params on each stream', function(done) {
 			done();
-/*
+		/*
 			for (var stream_id in new_cam.streams) {
 				sinon.spy( new_cam.streams[stream_id].db, "getOldestChunks" );
 			}
