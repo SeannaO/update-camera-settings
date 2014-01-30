@@ -704,6 +704,9 @@ describe('RecordModel', function() {
 			assert.equal( recordModel.camId, cam._id );
 		});
 	});
+<<<<<<< HEAD
+	*/
+=======
 	// end of updateCameraInfo tests
 	//
 
@@ -745,6 +748,8 @@ describe('RecordModel', function() {
 
 
 	});
+>>>>>>> fa182fdf5ef563e6d92c2ba6df42726dfbecdcbc
+
 });
 
 

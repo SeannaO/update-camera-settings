@@ -119,19 +119,20 @@ Camera.prototype.addStream = function( stream, cb ) {
 			});
 
 			self.streams[stream.id] = stream;
-			stream.recordModel = new RecordModel( self, stream );
+			stream.recordModel = new RecordModel( self, stream, function(recorder){
+				if ( self.shouldBeRecording() ) {
+					recorder.startRecording();
+				}
 
-			if ( self.shouldBeRecording() ) {
-				stream.recordModel.startRecording();
-			}
+				recorder.on('new_chunk', function(data) {
+					self.emit( 'new_chunk', data);
+				});
+				recorder.on('camera_status', function(data) {
+					console.log('emit: ' + stream.id);
+					self.emit('camera_status', { cam_id: self._id, status: data.status, stream_id: stream.id } );
+				});
+			});
 
-			stream.recordModel.on('new_chunk', function(data) {
-				self.emit( 'new_chunk', data);
-			});
-			stream.recordModel.on('camera_status', function(data) {
-				console.log('emit: ' + stream.id);
-				self.emit('camera_status', { cam_id: self._id, status: data.status, stream_id: stream.id } );
-			});
 		} else {
 			self.streamsToBeDeleted[stream.id] = stream;
 		}
@@ -516,6 +517,7 @@ Camera.prototype.getExpiredChunksFromStream = function( streamId, nChunks, cb ) 
 	// for safety reasons, avoids non-existing ids
 	if ( !this.streams[streamId] ) {
 		console.log('[error] cameraModel.getExpiredChunksFromStream: no stream with id ' + streamId);
+		cb([]);
 		return;
 	}
 
@@ -713,14 +715,15 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 
 	if ( !this.streams[streamId] ) {
 		console.log('[error] cameraModel.deleteChunk: no stream with id ' + streamId);
+		cb('no stream with this id');
 		return;
 	}
 	
 	var self = this;
 
-	self.streams[ streamId ].db.deleteVideo( chunk.id, function( err ) {
+	self.streams[ streamId ].db.deleteVideo( chunk.id, function( err, rows ) {
 
-		if (err && err !== "") {
+		if ( err && (!rows || rows.length === 0) ) {
 			console.log( "error removing indexes from db" );
 			console.log(err);
 			cb( chunk, err );

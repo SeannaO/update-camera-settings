@@ -30,7 +30,7 @@ Dblite.prototype.deleteVideo = function( id, cb ) {
 
 	this.db.query( query,
 		function(err, rows) {
-			cb( err );		
+			cb( err, rows );		
 		}
 	);
 };
@@ -141,7 +141,7 @@ Dblite.prototype.searchVideosByInterval = function( start, end, cb ) {
 
 Dblite.prototype.getExpiredChunks = function( expirationDate, numberOfChunks, cb ) {
     var self = this;
-	var query = 'SELECT * FROM videos WHERE start < ? ORDER BY id ASC LIMIT ?';
+	var query = 'SELECT id, file, start FROM videos WHERE start < ? ORDER BY id ASC LIMIT ?';
 
     var fileList = this.db.query(
 			query, 

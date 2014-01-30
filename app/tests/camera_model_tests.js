@@ -130,13 +130,16 @@ describe('Camera', function(){
 			cam_with_streams._id = 'startRecording_test_1_' + Math.random();			
 			new Camera( cam_with_streams, videosFolder, function(new_cam){
 			console.log(new_cam.streams);
-				var s1_startRecording = sinon.spy(new_cam.streams[0].recordModel, "startRecording");
-				var s2_startRecording = sinon.spy(new_cam.streams[1].recordModel, "startRecording");
+				var recordingSpies = [];
+				for (var stream_id in new_cam.streams){
+					recordingSpies.push(sinon.spy(new_cam.streams[stream_id].recordModel, "startRecording"));
+				}
 
 				new_cam.startRecording();
-				
-				assert(s1_startRecording.calledOnce);
-				assert(s2_startRecording.calledOnce);
+
+				for (var spy_id in recordingSpies){
+					assert(recordingSpies[spy_id].calledOnce);	
+				}
 				done();
 			});
 		});
@@ -145,14 +148,17 @@ describe('Camera', function(){
 
 			cam_with_streams._id = 'startRecording_test_2_' + Math.random();			
 			new Camera( cam_with_streams, videosFolder, function(new_cam){
-				var s1_startRecording = sinon.spy(new_cam.streams[0].recordModel, "startRecording");
-				var s2_startRecording = sinon.spy(new_cam.streams[1].recordModel, "startRecording");
+				var recordingSpies = [];
+				for (var stream_id in new_cam.streams){
+					recordingSpies.push(sinon.spy(new_cam.streams[stream_id].recordModel, "startRecording"));
+				}
 
 				new_cam.startRecording();
 				new_cam.startRecording();
 
-				assert(s1_startRecording.calledOnce);
-				assert(s2_startRecording.calledOnce);
+				for (var spy_id in recordingSpies){
+					assert(recordingSpies[spy_id].calledOnce);	
+				}
 				done();
 			});
 		});
@@ -169,14 +175,16 @@ describe('Camera', function(){
 			cam_with_streams._id = 'stopRecording_test_1_' + Math.random();			
 			new Camera( cam_with_streams, videosFolder, function(new_cam){
 				new_cam.startRecording();
-
-				var s1_stopRecording = sinon.spy(new_cam.streams[0].recordModel, "stopRecording");
-				var s2_stopRecording = sinon.spy(new_cam.streams[1].recordModel, "stopRecording");
+				var recordingSpies = [];
+				for (var stream_id in new_cam.streams){
+					recordingSpies.push(sinon.spy(new_cam.streams[stream_id].recordModel, "stopRecording"));
+				}
 
 				new_cam.stopRecording();
 				
-				assert(s1_stopRecording.calledOnce);
-				assert(s2_stopRecording.calledOnce);
+				for (var spy_id in recordingSpies){
+					assert(recordingSpies[spy_id].calledOnce);	
+				}
 				done();
 			});
 		});
@@ -188,14 +196,17 @@ describe('Camera', function(){
 
 				new_cam.startRecording();
 
-				var s1_stopRecording = sinon.spy(new_cam.streams[0].recordModel, "stopRecording");
-				var s2_stopRecording = sinon.spy(new_cam.streams[1].recordModel, "stopRecording");
+				var recordingSpies = [];
+				for (var stream_id in new_cam.streams){
+					recordingSpies.push(sinon.spy(new_cam.streams[stream_id].recordModel, "stopRecording"));
+				}
 
 				new_cam.stopRecording();
 				new_cam.stopRecording();
 
-				assert(s1_stopRecording.calledOnce);
-				assert(s2_stopRecording.calledOnce);
+				for (var spy_id in recordingSpies){
+					assert(recordingSpies[spy_id].calledOnce);	
+				}
 				done();
 			});
 			
