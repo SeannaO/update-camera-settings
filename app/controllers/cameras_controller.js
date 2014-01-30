@@ -279,7 +279,6 @@ CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_id
 					});
 					
 					console.log('adding ' + maxChunksPerCamera + ' expired chunks for deletion: ');
-					console.log( chunks );
 
 					self.addChunksToDeletionQueue( chunks );
 					self.periodicallyCheckForExpiredChunks( cam_ids_list );

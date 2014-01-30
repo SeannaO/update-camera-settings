@@ -2,83 +2,138 @@ var assert = require("assert");
 var sinon = require("sinon");
 
 var Dblite = require('../db_layers/dblite.js');
+var dblite_driver = require('dblite');
+
 var fs = require('fs');
 
 describe('Dblite', function() {
-/*
-	describe('new', function() {
-		
-		it('should create video table if not exists', function() {
-			// todo
-		});
-	});
-
-
-	describe('insert', function() {
-		
-		var emptyDb = 'tests/db/another_empty_db.sqlite';
-		if ( fs.existsSync( emptyDb ) ) {
-			fs.unlink( emptyDb );
-		}
-		
-		var dblite = new Dblite(emptyDb);
-
-		it('should add new chunk to videos table', function(done) {
-			
-			var chunk = {
-				start: 0,
-				end: 10,
-				file: "a file"
-			};
-			dblite.insertVideo( chunk );
-			dblite.db.query('select start, end, file from videos where start = ? and end = ? and file = ?',
-				[chunk.start, chunk.end, chunk.file],
-				['start', 'end', 'file'],
-				function( err, data ) {
-					assert.equal( data.length, 1 );
-					assert.equal(data[0].start, chunk.start);
-					assert.equal(data[0].end, chunk.end);
-					assert.equal(data[0].file, chunk.file);
-					done();
-				}
-			);
-		});
-	});
-
-
-	describe('delete', function() {
-
-		it('should remove video with specified id', function( done ) {
-			
-			var emptyDb = 'tests/db/yet_another_empty_db.sqlite';
 	
-			var chunk = {
-				start: 0,
-				end: 10,
-				file: "a file"
-			};
+	describe( 'constructor', function() {
+		
+		it( 'should create video table if not exists', function( done ) {
+				
+			var dbfile = 'tests/videosFolder/dblite_create_video_table_test.sqlite';
+			var db = new Dblite(dbfile, function() {
+				
+				checkIfTableExists( dbfile, 'videos', function( exists ) {
+					assert( exists );
+					done();
+				});
+			})
+		});
+		
+		it( 'should preserver table if already exists', function( done ) {
+
+			var dbfile = 'tests/videosFolder/dblite_create_video_table_test.sqlite';
 			
-			var dblite = new Dblite(emptyDb);
-			dblite.insertVideo( chunk );
-			dblite.db.query('select id from videos where start = ? and end = ? and file = ?',
-				[chunk.start, chunk.end, chunk.file],
-				['id'],
-				function( err, data ) {
+			var chunk = {
+				start: '0',
+				end: '100',
+				file: 'a_file'
+			};
 
-					var id = data[0].id;
-					dblite.deleteVideo ( id, function() {
+			insertData( dbfile, chunk, function(err) {
 
-						dblite.db.query('select * from videos', 
-							['id'], 
-							function( err, data ) {
-								assert.equal( data.length, 0 );
-								done();
-							}
-						);
+				var db = new Dblite(dbfile, function() {
+
+					getData( dbfile, function(data) {
+						assert(data);
+						assert(data.length === 1);
+						assert.equal( data[0].end, chunk.end );
+						assert.equal( data[0].start, chunk.start );
+						assert.equal( data[0].file, chunk.file );
+
+						done();
 					});
-				}	
-			);			
+
+				});
+
+			});
+
 		});
 	});
-*/
+	// end of constructor tests
+	//
+	
+	describe('deleteVideo', function() {
+	
+	});
+
+	describe('insertVideo', function() {
+		
+	});
+
+	describe('searchVideosByInterval', function() {
+		
+	});
+
 });
+
+
+
+
+
+var checkIfTableExists = function( db_file, table, cb ) {
+
+	var query = "SELECT name FROM sqlite_master WHERE name='" + table + "'";
+	
+	
+	dblite_driver(db_file).query(query, 
+            ['name'], 
+            function(err, data) {
+				if (!err && data.length > 0) cb( true );
+				else cb( false );
+			}
+	);
+};
+
+
+var insertData = function( db, data, cb ) {
+
+	var dblite;
+
+	if (typeof db === 'string') {
+		dblite = dblite_driver(db);
+	} else {
+		dblite = db;
+	}
+
+	var query = "INSERT INTO videos(start, end, file) VALUES(?, ?, ?)";
+
+	dblite.query(query, 
+			[data.start, data.end, data.file],
+			function(err, data) {
+				if ( !err ) cb();
+				else cb( err );
+			}
+	);
+};
+
+
+var getData = function(db, cb) {
+
+	var dblite;
+
+	if (typeof db === 'string') {
+		dblite = dblite_driver(db);
+	} else {
+		dblite = db;
+	}
+
+	
+	var query = 'SELECT file, start, end FROM videos';
+
+    dblite.query(
+        query, 
+        ['file', 'start', 'end'], 
+        function(err, data) {
+            if (err){
+            }
+            if (!data || data.length === 0) {
+                 cb( [] );
+            } else {
+                cb( data );
+            }
+        }
+    );
+};
