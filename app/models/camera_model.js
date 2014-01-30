@@ -674,14 +674,15 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 
 	if ( !this.streams[streamId] ) {
 		console.log('[error] cameraModel.deleteChunk: no stream with id ' + streamId);
+		cb('no stream with this id');
 		return;
 	}
 	
 	var self = this;
 
-	self.streams[ streamId ].db.deleteVideo( chunk.id, function( err ) {
+	self.streams[ streamId ].db.deleteVideo( chunk.id, function( err, rows ) {
 
-		if (err && err !== "") {
+		if ( err && (!rows || rows.length === 0) ) {
 			console.log( "error removing indexes from db" );
 			console.log(err);
 			cb( chunk, err );

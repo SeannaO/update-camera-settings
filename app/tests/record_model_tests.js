@@ -31,7 +31,23 @@ describe('RecordModel', function() {
 				framerate:	'20',
 				quality:	'30',
 				rtsp: 'rtsp://stream2_rtsp'
+			},
+			actual_stream : {				
+				id: 'actual_stream',
+				resolution: '1280x960',
+				framerate:	'20',
+				quality:	'30',
+				rtsp: 'rtsp://192.168.215.102'		// IMPORTANT: this field should contain an actual rtsp url 
+													// and it should be accessible from your machine in order for some tests to pass
+			},
+			empty_stream : {				
+				id: 'empty_stream',
+				resolution: '1280x960',
+				framerate:	'20',
+				quality:	'30',
+				rtsp: ''		
 			}
+
 		}
 	};
 
@@ -658,7 +674,45 @@ describe('RecordModel', function() {
 	// end of updateCameraInfo tests
 	//
 
-	
+
+	describe( 'recordContinuosly', function() {
+
+		it( 'should write error to console if rtsp is not defined', function() {
+
+			var recordModel = new RecordModel( cam, cam.streams['empty_stream'] );
+			
+			sinon.spy( console, 'error' );
+
+			recordModel.recordContinuously();
+			assert( console.error.withArgs('[RecordModel.recordContinuously] : error : empty rtsp string').calledOnce );
+
+			console.error.restore();
+		});
+
+		it( 'should not write error to console when ffmpeg process is killed', function( done ) {
+
+			this.timeout(15000);
+
+			var recordModel = new RecordModel( cam, cam.streams['actual_stream'] );
+			
+			console.log("#######################");
+			console.log( recordModel.rtsp );
+			console.log("#######################");
+
+			sinon.spy( console, 'error' );
+
+			recordModel.recordContinuously();
+			
+			setTimeout( function() {
+				assert( !console.error.called );
+				done();
+			},  500);
+
+		});
+
+
+	});
+
 });
 
 

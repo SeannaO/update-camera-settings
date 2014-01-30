@@ -28,7 +28,7 @@ Dblite.prototype.deleteVideo = function( id, cb ) {
 
 	this.db.query( query,
 		function(err, rows) {
-			cb( err );		
+			cb( err, rows );		
 		}
 	);
 };
