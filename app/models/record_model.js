@@ -109,6 +109,15 @@ RecordModel.prototype.cleanTmpFolder = function() {
  */
 RecordModel.prototype.updateCameraInfo = function( camera, stream ) {
 
+	if ( !stream || ( !stream.url && !stream.rtsp ) ) {
+		console.error( '[RecordModel.updateCameraInfo] : corrupted stream object' );
+		return;
+	}
+	if ( !camera || !camera._id ) {
+		console.error( '[RecordModel.updateCameraInfo] : corrupted camera object' );
+		return;
+	}
+
     this.rtsp = stream.url || stream.rtsp;	// supporting both attributes name
 											// we might want to change that
     this.camId = camera._id;
@@ -221,8 +230,7 @@ RecordModel.prototype.indexPendingFiles = function( cb ) {
 
 	} else {
         
-		var file = self.pending.shift();	// next file
-        
+		var file = self.pending.shift();	// next file 
 		
 		self.moveAndIndexFile( file, function(err) {	// method to move and index a single file
 			if (err) console.log(err);				
@@ -321,7 +329,6 @@ RecordModel.prototype.launchMonitor = function() {
 		}
 	}, 5000);	// the monitor will check back after 5s
 };
-
 
 
 /**
@@ -472,7 +479,6 @@ RecordModel.prototype.calcDuration = function( file, cb ) {
 //
 
 
-
 /**
  * Calculates chunk duration using file system stats and ffmpeg
  *  
@@ -508,6 +514,7 @@ RecordModel.prototype.calcDurationWithFileInfo = function( file, fileInfo, cb ) 
 };
 // end of calcDurationWithFileInfo
 //
+
 
 /**
  * TODO: check if this method is really necessary
@@ -593,8 +600,6 @@ RecordModel.prototype.moveFile = function( video, cb ) {
 };
 // end of moveFile
 //
-
-
 
 
 /**

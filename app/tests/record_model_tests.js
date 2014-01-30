@@ -33,12 +33,67 @@ describe('RecordModel', function() {
 				rtsp: 'rtsp://stream2_rtsp'
 			}
 		}
+	};
+
+	var cam_with_streams_2 = {
+		_id: "another_camera_2",
+		name: "a name",
+		ip: "127.0.0.1",
+		manufacturer: 'a_manufacturer',
+		user: 'a_user',
+		password: 'a_password',
+		streams: {
+			stream_1 : {
+				id: 'another_stream_1',
+				resolution: '640x480',
+				framerate: '10',
+				quality: '5',
+				rtsp: 'rtsp://stream1_rtsp'
+			}, 
+			stream_2 : {
+				id: 'another_stream_2',
+				resolution: '1280x960',
+				framerate:	'20',
+				quality:	'30',
+				rtsp: 'rtsp://stream2_rtsp'
+			}
+		}
 	};	
 
 	var cam = new CameraModel( cam_with_streams, 'tests/videosFolder');
-		
-	describe('constructor', function() {			
+	var cam_2 = new CameraModel( cam_with_streams_2, 'tests/videosFolder');
+	
+	describe('constructor', function() {		
+		it('should initialize all attributes correctly', function() {
+			
+			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
+
+			assert( recordModel.pending );
+			assert.equal( recordModel.pending.length, 0 );
+
+			assert.equal( recordModel.lastChunkTime, 0 );
+			assert.equal( recordModel.lastErrorTime, 0 );
+
+			assert.equal( recordModel.status, -1 );		// NOTE: -1 is the ERROR status code; 
+
+			assert.equal( recordModel.camera, cam );
+			assert.equal( recordModel.camId, cam._id );
+
+			assert.equal( recordModel.rtsp, cam.streams['stream_1'].rtsp || cam.streams['stream_1'].url );
+			assert.equal( recordModel.stream, cam.streams['stream_1'] );
+			assert.equal( recordModel.db, cam.streams['stream_1'].db );
+
+			var folder = cam.videosFolder + '/' + cam.streams['stream_1'].id;
+			assert.equal( recordModel.folder, folder );
+
+			assert.equal( typeof recordModel.watcher, 'object' );
+
+			assert( recordModel.filesToIndex );
+			assert.equal( recordModel.filesToIndex.length, 0 );
+		});
 	});
+	// end of constructor tests
+	//
 
 
 	describe('startRecording', function() {
@@ -513,23 +568,97 @@ describe('RecordModel', function() {
 	// end of moveAndIndexFile tests
 	//
 	
-	/*
+	
 	describe( 'indexPendingFiles', function() {
 		
 		it('should just callback and not call moveAndIndexFile when pending list length is <= 1', function( done ) {
 			
-			var recordModel = new RecordModel( cam, cam.streams['stream_3'] );
+			var recordModel = new RecordModel( cam, cam.streams['stream_2'] );
 			
 			sinon.spy(recordModel, 'moveAndIndexFile');
+			
+			recordModel.indexPendingFiles( function() {
+				assert( !recordModel.moveAndIndexFile.called,
+					'moveAndIndexFile should no be called');
+	
+				recordModel.pending = ['should_not_be_indexed'];
+		
+				recordModel.indexPendingFiles( function() {
+					assert( !recordModel.moveAndIndexFile.called,
+						'moveAndIndexFile should no be called');
+					done();
+				});
+			});			
+		});
 
-			recordModel.indexPendingDiles( function() {
-				assert( !moveAndIndexFile.called );
+		it('should call moveAndIndexFile for each file except the latest one when pending list length is > 1', function( done ) {
+			
+			var recordModel = new RecordModel( cam, cam.streams['stream_2'] );
+			
+			sinon.spy(recordModel, 'moveAndIndexFile');
+			
+			recordModel.pending.push('a');
+			recordModel.pending.push('b');
+			recordModel.pending.push('c');
+			recordModel.pending.push('should_not_be_indexed');
+
+			recordModel.indexPendingFiles( function() {
+				assert.equal( recordModel.moveAndIndexFile.firstCall.args[0], 'a');
+				assert.equal( recordModel.moveAndIndexFile.secondCall.args[0], 'b');
+				assert.equal( recordModel.moveAndIndexFile.thirdCall.args[0], 'c');
+				assert( recordModel.moveAndIndexFile.calledThrice );
+
+				assert.equal( recordModel.pending[0], 'should_not_be_indexed');
+
 				done();
 			});
 			
 		});
+		
 	});
-	*/
+	// end of indexPendingFiles tests
+	//
+	
+
+	describe('updateCameraInfo', function() {
+
+		it( 'should update params correctly', function() {
+
+			var recordModel = new RecordModel( cam, cam.streams['stream_2'] );
+			
+			// before
+			assert.equal( recordModel.rtsp, cam.streams['stream_2'].rtsp || cam.streams['stream_2'].url  );
+			assert.equal( recordModel.camId, cam._id );
+
+			recordModel.updateCameraInfo( cam_2, cam_2.streams['another_stream_1'] );
+			
+			// after
+			assert.equal( recordModel.rtsp, cam_2.streams['another_stream_1'].rtsp || cam_2.streams['another_stream_1'].url  );
+			assert.equal( recordModel.camId, cam_2._id );
+		});
+
+		it( 'should do nothing if camera or stream are not well defined', function() {
+
+			var recordModel = new RecordModel( cam, cam.streams['stream_2'] );
+			
+			var undefined_cam;
+			var undefined_stream;
+
+			// before
+			assert.equal( recordModel.rtsp, cam.streams['stream_2'].rtsp || cam.streams['stream_2'].url  );
+			assert.equal( recordModel.camId, cam._id );
+
+			recordModel.updateCameraInfo();
+			
+			// after
+			assert.equal( recordModel.rtsp, cam.streams['stream_2'].rtsp || cam.streams['stream_2'].url  );
+			assert.equal( recordModel.camId, cam._id );
+		});
+	});
+	// end of updateCameraInfo tests
+	//
+
+	
 });
 
 
