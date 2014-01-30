@@ -408,8 +408,8 @@ describe('Camera', function(){
 			new Camera( cam_with_streams, videosFolder, function(new_cam){
 				var stream = new_cam.streams[0];
 				var callback = sinon.stub(stream.db.backup, "restore").yields("empty", null);
-				var spy = sinon.spy(new_cam, "reIndexDatabaseFromFileStructure");
 				var reIndexStub = sinon.stub(new_cam, "reIndexDatabaseFromFileStructure").callsArgWith(2, null);
+				var spy = sinon.spy(new_cam, "reIndexDatabaseFromFileStructure");
 				new_cam.restoreBackupAndReindex(stream, function(){
 					assert(spy.calledOnce);
 					done();

@@ -2,7 +2,7 @@
 ###############
 *.ts
 *.mp4
-
+tests/fixtures/files/cam_db
 *.jpg
 
 *.swp
