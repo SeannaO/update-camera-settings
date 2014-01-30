@@ -103,6 +103,7 @@ Dblite.prototype.searchVideosByInterval = function( start, end, cb ) {
 
 	if ( isNaN( start ) || isNaN( end ) )  {
 		console.error( "[Dblite.searchVideosByInterval] invalid interval error: " + start + " : " + end );
+		cb('invalid interval error');
 		return;
 	}
 
