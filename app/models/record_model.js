@@ -12,7 +12,7 @@ var RECORDING = 2,
     STOPPED = 0,
     ERROR = -1;
 
-function RecordModel( camera, stream ) {
+function RecordModel( camera, stream, cb) {
 
     var self = this;
 
@@ -39,6 +39,7 @@ function RecordModel( camera, stream ) {
 	// watcher will watch for new chunks on tmp folder
     this.watcher = new Watcher( self.folder + '/videos/tmp', 'ts');
     this.filesToIndex = [];
+    if (cb) cb(self);
 }
 // end of constructor
 //

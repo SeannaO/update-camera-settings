@@ -7,7 +7,7 @@ var EventEmitter = require('events').EventEmitter;				// events
 var find = require('findit');
 var path = require('path');
 
-function Camera( cam, videosFolder ) {
+function Camera( cam, videosFolder, cb ) {
 
 
     var self = this;
@@ -26,7 +26,7 @@ function Camera( cam, videosFolder ) {
     this.manufacturer = cam.manufacturer;
     this.type = cam.type;					// 'ovif' or 'psia'
     this.indexing = false;					// lock for indexPendingFiles
-	this.username = cam.username || '';			
+	this.username = cam.username || cam.user || '';			
     this.password = cam.password || '';
 
 	this.videosFolder = videosFolder + "/" + this._id;
@@ -56,22 +56,25 @@ function Camera( cam, videosFolder ) {
 			fs.mkdirSync( this.videosFolder );
 		}
 
-		// instantiates streams
-		for (var i in cam.streams) {
-			self.addStream( cam.streams[i] );
+		var streams = []
+		for (var i in cam.streams){
+			streams.push(cam.streams[i]);
 		}
-	
-		// this.setupEvents();
 
-		if (!this.recording && this.shouldBeRecording()) {
-			console.log("starting camera " + (this.name || this.ip));
-			this.startRecording();
-		} else {
-			console.log("stopping camera " + (this.name || this.ip));
-			this.stopRecording();
-		}
+		this.addAllStreams(streams, function(){
+			if (!self.recording && self.shouldBeRecording()) {
+				console.log("starting camera " + (self.name || self.ip));
+				self.startRecording();
+			} else {
+				console.log("stopping camera " + (self.name || self.ip));
+				self.stopRecording();
+			}
+			if (cb) cb(self);
+		});
+		// instantiates streams
 	} else {	
 		// nothing to be done
+		if (cb) cb(self);
 	}
 }
 // end of constructor
@@ -80,6 +83,18 @@ function Camera( cam, videosFolder ) {
 
 util.inherits(Camera, EventEmitter);
 
+
+Camera.prototype.addAllStreams = function( streams, cb ) {
+	var self = this;
+	if (streams.length == 0) {
+		if (cb) cb();	// we're done					
+	} else {
+		var stream = streams.shift();	// next file
+		this.addStream( stream, function() {
+			self.addAllStreams(streams, cb );// recursive call
+		});
+    }
+};
 
 /**
  * Adds stream to camera, 
@@ -90,126 +105,151 @@ util.inherits(Camera, EventEmitter);
  * @param {stream} obj 
  *     stream should contain: { resolution, framerate, quality }
  */
-Camera.prototype.addStream = function( stream ) {
+Camera.prototype.addStream = function( stream, cb ) {
 
 	var self = this;
-	stream.db = new Dblite( this.videosFolder + '/db_'+stream.id+'.sqlite' );
+	stream.db = new Dblite( this.videosFolder + '/db_'+stream.id+'.sqlite', function(db){
+		if (!stream.toBeDeleted) {
 
-	stream.db.db.on('error', function (err) {
-        console.error(err.toString());
-        var msg = err.toString();
-        if (msg.indexOf('disk image is malformed') !== -1){
-        	// delete the old database file
-        	// recreate the database
-        	stream.db.backup.restore(function(err, backup){
-				var storedVideosFolder = self.videosFolder + "/" + stream.id + "/videos";
-        		if (err){
-        			if (err === "empty"){
-			        	fs.unlink(self.videosFolder + '/db_'+stream.id+'.sqlite', function (err) {
-							if (err){
-								console.log(err);
-								console.error("unable to delete corrupt sqlite file");	
-							}else{
-								// create the database
-								stream.db.createTableIfNotExists(function(err){
-									if (err){
-										console.log(err);
-										console.error("unable to recreate table.");	
-									}else{
-										var finder = find(storedVideosFolder);
-										finder.on('file', function (file, stat) {
-											stream.recordModel.addFileToIndexInDatabase(file);
-											// stream.recordModel.indexFileInDatabase(file);
-										});
-									}
-								});
-								stream.recordModel.indexPendingFilesAfterCorruptDatabase(function(){
-								
-								});
-							}
-						});
-        			}else{
-        				console.error(err);
-        			}
-        		}else{
-					stream.db.getNewestChunks(1,function(rows){
-						if (rows && rows.length > 0){
-							var last_recorded_timestamp = rows[0].end;
-							var last_recorded_date = new Date(last_recorded_timestamp);
-							
-							fs.stat(rows[0].file, function(err, stats){
-								var most_recent_dir = path.dirname(rows[0].file);
-								var lastFileStored = stats.mtime;
-								// finish indexing the folder that the last file was recorded in
-								var finder = find(most_recent_dir);
-								finder.on('file', function (file, stats) {
-									if (stats.mtime > lastFileStored){
-										stream.recordModel.addFileToIndexInDatabase(file);
-										// stream.recordModel.indexFileInDatabase(file);
-									}
-								});
-							});
-							// finish indexing all the folders after the last indexed file
-							fs.readdir(storedVideosFolder, function(err, list){
-								var unindexed_folders = [];
-								var re = /([\d]+)-([\d]+)-([\d]+)/
-								for (var idx in list){
-									var matches = re.exec(list[idx]);
-									if (matches && matches.length == 4){
-										var year = parseInt(matches[1]);
-										var month = parseInt(matches[2])-1;
-										var day = parseInt(matches[3]);
-										var dirdate = new Date(year, month, day);
-										if (dirdate > last_recorded_date){
-											var finder = find(storedVideosFolder + "/" + list[idx]);
-											finder.on('file', function (file, stat) {
-												stream.recordModel.addFileToIndexInDatabase(file);
-												// stream.recordModel.indexFileInDatabase(file);
-											});
-										}
-									}
-								}
-							});
-							stream.recordModel.indexPendingFilesAfterCorruptDatabase(function(){
-								
-							});
-						}
-					});
-        		}
-        	});
-        }
-    });
+			stream.url = self.api.getRtspUrl({
+				resolution: stream.resolution,
+				framerate: stream.framerate,
+				quality: stream.quality,
+				suggested_url: stream.url
+			});
 
-	if (!stream.toBeDeleted) {
+			self.streams[stream.id] = stream;
+			stream.recordModel = new RecordModel( self, stream, function(recorder){
+				if ( self.shouldBeRecording() ) {
+					recorder.startRecording();
+				}
 
-		stream.url = this.api.getRtspUrl({
-			resolution: stream.resolution,
-			framerate: stream.framerate,
-			quality: stream.quality,
-			suggested_url: stream.url
-		});
+				recorder.on('new_chunk', function(data) {
+					self.emit( 'new_chunk', data);
+				});
+				recorder.on('camera_status', function(data) {
+					console.log('emit: ' + stream.id);
+					self.emit('camera_status', { cam_id: self._id, status: data.status, stream_id: stream.id } );
+				});
+			});
 
-		self.streams[stream.id] = stream;
-		stream.recordModel = new RecordModel( this, stream );
-
-		if ( this.shouldBeRecording() ) {
-			stream.recordModel.startRecording();
+		} else {
+			self.streamsToBeDeleted[stream.id] = stream;
 		}
 
-		stream.recordModel.on('new_chunk', function(data) {
-			self.emit( 'new_chunk', data);
+		db.db.on('error', function (err) {
+		    console.error(err.toString());
+		    var msg = err.toString();
+		    if (msg.indexOf('disk image is malformed') !== -1){
+		    	self.restoreBackupAndReindex(stream);
+		    }
 		});
-		stream.recordModel.on('camera_status', function(data) {
-			console.log('emit: ' + stream.id);
-			self.emit('camera_status', { cam_id: self._id, status: data.status, stream_id: stream.id } );
-		});
-	} else {
-		self.streamsToBeDeleted[stream.id] = stream;
-	}
-	
+		if (cb) cb();
+	});
 };
 // end of addStream
 //
+
+Camera.prototype.restoreBackupAndReindex = function( stream, cb ) {
+	// delete the old database file
+    // recreate the database
+    var self = this;
+	stream.db.backup.restore(function(err, backup){
+		var storedVideosFolder = self.videosFolder + "/" + stream.id + "/videos";
+		if (err){
+			if (err === "empty"){
+				fs.unlink(self.videosFolder + '/db_'+stream.id+'.sqlite', function (err) {
+					if (err){
+						console.log(err);
+						console.error("unable to delete corrupt sqlite file");	
+						if (cb) cb(err);
+					}else{
+						self.reIndexDatabaseFromFileStructure(stream, storedVideosFolder, cb);
+					}
+				});
+			}else{
+				console.error(err);
+				if (cb) cb(err);
+			}
+		}else{
+			stream.db.getNewestChunks(1,function(rows){
+				if (rows && rows.length > 0){
+					self.reIndexDatabaseFromFileStructureAfterTimestamp(stream, storedVideosFolder, rows[0], cb);
+				}else{
+					if (cb) cb();
+				}
+			});
+		}
+	});
+};
+
+Camera.prototype.reIndexDatabaseFromFileStructure = function(stream, storedVideosFolder, cb){
+	var self = this;
+
+	// create the database
+	stream.db.createTableIfNotExists(function(err){
+		if (err){
+			console.log(err);
+			console.error("unable to recreate table.");
+			if (cb) cb(err);
+		}else{
+			var finder = find(storedVideosFolder);
+			finder.on('file', function (file, stat) {
+				stream.recordModel.addFileToIndexInDatabase(file);
+			});
+			finder.on('end', function () {
+				stream.recordModel.indexPendingFilesAfterCorruptDatabase(cb);
+			});
+		}
+	});
+};
+
+Camera.prototype.reIndexDatabaseFromFileStructureAfterTimestamp = function(stream, storedVideosFolder, indexItem, cb){
+	var self = this;
+
+	var last_recorded_date = new Date(indexItem.end);
+	
+	fs.stat(indexItem.file, function(err, stats){
+		var most_recent_dir = path.dirname(indexItem.file);
+		var lastFileStored = stats.mtime;
+		// finish indexing the folder that the last file was recorded in
+		var finder = find(most_recent_dir);
+		finder.on('file', function (file, stats) {
+			if (stats.mtime > lastFileStored){
+				stream.recordModel.addFileToIndexInDatabase(file);
+				// stream.recordModel.indexFileInDatabase(file);
+			}
+		});
+		finder.on('end', function () {
+			// finish indexing all the folders after the last indexed file
+			fs.readdir(storedVideosFolder, function(err, list){
+				if (err){
+					if (cb) cb();
+				}else{
+					var unindexed_folders = [];
+					var re = /([\d]+)-([\d]+)-([\d]+)/
+					for (var idx in list){
+						var matches = re.exec(list[idx]);
+						if (matches && matches.length == 4){
+							var year = parseInt(matches[1]);
+							var month = parseInt(matches[2])-1;
+							var day = parseInt(matches[3]);
+							var dirdate = new Date(year, month, day);
+							if (dirdate > last_recorded_date){
+								var finder = find(storedVideosFolder + "/" + list[idx]);
+								finder.on('file', function (file, stat) {
+									stream.recordModel.addFileToIndexInDatabase(file);
+									// stream.recordModel.indexFileInDatabase(file);
+								});
+							}
+						}
+					}
+					stream.recordModel.indexPendingFilesAfterCorruptDatabase(cb);			
+				}
+			});
+		});
+	});
+};
 
 
 Camera.prototype.setMotionDetection = function( cb ) {

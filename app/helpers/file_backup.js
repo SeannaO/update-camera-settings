@@ -43,12 +43,12 @@ FileBackup.prototype.setup = function(cb) {
 					}).sort(function(a, b) {
 						return a.time - b.time;
 					});
-					if (cb) cb(self.backups);
+					if (cb) cb(self);
 				}
 			});
 		} else {
 			fs.mkdir(self.backupFolder, function(e) {
-				if (cb) cb();
+				if (cb) cb(self);
 			});
 		}
 	}); 

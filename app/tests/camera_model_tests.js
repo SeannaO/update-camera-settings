@@ -1,9 +1,10 @@
+var rewire = require("rewire");
 var assert = require("assert");
 var sinon = require("sinon");
 
 var fs = require('fs');
 
-var Camera = require('../models/camera_model.js');
+var Camera = rewire('../models/camera_model.js');
 
 var cam_with_streams = {
 	_id: "abc",
@@ -38,6 +39,38 @@ var cam_without_streams = {
 };
 
 
+var fsStubUnlinkError = {
+  unlink: function(file, callback) {
+     console.log('fs.unlink stub called');
+     callback("failed");
+  },
+  existsSync: function(folder){
+  	return true;
+  },
+  mkdirSync: function(folder){
+  	return true;
+  },
+  exists:function(file,callback){
+  	callback(true);
+  }
+};
+
+var fsStubUnlink = {
+  unlink: function(file, callback) {
+     console.log('fs.unlink stub called');
+     callback(null);
+  },
+  existsSync: function(folder){
+  	return true;
+  },
+  mkdirSync: function(folder){
+  	return true;
+  },
+  exists:function(file,callback){
+  	callback(true);
+  }
+};
+
 var videosFolder = "tests/videosFolder"; 
 
 
@@ -48,38 +81,41 @@ describe('Camera', function(){
 		it('should create a folder for each stream', function() {
 			
 			cam_with_streams._id = 'constructor_test_1_' + Math.random();			
-			var new_cam = new Camera( cam_with_streams, videosFolder );
+			new Camera( cam_with_streams, videosFolder , function(new_cam){
+				for (var stream_id in cam_with_streams.streams) {
+					fs.exists(videosFolder+"/"+cam_with_streams._id+"/"+ stream_id, function(exists) {
+						assert.ok(exists);
+					});
+				}
+			});
 
-			for (var stream_id in cam_with_streams.streams) {
-				console.log(stream_id);
-				fs.exists(videosFolder+"/"+cam_with_streams._id+"/"+ stream_id, function(exists) {
-					assert.ok(exists);
-				});
-			}
+
 		});
 
-		it('should setup a new recordModel for each stream', function() {
+		it('should setup a new recordModel for each stream', function( done ) {
 
 			cam_with_streams._id = 'constructor_test_2_' + Math.random();		
-			var new_cam = new Camera( cam_with_streams, videosFolder );
-
-			for (var stream_id in cam_with_streams.streams) {
-				assert( new_cam.streams[stream_id].recordModel );
-				assert( typeof new_cam.streams[stream_id].recordModel === 'object' );
-			}
+			new Camera( cam_with_streams, videosFolder, function(new_cam){
+				for (var stream_id in cam_with_streams.streams) {
+					assert( new_cam.streams[stream_id].recordModel );
+					assert( typeof new_cam.streams[stream_id].recordModel === 'object' );
+				}
+				done();
+			});
 		});
 
-		it('should create a new camera with correct params', function(){
+		it('should create a new camera with correct params', function(done){
 
 			var cameras = [cam_with_streams, cam_without_streams];
 			
 			for (var cam in cameras) {
-				var new_cam = new Camera( cam, videosFolder );
+				console.log(cam);
+				var new_cam = new Camera( cam, videosFolder);
 				assert.equal( new_cam._id, cam._id );
 				assert.equal( new_cam.name, cam.name );
 				assert.equal( new_cam.ip, cam.ip );
 				assert.equal( new_cam.rtsp, cam.rtsp );
-				assert.equal( new_cam.username, cam.username || '' );
+				assert.equal( new_cam.username, cam.user || '' );
 				assert.equal( new_cam.password, cam.password || '' );
 				assert.equal( new_cam.manufacturer, cam.manufacturer );
 			}
@@ -89,37 +125,42 @@ describe('Camera', function(){
 
 	describe('start recording', function() {
 	
-		it('should call recordModel.startRecording on all streams if not already recording', function() {
+		it('should call recordModel.startRecording on all streams if not already recording', function(done) {
 
 			cam_with_streams._id = 'startRecording_test_1_' + Math.random();			
-			var new_cam = new Camera( cam_with_streams, videosFolder );
-			
-			for (var i in new_cam.streams ) {
-				sinon.spy(new_cam.streams[i].recordModel, "startRecording");
-			}
+			new Camera( cam_with_streams, videosFolder, function(new_cam){
+			console.log(new_cam.streams);
+				var recordingSpies = [];
+				for (var stream_id in new_cam.streams){
+					recordingSpies.push(sinon.spy(new_cam.streams[stream_id].recordModel, "startRecording"));
+				}
 
-			new_cam.startRecording();
-			
-			for (var i in new_cam.streams ) {
-				assert(new_cam.streams[i].recordModel.startRecording.calledOnce);
-			}
+				new_cam.startRecording();
+
+				for (var spy_id in recordingSpies){
+					assert(recordingSpies[spy_id].calledOnce);	
+				}
+				done();
+			});
 		});
 
-		it('should NOT call recordModel.startRecording again on a stream that is already recording', function() {
+		it('should NOT call recordModel.startRecording again on a stream that is already recording', function(done) {
 
 			cam_with_streams._id = 'startRecording_test_2_' + Math.random();			
-			var new_cam = new Camera( cam_with_streams, videosFolder );
+			new Camera( cam_with_streams, videosFolder, function(new_cam){
+				var recordingSpies = [];
+				for (var stream_id in new_cam.streams){
+					recordingSpies.push(sinon.spy(new_cam.streams[stream_id].recordModel, "startRecording"));
+				}
 
-			for (var i in new_cam.streams ) {
-				sinon.spy(new_cam.streams[i].recordModel, "startRecording");
-			}
+				new_cam.startRecording();
+				new_cam.startRecording();
 
-			new_cam.startRecording();
-			new_cam.startRecording();
-
-			for (var i in new_cam.streams ) {
-				assert(new_cam.streams[i].recordModel.startRecording.calledOnce);
-			}
+				for (var spy_id in recordingSpies){
+					assert(recordingSpies[spy_id].calledOnce);	
+				}
+				done();
+			});
 		});
 	});
 
@@ -129,61 +170,67 @@ describe('Camera', function(){
 		//cam_with_streams.name = cam_with_streams.name + '_stopRecording_test' + Math.random();
 		//var new_cam = new Camera( cam_with_streams, videosFolder );
 		
-		it('should call recordModel.stopRecording on all streams if still recording', function() {
+		it('should call recordModel.stopRecording on all streams if still recording', function(done) {
 			
 			cam_with_streams._id = 'stopRecording_test_1_' + Math.random();			
-			var new_cam = new Camera( cam_with_streams, videosFolder );
+			new Camera( cam_with_streams, videosFolder, function(new_cam){
+				new_cam.startRecording();
+				var recordingSpies = [];
+				for (var stream_id in new_cam.streams){
+					recordingSpies.push(sinon.spy(new_cam.streams[stream_id].recordModel, "stopRecording"));
+				}
 
-			new_cam.startRecording();
-
-			for (var i in new_cam.streams ) {
-				sinon.spy(new_cam.streams[i].recordModel, "stopRecording");
-			}
-
-			new_cam.stopRecording();
-			
-			for (var i in new_cam.streams ) {
-				assert(new_cam.streams[i].recordModel.stopRecording.calledOnce);
-			}
+				new_cam.stopRecording();
+				
+				for (var spy_id in recordingSpies){
+					assert(recordingSpies[spy_id].calledOnce);	
+				}
+				done();
+			});
 		});
 
-		it('should NOT call recordModel.stopRecording again on a stream that is already stopped', function() {
+		it('should NOT call recordModel.stopRecording again on a stream that is already stopped', function(done) {
 
 			cam_with_streams._id = 'stopRecording_test_2_' + Math.random();			
-			var new_cam = new Camera( cam_with_streams, videosFolder );
+			new Camera( cam_with_streams, videosFolder, function(new_cam){
+
+				new_cam.startRecording();
+
+				var recordingSpies = [];
+				for (var stream_id in new_cam.streams){
+					recordingSpies.push(sinon.spy(new_cam.streams[stream_id].recordModel, "stopRecording"));
+				}
+
+				new_cam.stopRecording();
+				new_cam.stopRecording();
+
+				for (var spy_id in recordingSpies){
+					assert(recordingSpies[spy_id].calledOnce);	
+				}
+				done();
+			});
 			
-			new_cam.startRecording();
-
-			for (var i in new_cam.streams ) {
-				sinon.spy(new_cam.streams[i].recordModel, "stopRecording");
-			}
-
-			new_cam.stopRecording();
-			new_cam.stopRecording();
-
-			for (var i in new_cam.streams ) {
-				assert(new_cam.streams[i].recordModel.stopRecording.calledOnce);
-			}
 		});
 	});
 	
 
 	describe('index pending files', function() {
 
-		cam_with_streams._id = 'indexPendingFiles_test_' + Math.random();			
-		var new_cam = new Camera( cam_with_streams, videosFolder );
+		it('should call recordModel.indexPendingFiles on each stream', function(done) {
 
-		it('should call recordModel.indexPendingFiles on each stream', function() {
+			cam_with_streams._id = 'indexPendingFiles_test_' + Math.random();			
+			new Camera( cam_with_streams, videosFolder, function(new_cam){
+				for (var i in new_cam.streams ) {
+					sinon.spy( new_cam.streams[i].recordModel, "indexPendingFiles" );
+				}
 
-			for (var i in new_cam.streams ) {
-				sinon.spy( new_cam.streams[i].recordModel, "indexPendingFiles" );
-			}
+				new_cam.indexPendingFiles();
 
-			new_cam.indexPendingFiles();
-
-			for (var i in new_cam.streams ) {
-				assert( new_cam.streams[i].recordModel.indexPendingFiles.calledOnce );
-			}
+				for (var i in new_cam.streams ) {
+					assert( new_cam.streams[i].recordModel.indexPendingFiles.calledOnce );
+				}
+				done();
+			});
 		});
 		
 	});
@@ -351,6 +398,97 @@ describe('Camera', function(){
 		*/
 
 	});
+
+
+	describe('#restoreBackupAndReindex', function(){
+		it ("indexes from scratch when an empty error is returned", function(done){
+			cam_with_streams._id = 'constructor_test_1_' + Math.random();
+			Camera.__set__('fs', fsStubUnlink);
+
+			new Camera( cam_with_streams, videosFolder, function(new_cam){
+				var stream = new_cam.streams[0];
+				var callback = sinon.stub(stream.db.backup, "restore").yields("empty", null);
+				var spy = sinon.spy(new_cam, "reIndexDatabaseFromFileStructure");
+				var reIndexStub = sinon.stub(new_cam, "reIndexDatabaseFromFileStructure").callsArgWith(2, null);
+				new_cam.restoreBackupAndReindex(stream, function(){
+					assert(spy.calledOnce);
+					done();
+				});
+			});
+		});
+
+
+		it ("skips the indexing when unable to delete the file", function(done){
+			cam_with_streams._id = 'constructor_test_1_' + Math.random();
+			Camera.__set__('fs', fsStubUnlinkError);
+			var new_cam = new Camera( cam_with_streams, videosFolder, function(new_cam){
+				var stream = new_cam.streams[0];
+				var callback = sinon.stub(stream.db.backup, "restore").yields("empty", null);
+				var reIndexStub = sinon.stub(new_cam, "reIndexDatabaseFromFileStructure").callsArgWith(2, null);
+				var spy = sinon.spy(new_cam, "reIndexDatabaseFromFileStructure");
+				new_cam.restoreBackupAndReindex(stream, function(){
+					assert(spy.notCalled);
+					done();
+				});
+			});
+		});
+
+		it ("successfully restores the backup and reindexes the remaining file", function(done){
+			cam_with_streams._id = 'constructor_test_1_' + Math.random();			
+			new Camera( cam_with_streams, videosFolder, function(new_cam){
+				var stream = new_cam.streams[0];
+				var backup = { name: "backup_file", time: 1385142591573 }
+				var restoreStub = sinon.stub(stream.db.backup, "restore").yields(null, backup);
+				var indexItem = {file: "", end: 1385142591573};			
+				var getNewestChunksStub = sinon.stub(stream.db, "getNewestChunks").callsArgWith(1,indexItem);
+				var reIndexStub = sinon.stub(new_cam, "reIndexDatabaseFromFileStructureAfterTimestamp").callsArgWith(3, null);
+				var spy = sinon.spy(new_cam, "reIndexDatabaseFromFileStructureAfterTimestamp");
+				
+				new_cam.restoreBackupAndReindex(stream, function(){
+					assert(spy.calledOnce);
+					done();
+				});
+			});
+		});
+	});
+
+	describe('#reIndexDatabaseFromFileStructureAfterTimestamp', function(){
+		// it("reindexes the database after the timestamp", function(done){
+		// 	cam_with_streams._id = 'constructor_test_1_' + Math.random();			
+		// 		new Camera( cam_with_streams, videosFolder, function(new_cam){
+		// 		var stream = new_cam.streams[0];
+		// 		var spy1 = sinon.spy(stream.recordModel, "addFileToIndexInDatabase");
+		// 		var spy2 = sinon.spy(stream.recordModel, "indexPendingFilesAfterCorruptDatabase");
+
+		// 		var storedVideosFolder = videosFolder + "/" + stream.id + "/videos";
+		// 		var indexItem = {file: "", end: 1385142591573};			
+		// 		new_cam.reIndexDatabaseFromFileStructureAfterTimestamp(stream, storedVideosFolder, indexItem, function(){
+		// 			assert(spy2.calledOnce);
+		// 			done();
+		// 		});
+		// 	});
+		// });
+	});
+
+	describe('#reIndexDatabaseFromFileStructure', function(){
+		// it("reindexes the database", function(done){
+		// 	cam_with_streams._id = 'constructor_test_1_' + Math.random();			
+		// 	new Camera( cam_with_streams, videosFolder, function(new_cam){
+		// 		var stream = new_cam.streams[0];
+		// 		var spy1 = sinon.spy(stream.recordModel, "addFileToIndexInDatabase");
+		// 		var spy2 = sinon.spy(stream.recordModel, "indexPendingFilesAfterCorruptDatabase");
+				
+		// 		var storedVideosFolder = videosFolder + "/" + stream.id + "/videos";
+		// 		new_cam.reIndexDatabaseFromFileStructureAfterTimestamp(stream, storedVideosFolder, function(){
+		// 			assert(spy2.calledOnce);
+		// 			done();
+		// 		});
+		// 	});
+		// });
+
+	});	
+
+	
 
 });
 

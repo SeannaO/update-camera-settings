@@ -14,11 +14,13 @@ var Dblite = function( db_path, cb ) {
 
 	var self = this;
     this.db_path = db_path;
-    this.backup = new FileBackup(db_path);
-    this.backup.launch();
     this.db = dblite( self.db_path );
+
+    this.backup = new FileBackup(db_path, function(backup){
+        backup.launch();
+    });
     this.createTableIfNotExists(function(){
-        if(cb) cb();
+        if(cb) cb(self);
     });
 };
 
