@@ -461,6 +461,39 @@ describe('RecordModel', function() {
 	// end of calcDuration tests
 	// 
 	
+	describe("#calcDurationFromFile", function(){
+		it ("returns a video object", function(done){
+			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
+			var file_name = "/Users/WadBook/solink/nas/cameras/Lug9pjnb1iaAaM9C/f57a95c5-84a5-468c-aeb0-802252d59d0a/videos/2014-1-29/1391013560340_11660.ts"
+			var expected = {
+				cam: "abc",
+				stream: "stream_1",		// appends stream id to the chunk
+				start: 1391013560340,
+				end: 1391013560340 + 11660,
+				file: file_name
+			};
+			recordModel.calcDurationFromFile(file_name, function(err, video){
+				assert.deepEqual(video, expected);
+				done();
+			});
+		});
+	});
+
+	describe("#indexPendingFilesAfterCorruptDatabase", function(){
+		it ("indexes each file in the database", function(done){
+			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
+			recordModel.filesToIndex.push("/Users/WadBook/Documents/Repositories/Github/node_vms/app/tests/videosFolder/abc/stream_1/videos/2013-9-7/1378565852648_1000.ts");
+			recordModel.filesToIndex.push("/Users/WadBook/Documents/Repositories/Github/node_vms/app/tests/videosFolder/abc/stream_1/videos/1385142591573_1000.ts");
+
+			var spy = sinon.spy(recordModel, 'indexFileInDatabase');
+			
+			recordModel.indexPendingFilesAfterCorruptDatabase(function(){
+				assert(spy.calledTwice);
+				done();
+			});
+		});
+	});
+
 
 	describe( 'moveAndIndexFile', function() {
 
@@ -530,6 +563,7 @@ describe('RecordModel', function() {
 		});
 	});
 	*/
+
 });
 
 
