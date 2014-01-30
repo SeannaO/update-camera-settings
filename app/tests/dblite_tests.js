@@ -64,7 +64,49 @@ describe('Dblite', function() {
 	});
 
 	describe('searchVideosByInterval', function() {
-		
+
+		it( 'should not query db if start or end times are invalid', function( done ) {
+
+			var dbfile = 'tests/videosFolder/dblite_create_video_table_test.sqlite';
+			var db = new Dblite(dbfile, function() {
+				
+				sinon.spy(db.db, 'query');
+
+				var start, 
+					end;
+				
+				db.searchVideosByInterval( start, end, function() {
+
+					assert( !db.db.query.called );
+					
+					start = 0;
+
+					db.searchVideosByInterval( start, end, function() {
+						
+						assert( !db.db.query.called );
+
+						start = end;
+						end = 0;
+
+						db.searchVideosByInterval( start, end, function() {
+					
+							assert( !db.db.query.called );
+							done();
+						});
+					});
+				});
+			});
+		});
+
+
+		it('should correctly return videos', function() {
+			
+			var dbfile = 'tests/videosFolder/dblite_create_video_table_test.sqlite';
+			var db = new Dblite(dbfile, function() {
+
+			});
+
+		});
 	});
 
 });
@@ -76,7 +118,6 @@ describe('Dblite', function() {
 var checkIfTableExists = function( db_file, table, cb ) {
 
 	var query = "SELECT name FROM sqlite_master WHERE name='" + table + "'";
-	
 	
 	dblite_driver(db_file).query(query, 
             ['name'], 
