@@ -195,7 +195,11 @@ Camera.prototype.reIndexDatabaseFromFileStructure = function(stream, storedVideo
 		}else{
 			var finder = find(storedVideosFolder);
 			finder.on('file', function (file, stat) {
-				stream.recordModel.addFileToIndexInDatabase(file);
+				self.parseFile(file, function(matches){
+					if (matches){
+						stream.recordModel.addFileToIndexInDatabase(file);
+					}
+				});
 			});
 			finder.on('end', function () {
 				stream.recordModel.indexPendingFilesAfterCorruptDatabase(cb);
@@ -206,19 +210,17 @@ Camera.prototype.reIndexDatabaseFromFileStructure = function(stream, storedVideo
 
 Camera.prototype.reIndexDatabaseFromFileStructureAfterTimestamp = function(stream, storedVideosFolder, indexItem, cb){
 	var self = this;
-
-	var last_recorded_date = new Date(indexItem.end);
-	
 	fs.stat(indexItem.file, function(err, stats){
 		var most_recent_dir = path.dirname(indexItem.file);
-		var lastFileStored = stats.mtime;
+		var lastFileStored = indexItem.start;
 		// finish indexing the folder that the last file was recorded in
 		var finder = find(most_recent_dir);
 		finder.on('file', function (file, stats) {
-			if (stats.mtime > lastFileStored){
-				stream.recordModel.addFileToIndexInDatabase(file);
-				// stream.recordModel.indexFileInDatabase(file);
-			}
+			self.parseFile(file, function(matches){
+				if (matches && parseInt(matches[1]) > lastFileStored){
+					stream.recordModel.addFileToIndexInDatabase(file);
+				}
+			});
 		});
 		finder.on('end', function () {
 			// finish indexing all the folders after the last indexed file
@@ -228,6 +230,8 @@ Camera.prototype.reIndexDatabaseFromFileStructureAfterTimestamp = function(strea
 				}else{
 					var unindexed_folders = [];
 					var re = /([\d]+)-([\d]+)-([\d]+)/
+					var last_recorded_date = new Date(indexItem.start);
+					var day_after_last_date = new Date(last_recorded_date.getUTCFullYear(), last_recorded_date.getUTCMonth(), last_recorded_date.getUTCDate());
 					for (var idx in list){
 						var matches = re.exec(list[idx]);
 						if (matches && matches.length == 4){
@@ -235,21 +239,51 @@ Camera.prototype.reIndexDatabaseFromFileStructureAfterTimestamp = function(strea
 							var month = parseInt(matches[2])-1;
 							var day = parseInt(matches[3]);
 							var dirdate = new Date(year, month, day);
-							if (dirdate > last_recorded_date){
-								var finder = find(storedVideosFolder + "/" + list[idx]);
-								finder.on('file', function (file, stat) {
-									stream.recordModel.addFileToIndexInDatabase(file);
-									// stream.recordModel.indexFileInDatabase(file);
-								});
+							if (dirdate > day_after_last_date){
+								unindexed_folders.push(storedVideosFolder + "/" + list[idx]);
 							}
 						}
 					}
-					stream.recordModel.indexPendingFilesAfterCorruptDatabase(cb);			
+					self.addFilesInFoldersToIndexInDatabase(unindexed_folders, stream.recordModel, function(){
+						console.log("indexPendingFilesAfterCorruptDatabase");
+						stream.recordModel.indexPendingFilesAfterCorruptDatabase(cb);
+					});
 				}
 			});
 		});
 	});
 };
+
+Camera.prototype.parseFile = function(file, cb){
+	var re = /([\d]+)_([\d]+).ts/
+	var matches = re.exec(file);
+	if (matches && matches.length == 3){
+		cb(matches);
+	}else{
+		cb(null);
+	}
+};
+
+Camera.prototype.addFilesInFoldersToIndexInDatabase = function( folders, recordModel, done ) {
+	var self = this;
+	if (folders.length == 0) {
+		if (done) done();	// we're done					
+	} else {
+		var folder = folders.shift();	// next file
+		var finder = find(folder);
+		finder.on('file', function (file, stat) {
+			self.parseFile(file,function(matches){
+				if (matches){
+					recordModel.addFileToIndexInDatabase(file);
+				}
+			});
+		});
+		finder.on('end', function () {
+			self.addFilesInFoldersToIndexInDatabase(folders,recordModel,done);
+		});
+    }
+};
+
 
 
 Camera.prototype.setMotionDetection = function( cb ) {

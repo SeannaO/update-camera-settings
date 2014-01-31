@@ -1,10 +1,9 @@
-var rewire = require("rewire");
 var assert = require("assert");
 var sinon = require("sinon");
 
 var fs = require('fs');
 
-var Camera = rewire('../models/camera_model.js');
+var Camera = require('../models/camera_model.js');
 
 var cam_with_streams = {
 	_id: "abc",
@@ -38,38 +37,6 @@ var cam_without_streams = {
 	password: 'a_password',
 };
 
-
-var fsStubUnlinkError = {
-  unlink: function(file, callback) {
-     console.log('fs.unlink stub called');
-     callback("failed");
-  },
-  existsSync: function(folder){
-  	return true;
-  },
-  mkdirSync: function(folder){
-  	return true;
-  },
-  exists:function(file,callback){
-  	callback(true);
-  }
-};
-
-var fsStubUnlink = {
-  unlink: function(file, callback) {
-     console.log('fs.unlink stub called');
-     callback(null);
-  },
-  existsSync: function(folder){
-  	return true;
-  },
-  mkdirSync: function(folder){
-  	return true;
-  },
-  exists:function(file,callback){
-  	callback(true);
-  }
-};
 
 var videosFolder = "tests/videosFolder"; 
 
@@ -338,20 +305,20 @@ describe('Camera', function(){
 
 		it('should call db.getOldestChunks with correct params on each stream', function(done) {
 			done();
-		/*
-			for (var stream_id in new_cam.streams) {
-				sinon.spy( new_cam.streams[stream_id].db, "getOldestChunks" );
-			}
+		
+			// for (var stream_id in another_cam.streams) {
+			// 	sinon.spy( another_cam.streams[stream_id].db, "getOldestChunks" );
+			// }
 
-			new_cam.getOldestChunks( numChunks, function(data) {
-				for (var stream_id in new_cam.streams) {
-					assert(new_cam.streams[stream_id].db.getOldestChunks.calledOnce);
-					assert.equal(numChunks, new_cam.streams[stream_id].db.getOldestChunks.getCall(0).args[0]);					
-					new_cam.streams[stream_id].db.getOldestChunks.restore();
-				}
-				done();
-			});
-		*/	
+			// another_cam.getOldestChunks( numChunks, function(data) {
+			// 	for (var stream_id in another_cam.streams) {
+			// 		assert(another_cam.streams[stream_id].db.getOldestChunks.calledOnce);
+			// 		assert.equal(numChunks, another_cam.streams[stream_id].db.getOldestChunks.getCall(0).args[0]);					
+			// 		another_cam.streams[stream_id].db.getOldestChunks.restore();
+			// 	}
+			// 	done();
+			// });
+			
 		});
 	
 		it('should return a maximum of numChunks * numStreams via callback', function(done) {
@@ -470,38 +437,41 @@ describe('Camera', function(){
 	});
 
 	describe('#reIndexDatabaseFromFileStructureAfterTimestamp', function(){
-		// it("reindexes the database after the timestamp", function(done){
-		// 	cam_with_streams._id = 'constructor_test_1_' + Math.random();			
-		// 		new Camera( cam_with_streams, videosFolder, function(new_cam){
-		// 		var stream = new_cam.streams[0];
-		// 		var spy1 = sinon.spy(stream.recordModel, "addFileToIndexInDatabase");
-		// 		var spy2 = sinon.spy(stream.recordModel, "indexPendingFilesAfterCorruptDatabase");
+		it("reindexes the database after the timestamp", function(done){
+			var cameraFolder = __dirname + "/fixtures/reIndexDatabaseFromFileStructureAfterTimestamp";
+			new Camera( cam_with_streams, cameraFolder, function(new_cam){
+				var stream = new_cam.streams['stream_1'];
+				var spy1 = sinon.spy(stream.recordModel, "addFileToIndexInDatabase");
+				var spy2 = sinon.spy(stream.recordModel, "indexPendingFilesAfterCorruptDatabase");
 
-		// 		var storedVideosFolder = videosFolder + "/" + stream.id + "/videos";
-		// 		var indexItem = {file: "", end: 1385142591573};			
-		// 		new_cam.reIndexDatabaseFromFileStructureAfterTimestamp(stream, storedVideosFolder, indexItem, function(){
-		// 			assert(spy2.calledOnce);
-		// 			done();
-		// 		});
-		// 	});
-		// });
+				var storedVideosFolder = cameraFolder + "/abc/" + stream.id + "/videos";
+				var first_file = storedVideosFolder + "/2012-5-17/1337241600235_1000.ts"
+				var indexItem = {file: first_file, start: 1337241600235 ,end: 1337241601235};
+				new_cam.reIndexDatabaseFromFileStructureAfterTimestamp(stream, storedVideosFolder, indexItem, function(){
+					assert.equal(spy1.callCount, 5);
+					assert.equal(spy2.callCount, 6);
+					done();
+				});
+			});
+		});
 	});
 
 	describe('#reIndexDatabaseFromFileStructure', function(){
-		// it("reindexes the database", function(done){
-		// 	cam_with_streams._id = 'constructor_test_1_' + Math.random();			
-		// 	new Camera( cam_with_streams, videosFolder, function(new_cam){
-		// 		var stream = new_cam.streams[0];
-		// 		var spy1 = sinon.spy(stream.recordModel, "addFileToIndexInDatabase");
-		// 		var spy2 = sinon.spy(stream.recordModel, "indexPendingFilesAfterCorruptDatabase");
+		it("reindexes the database", function(done){
+			var cameraFolder = __dirname + "/fixtures/reIndexDatabaseFromFileStructureAfterTimestamp";
+			new Camera( cam_with_streams, cameraFolder, function(new_cam){
+				var stream = new_cam.streams['stream_1'];
+				var spy1 = sinon.spy(stream.recordModel, "addFileToIndexInDatabase");
+				var spy2 = sinon.spy(stream.recordModel, "indexPendingFilesAfterCorruptDatabase");
 				
-		// 		var storedVideosFolder = videosFolder + "/" + stream.id + "/videos";
-		// 		new_cam.reIndexDatabaseFromFileStructureAfterTimestamp(stream, storedVideosFolder, function(){
-		// 			assert(spy2.calledOnce);
-		// 			done();
-		// 		});
-		// 	});
-		// });
+				var storedVideosFolder = cameraFolder + "/abc/" + stream.id + "/videos";
+				new_cam.reIndexDatabaseFromFileStructure(stream, storedVideosFolder, function(){
+					assert.equal(spy1.callCount, 6);
+					assert.equal(spy2.callCount, 7);
+					done();
+				});
+			});
+		});
 
 	});	
 
