@@ -24,16 +24,52 @@ exec('killall smartctl', function( error, stdout, stderr) {});
 
 var logger = new (winston.Logger)({
 	transports: [
-		new (winston.transports.Console)({'timestamp':true, colorize: true, handleExceptions: true})
-		// new (winston.transports.File)({ filename: 'production.log', handleExceptions: true})
+
+		new (winston.transports.Console)({
+			'timestamp':true, 
+			colorize: true, 
+			handleExceptions: true
+		}),
+
+		new (winston.transports.File)({
+			timestamp:			true, 
+			colorize: 			true, 
+			handleExceptions: 	true,
+			filename: 			'logs/vms_messages_.log',
+			maxsize: 			5 * 1024 * 1024,
+			maxFiles: 			20,
+			json: 				false
+		})			
 	]
 });
+
+var error_logger = new (winston.Logger)({
+	transports: [
+
+		new (winston.transports.Console)({
+			'timestamp':true, 
+			colorize: true, 
+			handleExceptions: true
+		}),
+
+		new (winston.transports.File)({
+			timestamp:			true, 
+			colorize: 			true, 
+			handleExceptions: 	true,
+			filename: 			"logs/vms_errors_.log",
+			maxsize: 			5 * 1024 * 1024,
+			maxFiles: 			20,
+			json:				false
+		})			
+	]
+});
+
 
 console.log = function(msg) {
 	logger.info(msg);
 };
 console.error = function(msg) {
-	logger.error(msg);
+	error_logger.error(msg);
 };
 
 // - - -
