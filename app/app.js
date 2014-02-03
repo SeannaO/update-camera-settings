@@ -20,6 +20,10 @@ var exec = require('child_process').exec;
 exec('killall ffmpeg', function( error, stdout, stderr) {});
 exec('killall iostat', function( error, stdout, stderr) {});
 exec('killall smartctl', function( error, stdout, stderr) {});
+
+exec('killall sh', function( error, stdout, stderr) {
+        exec('sh ./limit_svcd.sh', function( error, stdout, stderr) {});
+});
 // - - 
 
 var logger = new (winston.Logger)({
