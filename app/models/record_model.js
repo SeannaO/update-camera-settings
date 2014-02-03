@@ -579,20 +579,23 @@ RecordModel.prototype.moveFile = function( video, cb ) {
 		fs.mkdir(toFolder, function(e) {
 			fs.rename( from, to, function(err) { 
 				if (err) {
-					console.error("[RecordModel.moveFile]: error when moving file: " + err);
+					console.error('[RecordModel.moveFile]: error when moving file: ' + err);
 					if (cb) cb(err);
 				}
 				else {
 
 					video.file = to;	// updates file path after moving it
 
-					ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() { 
+					video.thumbFolder =  self.folder + '/thumbs';
+					// delegated to Thumbnailer
+					// - camerasController should push chunk to Thumbmailer queue
+					//ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() { 
 						self.camera.addChunk( self.stream.id, video );	// the chunk will be indexed by the camera
 
 						if (cb) {
 							cb();
 						}
-					});
+					//});
 				}                        
 			});
 		});

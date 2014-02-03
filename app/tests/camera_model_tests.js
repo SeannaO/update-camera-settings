@@ -43,7 +43,7 @@ var videosFolder = "tests/videosFolder";
 
 describe('Camera', function(){
 
-	describe('new', function() {
+	describe('constructor', function() {
 
 		it('should create a folder for each stream', function( done ) {
 			

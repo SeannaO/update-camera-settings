@@ -37,14 +37,23 @@ Dblite.prototype.deleteVideo = function( id, cb ) {
 
 Dblite.prototype.createTableIfNotExists = function( cb ) {
     var self = this;
-    fs.exists(self.db_path, function(exist) {        
+
+	var createTable = 'CREATE TABLE IF NOT EXISTS videos (id INTEGER PRIMARY KEY, start INTEGER, end INTEGER, file TEXT)';
+	var createStartIndex = 'CREATE INDEX idx_start ON videos(start)';
+	var createEndIndex = 'CREATE INDEX idx_end ON videos(end)';
+
+	fs.exists(self.db_path, function(exist) {        
         if (typeof self.db === 'undefined' || !exist){
             self.db = dblite( self.db_path );
         }
-        var query = 'CREATE TABLE IF NOT EXISTS videos (id INTEGER PRIMARY KEY, start INTEGER, end INTEGER, file TEXT)';
-        self.db.query(query, function() {
-            self.db.query('.show');
-            if (cb) cb();
+		self.db.query(createTable, function() {
+				self.db.query(createStartIndex, function() {
+					console.log('created start index');
+					self.db.query(createEndIndex, function() {
+						self.db.query('.show');
+						if (cb) cb();
+					});
+				});
         });
     });
 };
@@ -167,7 +176,7 @@ Dblite.prototype.getChunks = function( options, cb ) {
     var limit = options.limit || '10';
     var sort = options.sort || "ASC";
     
-    var query = 'SELECT id, file, start, end FROM videos ORDER BY end {sort} LIMIT ?';
+    var query = 'SELECT id, file, start, end FROM videos ORDER BY id {sort} LIMIT ?';
 	query = query.replace('{sort}', sort);
 
     var fileList = this.db.query(

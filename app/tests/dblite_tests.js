@@ -132,11 +132,6 @@ describe('Dblite', function() {
 
 				db.db.on('ready', function() {
 					db.searchVideosByInterval( 0, 40, function(err, returned_data, offset) {
-						
-						console.log("####################");
-						console.log(data);
-						console.log(returned_data);
-						console.log("####################");
 
 						//assert.ok( isEqArrays( data, returned_data ) );
 						

@@ -330,6 +330,12 @@ camerasController.on('new_chunk', function( data ) {
 	io.sockets.emit( 'newChunk', data );	
 });
 
+camerasController.on('new_thumb', function( data ) {
+	console.log("[new_thumb] " + JSON.stringify(data, null, 4));
+	io.sockets.emit( 'newThumb', data );	
+});
+
+
 camerasController.on('camera_status', function( data ) {
 	if (data.status === "disconnected" || data.status === "offline"){
 		console.error("[camera_status] " + data.cam_id + " : " + data.stream_id + " is " + data.status);

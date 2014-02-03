@@ -5,7 +5,7 @@ var util = require('util');							// for inheritance
 var checkH264 = require('../helpers/ffmpeg.js').checkH264;
 var find = require('findit');
 var OrphanFilesChecker = require('../helpers/orphanFiles.js');
-
+var Thumbnailer = require('../helpers/thumbnailer.js');
 
 // It seems that the mp4Handler should not be passed in as an argument. The mp4Handler is only used for taking snapshots and 
 // this logic should be happening outside of the CamerasController, especially since it has request handling as part of it
@@ -17,12 +17,14 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 
 	this.snapshotQ = [];
 
+	this.thumbnailer = new Thumbnailer();
+
     this.db = new Datastore({ filename: filename });
 
     this.db.loadDatabase( function(err) {
 		self.setup( function(err) {
 			this.orphanFilesChecker = new OrphanFilesChecker( self );
-			this.orphanFilesChecker.periodicallyCheckForOrphanFiles( 15 * 60 * 1000 );  // checks for orphan files each 15 minutes
+			this.orphanFilesChecker.periodicallyCheckForOrphanFiles( 10 * 60 * 1000 );  // checks for orphan files each 10 minutes
 		});
 
 		if (cb) {
@@ -40,6 +42,10 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 	self.checkSnapshotQ();	
 	self.periodicallyDeleteChunksOnQueue();
 	self.periodicallyCheckForExpiredChunks();
+
+	self.thumbnailer.on('new_thumb', function(thumb) {
+		self.emit('new_thumb', thumb);
+	});
 	
 }
 
@@ -233,7 +239,7 @@ CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_id
 	var maxChunksPerCamera = 100;			// limits query to 100 chunks per camera
 											// to avoid having a large array in memory
 
-	var millisPeriodicity = 1000 * 60 * 10; // checks each 15 minutes
+	var millisPeriodicity = 1000 * 60 * 10; // checks each 10 minutes
 	
 	if (process.env['NODE_ENV'] === 'development') {
 		millisPeriodicity = 1000 * 10 * 1;		// !! checks each 10s - development only !!
@@ -468,7 +474,9 @@ CamerasController.prototype.pushCamera = function( cam ) {
     self.cameras.push( cam );
 
     cam.on('new_chunk', function( data ) {
+		
         self.emit('new_chunk', data );
+		self.thumbnailer.addChunk( data );
     });
 
     cam.on('camera_status', function( data ) {

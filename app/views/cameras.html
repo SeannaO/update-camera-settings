@@ -295,6 +295,21 @@
                 showMeridian: false
             });
 
+			var updateThumb = function(data) {
+				var thumb = "/cameras/" + data.cam + "/streams/" + data.stream + "/thumb/"+data.start + "_" + (data.end-data.start);
+				var img = new Image();
+
+				$(img).attr({
+					src: thumb,
+					width: "100%",
+					height: "100%"
+				}).load(function(){
+					$("#thumb-"+data.cam).html( $(this) );
+				}).error(function(){
+					console.log("unable to load image")
+				});
+			};
+
 			var updateTimelines = function( data, options ) {
 				
 				var timeline = timelines[data.stream];
@@ -347,12 +362,16 @@
 				});
 			}
 
+			socket.on('newThumb', function(data) {
+				updateThumb( data );
+			});
+
             socket.on('newChunk', function (data) {
 				console.log(data);
                 $("#timeline-"+data.stream).animate({
 					backgroundColor: "none"
 				}, 1000);
-				updateTimelines(data, {updateThumb: true});
+				updateTimelines(data, {updateThumb: false});
 			});
 
 			list();
