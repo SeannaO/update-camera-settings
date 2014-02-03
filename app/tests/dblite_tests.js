@@ -96,22 +96,59 @@ describe('Dblite', function() {
 					});
 				});
 			});
+			
+			it( 'should correctly return videos by interval', function() {
+				var dbfile = 'tests/videosFolder/dblite_create_video_table_test.sqlite';
+				var db = new Dblite(dbfile, function() {
+					
+				});
+			});
+
+
 		});
 
 
-		it('should correctly return videos', function() {
+		it('should correctly return videos', function( done ) {
 			
-			var dbfile = 'tests/videosFolder/dblite_create_video_table_test.sqlite';
+			var dbfile = 'tests/videosFolder/dblite_create_video_table_test_2.sqlite';
 			var db = new Dblite(dbfile, function() {
 
+				var data = [
+					{start: '0', end: '10', file: 'a' },
+					{start: '10', end: '20', file: 'b' },
+					{start: '20', end: '30', file: 'c' },
+					{start: '30', end: '40', file: 'd' }
+				]
+
+				insertData(dbfile, data[0], function() {
+					insertData(dbfile, data[1], function() {
+						insertData(dbfile, data[2], function() {
+							insertData(dbfile, data[3], function() {
+								db.db.emit('ready');
+							});
+						});
+					});
+				});
+
+				db.db.on('ready', function() {
+					db.searchVideosByInterval( 0, 40, function(err, returned_data, offset) {
+						
+						console.log("####################");
+						console.log(data);
+						console.log(returned_data);
+						console.log("####################");
+
+						//assert.ok( isEqArrays( data, returned_data ) );
+						
+					});
+					done();
+				});
 			});
 
 		});
 	});
 
 });
-
-
 
 
 
@@ -178,3 +215,32 @@ var getData = function(db, cb) {
         }
     );
 };
+
+
+function isEqObjects(obj1, obj2) {
+
+	if ( Object.keys(obj1).length  !== Object.keys(obj2).length ) return false;
+
+	for( var i in obj1 ) {
+		if ( !obj2[i] ) return false;
+	}
+}
+
+function inArray(array, el) {
+  for ( var i = array.length; i--; ) {
+    if ( array[i] === el ) return true;
+  }
+  return false;
+}
+
+function isEqArrays(arr1, arr2) {
+  if ( arr1.length !== arr2.length ) {
+    return false;
+  }
+  for ( var i = arr1.length; i--; ) {
+    if ( !inArray( arr2, arr1[i] ) ) {
+      return false;
+    }
+  }
+  return true;
+}

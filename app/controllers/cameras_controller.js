@@ -233,7 +233,7 @@ CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_id
 	var maxChunksPerCamera = 100;			// limits query to 100 chunks per camera
 											// to avoid having a large array in memory
 
-	var millisPeriodicity = 1000 * 60 * 15; // checks each 15 minutes
+	var millisPeriodicity = 1000 * 60 * 10; // checks each 15 minutes
 	
 	if (process.env['NODE_ENV'] === 'development') {
 		millisPeriodicity = 1000 * 10 * 1;		// !! checks each 10s - development only !!
