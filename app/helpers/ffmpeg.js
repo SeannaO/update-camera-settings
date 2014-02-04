@@ -62,6 +62,7 @@ var makeThumb = function ( file, folder, resolution, cb ) {
  * snapshot
  *
  */
+/*
 var snapshot = function ( file, outFolder, offset, cb ) { 
 
     var ext = path.extname(file);
@@ -102,8 +103,10 @@ var snapshot = function ( file, outFolder, offset, cb ) {
 };
 // - - end of snapshot
 // - - - - - - - - - - - - - - - - - - - -
+*/
 
 
+/*
 var smartSnapshot = function( file, outFolder, offset, options, cb ) {
 
 	if ( typeof options === "function" ) {
@@ -134,7 +137,7 @@ var smartSnapshot = function( file, outFolder, offset, options, cb ) {
 		}
 	);    
 };
-
+*/
 
 /**
  * inMemoryStitch
@@ -187,6 +190,7 @@ var inMemoryStitch = function( files, offset, req, res ) {
  * stitch
  *
  */
+/*
 var stitch = function( files, out, offset, cb ) {
 
     var exec = require('child_process').exec;
@@ -205,7 +209,7 @@ var stitch = function( files, out, offset, cb ) {
 };
 // - - end of stitch
 // - - - - - - - - - - - - - - - - - - - -
-
+*/
 
 
 /**
@@ -225,6 +229,7 @@ function calcDuration(input, cb) {
     var Metalib = ffmpeg.Metadata;
 
 	try{
+		// !! can be optimized by creating custom duration parser !!
 		var metaObject = new Metalib(input, function(metadata, err) {
 			if (err){
 				console.error("* * *Error in ffmpeg calcDuration:");
@@ -247,10 +252,12 @@ function calcDuration(input, cb) {
 // - - - - - - - - - - - - - - - - - - - -
 
 
+
 /**
  * sendWebMStream
  *
  */
+/*
 var sendWebMStream = function(req, res) {
     var movie = './test_video.mp4';
 
@@ -292,12 +299,13 @@ var sendWebMStream = function(req, res) {
 };
 // - - end of sendWebMStream
 // - - - - - - - - - - - - - - - - - - - -
-
+*/
 
 /**
  * sendMp4File
  *
  */
+/*
 var sendMp4File = function(file, offset, req, res) {
     
     fs.exists(file, function(exists) {
@@ -317,13 +325,14 @@ var sendMp4File = function(file, offset, req, res) {
 };
 // - - end of sendMp4File
 // - - - - - - - - - - - - - - - - - - - -
-
+*/
 
 
 /**
  * sendMp4Stream
  *
  */
+/*
 var sendMp4Stream = function(file, offset, req, res) {
     
     fs.exists(file, function(exists) {
@@ -373,7 +382,7 @@ var sendMp4Stream = function(file, offset, req, res) {
 };
 // - - end of sendMp4Stream
 // - - - - - - - - - - - - - - - - - - - -
-
+*/
 
 /**
  * checkH264
@@ -407,13 +416,13 @@ var checkH264 = function( url, cb ) {
 
 
 // exports
-exports.sendWebMStream = sendWebMStream;
-exports.sendStream = sendMp4Stream;
-exports.snapshot = snapshot;
-exports.stitch = stitch;
+//exports.sendWebMStream = sendWebMStream;
+//exports.sendStream = sendMp4Stream;
+//exports.snapshot = snapshot;
+//exports.stitch = stitch;
 exports.calcDuration = calcDuration;
 exports.makeThumb = makeThumb;
-exports.smartSnapshot = smartSnapshot;
-exports.sendMp4File = sendMp4File;
+//exports.smartSnapshot = smartSnapshot;
+//exports.sendMp4File = sendMp4File;
 exports.inMemoryStitch = inMemoryStitch;
 exports.checkH264 = checkH264;
