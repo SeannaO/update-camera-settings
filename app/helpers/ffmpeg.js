@@ -42,7 +42,7 @@ var makeThumb = function ( file, folder, resolution, cb ) {
     
     var out = folder+"/" + path.basename(file, '.ts') + ".jpg"; 
      
-     var child = exec("nice -n -5 ffmpeg -y -i " + file + " -vcodec mjpeg -vframes 1 -an -f rawvideo -t 2 -s 160x120 " + out,
+     var child = exec("nice -n -10 ffmpeg -y -i " + file + " -vcodec mjpeg -vframes 1 -an -f rawvideo -t 2 -s 160x120 " + out,
              function( error, stdout, stderr ) {
                  if (error !== null) {
                      error = true;
@@ -224,7 +224,9 @@ function calcDurationOfMultipleFiles(list, cb) {
  */
 function calcDuration(input, cb) {
 
-	var child = spawn('ffmpeg', [
+	var child = spawn('nice', [
+			'-n', '-5',
+			'ffmpeg',
 			'-y', 
 			'-i', input
 	]);
