@@ -550,7 +550,7 @@ Camera.prototype.getExpiredChunksFromStream = function( streamId, nChunks, cb ) 
 
 	// for safety reasons, avoids non-existing ids
 	if ( !this.streams[streamId] ) {
-		console.log('[error] cameraModel.getExpiredChunksFromStream: no stream with id ' + streamId);
+		console.error('[error] cameraModel.getExpiredChunksFromStream: no stream with id ' + streamId);
 		cb([]);
 		return;
 	}

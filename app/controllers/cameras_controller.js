@@ -173,13 +173,15 @@ CamerasController.prototype.listCameras = function( cb ) {
     
 	var self = this;
 
-    refresh( function(err) {
-        if (err) {
-            cb( err, [] );
-        } else {
+	var err;
+
+    //refresh( function(err) {
+     //   if (err) {
+     //       cb( err, [] );
+     //   } else {
             cb( err, self.cameras );                        
-        }
-    });
+     //   }
+    //});
 };
 
 
@@ -198,7 +200,7 @@ CamerasController.prototype.indexFiles = function() {
             if (cam) {
                 cam.indexPendingFiles();
             }
-        }, 100
+        }, 200
     );
 };
 
@@ -206,15 +208,16 @@ CamerasController.prototype.indexFiles = function() {
 CamerasController.prototype.getCamera = function(camId, cb) {
 
     var self = this;
+	var err;
 
-    refresh( function(err) {
-        if (err) {
-            cb( err, null );
-        } else {
+    //refresh( function(err) {
+    //    if (err) {
+    //        cb( err, null );
+    //    } else {
             var cam = self.findCameraById( camId ).cam;
             cb( err, cam );
-        }
-    });
+    //    }
+    //});
 };
 
 

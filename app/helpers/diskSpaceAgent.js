@@ -18,7 +18,7 @@ DiskSpaceAgent.prototype.launch = function() {
 
 	self.process = setInterval( function() {
 			self.check();
-		}, 5*60*1000
+		}, 1*60*1000
 	);
 };
 
