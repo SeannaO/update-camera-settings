@@ -27,12 +27,12 @@ Scheduler.prototype.launchForCamera = function( camera ) {
             // console.log("Checking Schedule for camera:" + camera.name);
             // self.emit("recording", { cameraId: camera._id, scheduled: schedule.isOpen() }))
             if (!camera.isRecording() && camera.shouldBeRecording()){
-				console.log("Starting camera:" + camera.name);
+				console.log("[scheduler]  Starting camera:" + camera.name);
                 camera.startRecording();
 
             } else if (camera.isRecording() && !camera.shouldBeRecording() && !camera.api.motion_enabled){
 
-                console.log("Stopping camera:" + camera.name);
+                console.log("[schduler]  Stopping camera:" + camera.name);
                 camera.stopRecording();
             }
         }, 10000);        

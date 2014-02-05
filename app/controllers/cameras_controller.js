@@ -304,8 +304,8 @@ CamerasController.prototype.addChunksToDeletionQueue = function( chunk_list ) {
 
 	var self = this;
 	if (chunk_list.length > 0){
-		console.log( 'new chunks to be deleted: ' );
-		console.log( chunk_list );
+		console.log( chunk_list.length + ' new chunks to be deleted: ' );
+		//console.log( chunk_list );
 	}
 
 	for (var c in chunk_list) {
@@ -348,7 +348,7 @@ CamerasController.prototype.deleteChunk = function( chunk, cb ) {
 	self.getCamera(chunk.cam_id, function( err, cam ) {
 		if(!err && cam) {
 			cam.deleteChunk( chunk.stream_id, chunk, function(data) {
-				console.log( "- deleting chunk " + chunk.id + " from camera: " + cam._id );
+				// console.log( "- deleting chunk " + chunk.id + " from camera: " + cam._id );
 				if (cb) cb( data );
 			});
 		} else {
@@ -448,7 +448,7 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
 	self.db.insert( cam, function( err, newDoc ) {
 		if (err) {
-			console.error("##### error when inserting camera: " + err);
+			console.error("[camerasController]  error when inserting camera: " + err);
 			cb( err, "{ success: false }" );
 		} else {
 			var c = new Camera(newDoc, self.videosFolder );
@@ -530,7 +530,7 @@ CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
 				} 
 			}, { multi: false }, function (err, numReplaced) {
 				if (err) {
-					console.error('*** update camera db error: ');
+					console.error('[camerasController]  update camera db error: ');
 					console.error(err);
 					cb(err);
 				} else {
@@ -639,7 +639,7 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 	    } 
 	}, { multi: true }, function (err, numReplaced) {
 	    if (err) {
-			console.log('*** update camera db error: ');
+			console.log('[camerasController]  update camera db error: ');
 			console.log(err);
 	        cb(err);
 	    } else {

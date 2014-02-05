@@ -331,12 +331,12 @@ io.on('connection', function(socket) {
 // - - - -
 // socket.io broadcasts setup
 camerasController.on('new_chunk', function( data ) {
-	console.log("[new_chunk] " + JSON.stringify(data, null, 4));
+	//console.log("[new_chunk] " + JSON.stringify(data, null, 4));
 	io.sockets.emit( 'newChunk', data );	
 });
 
 camerasController.on('new_thumb', function( data ) {
-	console.log("[new_thumb] " + JSON.stringify(data, null, 4));
+	//console.log("[new_thumb] " + JSON.stringify(data, null, 4));
 	io.sockets.emit( 'newThumb', data );	
 });
 

@@ -4,8 +4,8 @@
 // calls to ffmpeg
 //
 
-var ffmpeg = require('fluent-ffmpeg');
-var fs = require('fs');
+//var ffmpeg = require('fluent-ffmpeg');
+//var fs = require('fs');
 var path = require('path');
 var spawn = require('child_process').spawn;
 var exec = require('child_process').exec;

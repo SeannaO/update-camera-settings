@@ -19,7 +19,7 @@ Iostat.prototype.launch = function() {
 
 	var self = this;
 
-	this.iostatProcess = spawn('iostat', ['1']);
+	this.iostatProcess = spawn('iostat', ['2']);
 
 	this.iostatProcess.stdout.on('data', function(data) {
 

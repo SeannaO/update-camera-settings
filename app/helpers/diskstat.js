@@ -28,7 +28,7 @@ Diskstat.prototype.launch = function() {
 	var self = this;
 
 	if ( !this.development ) {
-		this.iostatProcess = spawn('iostat', ['-x', '1']);
+		this.iostatProcess = spawn('iostat', ['-x', '2']);
 	} else {
 		this.iostatProcess = spawn('./helpers/fakestat.sh');
 	}
