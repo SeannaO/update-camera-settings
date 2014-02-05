@@ -8,15 +8,15 @@ var ffmpeg = require('fluent-ffmpeg');
 var fs = require('fs');
 var path = require('path');
 var spawn = require('child_process').spawn;
+var exec = require('child_process').exec;
 
 
 /**
  * convertFromTsToMp4
  *
  */
+/*
 var convertFromTsToMp4 = function( tsFile, cb ) {
-
-    var exec = require('child_process').exec;
 
     var mp4File = __dirname + "/tmp/" + path.basename(tsFile, '.ts') + ".mp4"; 
 
@@ -32,7 +32,7 @@ var convertFromTsToMp4 = function( tsFile, cb ) {
 };
 // - - end of convertFromTsToMp4
 // - - - - - - - - - - - - - - - - - - - -
-
+*/
 
 /**
  * makeThumb
@@ -40,11 +40,9 @@ var convertFromTsToMp4 = function( tsFile, cb ) {
  */
 var makeThumb = function ( file, folder, resolution, cb ) { 
     
-    var exec = require('child_process').exec;
-
     var out = folder+"/" + path.basename(file, '.ts') + ".jpg"; 
      
-     var child = exec("ffmpeg -y -i " + file + " -vcodec mjpeg -vframes 1 -an -f rawvideo -t 2 -s 160x120 " + out,
+     var child = exec("nice -n -5 ffmpeg -y -i " + file + " -vcodec mjpeg -vframes 1 -an -f rawvideo -t 2 -s 160x120 " + out,
              function( error, stdout, stderr ) {
                  if (error !== null) {
                      error = true;
@@ -226,6 +224,47 @@ function calcDurationOfMultipleFiles(list, cb) {
  */
 function calcDuration(input, cb) {
 
+	var child = spawn('ffmpeg', [
+			'-y', 
+			'-i', input
+	]);
+	
+	var output = '';
+	var re = /Duration: (\d+):(\d+):(\d+).(\d+)/;
+
+	child.stderr.on('data', function(d) {
+		output = output + d.toString();
+	});
+	child.on('close', function() {
+		var duration_string = re.exec(output);
+		var duration = 0;
+		
+		var err;
+
+		if ( duration_string ) {
+			duration = parseInt( duration_string[3] )
+						+ parseInt( duration_string[4] ) / 100.0;
+		}
+		else {
+			err = 'ffmpeg command error when calculating duration';
+		}
+
+		duration = duration * 1000; // converts to millis
+
+		cb( err, duration, input );
+	});
+
+/*
+	child.stdout.on('data', function( d ) {
+		output += d.toString();
+		console.log('.');
+	});
+
+	child.stdout.on('close', function() {
+		console.log(output);
+	});
+*/
+	/*
     var Metalib = ffmpeg.Metadata;
 
 	try{
@@ -247,6 +286,9 @@ function calcDuration(input, cb) {
 		console.error("* * *:");
 		cb(err, null, input);
 	}
+	*/
+
+	
 }
 // - - end of calcDuration
 // - - - - - - - - - - - - - - - - - - - -
