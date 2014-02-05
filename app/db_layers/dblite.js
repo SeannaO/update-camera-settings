@@ -116,8 +116,9 @@ Dblite.prototype.searchVideosByInterval = function( start, end, cb ) {
 		return;
 	}
 
-    var fileList = this.db.query('SELECT start, end, file FROM videos WHERE start < ? AND end > ? ORDER BY start ASC', 
-            [end+500, start-500], 
+//    var fileList = this.db.query('SELECT start, end, file FROM videos WHERE start < ? AND end > ? ORDER BY start ASC', 
+	var fileList = this.db.query('SELECT start, end, file FROM videos WHERE start BETWEEN ? AND ? ORDER BY start ASC', 
+            [start-500, end], 
             ['start', 'end', 'file'], 
             function(err, data) {
 
@@ -232,8 +233,13 @@ Dblite.prototype.getNewestChunks = function( numberOfChunks, cb ) {
  */
 Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
 
-    var fileList = this.db.query('SELECT start, end, file FROM videos WHERE start < ? AND end > ? ORDER BY start ASC', 
-            [startTime+1500, startTime-1500], 
+    var t0 = (startTime - 1500);
+    var t1 = (startTime + 1500);
+
+    var query = 'SELECT start, end, file FROM videos WHERE start BETWEEN '+t0+' AND '+t1+' ORDER BY start ASC';
+
+    var fileList = this.db.query( 
+			query, 
             ['start', 'end', 'file'], 
             function(err, data) {
                 if (err){
