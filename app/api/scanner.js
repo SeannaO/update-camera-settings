@@ -1,8 +1,10 @@
 var scan = require('../helpers/camera_scanner/scanner.js').scan;
 
-module.exports = function( app, passport, prefix ) {
+module.exports = function( app, passport) {
 	
 	app.get('/scan.json', passport.authenticate('basic', {session: false}), function( req, res ) {
+		var prefix = req.query.subnet;
+		console.log(prefix);
 		scan(prefix, function( camlist ) {
 			res.json( camlist );
 		});

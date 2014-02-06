@@ -384,7 +384,7 @@ require('./api/device.js')( app, passport);			// device
 
 // usage: append subnet prefix in the form xxx.xxx.xxx
 // TODO: we need to configure the subnet that camera should scan
-require('./api/scanner.js')( app, passport, '192.168.215' );				// scanner
+require('./api/scanner.js')( app, passport);				// scanner
 
 app.get('/health', passport.authenticate('basic', {session: false}), function(req, res) {							// health
     res.sendfile(__dirname + '/views/health.html');

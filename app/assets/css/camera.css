@@ -7,6 +7,28 @@ body {
 	/*height:105px;*/
 }
 
+#camera-scanner-container{
+	position:absolute;
+	left:0px;
+	top:30px;
+	width:237px;
+	z-index: 100;
+	border-radius: 0px 0px 5px 5px;
+	border: 1px solid #bbb;
+	border-top:none;
+	background-color: #eee;
+	padding: 5px;
+	display:none;
+}
+
+#camera-scanner{
+	margin-bottom: 0px;
+}
+
+#camera-subnet{
+	width:90px;
+}
+
 #device-info dl{
 	display:none;
 	height:60px;

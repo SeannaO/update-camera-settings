@@ -85,7 +85,17 @@
         </div>
         <div class="btn-group">
             <a id="add-camera-btn" href="javascript:openAddCameraDialog()" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-plus"></span> Add Camera</a>
-            <a id="camera-scanner-btn" href="javascript:scanForCameras()" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-refresh"></span> Scan For Cameras</a>
+            <a id="camera-scanner-btn" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-refresh"></span> Scan For Cameras</a>
+            <div id="camera-scanner-container">
+                <form id="camera-scanner" class="form-inline" role="form">
+                    <div class="form-group">
+                        <label for="scanner-subnet">subnet</label>
+                        <input name="scanner[subnet]" type="text" id="camera-subnet" class="input-sm form-control" placeholder="192.168.1">
+                    </div>
+                    <button id="reset-subnet-field" type="button" class="btn btn-xs btn-default">Reset</button>
+                    <button id="start-camera-scanner" type="button" class="btn btn-xs btn-default btn-success">GO</button>
+                </form>
+            </div>
         </div>
 
         <img style="display:none" height="20" width="20" id= "scan-spinner" src="/img/spinner.gif"/>
@@ -257,13 +267,16 @@
         </div><!-- /.modal -->  
 
         <script>
-
+            var default_subnet = "";
             $.ajax({
                 type: "GET",
                 url: '/device.json',
                 success: function( data ) {
                     $("#device-info .title").html(data.name);
                     $("#device-info .ip_address").html(data.ip);
+                    var last_idx = data.ip.lastIndexOf(".");
+                    default_subnet = data.ip.substr(0,last_idx);
+                    $("#camera-subnet").val(default_subnet);
                     $("#device-info .model").html(data.model);
                     $("#device-info .version").html(data.version);
                     $("#device-info dl").show();
@@ -395,6 +408,22 @@
                     }
                 });
             });
+
+            $("#camera-scanner-btn").click(function() {
+                $("#camera-scanner-container").show();
+            });
+
+            $("#start-camera-scanner").click(function() {
+
+                var subnet = $('#camera-subnet').val();
+                scanForCameras(subnet, function(){
+
+                });
+            });
+
+            $("#reset-subnet-field").click(function() {
+                $('#camera-subnet').val(default_subnet);
+            });            
 
 
             $("#add-stream").click(function(){

@@ -521,12 +521,12 @@ var to12HourTime = function(hours){
 };
 
 
-scanForCameras = function() {
-            
+scanForCameras = function(subnet, cb) {
+	$("#camera-scanner-container").hide();
     $("#scan-spinner").show();
     $.ajax({
         type: "GET",
-        url: "/scan.json",
+        url: "/scan.json?subnet=" + subnet,
         contentType: 'application/json',
         success: function(data) {
             var ip_addresses = $.map(cameras, function(n,i){
@@ -555,7 +555,11 @@ scanForCameras = function() {
                 }
             }
             $("#scan-spinner").hide();
-        }
+            if (cb) cb();
+        },
+        error: function( data ) {
+			$("#scan-spinner").hide();
+		}
     });    
     
 };
