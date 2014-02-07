@@ -134,22 +134,22 @@ var lifelineAuthentication = function(username,password, done){
 };
 
 passport.use(new BasicStrategy( function(username,password,done){
-				
+		return done(null, true);
 		// bypasses auth for development mode
-		if (process.env['NODE_ENV'] === 'development') {
-			process.nextTick(function() {
+		// if (process.env['NODE_ENV'] === 'development') {
+		// 	process.nextTick(function() {
 				
-				// stores lifeline auth in memory for later usage
-				process.env['USER'] = username;
-				process.env['PASSWORD'] = password;
+		// 		// stores lifeline auth in memory for later usage
+		// 		process.env['USER'] = username;
+		// 		process.env['PASSWORD'] = password;
 
-				return done( null, true );
-			});	
-			return;
-		}
-		process.nextTick(function(){
-			lifelineAuthentication(username,password, done);
-		});
+		// 		return done( null, true );
+		// 	});	
+		// 	return;
+		// }
+		// process.nextTick(function(){
+		// 	lifelineAuthentication(username,password, done);
+		// });
 	})
 );
 
@@ -240,7 +240,7 @@ app.configure(function() {
 	app.use(express.bodyParser());  // middleware for parsing request body contents
 								// this must come before app.all
 	app.use(express.session({secret: 'solink'}));	// for session storage
-	app.use(passport.initialize());
+	//app.use(passport.initialize());
 	//app.use(passport.session());
 	app.use(express.logger());  
 	app.use(logrequest);
@@ -370,6 +370,8 @@ scheduler.setupListeners( camerasController );
 app.use('/css', express.static(__dirname + '/assets/css'));		
 app.use('/js', express.static(__dirname + '/assets/js'));
 app.use('/img', express.static(__dirname + '/assets/img'));
+app.use('/images', express.static(__dirname + '/assets/images'));
+app.use('/imagefiles', express.static(__dirname + '/assets/imagefiles'));
 app.use('/swf', express.static(__dirname + '/assets/swf'));
 app.use('/fonts', express.static(__dirname + '/assets/fonts'));
 app.use(express.static(__dirname + '/assets/public'));
@@ -388,6 +390,10 @@ require('./api/scanner.js')( app, passport);				// scanner
 
 app.get('/health', passport.authenticate('basic', {session: false}), function(req, res) {							// health
     res.sendfile(__dirname + '/views/health.html');
+});
+
+app.get('/cast', function (req, res) {								// main page
+    res.sendfile(__dirname + '/views/index.html');			
 });
 
 app.get('/', passport.authenticate('basic', {session: false}), function (req, res) {								// main page
