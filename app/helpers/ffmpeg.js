@@ -15,7 +15,7 @@ var exec = require('child_process').exec;
  * convertFromTsToMp4
  *
  */
-
+/*
 var convertFromTsToMp4 = function( tsFile, cb ) {
 
     var mp4File = __dirname + "/tmp/" + path.basename(tsFile, '.ts') + ".mp4"; 
@@ -32,7 +32,7 @@ var convertFromTsToMp4 = function( tsFile, cb ) {
 };
 // - - end of convertFromTsToMp4
 // - - - - - - - - - - - - - - - - - - - -
-
+*/
 
 /**
  * makeThumb
@@ -188,7 +188,7 @@ var inMemoryStitch = function( files, offset, req, res ) {
  * stitch
  *
  */
-
+/*
 var stitch = function( files, out, offset, cb ) {
 
     var exec = require('child_process').exec;
@@ -207,7 +207,7 @@ var stitch = function( files, out, offset, cb ) {
 };
 // - - end of stitch
 // - - - - - - - - - - - - - - - - - - - -
-
+*/
 
 
 /**
@@ -349,7 +349,7 @@ var sendWebMStream = function(req, res) {
  * sendMp4File
  *
  */
-
+/*
 var sendMp4File = function(file, offset, req, res) {
     
     fs.exists(file, function(exists) {
@@ -369,14 +369,14 @@ var sendMp4File = function(file, offset, req, res) {
 };
 // - - end of sendMp4File
 // - - - - - - - - - - - - - - - - - - - -
-
+*/
 
 
 /**
  * sendMp4Stream
  *
  */
-
+/*
 var sendMp4Stream = function(file, offset, req, res) {
     
     fs.exists(file, function(exists) {
@@ -426,7 +426,7 @@ var sendMp4Stream = function(file, offset, req, res) {
 };
 // - - end of sendMp4Stream
 // - - - - - - - - - - - - - - - - - - - -
-
+*/
 
 /**
  * checkH264
@@ -461,12 +461,12 @@ var checkH264 = function( url, cb ) {
 
 // exports
 //exports.sendWebMStream = sendWebMStream;
-exports.sendStream = sendMp4Stream;
+//exports.sendStream = sendMp4Stream;
 //exports.snapshot = snapshot;
-exports.stitch = stitch;
+//exports.stitch = stitch;
 exports.calcDuration = calcDuration;
 exports.makeThumb = makeThumb;
 //exports.smartSnapshot = smartSnapshot;
-exports.sendMp4File = sendMp4File;
+//exports.sendMp4File = sendMp4File;
 exports.inMemoryStitch = inMemoryStitch;
 exports.checkH264 = checkH264;

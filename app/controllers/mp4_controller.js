@@ -93,7 +93,7 @@ function inMemoryMp4Video( db, cam, begin, end, req, res ) {
 }
 
 
-
+/*
 function sendMp4Video( file, req, res ) {
      fs.exists( file, function(exists) {
          if (exists) {
@@ -167,7 +167,7 @@ function generateMp4Video( db, cam, streamId, begin, end, cb ) {
     });
 }
 //
-
+*/
 
 //
 function takeSnapshot( db, cam, req, res, cb ) {
@@ -216,9 +216,9 @@ function takeSnapshot( db, cam, req, res, cb ) {
 
 
 //
-exports.generateMp4Video = generateMp4Video;
+//exports.generateMp4Video = generateMp4Video;
 exports.takeSnapshot = takeSnapshot;
-exports.sendMp4Video = sendMp4Video;
-exports.sendMp4VideoForDownload = sendMp4VideoForDownload;
+//exports.sendMp4Video = sendMp4Video;
+//exports.sendMp4VideoForDownload = sendMp4VideoForDownload;
 exports.inMemorySnapshot = inMemorySnapshot;
 exports.inMemoryMp4Video = inMemoryMp4Video;
