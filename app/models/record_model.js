@@ -359,9 +359,9 @@ RecordModel.prototype.launchMonitor = function() {
 		var dt = Date.now() - self.lastChunkTime;	// interval since last chunk arrived
 
 		// thresholds: 
-		// 30s if recording
-		// 20s if there was an error - to avoid false alarms
-		if ( (dt > 30*1000 && self.status === RECORDING) || (dt > 20*1000 && self.status === ERROR) ) 
+		// 20s if recording
+		// 40s if there was an error - to avoid false alarms
+		if ( (dt > 30*1000 && self.status === RECORDING) || (dt > 40*1000 && self.status === ERROR) ) 
 		{	
 			if ( self.status !== ERROR ) {								// if camera WAS recording
 				self.emit('camera_status', { status: 'disconnected' });	// tells that it was disconnected
@@ -377,7 +377,7 @@ RecordModel.prototype.launchMonitor = function() {
 		    // this.status = RECORDING;
 	
 			// restarts ffmpeg
-			//console.log('[RecordModel] monitor: no new chunks in a while, will attempt to stop/start recording');
+			console.log('[RecordModel] monitor: no new chunks in a while, will attempt to stop/start recording');
 			//self.stopRecording();
 			//setTimeout( function() {	// wait a few millis before starting ffmpeg again
 										// to avoid the cost of respawning a process
@@ -659,78 +659,7 @@ RecordModel.prototype.recordContinuously = function() {
 	}
 
 	self.sendSignal( 'launch', self.rtsp, self.folder + "/videos/tmp" );
-	return;
-
-
-	// the recording processess 
-	// are being executed as high priority processess (nice -20)
-	// which means the cpu will allocate longer time shares to them
-
-	// ffmpeg params:
-	// 		-rtsp_transport tcp  	: used for rtsp
-	// 		-fflags +igndts			: ignores dts (avoids error when stream doesn't support dts)
-	// 		-vcodec copy			: avoids transcoding by just copying the stream
-	//		-f segment				: specifies file format, in this case, segment files
-	//		-segment_time			: segment time, in seconds - this is not precise
-	//		-bsf dump_extra			: dumps headers to the segment - necessary for the segment to be played correctly
-	//		-segment_format	mpegts	: ts file
-    if (self.rtsp.indexOf("rtsp") >= 0) {
-         this.ffmpegProcess = exec( "nice -n -20 ffmpeg -rtsp_transport tcp -fflags +igndts -i '" + self.rtsp + "' -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
-
-                function (error, stdout, stderr) {
-
-					// when error occurs, 
-					// and it's not because the process was killed
-                    if (error !== null  && error.signal != 'SIGKILL' ) {
-						console.error("[ error ] RecordModel.recordContinuously: ffmpeg record error");
-						console.error( error );
-						setTimeout( function() {
-							self.checkForConnectionErrors();	// TODO: this call might be obsolete
-						}, 500 );
-                    }
-                }); 
-
-		// when the process exits for any reason...
-        this.ffmpegProcess.on('exit', function() {	
-			
-			setTimeout( function() {
-
-				// ... and when it's not because it was stopped by the camera model
-				if (self.status !== STOPPING && self.status !== STOPPED) {
-					
-					self.recordContinuously();			// ...attempts to restart it
-					self.checkForConnectionErrors();	// TODO: this call might be obsolete
-					
-				}
-			}, 500 );	// this timeout avoids that 
-						// the app tries to restart the process too frequently
-						// causing a CPU usage peak
-		});
- 
-    } else if (self.rtsp.indexOf("http") >= 0) {	// this is for http streams 
-													// (we only use it for tests, but might be useful)
-
-        this.ffmpegProcess = exec( "nice -n -20 ffmpeg -i '" + self.rtsp + "' -vcodec copy -an -map 0 -f segment -segment_time 10 -bsf dump_extra -flags -global_header -segment_format mpegts '" + self.folder + "/videos/tmp/capture-%03d.ts'",
-
-                function (error, stdout, stderr) {
-					console.log("ffmpeg record error");
-                    if (error !== null && error.signal !== 'SIGKILL') {
-						setTimeout( function() {
-							self.checkForConnectionErrors();
-						}, 500 );
-					} 
-				}); 
-
-        this.ffmpegProcess.on('exit', function() {
-			
-			setTimeout( function() {
-				//if (self.status !== STOPPING && self.status !== STOPPED) {
-					self.recordContinuously();
-					self.checkForConnectionErrors();
-				//}
-			}, 500 );
-		});   
-    }
+	self.sendSignal( 'start', self.rtsp, self.folder + "/videos/tmp" );
 };
 // end of recordContinuously
 //
