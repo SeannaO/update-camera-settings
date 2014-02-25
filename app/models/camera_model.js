@@ -893,7 +893,6 @@ Camera.prototype.updateRecorder = function() {
 // end of updateRecorder
 //
 
-
 /**
  * Renders streams info as a json array
  * NOTE: remember to edit this method when changing stream data attributes

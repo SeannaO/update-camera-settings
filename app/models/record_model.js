@@ -5,6 +5,7 @@ var Watcher = require('./../helpers/watcher.js');	// watches folder for new chun
 var exec = require('child_process').exec;			// for executing system commands
 var EventEmitter = require('events').EventEmitter;	// for events
 var util = require('util');							// for inheritin events class
+var dbus = require('node-dbus');
 
 // record statuses
 var RECORDING = 2,
@@ -19,27 +20,28 @@ function RecordModel( camera, stream, cb) {
     this.pending = [];		// array of pending chunks on tmp folder
 
     this.lastChunkTime = 0;	//	last time a new chunk was recorded
-	this.lastErrorTime = 0;	//	last time ffmpeg threw an error
+    this.lastErrorTime = 0;	//	last time ffmpeg threw an error
 
     this.status = ERROR;	// starts as an error until we actually have a chunk
 
-	this.camera = camera;	
+    this.camera = camera;	
     this.camId = camera._id;
     this.rtsp = stream.rtsp || stream.url;	// supports different attribute names for rtsp 
 											// TODO: we might want to change that
-	this.stream = stream;	// corresponding stream
+    this.stream = stream;	// corresponding stream
     this.db = stream.db;	// corresponding stream.db - for indexing
     
-	//    this.error = false;		// apparently not being used
+    //    this.error = false;		// apparently not being used
 
     this.folder = "";		// stream folder - it's empty until we setup the folders
 
     this.setupFolders();	// creates folders if necessary
 
-	// watcher will watch for new chunks on tmp folder
-    this.watcher = new Watcher( self.folder + '/videos/tmp', 'ts');
     this.filesToIndex = [];
-    if (cb) cb(self);
+    
+	this.setupDbusListener();
+
+	if (cb) cb(self);
 }
 // end of constructor
 //
@@ -142,23 +144,8 @@ RecordModel.prototype.stopRecording = function() {
 
     this.status = STOPPING;							// didn't stop yet
 
-    this.watcher.removeAllListeners('new_files');	// removes listener for new files
-    this.watcher.stopWatching();					
-
-    clearInterval( this.isRecordingIntervalId );	// clears listener that checks if recording is going ok
-
-    if (this.ffmpegProcess) {
-        console.log("killing ffmpeg process: " + this.ffmpegProcess.pid);
-
-        this.ffmpegProcess.removeAllListeners('exit');	// before killing ffmpeg process, 
-														// removes exit listner,
-														// so that ffmpeg will not be respawned
-        this.ffmpegProcess.kill();
-        var exec = require('child_process').exec;
-        exec("kill -s 9 " + this.ffmpegProcess.pid, function(err) {});	// in case native kill fails
-
-		this.status = STOPPED;						// now we stopped
-    }
+	clearInterval( this.isRecordingIntervalId );	// clears listener that checks if recording is going ok
+	this.status = STOPPED;						// now we stopped
 };
 // end of stopRecording
 // 
@@ -190,8 +177,6 @@ RecordModel.prototype.setStatus = function( status ) {
 //
 
 
-
-
 /**
  * Index files on peding list
  *
@@ -213,34 +198,123 @@ RecordModel.prototype.indexPendingFilesAfterCorruptDatabase = function( cb ) {
 };
 
 
+RecordModel.prototype.setupDbusListener = function() {
 
-/**
- * Index files on peding list
- *
- * @param { function } Callback that is called when all files have been indexed
- *
- */
-RecordModel.prototype.indexPendingFiles = function( cb ) {
+	var self = this;
+	
+    this.lastIdReceived = -1;
+	
+	var dbusMonitorSignal = Object.create(dbus.DBusMessage, {
+		path: {
+			value: '/ffmpeg/signal/Object',
+			writable: true
+		},
+		iface: {
+			value: 'ffmpeg.signal.Type',
+			writable: true
+		},
+		member: {
+			value: 'new_chunk',
+			writable: true
+			},
+		bus: {
+			value: dbus.DBUS_BUS_SYSTEM,
+			writable: true
+		},
+		variantPolicy: {
+			value: dbus.NDBUS_VARIANT_POLICY_DEFAULT,
+			writable: true
+		},
+		type: {
+			value: dbus.DBUS_MESSAGE_TYPE_SIGNAL
+		  }
+	});
 
-    var self = this;
+	try {
+		dbusMonitorSignal.addMatch();
+	} catch( e ) {
+		console.log( e );
+	}
 
-	if (self.pending.length <= 1) {	 	// !! important: we want to leave the newest file
-										// until new chunks arrive,
-										// because this file is still growing
-		if (cb) cb();	// we're done					
+	dbusMonitorSignal.on ("signalReceipt", function () {
 
-	} else {
-        
-		var file = self.pending.shift();	// next file 
-		
-		self.moveAndIndexFile( file, function(err) {	// method to move and index a single file
-			if (err) console.log(err);				
-			self.indexPendingFiles( cb );			// keeps indexing the rest of the queue
-		});
-    }
+		var new_chunk = JSON.parse( arguments[1] );
+
+		new_chunk.id = new_chunk.id.trim();
+
+		if ( new_chunk.id === self.stream.id ) { // && self.lastIdReceived != parseInt( new_chunk.file_id) ) {
+
+			console.log('==== received new chunk from rtsp_grabber');
+			console.error("received signal from dbus: ");
+			console.error( new_chunk );
+
+			self.lastIdReceived = parseInt( new_chunk.file_id );
+
+			video = {
+				cam: self.camId,
+				stream: self.stream.id,         // appends stream id to the chunk
+				start: new_chunk.start_time * 1000,
+				end: ( Math.round(1000*new_chunk.start_time) + Math.round(1000*new_chunk.duration_secs ) ),
+				file: new_chunk.file_id + '.ts'
+			};
+
+			self.status = RECORDING;
+			self.lastChunkTime = Date.now();
+
+			self.emit('camera_status', {status: 'online', stream_id: self.stream.id});
+
+			self.moveFile( video, function() {
+				console.error( "emitting new_chunk event... dbus listener: ");
+				console.error( video );
+				self.emit( 'new_chunk', video );
+			});
+		}
+	});
+}
+
+
+RecordModel.prototype.sendSignal = function( command, url, path ) {
+
+        var id = this.stream.id;
+
+        var dbusSignal = Object.create(dbus.DBusMessage, {
+                  path: {
+                    value: '/ffmpeg/signal/Object',
+                    writable: true
+                  },
+                  iface: {
+                    value: 'ffmpeg.signal.Type',
+                    writable: true
+                  },
+                  member: {
+                    value: 'rtsp',
+                    writable: true
+                  },
+                  bus: {
+                    value: dbus.DBUS_BUS_SYSTEM,
+                    writable: true
+                  },
+                  variantPolicy: {
+                    value: dbus.NDBUS_VARIANT_POLICY_DEFAULT,
+                    writable: true
+                  },
+                  type: {
+                    value: dbus.DBUS_MESSAGE_TYPE_SIGNAL
+                  }
+        });
+
+        dbusSignal.appendArgs('svviasa{sv}',
+                                command + ' ' + id + ' ' + url + ' ' + path,
+                                'non-container variant',
+                              {type:'default variant policy', value:0, mixedPropTypes:true},
+                              73,
+                              ['strArray1','strArray2'],
+                              {dictPropInt: 31, dictPropStr: 'dictionary', dictPropBool: true});
+        //send signal on session bus
+        //check signal receipt in 'test-signal-listener' process
+        //or on your terminal with $dbus-monitor --session
+        dbusSignal.send();
 };
-// end of indexPendingFiles
-//
 
 
 /**
@@ -249,7 +323,6 @@ RecordModel.prototype.indexPendingFiles = function( cb ) {
  */
 RecordModel.prototype.startRecording = function() {    
 
-	
     var self = this;
 	if (this.status === RECORDING) {
 													// avoids start recording twice,
@@ -262,25 +335,7 @@ RecordModel.prototype.startRecording = function() {
     this.status = RECORDING;
 
 	this.lastChunkTime = Date.now();	// resets timer 
-    this.watcher.startWatching();		// launches watcher
 	
-    this.watcher.on("new_files", function( files ) {
-
-		// console.log(files);
-		if (self.status === ERROR) {							// if status WAS ERROR,
-			self.emit('camera_status', {status: 'connected', stream_id: self.stream.id});	// emits event telling that
-																// we're ok now
-		} else {
-
-			self.emit('camera_status', {status: 'online', stream_id: self.stream.id});		// 
-		}
-
-		self.status = RECORDING;
-        
-		self.lastChunkTime = Date.now();			// resets timer when new chunk arrives
-        self.addNewVideosToPendingList( files );	// 
-    });
-
 	self.launchMonitor();		// launches monitor that periodically 
 								// checks if recording is going ok    
 
@@ -318,14 +373,17 @@ RecordModel.prototype.launchMonitor = function() {
 
 			self.lastChunkTime = Date.now();	// refreshes timer
 
+			self.sendSignal( 'restart', self.rtsp, self.folder + "/videos/tmp" );
+		    // this.status = RECORDING;
+	
 			// restarts ffmpeg
-			console.log('[RecordModel] monitor: no new chunks in a while, will attempt to stop/start recording');
-			self.stopRecording();
-			setTimeout( function() {	// wait a few millis before starting ffmpeg again
+			//console.log('[RecordModel] monitor: no new chunks in a while, will attempt to stop/start recording');
+			//self.stopRecording();
+			//setTimeout( function() {	// wait a few millis before starting ffmpeg again
 										// to avoid the cost of respawning a process
 										// too frequently in case of a persistent error
-				self.startRecording();
-			}, 100);
+			//	self.startRecording();
+			//}, 100);
 			
 		}
 	}, 5000);	// the monitor will check back after 5s
@@ -351,43 +409,6 @@ RecordModel.prototype.setupFolderSync = function(folder) {
 // end of setupFolderSync
 //
 
-
-/**
- * Moves new chunks to definitive folder and emits new_chunk event
- *  
- *  @param { file } string File name
- */
-RecordModel.prototype.moveAndIndexFile = function( file, cb ) {
-
-    var self = this;
-
-    self.calcDuration( file, function( err, video ) {	// first, calculates duration
-													// video object contains start, end times 
-													// and also the file path
-		if (err){
-			console.error("calcDuration in moveAndIndexFile:");
-			console.error(err);
-			if ( cb ) {
-				// What do we do if we fail to move a chunk?
-				cb(err);								
-			}
-		} else{
-			self.moveFile( video, function(err) {		// creates thumb,
-														// moves chunk to definitive folder
-														// and indexes it
-				self.emit('new_chunk', video );	
-
-				if (err) console.error( '[RecordModel] : moveAndIndexFile : ' + err );
-
-				if ( cb ) {
-					cb(err);								
-				}
-			});
-		}
-	});
-};
-// end of moveAndIndexFile
-//
 
 RecordModel.prototype.addFileToIndexInDatabase = function(file){
 	this.filesToIndex.push(file);
@@ -630,12 +651,17 @@ RecordModel.prototype.addNewVideosToPendingList = function( files ) {
  */
 RecordModel.prototype.recordContinuously = function() {
 
-    var self = this;
+	var self = this;
 
 	if (!self.rtsp) {
 		console.error('[RecordModel.recordContinuously] : error : empty rtsp string');
 		return;
 	}
+
+	self.sendSignal( 'launch', self.rtsp, self.folder + "/videos/tmp" );
+	return;
+
+
 	// the recording processess 
 	// are being executed as high priority processess (nice -20)
 	// which means the cpu will allocate longer time shares to them

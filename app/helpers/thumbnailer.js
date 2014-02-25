@@ -52,6 +52,47 @@ Thumbnailer.prototype.checkForChunks = function() {
 	}
 };
 
+Thumbnailer.prototype.sendSignal = function( ts_file, out_file ) {
+
+        var dbusSignal = Object.create(dbus.DBusMessage, {
+                  path: {
+                    value: '/ffmpeg/signal/Object',
+                    writable: true
+                  },
+                  iface: {
+                    value: 'ffmpeg.signal.Type',
+                    writable: true
+                  },
+                  member: {
+                    value: 'Test',
+                    writable: true
+                  },
+                  bus: {
+                    value: dbus.DBUS_BUS_SYSTEM,
+                    writable: true
+                  },
+                  variantPolicy: {
+                    value: dbus.NDBUS_VARIANT_POLICY_DEFAULT,
+                    writable: true
+                  },
+                  type: {
+                    value: dbus.DBUS_MESSAGE_TYPE_SIGNAL
+                  }
+        });
+
+        dbusSignal.appendArgs('svviasa{sv}',
+                              ts_file + ' ' + out_file,
+                              'non-container variant',
+                              {type:'default variant policy', value:0, mixedPropTypes:true},
+                              73,
+                              ['strArray1','strArray2'],
+                              {dictPropInt: 31, dictPropStr: 'dictionary', dictPropBool: true});
+        //send signal on session bus
+        //check signal receipt in 'test-signal-listener' process
+        //or on your terminal with $dbus-monitor --session
+        dbusSignal.send();
+};
+
 
 Thumbnailer.prototype.addChunk = function( chunk ) { 
 	this.queue.push( chunk );
