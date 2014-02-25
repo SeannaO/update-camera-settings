@@ -9,12 +9,11 @@ var path = require('path');
 
 function Camera( cam, videosFolder, cb ) {
 
-
     var self = this;
 
     this._id = cam._id;
 
-	if (cam.id) { 
+    if (cam.id) { 
         this.id = cam.id;		// id: assigned from lifeline - legacy
     } else {
         this.id = cam._id;		// _id: assigned from db
@@ -26,26 +25,26 @@ function Camera( cam, videosFolder, cb ) {
     this.manufacturer = cam.manufacturer;
     this.type = cam.type;					// 'ovif' or 'psia'
     this.indexing = false;					// lock for indexPendingFiles
-	this.username = cam.username || cam.user || '';			
+    this.username = cam.username || cam.user || '';			
     this.password = cam.password || '';
 
-	this.videosFolder = videosFolder + "/" + this._id;
+    this.videosFolder = videosFolder + "/" + this._id;
 
-	this.streams = {};
-	this.streamsToBeDeleted = {};
-	this.schedule_enabled = cam.schedule_enabled;
-	this.recording = false;					// is the camera recording?
+    this.streams = {};
+    this.streamsToBeDeleted = {};
+    this.schedule_enabled = cam.schedule_enabled;
+    this.recording = false;					// is the camera recording?
 
-	this.api = require('../helpers/camera_scanner/cam_api/api.js').getApi( this.manufacturer );
+    this.api = require('../helpers/camera_scanner/cam_api/api.js').getApi( this.manufacturer );
 
-	this.password = this.password ? this.password : '';
-	this.username = this.username ? this.username : '';
+    this.password = this.password ? this.password : '';
+    this.username = this.username ? this.username : '';
 
-	this.api.setCameraParams({
-		id: this._id,
-		ip: this.ip,
-		password: this.password,
-		username: this.username
+    this.api.setCameraParams({
+	id: this._id,
+	ip: this.ip,
+	password: this.password,
+	username: this.username
 	});
 
 	
@@ -183,6 +182,7 @@ Camera.prototype.restoreBackupAndReindex = function( stream, cb ) {
 	});
 };
 
+
 Camera.prototype.reIndexDatabaseFromFileStructure = function(stream, storedVideosFolder, cb){
 	var self = this;
 
@@ -264,6 +264,7 @@ Camera.prototype.parseFile = function(file, cb){
 	}
 };
 
+
 Camera.prototype.addFilesInFoldersToIndexInDatabase = function( folders, recordModel, done ) {
 	var self = this;
 	if (folders.length == 0) {
@@ -285,7 +286,6 @@ Camera.prototype.addFilesInFoldersToIndexInDatabase = function( folders, recordM
 };
 
 
-
 Camera.prototype.setMotionDetection = function( cb ) {
 	
 	var motionParams = {
@@ -305,6 +305,7 @@ Camera.prototype.stopMotionDetection = function() {
 	var self = this;
 	this.api.stopListeningForMotionDetection();
 };
+
 
 Camera.prototype.startMotionDetection = function() {
 		
@@ -890,55 +891,6 @@ Camera.prototype.updateRecorder = function() {
 	}
 }; 
 // end of updateRecorder
-//
-
-
-/**
- * Index pending chunks on each stream,
- *	one stream at a time to avoid CPU peaks.
- *
- * @param { streamList } array Used for the recursive call
- *		- this param is not necessary when first calling the method
- *	@param { cb } function Callback, called when done with all streams	
- */
-Camera.prototype.indexPendingFiles = function( streamList, cb ) {
-
-	var self = this;
-	// checks if method is being called for the first time
-	// or if it's a recursive call
-	if ( !streamList || typeof streamList === 'function' ) {
-
-		if (self.indexing) {									// avoids calling the method
-																// while the camera is still indexing
-			return;
-		}
-
-		if ( typeof streamList === 'function') cb = streamList;	
-		streamList = Object.keys( self.streams );				// sets up array with all streams ids
-		self.indexing = true;									// this camera is now indexing
-	}
-
-	if ( streamList.length === 0 ) {	// we're done with all the streams
-		
-		if (cb) cb();					// .. so let's call the callback
-		self.indexing = false;			// .. and we're not indexing anymore
-	} else {
-
-		self.indexing = true;				// we're indexing now
-		var streamId = streamList.shift();
-		
-		if ( this.streams[streamId] && 	this.streams[streamId].recordModel) {
-			// index pending files on a stream
-			this.streams[streamId].recordModel.indexPendingFiles( function() {
-															// done indexing on that stream
-				self.indexPendingFiles( streamList, cb );	// recursive call, index pending files on the next stream
-			});
-		} else {
-			self.indexPendingFiles( streamList, cb );
-		}
-	}
-};
-// indexPendingFiles
 //
 
 

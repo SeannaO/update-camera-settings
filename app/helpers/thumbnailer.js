@@ -3,6 +3,7 @@ var path = require('path');
 var makeThumb = require('./ffmpeg').makeThumb;
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
+var dbus = require('node-dbus');
 
 function Thumbnailer() {
 	
@@ -32,20 +33,22 @@ Thumbnailer.prototype.checkForChunks = function() {
 			self.checkForChunks();
 		}, 1000);
 	} else {
-		makeThumb( chunk.file, chunk.thumbFolder, {width: 160, height: 120}, function() {
-			var thumb = { 
-				start: chunk.start,
-				end: chunk.end,
-				chunk_file: chunk.file,
-				folder: chunk.thumbFolder,
-				cam: chunk.cam,
-				stream: chunk.stream
-			};
+		
+		self.sendSignal(chunk.file, chunk.thumbFolder + '/' + chunk.start + '_' +(chunk.end - chunk.start) + '.jpg' );
 
-			self.emit('new_thumb', thumb);
+		var thumb = {
+			start: chunk.start,
+		       	end: chunk.end,
+		       	chunk_file: chunk.file,
+		       	folder: chunk.thumbFolder,
+		       	cam: chunk.cam,
+		       	stream: chunk.stream
+		};
 
+		setTimeout( function() {
+			self.emit( 'new_thumb', thumb );
 			self.checkForChunks();
-		});
+		}, 500);
 	}
 };
 
@@ -55,5 +58,4 @@ Thumbnailer.prototype.addChunk = function( chunk ) {
 };
 
 module.exports = Thumbnailer;
-
 

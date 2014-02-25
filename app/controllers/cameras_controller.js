@@ -38,15 +38,18 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 
 	self.deletionQueue = [];
 
-	self.indexFiles();	
-	self.checkSnapshotQ();	
+//	not necessary anymore, because of our custom ffmpeg
+//	self.indexFiles();	
+
+	// not necessary anymore, because of custom thumbnailer
+	self.checkSnapshotQ();
+	
 	self.periodicallyDeleteChunksOnQueue();
 	self.periodicallyCheckForExpiredChunks();
 
 	self.thumbnailer.on('new_thumb', function(thumb) {
 		self.emit('new_thumb', thumb);
 	});
-	
 }
 
 util.inherits(CamerasController, EventEmitter);
@@ -175,49 +178,16 @@ CamerasController.prototype.listCameras = function( cb ) {
 
 	var err;
 
-    //refresh( function(err) {
-     //   if (err) {
-     //       cb( err, [] );
-     //   } else {
-            cb( err, self.cameras );                        
-     //   }
-    //});
-};
-
-
-CamerasController.prototype.indexFiles = function() {
-
-	var self = this;
-
-    var k;
-	
-    self.indexFilesInterval = setInterval( 
-        function() {
-			if ( isNaN(k) ) k = 0;
-            k = (k + 1) % self.cameras.length;
-            var cam = self.getCameraFromArray( k );
-
-            if (cam) {
-                cam.indexPendingFiles();
-            }
-        }, 200
-    );
+	cb( err, self.cameras );                        
 };
 
 
 CamerasController.prototype.getCamera = function(camId, cb) {
 
     var self = this;
-	var err;
-
-    //refresh( function(err) {
-    //    if (err) {
-    //        cb( err, null );
-    //    } else {
-            var cam = self.findCameraById( camId ).cam;
-            cb( err, cam );
-    //    }
-    //});
+    var err;
+    var cam = self.findCameraById( camId ).cam;
+    cb( err, cam );
 };
 
 
@@ -236,6 +206,7 @@ CamerasController.prototype.getMotion = function(camId, cb) {
 		}
 	});
 };
+
 
 CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_ids_list ) {
 	
@@ -545,8 +516,6 @@ CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
 			return;
 		}
 	});
-
-
 };
 
 
