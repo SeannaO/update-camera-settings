@@ -533,7 +533,10 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
             var i = whichCam.index;
 
             cam.stopRecording();
-
+	
+		for (var i in cam.streams){
+			cam.removeStream( i );	
+		}
 			//
 			// set camera.delete = true
 			//

@@ -138,12 +138,36 @@ RecordModel.prototype.updateCameraInfo = function( camera, stream ) {
  */
 RecordModel.prototype.stopRecording = function() {
 
+	var self = this;
+
 	console.log(" - - - record model stop recording - - - ");
-	
+
 	this.cleanTmpFolder();		// resets temp folder
 
-    this.status = STOPPING;							// didn't stop yet
+	this.status = STOPPING;							// didn't stop yet
+	this.sendSignal( 'stop', self.rtsp, self.folder + "/videos/tmp" );
+	clearInterval( this.isRecordingIntervalId );	// clears listener that checks if recording is going ok
+	this.status = STOPPED;						// now we stopped
+};
+// end of stopRecording
+// 
 
+
+/**
+ * Quit recording
+ *  sends signal to terminate recorder process,
+ *  removes listeners
+ *  
+ */
+RecordModel.prototype.quitRecording = function() {
+
+	var self = this;
+
+	console.log(" - - - record model quit recording - - - ");
+
+	self.sendSignal( 'quit', self.rtsp, self.folder + "/videos/tmp" );
+
+	this.status = STOPPING;							// didn't stop yet
 	clearInterval( this.isRecordingIntervalId );	// clears listener that checks if recording is going ok
 	this.status = STOPPED;						// now we stopped
 };

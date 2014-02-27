@@ -43,8 +43,13 @@ var generatePlaylist = function( camId, streamId, videos, targetDuration, mediaS
 
     for ( var i = 0; i < videos.length; i++ ) {
 		
-		var duration = (videos[i].end - videos[i].start)/1000.0;
-        content = content + "#EXTINF:" + duration + ",\n";
+	    var duration = (videos[i].end - videos[i].start)/1000.0;
+
+        if (duration > 100) {
+		console.error("[hls] invalid chunk duration, defaulting to 10s");
+	}
+
+	content = content + "#EXTINF:" + duration + ",\n";
         content = content + "ts/" + streamId + "/" + path.basename(videos[i].file) + "\n";
     }
 

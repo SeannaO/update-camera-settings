@@ -391,7 +391,7 @@ Camera.prototype.removeStream  = function( streamId ) {
 	if ( !self.streams[streamId] ) return;
 	
 	if ( self.streams[streamId].recordModel ) {
-		self.streams[streamId].recordModel.stopRecording();
+		self.streams[streamId].recordModel.quitRecording();
 	}
 	delete self.streams[streamId].recordModel;
 	

@@ -21,28 +21,28 @@ var exec = require('child_process').exec;
 
 exec('killall -9 iostat', function( error, stdout, stderr) {});
 exec('killall -9 smartctl', function( error, stdout, stderr) {});
-
-exec('killall -9 sh', function( error, stdout, stderr) {
-        exec('sh ./limit_svcd.sh', function( error, stdout, stderr) {});
-});
 // - - 
 
 var self = this;
 
 // launches custom ffmpeg
 this.launchRtspGrabber = function() {
-	exec('killall -9 rtsp_grabber', function( error, stdout, stderr) {});
-	this.grabberProcess = exec('./rtsp_grabber', function( error, stdout, stderr ) {});
-	this.grabberProcess.once('exit', function() {
-		self.launchRtspGrabber();	
+	exec('killall -9 rtsp_grabber', function( error, stdout, stderr) {
+		self.grabberProcess = exec('./rtsp_grabber > /dev/null', function( error, stdout, stderr ) {
+			self.grabberProcess.once('exit', function() {
+		//		self.launchRtspGrabber();	
+			});
+		});
 	});
 };
 
 this.launchThumbnailer = function() {
-	exec('killall -9 thumbnailer', function( error, stdout, stderr) {});
-	this.thumbnailerProcess = exec('./thumbnailer', function( error, stdout, stderr ) {});
-	this.thumbnailerProcess.once('exit', function() {
-		self.launchThumbnailer();	
+	exec('killall -9 thumbnailer', function( error, stdout, stderr) {
+		self.thumbnailerProcess = exec('./thumbnailer > /dev/null', function( error, stdout, stderr ) {
+			self.thumbnailerProcess.once('exit', function() {
+		//		self.launchThumbnailer();	
+			});
+		});
 	});
 };
 //
