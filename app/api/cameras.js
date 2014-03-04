@@ -248,6 +248,14 @@ module.exports = function( app, passport, camerasController ) {
 				console.error("* * *");
 				res.status(422).json({error: err, success: false});
 			} else {
+				// we only need start/end information here
+				fileList = fileList.map( function( d ) {
+					var chunk = {
+						'start': d.start,
+						'end': d.end
+					};
+					return chunk;	
+				});
 				res.json({success: true, offset: offset, videos: fileList});
 			}
 		});
@@ -306,8 +314,8 @@ module.exports = function( app, passport, camerasController ) {
 		thumb = path.basename(thumb);
 
 		camerasController.getCamera( camId, function(err, cam) {
-			if (err) {
-				console.error("*** getCamera within stream thumbnail " + thumb + ": ");
+			if (err || !cam) {
+				console.error("*** getCamera within stream thumbnail : thumb:" + thumb + " : cam_id: " + camId + " : stream_id : " + streamId);
 				console.error( err ) ;
 				console.error("* * *");
 				res.status(422).json( { error: err } );

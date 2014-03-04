@@ -80,8 +80,8 @@ var timelineSetup = function( cam_id, id, name ) {
         var videos = data.videos;
 
 		for (var i = 0; i < videos.length; i++) {
-			if ( videos[i].file && videos[i].start && videos[i].end) {
-				timelineData[0].times.push({ thumb: "/cameras/" + cam_id + "/streams/" + id + "/thumb/" + removeTsExt(videos[i].file), starting_time: (parseInt(videos[i].start)-1000), ending_time: (parseInt(videos[i].end) + 1000)}); 
+			if ( videos[i].start && videos[i].end) {
+				timelineData[0].times.push({ thumb: "/cameras/" + cam_id + "/streams/" + id + "/thumb/" + videos[i].start + '_' + (videos[i].end-videos[i].start), starting_time: (parseInt(videos[i].start)-1000), ending_time: (parseInt(videos[i].end) + 1000)}); 
 				var start = videos[i].start;
 
 				updateTimelines({
