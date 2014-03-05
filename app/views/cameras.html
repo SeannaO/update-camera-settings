@@ -327,8 +327,12 @@
 				
 				var timeline = timelines[data.stream];
 
-				if (!timeline) return;
-				
+				if (!timeline) {
+					console.log("ERROR: no such timeline");
+					console.log(data);
+					return;
+				}
+
 				var thumb = "/cameras/" + data.cam + "/streams/" + data.stream + "/thumb/"+data.start + "_" + (data.end-data.start);
 
 				var img = new Image();

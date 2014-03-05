@@ -227,50 +227,51 @@ RecordModel.prototype.setupDbusListener = function() {
 	var self = this;
 	
     this.lastIdReceived = -1;
-	
-	var dbusMonitorSignal = Object.create(dbus.DBusMessage, {
-		path: {
-			value: '/ffmpeg/signal/Object',
-			writable: true
-		},
-		iface: {
-			value: 'ffmpeg.signal.Type',
-			writable: true
-		},
-		member: {
-			value: 'new_chunk',
-			writable: true
+
+	if( !RecordModel.dbusMonitorSignal ) {	
+		RecordModel.dbusMonitorSignal = Object.create(dbus.DBusMessage, {
+			path: {
+				value: '/ffmpeg/signal/Object',
+				writable: true
 			},
-		bus: {
-			value: dbus.DBUS_BUS_SYSTEM,
-			writable: true
-		},
-		variantPolicy: {
-			value: dbus.NDBUS_VARIANT_POLICY_DEFAULT,
-			writable: true
-		},
-		type: {
-			value: dbus.DBUS_MESSAGE_TYPE_SIGNAL
-		  }
-	});
+			iface: {
+				value: 'ffmpeg.signal.Type',
+				writable: true
+			},
+			member: {
+				value: 'new_chunk',
+				writable: true
+				},
+			bus: {
+				value: dbus.DBUS_BUS_SYSTEM,
+				writable: true
+			},
+			variantPolicy: {
+				value: dbus.NDBUS_VARIANT_POLICY_DEFAULT,
+				writable: true
+			},
+			type: {
+				value: dbus.DBUS_MESSAGE_TYPE_SIGNAL
+			  }
+		});
 
-	try {
-		dbusMonitorSignal.addMatch();
-	} catch( e ) {
-		console.log( e );
+		try {
+			RecordModel.dbusMonitorSignal.addMatch();
+		} catch( e ) {
+			console.log( e );
+		}
 	}
-
-	dbusMonitorSignal.on ("signalReceipt", function () {
+	
+	RecordModel.dbusMonitorSignal.on ("signalReceipt", function () {
 
 		var new_chunk = JSON.parse( arguments[1] );
-
 		new_chunk.id = new_chunk.id.trim();
 
 		if ( new_chunk.id === self.stream.id ) { // && self.lastIdReceived != parseInt( new_chunk.file_id) ) {
 
-			console.log('==== received new chunk from rtsp_grabber');
-			console.error("received signal from dbus: ");
-			console.error( new_chunk );
+			// console.log('==== received new chunk from rtsp_grabber');
+			// console.error("received signal from dbus: ");
+			// console.error( new_chunk );
 
 			self.lastIdReceived = parseInt( new_chunk.file_id );
 
@@ -287,10 +288,10 @@ RecordModel.prototype.setupDbusListener = function() {
 
 			self.emit('camera_status', {status: 'online', stream_id: self.stream.id});
 
-			self.moveFile( video, function() {
-				console.error( "emitting new_chunk event... dbus listener: ");
-				console.error( video );
-				self.emit( 'new_chunk', video );
+			self.moveFile( video, function( err, v ) {
+			//	console.error( "emitting new_chunk event... dbus listener: ");
+			//	console.error( video );
+				if ( !err ) self.emit( 'new_chunk', v );
 			});
 		}
 	});
@@ -601,8 +602,8 @@ RecordModel.prototype.moveFile = function( video, cb ) {
     var self = this;
 
 	if (!video) {
-		console.error("Cannot move video file since it is undefined");
-		cb('Cannot move video file since it is undefined');
+		console.error('cannot move video file since it is undefined');
+		cb('[RecordModel.moveFile]  cannot move video file since it is undefined');
 		return;
 	}
 
@@ -611,36 +612,28 @@ RecordModel.prototype.moveFile = function( video, cb ) {
 
 	var toFolder = self.folder + '/videos/' + dateString;
 
-	var from = self.folder + "/videos/tmp/" + path.basename( video.file );
-	var to = toFolder + '/' + video.start + "_" + (video.end - video.start) + path.extname( video.file );
+	var from = self.folder + '/videos/tmp/' + path.basename( video.file );
+	var to = toFolder + '/' + video.start + '_' + (video.end - video.start) + path.extname( video.file );
 
 	fs.exists( from, function(exists) {
 		
 		if( !exists ) {
-			if (cb) cb('cannot move video file since it does not exist');
+			if (cb) cb('[RecordModel.moveFile]  cannot move video file since it does not exist');
 			return;
 		}
 
 		fs.mkdir(toFolder, function(e) {
 			fs.rename( from, to, function(err) { 
 				if (err) {
-					console.error('[RecordModel.moveFile]: error when moving file: ' + err);
+					console.error('[RecordModel.moveFile]  error when moving file: ' + err);
 					if (cb) cb(err);
 				}
 				else {
-
 					video.file = to;	// updates file path after moving it
-
 					video.thumbFolder =  self.folder + '/thumbs';
-					// delegated to Thumbnailer
-					// - camerasController should push chunk to Thumbmailer queue
-					//ffmpeg.makeThumb( to, self.folder + "/thumbs", {width: 160, height: 120}, function() { 
-						self.camera.addChunk( self.stream.id, video );	// the chunk will be indexed by the camera
 
-						if (cb) {
-							cb();
-						}
-					//});
+					self.camera.addChunk( self.stream.id, video );	// the chunk will be indexed by the camera
+					if (cb) cb(null, video);
 				}                        
 			});
 		});

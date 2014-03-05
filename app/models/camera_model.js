@@ -727,7 +727,7 @@ Camera.prototype.addChunk = function( streamId, chunk ) {
 	
 	// for safety reasons, avoids non-existing ids
 	if ( !this.streams[streamId] ) {
-		console.log('[error] cameraModel.addChunk: no stream with id ' + streamId);
+		console.error('[cameraModel.addChunk]  no stream with id ' + streamId);
 		return;
 	}
 
@@ -749,7 +749,7 @@ Camera.prototype.addChunk = function( streamId, chunk ) {
 Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 
 	if ( !this.streams[streamId] ) {
-		console.log('[error] cameraModel.deleteChunk: no stream with id ' + streamId);
+		console.error('[cameraModel.deleteChunk]  no stream with id ' + streamId);
 		cb('no stream with this id');
 		return;
 	}
@@ -759,8 +759,8 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 	self.streams[ streamId ].db.deleteVideo( chunk.id, function( err, rows ) {
 
 		if ( err && (!rows || rows.length === 0) ) {
-			console.log( "error removing indexes from db" );
-			console.log(err);
+			console.error( "[Camera.deleteChunk]  error removing indexes from db" );
+			console.error(err);
 			cb( chunk, err );
 		} else { 
 			fs.exists(chunk.file, function(exists) {	// check if file really exists before deleting
