@@ -40,14 +40,13 @@ function Camera( cam, videosFolder, cb ) {
     this.password = this.password ? this.password : '';
     this.username = this.username ? this.username : '';
 
-    this.api.setCameraParams({
-	id: this._id,
-	ip: this.ip,
-	password: this.password,
-	username: this.username
+	this.api.setCameraParams({
+		id: this._id,
+		ip: this.ip,
+		password: this.password,
+		username: this.username
 	});
-
-	
+		
 	if ( !cam.deleted ) {	// starts camera if it's not being deleted
 		this.schedule = new WeeklySchedule(cam.schedule);
 		

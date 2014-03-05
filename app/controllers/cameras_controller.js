@@ -21,16 +21,18 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 
     this.db = new Datastore({ filename: filename });
 
-    this.db.loadDatabase( function(err) {
-		self.setup( function(err) {
-			this.orphanFilesChecker = new OrphanFilesChecker( self );
-			this.orphanFilesChecker.periodicallyCheckForOrphanFiles( 10 * 60 * 1000 );  // checks for orphan files each 10 minutes
-		});
-
-		if (cb) {
-			cb();
-		}
+	// this.db.loadDatabase( function(err) {
+	self.setup( function(err) {
+			setTimeout( function() {
+				this.orphanFilesChecker = new OrphanFilesChecker( self );
+				this.orphanFilesChecker.periodicallyCheckForOrphanFiles( 10 * 60 * 1000 );  // checks for orphan files each 10 minutes
+				
+				if (cb) {
+					cb(err);
+				}
+			}, 1000);
 	});
+	//});
 
     this.videosFolder = videosFolder;
 
@@ -38,10 +40,6 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 
 	self.deletionQueue = [];
 
-//	not necessary anymore, because of our custom ffmpeg
-//	self.indexFiles();	
-
-	// not necessary anymore, because of custom thumbnailer
 	self.checkSnapshotQ();
 	
 	self.periodicallyDeleteChunksOnQueue();
@@ -442,7 +440,7 @@ CamerasController.prototype.getCameraFromArray = function( i ) {
 };
 
 CamerasController.prototype.pushCamera = function( cam ) {
-    
+   
     var self = this;
 
     self.cameras.push( cam );
@@ -742,6 +740,12 @@ CamerasController.prototype.setup = function( cb ) {
 	var self = this;
 
 	self.db.loadDatabase( function( err ) {
+		if (err) {
+			console.error("[CamerasController.setup]  error when loading database");
+			console.error( err );
+			cb(err);
+			return;
+		}
 		self.db.find( {}, function( err, docs ) {
 			if (err) {
 				console.log(err);
@@ -752,11 +756,10 @@ CamerasController.prototype.setup = function( cb ) {
 					var newCam = new Camera(cam, self.videosFolder );
 					self.pushCamera( newCam );
 				}
-				cb( false );
+				cb();
 			}
 		});    
 	});
-    
 };
 
 

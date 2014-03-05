@@ -269,10 +269,6 @@ RecordModel.prototype.setupDbusListener = function() {
 
 		if ( new_chunk.id === self.stream.id ) { // && self.lastIdReceived != parseInt( new_chunk.file_id) ) {
 
-			// console.log('==== received new chunk from rtsp_grabber');
-			// console.error("received signal from dbus: ");
-			// console.error( new_chunk );
-
 			self.lastIdReceived = parseInt( new_chunk.file_id );
 
 			video = {
@@ -289,8 +285,6 @@ RecordModel.prototype.setupDbusListener = function() {
 			self.emit('camera_status', {status: 'online', stream_id: self.stream.id});
 
 			self.moveFile( video, function( err, v ) {
-			//	console.error( "emitting new_chunk event... dbus listener: ");
-			//	console.error( video );
 				if ( !err ) self.emit( 'new_chunk', v );
 			});
 		}

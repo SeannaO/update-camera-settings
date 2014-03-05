@@ -2,7 +2,7 @@ var fs = require('fs');
 var find = require('../node_modules/findit');
 
 var OrphanFilesChecker = function( camerasController ) {
-	
+
 	this.camerasController = camerasController;
 };
 
@@ -117,6 +117,14 @@ OrphanFilesChecker.prototype.checkForOrphanStreams = function( folders, cb ) {
 									  streamId !== 'backup');
 
 			if ( should_be_deleted ) {			
+				console.log( "\n======= DELETING stream " + streamId + " because: \n");
+				console.log( "\t!cam.streams: " + !cam.streams );
+				console.log( "\tcam.streams.length: " + cam.streams.length );
+				console.log( "\t!cam.streams[streamId]: " + !cam.streams[streamId] );
+				console.log( cam.streams );
+				console.log("---");
+				console.log( cam.streams[streamId] );
+	
 				var streamFolder = camFolder + '/' + streamId;
 				self.recursiveDeleteFiles( streamFolder, function() {
 					if (cb) {
@@ -130,6 +138,7 @@ OrphanFilesChecker.prototype.checkForOrphanStreams = function( folders, cb ) {
 		self.checkForOrphanStreams( folders, cb );
 	});
 };
+
 
 OrphanFilesChecker.prototype.periodicallyCheckForOrphanFiles = function( periodicity ) {
 
@@ -157,5 +166,6 @@ OrphanFilesChecker.prototype.periodicallyCheckForOrphanFiles = function( periodi
 		}		
 	});
 };
+
 
 module.exports = OrphanFilesChecker;
