@@ -1,6 +1,8 @@
-var Timeline = function( el ) {
+var Timeline = function( el, options ) {
 
 	var self = this;
+
+	options = options || {};
 
 	this.width = 600;
 	this.totalTime = 30*60*1000;
@@ -39,9 +41,11 @@ var Timeline = function( el ) {
 
 	this.boxes = this.timeline.append("g");	
 
-	setInterval( function() {
-		self.refresh();
-	}, 1000);
+	if (!options.static) {
+		setInterval( function() {
+			self.refresh();
+		}, 1000);
+	}
 };
 
 
@@ -102,6 +106,10 @@ Timeline.prototype.append = function( data ) {
 		.on("mouseover", function() {
 			var d = d3.select(this);
 			data.mouseover(d);
+		})
+		.on("click", function() {
+			var d = d3.select(this);
+			data.mouseclick(d);
 		});
 };
 

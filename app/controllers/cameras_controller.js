@@ -21,7 +21,6 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 
     this.db = new Datastore({ filename: filename });
 
-	// this.db.loadDatabase( function(err) {
 	self.setup( function(err) {
 			setTimeout( function() {
 				this.orphanFilesChecker = new OrphanFilesChecker( self );
@@ -32,7 +31,6 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 				}
 			}, 1000);
 	});
-	//});
 
     this.videosFolder = videosFolder;
 

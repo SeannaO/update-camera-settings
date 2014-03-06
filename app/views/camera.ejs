@@ -1,5 +1,9 @@
 <html>
     <head>
+		<script>
+			var camId = "<%= _id %>";
+		</script>
+
         <link rel="stylesheet" href="/css/bootstrap.min.css">
         <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
         <link rel="stylesheet" href="/css/jquery-ui.css">
@@ -8,6 +12,12 @@
 
         <script src = "/js/jquery.min.js"></script>        
         <script src = "/js/jquery-ui.min.js"></script>
+
+        <script src="/js/socket.io.js"></script>
+ 
+		<script src = "/js/timeline.js"></script>
+
+		<script type="text/javascript" src="/js/swfobject.js"></script>
         <script src = "/js/cam.js"></script>
 
         <script src="/js/timepicker.js"></script>
@@ -17,11 +27,10 @@
         <script src="/js/d3.v3.min.js"></script>
         <script src="/js/d3-timeline.js"></script>    
 
-		<script type="text/javascript" src="/js/swfobject.js"></script>
-
         <script>
-            var camId = "<%= _id %>";
 			var hlsEnabled = canPlayHLS();
+					
+            var socket = io.connect();
         </script>
 
         <style>
@@ -51,8 +60,7 @@
 		
 		<div id = 'stream-selector-container' style = 'width: 300px; height: 70px;'>
 			<label for="stream-selector">streams</label>
-			<select id = 'stream-selector' class="form-control col-xs-4 input-sm">
-			</select>
+			<select id = 'stream-selector' class="form-control col-xs-4 input-sm"></select>
 		</div>
 
         <div id = "search-bar" class="form-inline">
@@ -67,23 +75,36 @@
 
         </div>
 
-        <div id = "video" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px;" class = "shadow">
+		<div id = "time-map">
+			<!--div id = "zoom-out"></div>
+			<div id = "zoom-in"></div-->
+			<div id = "marker"></div>
+
+			<div id = "timeline">
+			</div>				
+		</div>
+		 
+		<div id = "video" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px;" class = "shadow">
 			
 			<div id = "snapshot" style="display:hidden"></div>
 
 			<video id="nativePlayer" src = "" style = "display:none" controls autoplay width="640px" height="480px"></video>
 
-			<div id="StrobeMediaPlayback" style="display:none">
+			<object id="strobeMediaPlayback" style="display:none">
 				<p>
 					( this player requires flash. check if it's enabled and make sure your browser supports flash )
 				</p>
-			</div>
+			</object>
 
 			<div style="width: 640px; height: 360px; display: none" id="live-player"></div>
 
 		</div>
 
-						
+		<div id = "thumb" style = "display:none; position: absolute; z-index: 1000">
+			<div id = 'thumb-time'></div>
+			<img src = ""/>
+        </div>
+					
         <script>
             $(function() {
 				$("#begin_date").change( function() {
@@ -128,9 +149,9 @@
                     $("#file-list").html("<span class='subtle'>loading...</span>");
 
                     // converts local time to gmt and then to unix format
-                    
+
                     var begin = 1000*moment( $("#begin_date").val() ).unix(); //.add("minutes", moment().zone()).unix();
-                    var end = 1000*moment( $("#end_date").val() ).unix(); //.add("minutes", moment().zone()).unix();
+                    var end   = 1000*moment( $("#end_date").val() ).unix(); //.add("minutes", moment().zone()).unix();
 
 					var stream = $("#stream-selector").val();
 
@@ -166,7 +187,21 @@
 
 
 		<script>
-			getStreamsInfo( camId );
+	
+			getStreamsInfo( camId, function() {
+				list();
+			});
+			socket.on('newThumb', function(data) {
+			//	updateThumb( data );
+			});
+
+			socket.on('newChunk', function (data) {
+			//	console.log(data);
+				$("#timeline-"+data.stream).animate({
+					backgroundColor: "none"
+				}, 1000);
+			//	updateTimelines(data, {updateThumb: false});
+			});
 		</script>
 		
     </body>
