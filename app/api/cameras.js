@@ -1,5 +1,5 @@
-var path = require('path');												// for parsing path urls
-var fs = require('fs');													// for sending files
+var path       = require('path');												// for parsing path urls
+var fs         = require('fs');													// for sending files
 var hlsHandler = require('../controllers/hls_controller.js');
 
 module.exports = function( app, passport, camerasController ) {

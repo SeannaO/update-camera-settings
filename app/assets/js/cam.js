@@ -294,13 +294,12 @@ var updateTimelines = function( data, options ) {
 
 var jumpTo = function(d) {
 	
-	var player = document.getElementById("strobeMediaPlayback");
-	var time = parseInt( d.attr('data-start') );
-	var dt = time - timeline_begin;
+	var player    = document.getElementById("strobeMediaPlayback");
+	var time      = parseInt( d.attr('data-start') );
+	var dt        = time - timeline_begin;
 	var totalTime = 30*60*1000;
-	
+
 	var time = dt/1000;
-	console.log( time );
 	
 	if (player.canSeekTo(time) ) {
 		console.log("seek to " + time);
@@ -323,6 +322,7 @@ var showThumb = function( thumb ) {
 	} else {
 	}
 }
+
 
 var timelineSetup = function( cam_id, id, name ) {
 

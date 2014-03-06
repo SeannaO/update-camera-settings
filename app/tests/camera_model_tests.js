@@ -6,35 +6,35 @@ var fs = require('fs');
 var Camera = require('../models/camera_model.js');
 
 var cam_with_streams = {
-	_id: "abc",
-	name: "a name",
-	ip: "127.0.0.1",
-	manufacturer: 'a_manufacturer',
-	user: 'a_user',
-	password: 'a_password',
+	_id          : "abc",
+	name         : "a name",
+	ip           : "127.0.0.1",
+	manufacturer : 'a_manufacturer',
+	user         : 'a_user',
+	password     : 'a_password',
 	streams: {
 		stream_1 : {
-			id: 'stream_1',
-			resolution: '640x480',
-			framerate: '10',
-			quality: '5'
+			id         : 'stream_1',
+			resolution : '640x480',
+			framerate  : '10',
+			quality    : '5'
 		}, 
 		stream_2 : {
-			id: 'stream_2',
-			resolution: '1280x960',
-			framerate:	'20',
-			quality:	'30'
+			id         : 'stream_2',
+			resolution : '1280x960',
+			framerate  : '20',
+			quality    : '30'
 		}
 	}
 };
 
 var cam_without_streams = {
-	_id: "abc",
-	name: "a name",
-	ip: "127.0.0.1",
-	manufacturer: 'a_manufacturer',
-	user: 'a_user',
-	password: 'a_password',
+	_id          : "abc",
+	name         : "a name",
+	ip           : "127.0.0.1",
+	manufacturer : 'a_manufacturer',
+	user         : 'a_user',
+	password     : 'a_password',
 };
 
 
@@ -87,13 +87,13 @@ describe('Camera', function(){
 			for (var cam in cameras) {
 				console.log(cam);
 				var new_cam = new Camera( cam, videosFolder);
-				assert.equal( new_cam._id, cam._id );
-				assert.equal( new_cam.name, cam.name );
-				assert.equal( new_cam.ip, cam.ip );
-				assert.equal( new_cam.rtsp, cam.rtsp );
-				assert.equal( new_cam.username, cam.user || '' );
-				assert.equal( new_cam.password, cam.password || '' );
-				assert.equal( new_cam.manufacturer, cam.manufacturer );
+				assert.equal( new_cam._id          , cam._id );
+				assert.equal( new_cam.name         , cam.name );
+				assert.equal( new_cam.ip           , cam.ip );
+				assert.equal( new_cam.rtsp         , cam.rtsp );
+				assert.equal( new_cam.username     , cam.user || '' );
+				assert.equal( new_cam.password     , cam.password || '' );
+				assert.equal( new_cam.manufacturer , cam.manufacturer );
 			}
 			done();
 		});
@@ -192,28 +192,6 @@ describe('Camera', function(){
 		});
 	});
 	
-
-	describe('index pending files', function() {
-
-		it('should call recordModel.indexPendingFiles on each stream', function(done) {
-
-			cam_with_streams._id = 'indexPendingFiles_test_' + Math.random();			
-			new Camera( cam_with_streams, videosFolder, function(new_cam){
-				for (var i in new_cam.streams ) {
-					sinon.spy( new_cam.streams[i].recordModel, "indexPendingFiles" );
-				}
-
-				new_cam.indexPendingFiles();
-
-				for (var i in new_cam.streams ) {
-					assert( new_cam.streams[i].recordModel.indexPendingFiles.calledOnce );
-				}
-				done();
-			});
-		});
-		
-	});
-
 	
 	describe('addChunk', function() {
 		
@@ -229,9 +207,9 @@ describe('Camera', function(){
 			for (var stream_id in new_cam.streams) {
 
 				var chunk = {
-					start: 1,
-					end: 10,
-					file: 'chunk_file'
+					start : 1,
+					end   : 10,
+					file  : 'chunk_file'
 				};
 
 				new_cam.addChunk( stream_id, chunk );

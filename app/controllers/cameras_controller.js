@@ -1,11 +1,11 @@
-var Datastore = require('nedb');					// nedb datastore
-var Camera = require('./../models/camera_model');	// 
-var EventEmitter = require('events').EventEmitter;	// 
-var util = require('util');							// for inheritance
-var checkH264 = require('../helpers/ffmpeg.js').checkH264;
-var find = require('findit');
+var Datastore          = require('nedb');                           // nedb datastore
+var Camera             = require('./../models/camera_model');       //
+var EventEmitter       = require('events').EventEmitter;            //
+var util               = require('util');                           // for inheritance
+var checkH264          = require('../helpers/ffmpeg.js').checkH264;
+var find               = require('findit');
 var OrphanFilesChecker = require('../helpers/orphanFiles.js');
-var Thumbnailer = require('../helpers/thumbnailer.js');
+var Thumbnailer        = require('../helpers/thumbnailer.js');
 
 // It seems that the mp4Handler should not be passed in as an argument. The mp4Handler is only used for taking snapshots and 
 // this logic should be happening outside of the CamerasController, especially since it has request handling as part of it
@@ -67,9 +67,9 @@ CamerasController.prototype.getCameras = function() {
 CamerasController.prototype.requestSnapshot = function( camId, req, res ) {
 
 	var snapshot = {};
-	snapshot.camId = camId;
-	snapshot.req = req;
-	snapshot.res = res;
+	snapshot.camId     = camId;
+	snapshot.req       = req;
+	snapshot.res       = res;
 	snapshot.cancelled = false;
 
 	res.on('close', function() {
@@ -146,9 +146,7 @@ CamerasController.prototype.takeSnapshot = function( camId, req, res, cb ) {
 CamerasController.prototype.listVideosByCamera = function( camId, streamId, start, end, cb ) {
     
     var self = this;
-
     var cam = self.findCameraById( camId ).cam;    
-    
 
     if (!cam) {
         cb("camera not found");
@@ -156,7 +154,7 @@ CamerasController.prototype.listVideosByCamera = function( camId, streamId, star
     }
 
     start = parseInt( start, 10 );
-    end = parseInt( end, 10 );
+    end   = parseInt( end, 10 );
 
     cam.streams[streamId].db.searchVideosByInterval( start, end, function(err, fileList, offset) {
         if (err) {
@@ -171,7 +169,6 @@ CamerasController.prototype.listVideosByCamera = function( camId, streamId, star
 CamerasController.prototype.listCameras = function( cb ) {
     
 	var self = this;
-
 	var err;
 
 	cb( err, self.cameras );                        
@@ -595,15 +592,15 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 	}	
 
 	self.db.update({ _id: cam._id }, { 
-	    $set: { 
-	        name: cam.name							|| camera.cam.name, 
-	        manufacturer: cam.manufacturer			|| camera.cam.manufacturer, 
-	        ip: cam.ip								|| camera.cam.ip,
-			id: cam.id								|| camera.cam.id,
-	        username: cam.username,
-	        password: cam.password,
-	        streams: streamsHash,
-	        status: cam.status
+	    $set: {
+	        name         : cam.name         || camera.cam.name,
+	        manufacturer : cam.manufacturer || camera.cam.manufacturer,
+	        ip           : cam.ip           || camera.cam.ip,
+			id           : cam.id           || camera.cam.id,
+	        username     : cam.username,
+	        password     : cam.password,
+	        streams      : streamsHash,
+	        status       : cam.status
 	    } 
 	}, { multi: true }, function (err, numReplaced) {
 	    if (err) {
@@ -614,9 +611,10 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 
 	        self.db.loadDatabase();
 
-	        camera.cam.name = cam.name;
-			camera.cam.id = cam.id;
+	        camera.cam.name   = cam.name;
+			camera.cam.id     = cam.id;
 			camera.cam.status = cam.status;
+
 			var need_restart_all_streams = false;
 
 			if (cam.manufacturer && (camera.cam.manufacturer !== cam.manufacturer) ) {

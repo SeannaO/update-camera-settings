@@ -1,41 +1,39 @@
-var ffmpeg = require('./../helpers/ffmpeg.js');		// ffmpeg helper
-var fs = require('fs');								// file system utils
-var path = require('path');							// path manipulation utils
-var Watcher = require('./../helpers/watcher.js');	// watches folder for new chunks
-var exec = require('child_process').exec;			// for executing system commands
-var EventEmitter = require('events').EventEmitter;	// for events
-var util = require('util');							// for inheritin events class
-var dbus = require('node-dbus');
+var ffmpeg       = require('./../helpers/ffmpeg.js');  // ffmpeg helper
+var fs           = require('fs');                      // file system utils
+var path         = require('path');                    // path manipulation utils
+var Watcher      = require('./../helpers/watcher.js'); // watches folder for new chunks
+var exec         = require('child_process').exec;      // for executing system commands
+var EventEmitter = require('events').EventEmitter;     // for events
+var util         = require('util');                    // for inheritin events class
+var dbus         = require('node-dbus');
 
 // record statuses
 var RECORDING = 2,
-    STOPPING = 1,
-    STOPPED = 0,
-    ERROR = -1;
+    STOPPING  = 1,
+    STOPPED   = 0,
+    ERROR     = -1;
 
 function RecordModel( camera, stream, cb) {
 
     var self = this;
 
-    this.pending = [];		// array of pending chunks on tmp folder
+    this.pending = [];                       // array of pending chunks on tmp folder
 
-    this.lastChunkTime = 0;	//	last time a new chunk was recorded
-    this.lastErrorTime = 0;	//	last time ffmpeg threw an error
+    this.lastChunkTime = 0;                  // last time a new chunk was recorded
+    this.lastErrorTime = 0;                  // last time ffmpeg threw an error
 
-    this.status = ERROR;	// starts as an error until we actually have a chunk
+    this.status = ERROR;                     // starts as an error until we actually have a chunk
 
-    this.camera = camera;	
-    this.camId = camera._id;
-    this.rtsp = stream.rtsp || stream.url;	// supports different attribute names for rtsp 
-											// TODO: we might want to change that
-    this.stream = stream;	// corresponding stream
-    this.db = stream.db;	// corresponding stream.db - for indexing
-    
-    //    this.error = false;		// apparently not being used
+    this.camera = camera;
+    this.camId  = camera._id;
+    this.rtsp   = stream.rtsp || stream.url;   // supports different attribute names for rtsp
+											 // TODO: we might want to change that
+    this.stream = stream;                    // corresponding stream
+    this.db = stream.db;                     // corresponding stream.db - for indexing
 
-    this.folder = "";		// stream folder - it's empty until we setup the folders
+    this.folder = "";                        // stream folder - it's empty until we setup the folders
 
-    this.setupFolders();	// creates folders if necessary
+    this.setupFolders();                     // creates folders if necessary
 
     this.filesToIndex = [];
     
@@ -231,24 +229,24 @@ RecordModel.prototype.setupDbusListener = function() {
 	if( !RecordModel.dbusMonitorSignal ) {	
 		RecordModel.dbusMonitorSignal = Object.create(dbus.DBusMessage, {
 			path: {
-				value: '/ffmpeg/signal/Object',
-				writable: true
+				value    : '/ffmpeg/signal/Object',
+				writable : true
 			},
 			iface: {
-				value: 'ffmpeg.signal.Type',
-				writable: true
+				value    : 'ffmpeg.signal.Type',
+				writable : true
 			},
 			member: {
-				value: 'new_chunk',
-				writable: true
+				value    : 'new_chunk',
+				writable : true
 				},
 			bus: {
-				value: dbus.DBUS_BUS_SYSTEM,
-				writable: true
+				value    : dbus.DBUS_BUS_SYSTEM,
+				writable : true
 			},
 			variantPolicy: {
-				value: dbus.NDBUS_VARIANT_POLICY_DEFAULT,
-				writable: true
+				value    : dbus.NDBUS_VARIANT_POLICY_DEFAULT,
+				writable : true
 			},
 			type: {
 				value: dbus.DBUS_MESSAGE_TYPE_SIGNAL
@@ -272,11 +270,11 @@ RecordModel.prototype.setupDbusListener = function() {
 			self.lastIdReceived = parseInt( new_chunk.file_id );
 
 			video = {
-				cam: self.camId,
-				stream: self.stream.id,         // appends stream id to the chunk
-				start: new_chunk.start_time * 1000,
-				end: ( Math.round(1000*new_chunk.start_time) + Math.round(1000*new_chunk.duration_secs ) ),
-				file: new_chunk.file_id + '.ts'
+				cam    : self.camId,
+				stream : self.stream.id,         // appends stream id to the chunk
+				start  : new_chunk.start_time * 1000,
+				end    : ( Math.round(1000*new_chunk.start_time) + Math.round(1000*new_chunk.duration_secs ) ),
+				file   : new_chunk.file_id + '.ts'
 			};
 
 			self.status = RECORDING;
@@ -477,16 +475,16 @@ RecordModel.prototype.calcDurationFromFile = function( file, cb ) {
 		var end = start + parseInt(matches[2]);
 
 		video = {
-			cam: self.camId,
-			stream: self.stream.id,		// appends stream id to the chunk
-			start: start,
-			end: end,
-			file: file
+			cam    : self.camId,
+			stream : self.stream.id,		// appends stream id to the chunk
+			start  : start,
+			end    : end,
+			file   : file
 		};
 
 		cb(null, video );
 	}else{
-		cb("file does not have start time and duration", null );
+		cb("[RecordModel.calcDurationFromFile]  file does not have start time and duration", null );
 	}
 };
 
@@ -534,15 +532,16 @@ RecordModel.prototype.calcDurationWithFileInfo = function( file, fileInfo, cb ) 
 																// getTime: converts to Unix millis
 	ffmpeg.calcDuration( file, function(err, duration) {
 		if (!err && duration){
-			var start =  lastModified - duration;		
-			var end = lastModified;
+
+			var start = lastModified - duration;
+			var end   = lastModified;
 
 			video = {
-				cam: self.camId,
-				stream: self.stream.id,		// appends stream id to the chunk
-				start: start,
-				end: end,
-				file: file
+				cam    : self.camId,
+				stream : self.stream.id,		// appends stream id to the chunk
+				start  : start,
+				end    : end,
+				file   : file
 			};
 
 			cb(null, video );
@@ -596,7 +595,7 @@ RecordModel.prototype.moveFile = function( video, cb ) {
     var self = this;
 
 	if (!video) {
-		console.error('cannot move video file since it is undefined');
+		console.error('[RecordModel.moveFile]  cannot move video file since it is undefined');
 		cb('[RecordModel.moveFile]  cannot move video file since it is undefined');
 		return;
 	}
@@ -612,6 +611,7 @@ RecordModel.prototype.moveFile = function( video, cb ) {
 	fs.exists( from, function(exists) {
 		
 		if( !exists ) {
+			console.error('[RecordModel.moveFile]  cannot move video file since it does not exist');
 			if (cb) cb('[RecordModel.moveFile]  cannot move video file since it does not exist');
 			return;
 		}
@@ -623,10 +623,11 @@ RecordModel.prototype.moveFile = function( video, cb ) {
 					if (cb) cb(err);
 				}
 				else {
-					video.file = to;	// updates file path after moving it
-					video.thumbFolder =  self.folder + '/thumbs';
+					video.file        = to;							// updates file path after moving it
+					video.thumbFolder = self.folder + '/thumbs';
 
 					self.camera.addChunk( self.stream.id, video );	// the chunk will be indexed by the camera
+
 					if (cb) cb(null, video);
 				}                        
 			});

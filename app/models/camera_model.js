@@ -1,11 +1,11 @@
-var fs = require('fs');											// fs utils
-var WeeklySchedule = require('weekly-schedule');				// scheduler
-var RecordModel = require('./record_model');					// recorder
-var Dblite = require('../db_layers/dblite.js');					// sqlite layer
-var util = require('util');										// for inheritance
-var EventEmitter = require('events').EventEmitter;				// events
-var find = require('findit');
-var path = require('path');
+var fs             = require('fs');                     // fs utils
+var WeeklySchedule = require('weekly-schedule');        // scheduler
+var RecordModel    = require('./record_model');         // recorder
+var Dblite         = require('../db_layers/dblite.js'); // sqlite layer
+var util           = require('util');                   // for inheritance
+var EventEmitter   = require('events').EventEmitter;    // events
+var find           = require('findit');
+var path           = require('path');
 
 function Camera( cam, videosFolder, cb ) {
 
@@ -19,21 +19,20 @@ function Camera( cam, videosFolder, cb ) {
         this.id = cam._id;		// _id: assigned from db
     } 
 
-    this.name = cam.name;
-    this.ip = cam.ip;
-    this.status = cam.status;
+    this.name         = cam.name;
+    this.ip           = cam.ip;
+    this.status       = cam.status;
     this.manufacturer = cam.manufacturer;
-    this.type = cam.type;					// 'ovif' or 'psia'
-    this.indexing = false;					// lock for indexPendingFiles
-    this.username = cam.username || cam.user || '';			
-    this.password = cam.password || '';
+    this.type         = cam.type;							// 'onvif' or 'psia'
+    this.username     = cam.username || cam.user || '';
+    this.password     = cam.password || '';
 
     this.videosFolder = videosFolder + "/" + this._id;
 
-    this.streams = {};
+    this.streams            = {};
     this.streamsToBeDeleted = {};
-    this.schedule_enabled = cam.schedule_enabled;
-    this.recording = false;					// is the camera recording?
+    this.schedule_enabled   = cam.schedule_enabled;
+    this.recording          = false;					// is the camera recording?
 
     this.api = require('../helpers/camera_scanner/cam_api/api.js').getApi( this.manufacturer );
 
@@ -41,10 +40,10 @@ function Camera( cam, videosFolder, cb ) {
     this.username = this.username ? this.username : '';
 
 	this.api.setCameraParams({
-		id: this._id,
-		ip: this.ip,
-		password: this.password,
-		username: this.username
+		id       : this._id,
+		ip       : this.ip,
+		password : this.password,
+		username : this.username
 	});
 		
 	if ( !cam.deleted ) {	// starts camera if it's not being deleted
@@ -85,11 +84,11 @@ util.inherits(Camera, EventEmitter);
 Camera.prototype.addAllStreams = function( streams, cb ) {
 	var self = this;
 	if (streams.length == 0) {
-		if (cb) cb();	// we're done					
+		if (cb) cb();                         // we're done
 	} else {
-		var stream = streams.shift();	// next file
+		var stream = streams.shift();         // next file
 		this.addStream( stream, function() {
-			self.addAllStreams(streams, cb );// recursive call
+			self.addAllStreams(streams, cb ); // recursive call
 		});
     }
 };
@@ -110,10 +109,10 @@ Camera.prototype.addStream = function( stream, cb ) {
 		if (!stream.toBeDeleted) {
 
 			stream.url = self.api.getRtspUrl({
-				resolution: stream.resolution,
-				framerate: stream.framerate,
-				quality: stream.quality,
-				suggested_url: stream.url
+				resolution    : stream.resolution,
+				framerate     : stream.framerate,
+				quality       : stream.quality,
+				suggested_url : stream.url
 			});
 
 			self.streams[stream.id] = stream;
@@ -230,14 +229,22 @@ Camera.prototype.reIndexDatabaseFromFileStructureAfterTimestamp = function(strea
 					var unindexed_folders = [];
 					var re = /([\d]+)-([\d]+)-([\d]+)/
 					var last_recorded_date = new Date(indexItem.start);
-					var day_after_last_date = new Date(last_recorded_date.getUTCFullYear(), last_recorded_date.getUTCMonth(), last_recorded_date.getUTCDate());
-					for (var idx in list){
+					var day_after_last_date = new Date(
+						last_recorded_date.getUTCFullYear(), 
+						last_recorded_date.getUTCMonth(),
+						last_recorded_date.getUTCDate()
+					);
+					for (var idx in list) {
+
 						var matches = re.exec(list[idx]);
-						if (matches && matches.length == 4){
-							var year = parseInt(matches[1]);
-							var month = parseInt(matches[2])-1;
-							var day = parseInt(matches[3]);
+						
+						if (matches && matches.length == 4) {
+							
+							var year    = parseInt(matches[1]);
+							var month   = parseInt(matches[2])-1;
+							var day     = parseInt(matches[3]);
 							var dirdate = new Date(year, month, day);
+							
 							if (dirdate > day_after_last_date){
 								unindexed_folders.push(storedVideosFolder + "/" + list[idx]);
 							}
@@ -288,9 +295,9 @@ Camera.prototype.addFilesInFoldersToIndexInDatabase = function( folders, recordM
 Camera.prototype.setMotionDetection = function( cb ) {
 	
 	var motionParams = {
-		enabled: true,
-		threshold: 10,
-		sensitivity: 80
+		enabled     : true,
+		threshold   : 10,
+		sensitivity : 80
 	};
 
 	this.api.setMotionParams( motionParams, function( err, body ) {
@@ -311,8 +318,6 @@ Camera.prototype.startMotionDetection = function() {
 	var self = this;
 
 	this.api.startListeningForMotionDetection( function(data) {
-
-		// console.log("*** start listenint for motion " + Date.now() + " * * * " + self.manufacturer);
 
 		if ( !self.recording ) {
 			self.startRecording();
@@ -342,9 +347,9 @@ Camera.prototype.updateAllStreams = function( new_streams ) {
 	var self = this;
 
 	this.api.setCameraParams({
-		ip: self.ip,
-		password: self.password,
-		username: self.username
+		ip       : self.ip,
+		password : self.password,
+		username : self.username
 	});
 
 	
@@ -458,9 +463,9 @@ Camera.prototype.restartAllStreams = function() {
 	var self = this;
 
 	this.api.setCameraParams({
-		ip: self.ip,
-		password: self.password,
-		username: self.username
+		ip       : self.ip,
+		password : self.password,
+		username : self.username
 	});
 	
 	for (var i in self.streams) {
@@ -493,10 +498,10 @@ Camera.prototype.restartStream = function( streamId ) {
 	
 	// refreshes rtsp url
 	self.streams[streamId].rtsp = self.streams[streamId].url = self.api.getRtspUrl({
-		resolution: stream.resolution,
-		framerate: stream.framerate,
-		quality: stream.quality,
-		suggested_url: self.streams[streamId].url
+		resolution    : stream.resolution,
+		framerate     : stream.framerate,
+		quality       : stream.quality,
+		suggested_url : self.streams[streamId].url
 	});
 	
 	self.streams[streamId].recordModel = new RecordModel( self, self.streams[streamId] );
@@ -564,7 +569,7 @@ Camera.prototype.getExpiredChunksFromStream = function( streamId, nChunks, cb ) 
 	}
 
 	var retentionToMillis = self.daysToMillis( stream.retention );	// converts to millis
-	var expirationDate = Date.now() - retentionToMillis;			// when should it expire?
+	var expirationDate    = Date.now() - retentionToMillis;			// when should it expire?
 
 	// TODO: check if this condition is indeed working and really necessary
 	// try to avoid call to db when we know that there are no expired chunks
@@ -606,10 +611,10 @@ Camera.prototype.getExpiredChunks = function(  chunks, streamList, nChunks, cb )
 	// checks if method is being called for the first time
 	if ( !Array.isArray( streamList ) ) {
 		
-		nChunks = chunks;							//	
-		cb = streamList;							//	cb is always the last param
-		streamList=Object.keys( self.streams);		//	creates an array of streams id
-		chunks=[];									//	no chunks yet
+		nChunks    = chunks;							//
+		cb         = streamList;						//	cb is always the last param
+		streamList = Object.keys( self.streams);		//	creates an array of streams id
+		chunks     = [];								//	no chunks yet
 	}
 	
 	if (streamList.length === 0) {	// we are done checking all streams
@@ -657,11 +662,11 @@ Camera.prototype.getOldestChunks = function( chunks, streamList, numberOfChunks,
 	var self = this;
 
 	if ( !Array.isArray( streamList ) ) {
-		
+
 		numberOfChunks = chunks;
-		cb = streamList;
-		streamList = Object.keys( self.streams );
-		chunks = [];
+		cb             = streamList;
+		streamList     = Object.keys( self.streams );
+		chunks         = [];
 	}
 	
 	if (streamList.length === 0) {	// we are done checking all streams
@@ -702,7 +707,7 @@ Camera.prototype.getOldestChunksFromStream = function( streamId, numberOfChunks,
 
 	// for safety reasons, avoids non-existing ids
 	if ( !this.streams[streamId] ) {
-		console.log('[error] cameraModel.getOldestChunks: no stream with id ' + streamId);
+		console.error('[error] cameraModel.getOldestChunks: no stream with id ' + streamId);
 		return;
 	}
 	
@@ -911,15 +916,15 @@ Camera.prototype.getStreamsJSON = function() {
 	for (var id in self.streams) {
 		var s = self.streams[id];
 		streams.push({
-			retention: s.retention,
-			url: s.url,
-			rtsp: s.rtsp,
-			resolution: s.resolution,
-			quality: s.quality,
-			framerate: s.framerate,
-			name: s.name,
-			id: id,
-			latestThumb: s.latestThumb
+			retention   : s.retention,
+			url         : s.url,
+			rtsp        : s.rtsp,
+			resolution  : s.resolution,
+			quality     : s.quality,
+			framerate   : s.framerate,
+			name        : s.name,
+			id          : id,
+			latestThumb : s.latestThumb
 		}); 
 	}
 
@@ -938,16 +943,16 @@ Camera.prototype.getStreamsJSON = function() {
 Camera.prototype.toJSON = function() {
     var info = {};
     
-    info.name = this.name;
-    info.ip = this.ip;
-    info._id = this._id;
-    info.schedule_enabled = this.schedule_enabled;
-    info.status = this.status;
-    info.type = this.type;
-    info.manufacturer = this.manufacturer;
-    info.username = this.username || '';
-    info.password = this.password || '';
-	
+	info.name             = this.name;
+	info.ip               = this.ip;
+	info._id              = this._id;
+	info.schedule_enabled = this.schedule_enabled;
+	info.status           = this.status;
+	info.type             = this.type;
+	info.manufacturer     = this.manufacturer;
+	info.username         = this.username || '';
+	info.password         = this.password || '';
+
 	info.streams = this.getStreamsJSON();
 	
     if (this.id) {
