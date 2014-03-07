@@ -229,24 +229,24 @@ RecordModel.prototype.setupDbusListener = function() {
 	if( !RecordModel.dbusMonitorSignal ) {	
 		RecordModel.dbusMonitorSignal = Object.create(dbus.DBusMessage, {
 			path: {
-				value    : '/ffmpeg/signal/Object',
-				writable : true
+				value:     '/ffmpeg/signal/Object',
+				writable:  true
 			},
 			iface: {
-				value    : 'ffmpeg.signal.Type',
-				writable : true
+				value:     'ffmpeg.signal.Type',
+				writable:  true
 			},
 			member: {
-				value    : 'new_chunk',
-				writable : true
+				value:     'new_chunk',
+				writable:  true
 				},
 			bus: {
-				value    : dbus.DBUS_BUS_SYSTEM,
-				writable : true
+				value:     dbus.DBUS_BUS_SYSTEM,
+				writable:  true
 			},
 			variantPolicy: {
-				value    : dbus.NDBUS_VARIANT_POLICY_DEFAULT,
-				writable : true
+				value:     dbus.NDBUS_VARIANT_POLICY_DEFAULT,
+				writable:  true
 			},
 			type: {
 				value: dbus.DBUS_MESSAGE_TYPE_SIGNAL
@@ -270,11 +270,11 @@ RecordModel.prototype.setupDbusListener = function() {
 			self.lastIdReceived = parseInt( new_chunk.file_id );
 
 			video = {
-				cam    : self.camId,
-				stream : self.stream.id,         // appends stream id to the chunk
-				start  : new_chunk.start_time * 1000,
-				end    : ( Math.round(1000*new_chunk.start_time) + Math.round(1000*new_chunk.duration_secs ) ),
-				file   : new_chunk.file_id + '.ts'
+				cam:     self.camId,
+				stream:  self.stream.id,         // appends stream id to the chunk
+				start:   new_chunk.start_time * 1000,
+				end:     ( Math.round(1000*new_chunk.start_time) + Math.round(1000*new_chunk.duration_secs ) ),
+				file:    new_chunk.file_id + '.ts'
 			};
 
 			self.status = RECORDING;
@@ -296,24 +296,24 @@ RecordModel.prototype.sendSignal = function( command, url, path ) {
 
         var dbusSignal = Object.create(dbus.DBusMessage, {
                   path: {
-                    value: '/ffmpeg/signal/Object',
-                    writable: true
+                    value:     '/ffmpeg/signal/Object',
+                    writable:  true
                   },
                   iface: {
-                    value: 'ffmpeg.signal.Type',
-                    writable: true
+                    value:     'ffmpeg.signal.Type',
+                    writable:  true
                   },
                   member: {
-                    value: 'rtsp',
-                    writable: true
+                    value:     'rtsp',
+                    writable:  true
                   },
                   bus: {
-                    value: dbus.DBUS_BUS_SYSTEM,
-                    writable: true
+                    value:     dbus.DBUS_BUS_SYSTEM,
+                    writable:  true
                   },
                   variantPolicy: {
-                    value: dbus.NDBUS_VARIANT_POLICY_DEFAULT,
-                    writable: true
+                    value:     dbus.NDBUS_VARIANT_POLICY_DEFAULT,
+                    writable:  true
                   },
                   type: {
                     value: dbus.DBUS_MESSAGE_TYPE_SIGNAL
@@ -471,15 +471,15 @@ RecordModel.prototype.calcDurationFromFile = function( file, cb ) {
 	var matches = re.exec(file);
 		
 	if (matches && matches.length == 3){
-		var start =  parseInt(matches[1]);
-		var end = start + parseInt(matches[2]);
+		var start = parseInt(matches[1]);
+		var end   = start + parseInt(matches[2]);
 
 		video = {
-			cam    : self.camId,
-			stream : self.stream.id,		// appends stream id to the chunk
-			start  : start,
-			end    : end,
-			file   : file
+			cam:     self.camId,
+			stream:  self.stream.id,		// appends stream id to the chunk
+			start:   start,
+			end:     end,
+			file:    file
 		};
 
 		cb(null, video );
@@ -537,11 +537,11 @@ RecordModel.prototype.calcDurationWithFileInfo = function( file, fileInfo, cb ) 
 			var end   = lastModified;
 
 			video = {
-				cam    : self.camId,
-				stream : self.stream.id,		// appends stream id to the chunk
-				start  : start,
-				end    : end,
-				file   : file
+				cam:     self.camId,
+				stream:  self.stream.id,		// appends stream id to the chunk
+				start:   start,
+				end:     end,
+				file:    file
 			};
 
 			cb(null, video );

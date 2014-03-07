@@ -1,6 +1,6 @@
-var exec = require('child_process').exec;
+var exec         = require('child_process').exec;
 var EventEmitter = require('events').EventEmitter;
-var util = require('util');
+var util         = require('util');
 
 
 var DiskSpaceAgent = function( folder ) {

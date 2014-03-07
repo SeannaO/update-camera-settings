@@ -40,10 +40,10 @@ function Camera( cam, videosFolder, cb ) {
     this.username = this.username ? this.username : '';
 
 	this.api.setCameraParams({
-		id       : this._id,
-		ip       : this.ip,
-		password : this.password,
-		username : this.username
+		id:        this._id,
+		ip:        this.ip,
+		password:  this.password,
+		username:  this.username
 	});
 		
 	if ( !cam.deleted ) {	// starts camera if it's not being deleted
@@ -109,10 +109,10 @@ Camera.prototype.addStream = function( stream, cb ) {
 		if (!stream.toBeDeleted) {
 
 			stream.url = self.api.getRtspUrl({
-				resolution    : stream.resolution,
-				framerate     : stream.framerate,
-				quality       : stream.quality,
-				suggested_url : stream.url
+				resolution:     stream.resolution,
+				framerate:      stream.framerate,
+				quality:        stream.quality,
+				suggested_url:  stream.url
 			});
 
 			self.streams[stream.id] = stream;
@@ -295,9 +295,9 @@ Camera.prototype.addFilesInFoldersToIndexInDatabase = function( folders, recordM
 Camera.prototype.setMotionDetection = function( cb ) {
 	
 	var motionParams = {
-		enabled     : true,
-		threshold   : 10,
-		sensitivity : 80
+		enabled:      true,
+		threshold:    10,
+		sensitivity:  80
 	};
 
 	this.api.setMotionParams( motionParams, function( err, body ) {
@@ -347,9 +347,9 @@ Camera.prototype.updateAllStreams = function( new_streams ) {
 	var self = this;
 
 	this.api.setCameraParams({
-		ip       : self.ip,
-		password : self.password,
-		username : self.username
+		ip:        self.ip,
+		password:  self.password,
+		username:  self.username
 	});
 
 	
@@ -463,9 +463,9 @@ Camera.prototype.restartAllStreams = function() {
 	var self = this;
 
 	this.api.setCameraParams({
-		ip       : self.ip,
-		password : self.password,
-		username : self.username
+		ip:        self.ip,
+		password:  self.password,
+		username:  self.username
 	});
 	
 	for (var i in self.streams) {
@@ -498,10 +498,10 @@ Camera.prototype.restartStream = function( streamId ) {
 	
 	// refreshes rtsp url
 	self.streams[streamId].rtsp = self.streams[streamId].url = self.api.getRtspUrl({
-		resolution    : stream.resolution,
-		framerate     : stream.framerate,
-		quality       : stream.quality,
-		suggested_url : self.streams[streamId].url
+		resolution:     stream.resolution,
+		framerate:      stream.framerate,
+		quality:        stream.quality,
+		suggested_url:  self.streams[streamId].url
 	});
 	
 	self.streams[streamId].recordModel = new RecordModel( self, self.streams[streamId] );
@@ -916,15 +916,15 @@ Camera.prototype.getStreamsJSON = function() {
 	for (var id in self.streams) {
 		var s = self.streams[id];
 		streams.push({
-			retention   : s.retention,
-			url         : s.url,
-			rtsp        : s.rtsp,
-			resolution  : s.resolution,
-			quality     : s.quality,
-			framerate   : s.framerate,
-			name        : s.name,
-			id          : id,
-			latestThumb : s.latestThumb
+			retention:    s.retention,
+			url:          s.url,
+			rtsp:         s.rtsp,
+			resolution:   s.resolution,
+			quality:      s.quality,
+			framerate:    s.framerate,
+			name:         s.name,
+			id:           id,
+			latestThumb:  s.latestThumb
 		}); 
 	}
 

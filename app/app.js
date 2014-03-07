@@ -1,17 +1,17 @@
 //require('look').start(); // -- profiler ( NOT for production )
 //var agent = require('webkit-devtools-agent');
-var winston = require('winston');
-var express = require('express');										// express 
-var request = require('request');										// request
-var tsHandler = require('./helpers/ts');								// ts abstraction
-var hlsHandler = require('./controllers/hls_controller');				// hls abstraction
-var mp4Handler = require('./controllers/mp4_controller');				// mp4 abstraction
-var CamerasController = require('./controllers/cameras_controller');	// cameras controller								
-var fs = require('fs');													// for sending files
-var DiskSpaceAgent = require('./helpers/diskSpaceAgent.js');			// agent that periodically checks disk space
+var winston           = require('winston');
+var express           = require('express');                          // express
+var request           = require('request');                          // request
+var tsHandler         = require('./helpers/ts');                     // ts abstraction
+var hlsHandler        = require('./controllers/hls_controller');     // hls abstraction
+var mp4Handler        = require('./controllers/mp4_controller');     // mp4 abstraction
+var CamerasController = require('./controllers/cameras_controller'); // cameras controller
+var fs                = require('fs');                               // for sending files
+var DiskSpaceAgent    = require('./helpers/diskSpaceAgent.js');      // agent that periodically checks disk space
 
-var passport = require('passport');
-var BasicStrategy = require('passport-http').BasicStrategy;
+var passport          = require('passport');
+var BasicStrategy     = require('passport-http').BasicStrategy;
 
 var authCache = {};
 
@@ -77,9 +77,9 @@ var error_logger = new (winston.Logger)({
 	transports: [
 
 		new (winston.transports.Console)({
-			'timestamp':true, 
-			colorize: true, 
-			handleExceptions: true
+			'timestamp':       true,
+			colorize:          true,
+			handleExceptions:  true
 		}),
 
 		new (winston.transports.File)({
@@ -428,9 +428,9 @@ app.get('/cameras', passport.authenticate('basic', {session: false}), function(r
 // TODO: get authentication to work with HLS video tag
 app.get('/cameras/:cam_id/ts/:stream_id/:file', function(req, res) {
     
-    var camId = req.params.cam_id;
+    var camId    = req.params.cam_id;
 	var streamId = req.params.stream_id;
-    var file = req.params.file;
+    var file     = req.params.file;
 
     tsHandler.deliverTsFile( camId, streamId, file, res );
 });

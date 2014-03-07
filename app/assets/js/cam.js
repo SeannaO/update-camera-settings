@@ -352,7 +352,7 @@ var timelineSetup = function( cam_id, id, name ) {
 		});
 	}
 	
-	timeline = new Timeline("#timeline-"+id, { static: true });
+	timeline = new Timeline("#timeline-"+id, { static: true, seekable: true });
 
     $.getJSON( "/cameras/" + cam_id + "/streams/" + id + "/list_videos?start="+startTime+"&end="+Date.now(), function( data ) {
 

@@ -3,6 +3,9 @@ var Timeline = function( el, options ) {
 	var self = this;
 
 	options = options || {};
+	
+	this.seekable = options.seekable;
+	this.index = [];
 
 	this.width = 600;
 	this.totalTime = 30*60*1000;
@@ -93,7 +96,7 @@ Timeline.prototype.append = function( data ) {
 	
 	var self = this;
 
-	self.boxes.append("rect")
+	var rect = self.boxes.append("rect")
 		.attr("data-start", data.start)
 		.attr("data-thumb", data.thumb)
 		.attr("x", self.scaleX( data.start ) + "%")
@@ -111,17 +114,46 @@ Timeline.prototype.append = function( data ) {
 			var d = d3.select(this);
 			data.mouseclick(d);
 		});
+
+	if( this.seekable ) {
+		var indexed_box = {
+			rect: rect,
+			start: data.start
+		}
+		self.pushToIndex( indexed_box );
+	}
 };
 
 
-function formattedTimeFromTimestamp(timestamp)
-{
+Timeline.prototype.pushToIndex = function( indexed_box ) {
+
+	var self = this;
+	var i = self.index.length;
+	var totalLength = 0;
+
+	var mostRecent = i > 0 ? self.index[ i - 1 ] : {start: -1, totalLength: 0}; 	
+	var totalLength = mostRecent.totalLength;
+	
+	while( indexed_box.start < mostRecent.start ) {
+		i--;
+		mostRecent = self.index[i];	
+		totalLength = mostRecent.totalLength;
+	}
+	
+	indexed_box.totalLength = totalLength;	
+	self.index.splice(i, 0, indexed_box);
+};
+
+
+function formattedTimeFromTimestamp(timestamp) {
+
     var
-        date = new Date(timestamp),
-        hours = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()),
-        minutes = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()),
-        seconds = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds()),
+        date          = new Date(timestamp),
+        hours         = (date.getHours()   < 10 ? '0' + date.getHours()   : date.getHours()),
+        minutes       = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()),
+        seconds       = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds()),
         formattedTime = hours + ':' + minutes + ':' + seconds;
 
     return formattedTime;
 }
+

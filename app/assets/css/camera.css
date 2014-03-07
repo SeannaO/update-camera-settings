@@ -1,6 +1,6 @@
 body {
-	margin: 0px 30px;
-	min-width: 460px;
+	margin:     0px 30px;
+	min-width:  460px;
 }
 
 #header{
@@ -8,31 +8,31 @@ body {
 }
 
 #camera-scanner-container{
-	position:absolute;
-	left:0px;
-	top:30px;
-	width:237px;
-	z-index: 100;
-	border-radius: 0px 0px 5px 5px;
-	border: 1px solid #bbb;
-	border-top:none;
-	background-color: #eee;
-	padding: 5px;
-	display:none;
+	position:          absolute;
+	left:              0px;
+	top:               30px;
+	width:             237px;
+	z-index:           100;
+	border-radius:     0px 0px 5px 5px;
+	border:            1px solid #bbb;
+	border-top:        none;
+	background-color:  #eee;
+	padding:           5px;
+	display:           none;
 }
 
 #camera-scanner{
-	margin-bottom: 0px;
+	margin-bottom:  0px;
 }
 
 #camera-subnet{
-	width:90px;
+	width:  90px;
 }
 
 #device-info dl{
-	display:none;
-	height:60px;
-	/*overflow:hidden;*/
+	display:     none;
+	height:      60px;
+	/*overflow:  hidden;*/
 }
 
 #header .title{
@@ -40,23 +40,23 @@ body {
 }
 
 #header dl .info-item{
-	text-align:right;
+	text-align:  right;
 }
 #header dl {
-    float: right;
-    margin:0px;
-    width:250px;
+    float:   right;
+    margin:  0px;
+    width:   250px;
 }
 #header dl dt{
-    float: left;
+    float:  left;
 }
 #storage-info{
-    float:right;
-    margin-left:10px;
+    float:        right;
+    margin-left:  10px;
 }
 
 #camera-auth-status{
-	margin-top: 32px;
+	margin-top:  32px;
 }
 
 #camera-auth-status .glyphicon{
@@ -64,73 +64,73 @@ body {
 }
 
 .status{
-	width:12px;
-	height:12px;
-	background-repeat: no-repeat;
-	background-color: transparent;
-	margin:0px 2px;
-	display:inline-block;
+	width:              12px;
+	height:             12px;
+	background-repeat:  no-repeat;
+	background-color:   transparent;
+	margin:             0px 2px;
+	display:            inline-block;
 }
 .status.red{
-	background-image: url("../img/redstatus.png");
+	background-image:  url("../img/redstatus.png");
 }
 .status.green{
-	background-image: url("../img/greenstatus.png");
+	background-image:  url("../img/greenstatus.png");
 }
 .status.gray{
-	background-image: url("../img/graystatus.png");
+	background-image:  url("../img/graystatus.png");
 }
 
 
 .thumb-container {
-	position: absolute;
-	top: 0px;
-	left: -180px;
+	position:  absolute;
+	top:       0px;
+	left:      -180px;
 }
 
 .timeline-container {
-	position: relative;
-	margin-left: 100px;
+	position:     relative;
+	margin-left:  100px;
 }
 
 .timeline-name {
-	position: absolute;
-	width: 100px;
-	overflow:hidden;
-	left: -100px;
-	top: 9px;
+	position:  absolute;
+	width:     100px;
+	overflow:  hidden;
+	left:      -100px;
+	top:       9px;
 }
 
 .timeline-end-time {
-	position: absolute;
-	top: 28px;
-	right: 0px;
-	color: #8F8F8F;
+	position:  absolute;
+	top:       28px;
+	right:     0px;
+	color:     #8F8F8F;
 }
 
 .timeline-start-time {
-	position: absolute;
-	top: 28px;
-	left: 0px;
-	color: #8F8F8F;
+	position:  absolute;
+	top:       28px;
+	left:      0px;
+	color:     #8F8F8F;
 }
 
 .camera-item {
-	position: relative;
-	margin: 20px 0px 20px 180px;
-	height: 130px;
-	/*padding: 5px;*/
+	position:   relative;
+	margin:     20px 0px 20px 180px;
+	height:     130px;
+	/*padding:  5px;*/
 }
 
 .camera-item-name {
-	display:block;
-	height:25px;
+	display:  block;
+	height:   25px;
 }
 
 .camera-item-status {
-	margin-left: 10px;
-	font-size: 12pt;
-	display:inline;
+	margin-left:  10px;
+	font-size:    12pt;
+	display:      inline;
 }
 
 .camera-item-menu {
@@ -138,12 +138,12 @@ body {
 }
 
 .camera-item-menu .glyphicon {
-	margin: 0px 3px;
+	margin:  0px 3px;
 }
 
 .camera-motion-switch {
-	padding-bottom:40px;
-	margin-left:18px;
+	padding-bottom:  40px;
+	margin-left:     18px;
 }
 
 
@@ -159,44 +159,44 @@ input.switch:empty
 
 input.switch:empty ~ label
 {
-	position: relative;
-	float: left;
-	line-height: 1.6em;
-	text-indent: 4em;
-	margin: 0.2em 0;
-	cursor: pointer;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+	position:             relative;
+	float:                left;
+	line-height:          1.6em;
+	text-indent:          4em;
+	margin:               0.2em 0;
+	cursor:               pointer;
+	-webkit-user-select:  none;
+	-moz-user-select:     none;
+	-ms-user-select:      none;
+	user-select:          none;
 }
 
 input.switch:empty ~ label:before, 
 input.switch:empty ~ label:after
 {
-	position: absolute;
-	display: block;
-	top: 0;
-	bottom: 0;
-	left: 0;
-	content: ' ';
-	width: 3.6em;
-	background-color: #c33;
-	border-radius: 0.3em;
-	box-shadow: inset 0 0.2em 0 rgba(0,0,0,0.3);
-	-webkit-transition: all 100ms ease-in;
-  transition: all 100ms ease-in;
+	position:            absolute;
+	display:             block;
+	top:                 0;
+	bottom:              0;
+	left:                0;
+	content:             ' ';
+	width:               3.6em;
+	background-color:    #c33;
+	border-radius:       0.3em;
+	box-shadow:          inset 0 0.2em 0 rgba(0,0,0,0.3);
+	-webkit-transition:  all 100ms ease-in;
+	transition:          all 100ms ease-in;
 }
 
 input.switch:empty ~ label:after
 {
-	width: 1.4em;
-	top: 0.1em;
-	bottom: 0.1em;
-	margin-left: 0.1em;
-	background-color: #fff;
-	border-radius: 0.15em;
-	box-shadow: inset 0 -0.2em 0 rgba(0,0,0,0.2);
+	width:             1.4em;
+	top:               0.1em;
+	bottom:            0.1em;
+	margin-left:       0.1em;
+	background-color:  #fff;
+	border-radius:     0.15em;
+	box-shadow:        inset 0 -0.2em 0 rgba(0,0,0,0.2);
 }
 
 input.switch:checked ~ label:before
@@ -218,41 +218,41 @@ input.switch:checked ~ label:after
 }
 
 .check-stream {
-	float: left;
-	margin: 5px;
+	float:   left;
+	margin:  5px;
 }
 
 .check-stream-status {
-	float: left;
-	margin: 8px;
-	color: #555;
+	float:   left;
+	margin:  8px;
+	color:   #555;
 }
 
 .stream-error {
-	color: #a00;
+	color:  #a00;
 }
 
 .stream-ok {
-	color: #0a0;
+	color:  #0a0;
 }
 
 .remove-stream {
-	float: left;
-	margin: 5px;
+	float:   left;
+	margin:  5px;
 }
 
 .camera-streams-retention{
 	width:85%;
 }
 .retention-unit{
-	width:10%;
-	float:right;
-	margin-top:5px;
+	width:       10%;
+	float:       right;
+	margin-top:  5px;
 }
 
 .unknown #check-stream-container{
-	margin-top:40px;
+	margin-top:  40px;
 }
 .unknown #check-stream-container .btn.check-stream{
-	margin-left:10px;
+	margin-left:  10px;
 }
