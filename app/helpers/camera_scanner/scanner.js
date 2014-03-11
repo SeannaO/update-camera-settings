@@ -1,9 +1,9 @@
 var request = require('request');
-var http = require('http');
-var onvif = require('./protocols/onvif.js');
-var psia = require('./protocols/psia.js');
-var api = require( './cam_api/api.js').api_list;
-var zlib = require('zlib');
+var http    = require('http');
+var onvif   = require('./protocols/onvif.js');
+var psia    = require('./protocols/psia.js');
+var api     = require( './cam_api/api.js').api_list;
+var zlib    = require('zlib');
 
 var camList = Object.keys( api );
 
@@ -177,7 +177,6 @@ var psiaScan = function( prefix, cb ) {
 
 	});
 };
-
 
 
 module.exports.scan = scan;

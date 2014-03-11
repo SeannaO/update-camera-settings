@@ -7,14 +7,17 @@
         <link rel="stylesheet" href="/css/bootstrap.min.css">
         <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
         <link rel="stylesheet" href="/css/jquery-ui.css">
+		<link rel="stylesheet" href="/css/lib/default.css">
+		<link rel="stylesheet" href="/css/lib/default.date.css">
 
         <link rel="stylesheet" href="/css/cam.css">
-
+		
         <script src = "/js/jquery.min.js"></script>        
         <script src = "/js/jquery-ui.min.js"></script>
 
         <script src="/js/socket.io.js"></script>
- 
+
+		<script src = "/js/indexer.js"></script> 
 		<script src = "/js/timeline.js"></script>
 
 		<script type="text/javascript" src="/js/swfobject.js"></script>
@@ -26,6 +29,11 @@
         <script src="/js/bootstrap.min.js"></script>
         <script src="/js/d3.v3.min.js"></script>
         <script src="/js/d3-timeline.js"></script>    
+
+		<script src="/js/lib/picker.js"></script>
+		<script src="/js/lib/picker.date.js"></script>
+
+		<script src="/js/date-selector.js"></script>
 
         <script>
 			var hlsEnabled = canPlayHLS();
@@ -64,8 +72,8 @@
 		</div>
 
         <div id = "search-bar" class="form-inline">
-            <input id="begin_date" type="text" placeholder="start time" ></input>
-            <input id="end_date" placeholder="end time" ></input>
+            <input id="begin_date" type="text" placeholder="select a day" ></input>
+<!--             <input id="end_date" placeholder="end time" ></input> -->
             <button id = "search" class = 'btn btn-xs btn-info'>watch video</button>
 
             <button id = "get-snapshot" class = 'btn btn-xs btn-default'>get a snapshot</button>
@@ -76,6 +84,7 @@
         </div>
 
 		<div id = "time-map">
+			<div id = "date-selector"></div>	
 			<!--div id = "zoom-out"></div>
 			<div id = "zoom-in"></div-->
 			<div id = "marker"></div>
@@ -110,35 +119,29 @@
 				$("#begin_date").change( function() {
 					
 					var begin_date = $("#begin_date").val();
-					var end_date = $("#end_date").val();	 
 
-					if (begin_date > end_date) {
-						$("#end_date").val( begin_date );
-					}
-				});
+					$("#begin_date")[0].blur();
+					$("#stream-selector")[0].focus();
+					$("body")[0].click();
+				
+					begin_date = new Date( begin_date );
+					var end_date = new Date(begin_date);
 
-				$("#end_date").change( function() {
+					end_date.setHours(23);
+					end_date.setMinutes(59);
+					end_date.setSeconds(59);
 					
-					var begin_date = $("#begin_date").val();
-					var end_date = $("#end_date").val();	 
+					begin_date = Date.parse( begin_date );
+					end_date   = Date.parse( end_date );
 
-					if (end_date < begin_date) {
-						$("#begin_date").val(  end_date );
-					}
+					playVideo( begin_date, end_date );
 				});
-				
+			
+				$("#begin_date").pickadate();
 
-                $("#begin_date").datetimepicker({
-                    timeFormat: 'HH:mm:ss',       
-                });
-                $("#end_date").datetimepicker({
-                    timeFormat: 'HH:mm:ss',
-                });
-				
 				$("#download").click(function() {
 					var stream = $("#stream-selector").val();
 					var begin = 1000*moment( $("#begin_date").val() ).unix();
-                    var end = 1000*moment( $("#end_date").val() ).unix();
 					
 					var url = window.location.origin + "/cameras/"+camId+"/download?begin="+begin+"&end="+end+"&stream="+stream;
 					
@@ -150,9 +153,7 @@
 
                     // converts local time to gmt and then to unix format
 
-                    var begin = 1000*moment( $("#begin_date").val() ).unix(); //.add("minutes", moment().zone()).unix();
-                    var end   = 1000*moment( $("#end_date").val() ).unix(); //.add("minutes", moment().zone()).unix();
-
+					var begin = 1000*moment( $("#begin_date").val() ).unix(); 
 					var stream = $("#stream-selector").val();
 
 					var url = window.location.origin + "/cameras/"+camId+"/video.m3u8?begin="+begin+"&end="+end+"&stream="+stream;
@@ -187,7 +188,10 @@
 
 
 		<script>
-	
+			
+			var dateSelector = new DateSelector("#date-selector");
+			
+				
 			getStreamsInfo( camId, function() {
 				list();
 			});

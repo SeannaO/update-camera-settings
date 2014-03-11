@@ -4,10 +4,10 @@
 // queries the sqlite3 db
 //
 
-var dblite = require('dblite');
-var format = require('util').format;
-var path = require('path');
-var fs = require('fs');
+var dblite     = require('dblite');
+var format     = require('util').format;
+var path       = require('path');
+var fs         = require('fs');
 var FileBackup = require('../helpers/file_backup.js');
 
 var Dblite = function( db_path, cb ) {

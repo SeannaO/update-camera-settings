@@ -9,6 +9,8 @@ var timeline;
 var timeline_begin;
 var timeline_end;
 
+var indexer = new Indexer();
+
 $(document).ready(function(){
 
 	$(document).mousemove(function(e){
@@ -168,14 +170,14 @@ var launchStrobePlayer = function( options ) {
 	options.url = encodeURIComponent( options.url );
 
 	var parameters = {
-		src                        : options.url,
-		autoPlay                   : options.autoplay,
-		verbose                    : true,
-		controlBarAutoHide         : "true",
-		controlBarPosition         : "bottom",
-		poster                     : "",
-		plugin_hls                 : "/swf/HLSDynamicPlugin.swf",
-		javascriptCallbackFunction : "window.onJavaScriptBridgeCreated"
+		src:                         options.url,
+		autoPlay:                    options.autoplay,
+		verbose:                     true,
+		controlBarAutoHide:          "true",
+		controlBarPosition:          "bottom",
+		poster:                      "",
+		plugin_hls:                  "/swf/HLSDynamicPlugin.swf",
+		javascriptCallbackFunction:  "window.onJavaScriptBridgeCreated"
 	};
 
 	var wmodeValue = "direct";
@@ -208,8 +210,10 @@ var launchStrobePlayer = function( options ) {
 
 	window.onCurrentTimeChange = function (time, playerId) {
 		var timelineWidth = $("#timeline").width();	
-	    var totalTime = 30*60;
-		var pos = time * (1.0 * timelineWidth) / totalTime;
+	    var totalTime = 24*60*60;
+		var absolute_time = indexer.getAbsoluteTime( time );
+		var dt = ( absolute_time - timeline.begin )/1000; 
+		var pos = dt * (1.0 * timelineWidth) / totalTime - 2;
 		$("#marker").css("left", pos);
 	}
 			
@@ -266,14 +270,14 @@ var updateTime = function( time ) {
 
 
 var updateTimelines = function( data, options ) {
-	
+
 	if (!timeline) {
 		console.log("ERROR: no such timeline");
 		console.log(data);
 		return;
 	}
 
-	var thumb = "/cameras/" + data.cam + "/streams/" + data.stream + "/thumb/"+data.start + "_" + (data.end-data.start);
+	var thumb = "/cameras/" + data.cam + "/streams/" + data.stream + "/thumb/" + data.thumb;
 
 	var img = new Image();
 		
@@ -283,11 +287,12 @@ var updateTimelines = function( data, options ) {
 	};
 
 	timeline.append({
-		start      : data.start,
-		w          : data.end - data.start,
-		thumb      : thumb,
-		mouseover  : showThumbWrapper,
-		mouseclick : jumpTo 
+		start:       data.start,
+		w:           data.end - data.start,
+		thumb:       thumb,
+		totalTime:   data.totalTime,
+		mouseover:   showThumbWrapper,
+		mouseclick:  jumpTo
 	});
 }
 
@@ -295,12 +300,13 @@ var updateTimelines = function( data, options ) {
 var jumpTo = function(d) {
 	
 	var player    = document.getElementById("strobeMediaPlayback");
-	var time      = parseInt( d.attr('data-start') );
-	var dt        = time - timeline_begin;
-	var totalTime = 30*60*1000;
+	var time      = parseInt( d.attr('data-totalTime') );
+// 	var dt        = time - timeline_begin;
+// 	var totalTime = 30*60*1000;
+//
+// 	var time = dt/1000;
+	console.log("seek to " + time);
 
-	var time = dt/1000;
-	
 	if (player.canSeekTo(time) ) {
 		console.log("seek to " + time);
 		player.seek(time);
@@ -328,22 +334,15 @@ var timelineSetup = function( cam_id, id, name ) {
 
     var label = name ? name : id;
 
-    var timelineData = [];
-    timelineData.push({label: label, times: []});
-
-    var startTime = Date.now() - 1*60*60*1000; // 1hour from now
-
-	var count = 0;
-
 	if (id) {
 		var timelineContainer = $("<div>", {
-			id    : "timeline-" + id,
-			class : "timeline-container"
+			id:     "timeline-" + id,
+			class:  "timeline-container"
 		});
 		var timelineName = $("<span>", {
-			id    : "timeline-name-" + id,
-			class : "timeline-name",
-			html  : "", //name
+			id:     "timeline-name-" + id,
+			class:  "timeline-name",
+			html:   "", //name
 		})
 
 		timelineContainer.append(timelineName);
@@ -352,35 +351,10 @@ var timelineSetup = function( cam_id, id, name ) {
 		});
 	}
 	
-	timeline = new Timeline("#timeline-"+id, { static: true, seekable: true });
-
-    $.getJSON( "/cameras/" + cam_id + "/streams/" + id + "/list_videos?start="+startTime+"&end="+Date.now(), function( data ) {
-
-        var videos = data.videos;
-	
-		for (var i = 0; i < videos.length; i++) {
-			
-			var start    = videos[i].start;
-			var end      = videos[i].end;
-			var duration = videos[i].end - videos[i].start;
-
-			if ( videos[i].start && videos[i].end ) {
-				
-				timelineData[0].times.push({
-					thumb         : "/cameras/" + cam_id + "/streams/" + id + "/thumb/" + start + '_' + duration,
-					starting_time : parseInt(start) - 1000,
-					ending_time   : parseInt(end)   + 1000
-				}); 
-
-				updateTimelines({
-					cam    : cam_id,
-                    stream : id,
-					start  : start,
-					end    : end
-				});
-			} 
-		}
-		count++;
+	timeline = new Timeline("#timeline-"+id, { 
+		static:    true,
+		seekable:  true,
+		timeSpan:  24*60*60*1000
 	});
 }
 
@@ -405,11 +379,68 @@ var list = function() {
 }
 
 
-var playVideo = function() { 
+var loadIndexer = function( begin, end, cb ) {
+
+	var id     = $("#stream-selector").val();
+	var cam_id = camera_data._id;
+	
+	indexer.clear();
+
+    $.getJSON( "/cameras/" + cam_id + "/streams/" + id + "/list_videos?start="+begin+"&end=" + end, function( data ) {
+
+        var videos = data.videos;
+	
+		for (var i = 0; i < videos.length; i++) {
+			
+			var start = videos[i].start;
+			var end   = videos[i].end;
+
+			indexer.push( videos[i] );	
+		}
+		if(cb) cb();
+	});
+}
+
+
+var launchTimeline = function(block_size, begin, end) {
+
+	var id = $("#stream-selector").val();
+	var cam_id = camera_data._id;
+
+	block_size = block_size || 2;
+	var elements = indexer.agglutinate(block_size);
+	
+	timeline.clear();
+	timeline.setEnd( end );
+	timeline.setBegin( begin );
+
+	for( var i in elements ) {
+
+		var start = elements[i].start;
+		var end   = elements[i].end;
+	
+		updateTimelines({
+			cam:        cam_id,
+			stream:     id,
+			start:      start,
+			end:        end,
+			totalTime:  elements[i].totalTime,
+			thumb:      elements[i].thumb
+		});
+	}
+}
+
+
+var playVideo = function( begin, end ) { 
+	
+	loadIndexer( begin, end, function() {
+		launchTimeline( 2, begin, end);
+	});
+		
 	$("#file-list").html("<span class='subtle'>loading...</span>");
 
-	timeline_begin = Date.now() - 30*60*1000; //1000*moment( $("#begin_date").val() ).unix(); //.add("minutes", moment().zone()).unix();
-	timeline_end   = Date.now(); // 1000*moment( $("#end_date").val() ).unix(); //.add("minutes", moment().zone()).unix();
+	timeline_begin = begin; 
+	timeline_end   = end;
 
 	var stream = $("#stream-selector").val();
 
@@ -417,12 +448,11 @@ var playVideo = function() {
 
 	if (!canPlayHLS()) {
 		launchStrobePlayer({
-			url: url,
-			autoplay: true
+			url:       url,
+			autoplay:  true
 		});
 	} else {
 		launchNativePlayer( url );
 	}
 }
 
-playVideo();

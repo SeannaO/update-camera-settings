@@ -1,9 +1,9 @@
-var fs = require('fs');
-var path = require('path');
-var makeThumb = require('./ffmpeg').makeThumb;
+var fs           = require('fs');
+var path         = require('path');
+var makeThumb    = require('./ffmpeg').makeThumb;
 var EventEmitter = require('events').EventEmitter;
-var util = require('util');
-var dbus = require('node-dbus');
+var util         = require('util');
+var dbus         = require('node-dbus');
 
 function Thumbnailer() {
 	
@@ -37,12 +37,12 @@ Thumbnailer.prototype.checkForChunks = function() {
 		self.sendSignal(chunk.file, chunk.thumbFolder + '/' + chunk.start + '_' +(chunk.end - chunk.start) + '.jpg' );
 
 		var thumb = {
-			start: chunk.start,
-		       	end: chunk.end,
-		       	chunk_file: chunk.file,
-		       	folder: chunk.thumbFolder,
-		       	cam: chunk.cam,
-		       	stream: chunk.stream
+				start:       chunk.start,
+		       	end:         chunk.end,
+		       	chunk_file:  chunk.file,
+		       	folder:      chunk.thumbFolder,
+		       	cam:         chunk.cam,
+		       	stream:      chunk.stream
 		};
 
 		setTimeout( function() {
@@ -56,24 +56,24 @@ Thumbnailer.prototype.sendSignal = function( ts_file, out_file ) {
 
         var dbusSignal = Object.create(dbus.DBusMessage, {
                   path: {
-                    value: '/ffmpeg/signal/Object',
-                    writable: true
+					value:     '/ffmpeg/signal/Object',
+                    writable:  true
                   },
                   iface: {
-                    value: 'ffmpeg.signal.Type',
-                    writable: true
+                    value:     'ffmpeg.signal.Type',
+                    writable:  true
                   },
                   member: {
-                    value: 'Test',
-                    writable: true
+                    value:     'Test',
+                    writable:  true
                   },
                   bus: {
-                    value: dbus.DBUS_BUS_SYSTEM,
-                    writable: true
+                    value:     dbus.DBUS_BUS_SYSTEM,
+                    writable:  true
                   },
                   variantPolicy: {
-                    value: dbus.NDBUS_VARIANT_POLICY_DEFAULT,
-                    writable: true
+                    value:     dbus.NDBUS_VARIANT_POLICY_DEFAULT,
+                    writable:  true
                   },
                   type: {
                     value: dbus.DBUS_MESSAGE_TYPE_SIGNAL

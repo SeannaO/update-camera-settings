@@ -4,15 +4,12 @@ var Timeline = function( el, options ) {
 
 	options = options || {};
 	
-	this.begin    = options.begin;
-	this.end      = options.end;
 	this.seekable = options.seekable;
-
 	this.index = [];
 
 	this.width = 600;
 
-	this.setTimeSpan( options.timeSpan || 30*60*1000 );
+	this.setTimeSpan( options.timeSpan || 30 );
 
 	this.el = el;
 
@@ -36,6 +33,7 @@ var Timeline = function( el, options ) {
 		.attr("y2", 10)
 		.attr("stroke", "lightgray");
 
+	
 	this.startTime = $("<div>", {
 		html: '',
 		class: 'timeline-start-time'
@@ -99,18 +97,13 @@ Timeline.prototype.getRectByRelativeTime = function( relative_time, begin, end) 
 		}
 		return self.getRectByRelativeTime( relative_time, begin, end );
 	}
-
+								
 };
 
 
 Timeline.prototype.scaleX = function( t ) {
 	var self = this;
-	var x;
-	if (!self.end) {
-		x = 100 - this.dx * ( Date.now() - 15000 - t );
-	} else {
-		x = 100 - this.dx * ( self.end - 15000 - t );
-	}
+	var x = 100 - this.dx * ( Date.now() - 15000 - t );
 	
 	return x;
 };
@@ -122,34 +115,25 @@ Timeline.prototype.scaleW = function( t ) {
 };
 
 
-Timeline.prototype.setBegin = function( begin ) {
-	this.begin = begin;
-};
-
-Timeline.prototype.setEnd = function( end ) {
-	this.end = end;
-};
-
 Timeline.prototype.append = function( data ) {
-
+	
 	var self = this;
 
-	var rect = self.boxes.append('rect')
-		.attr('data-start',       data.start)
-		.attr('data-totalTime',   data.totalTime)
-		.attr('data-thumb',       data.thumb)
-		.attr('x',                self.scaleX( data.start ) + "%")
-		.attr('y',                10)
-		.attr('width',            self.scaleW(data.w) + "%" )
-		.attr('height',           15)
-		.style('fill',            'rgb(100,100,200)')
-		.style('stroke',          'rgb(100,100,200)')
-		.style('stroke-width',    "2")
-		.on('mouseover', function() {
+	var rect = self.boxes.append("rect")
+		.attr("data-start", data.start)
+		.attr("data-thumb", data.thumb)
+		.attr("x", self.scaleX( data.start ) + "%")
+		.attr("y", 10)
+		.attr("width", self.scaleW(data.w) + "%" )
+		.attr("height", 15)
+		.style("fill", "rgb(100,100,200)")
+		.style("stroke", "rgb(100,100,200)")
+		.style("stroke-width", "2")
+		.on("mouseover", function() {
 			var d = d3.select(this);
 			data.mouseover(d);
 		})
-		.on('click', function() {
+		.on("click", function() {
 			var d = d3.select(this);
 			data.mouseclick(d);
 		});
@@ -165,12 +149,6 @@ Timeline.prototype.append = function( data ) {
 };
 
 
-Timeline.prototype.clear = function() {
-		
-	this.boxes.selectAll('rect').data([]).exit().remove()
-}
-
-
 Timeline.prototype.pushToIndex = function( indexed_box ) {
 };
 
@@ -182,28 +160,28 @@ Timeline.prototype.totalTime = function() {
 	return totalTime;
 };
 
-//
-// Timeline.prototype.begin = function() {
-// 	var self = this;
-// 	var l = self.index.length;
-// 	if ( l <= 0 ) return 0;
-//
-// 	return self.index[0].start;
-// }
+
+Timeline.prototype.begin = function() {
+	var self = this;
+	var l = self.index.length;
+	if ( l <= 0 ) return 0;
+	
+	return self.index[0].start;
+}
 
 
 Timeline.prototype.end = function() {
 	var self = this;
 	var l = self.index.length;
 	if ( l <= 0 ) return 0;
-
+	
 	return self.index[l-1].start;
 }
 
 
 Timeline.prototype.setTimeSpan = function( t ) {
 	this.timeSpan = t;
-	this.dx = 100.0 / this.timeSpan;
+	this.dx = 100 / this.timeSpan;
 }
 
 

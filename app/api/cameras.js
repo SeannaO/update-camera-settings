@@ -4,7 +4,6 @@ var hlsHandler = require('../controllers/hls_controller.js');
 
 module.exports = function( app, passport, camerasController ) {
 
-
 	// - - -
 	// gets json list of cameras
 	app.get('/cameras.json', passport.authenticate('basic', {session: false}), function(req, res) {
