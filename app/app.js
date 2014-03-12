@@ -28,23 +28,28 @@ var self = this;
 // launches custom ffmpeg
 this.launchRtspGrabber = function() {
 	exec('killall -9 rtsp_grabber', function( error, stdout, stderr) {
-		self.grabberProcess = exec('./rtsp_grabber > /dev/null', function( error, stdout, stderr ) {
-			self.grabberProcess.once('exit', function() {
-				self.launchRtspGrabber();	
-			});
+		self.grabberProcess = exec('./rtsp_grabber', function( error, stdout, stderr ) {
+		});
+		console.log('*** launching rtsp_grabber');
+		self.grabberProcess.on('exit', function(code) {
+			console.error('*** relaunching rtsp_grabber');
+			self.launchRtspGrabber();
 		});
 	});
 };
 
 this.launchThumbnailer = function() {
 	exec('killall -9 thumbnailer', function( error, stdout, stderr) {
-		self.thumbnailerProcess = exec('./thumbnailer > /dev/null', function( error, stdout, stderr ) {
-			self.thumbnailerProcess.once('exit', function() {
-				self.launchThumbnailer();	
-			});
+		self.thumbnailerProcess = exec('./thumbnailer', function( error, stdout, stderr ) {
+		});
+		console.log('*** launching thumbnailer');
+		self.thumbnailerProcess.on('exit', function() {
+			console.error('*** relaunching thumbaniler');
+			self.launchThumbnailer();	
 		});
 	});
 };
+
 //
 
 this.launchRtspGrabber();
@@ -338,7 +343,7 @@ diskSpaceAgent.on('disk_usage', function(usage) {
 		console.log( "usage: " + usage + "%");
 		console.log('freeing disk space...');
 		camerasController.deleteOldestChunks( 10 * nCameras, function(data) {
-			console.log( "added old files to deletion queue" );
+	// 		console.log( "added old files to deletion queue" );
 		});
 	}
 });
