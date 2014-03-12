@@ -36,10 +36,15 @@ Indexer.prototype.agglutinate = function( size ) {
 		var k = 0;
 
 		agg_el.start     = self.elements[i].start;
+		agg_el.end       = self.elements[i].end;
 		agg_el.totalTime = self.elements[i].totalTime;
 		agg_el.thumb     = self.elements[i].start + '_' + ( self.elements[i].end - self.elements[i].start );
 
-		while( i + k < self.elements.length && k < size ) {
+		done = false;
+
+		while( i + k < self.elements.length && k < size && !done) {
+			done = (self.elements[i].start - agg_el.end > 5000); 
+			if( done ) break;
 			agg_el.end = self.elements[i].end;
 			k++;
 			i++;

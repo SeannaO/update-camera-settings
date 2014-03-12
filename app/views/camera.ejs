@@ -34,6 +34,7 @@
 		<script src="/js/lib/picker.date.js"></script>
 
 		<script src="/js/date-selector.js"></script>
+		<script src="/js/timeline-selector.js"></script>
 
         <script>
 			var hlsEnabled = canPlayHLS();
@@ -90,6 +91,7 @@
 			<div id = "marker"></div>
 
 			<div id = "timeline">
+				<div id = "timeline-selector"></div>
 			</div>				
 		</div>
 		 
@@ -152,7 +154,6 @@
                     $("#file-list").html("<span class='subtle'>loading...</span>");
 
                     // converts local time to gmt and then to unix format
-
 					var begin = 1000*moment( $("#begin_date").val() ).unix(); 
 					var stream = $("#stream-selector").val();
 
@@ -166,10 +167,8 @@
 					} else {
 						launchNativePlayer( url );
 					}
-						
                 });
                 
-
                 $("#get-snapshot").click(function() {
                     
                     $("#file-list").html("<span class='subtle'>loading...</span>");
@@ -188,9 +187,7 @@
 
 
 		<script>
-			
 			var dateSelector = new DateSelector("#date-selector");
-			
 				
 			getStreamsInfo( camId, function() {
 				list();
@@ -207,6 +204,42 @@
 			//	updateTimelines(data, {updateThumb: false});
 			});
 		</script>
-		
+
+		<script>
+			var timelineSelector = new TimelineSelector("#timeline-selector");
+			var mousePressed = false;
+			var mouseDragged = false;
+			$('#timeline-selector').mousedown( function(e) {
+					var x = e.pageX - $(this).parent().offset().left;//left;
+					timelineSelector.setLeft( x );
+					timelineSelector.setRight( x ); 				
+					mousePressed = true;
+					mouseDragged = false;
+			});
+			$('#timeline-selector').mousemove( function(e) {
+				console.log("x");
+				if ( mousePressed ) {
+					mouseDragged = true;
+					var x = e.pageX - $(this).parent().offset().left;
+					timelineSelector.setBounds( x ); 				
+				}
+			});
+			$('#timeline-selector').mouseup( function(e) {
+					mousePressed = false;
+					if( !mouseDragged ) {
+						console.log("that was a click");
+						var left = $(window).scrollLeft();
+						var top = $(window).scrollTop();
+
+						$(this).css('display','none');
+						$(document.elementFromPoint(e.pageX-left, e.pageY-top)).click();
+						console.log( 	$(document.elementFromPoint(e.pageX-left, e.pageY-top)) );
+						$(this).css('display','block');
+					}
+					else { 
+						console.log("that was a drag");
+					}
+			});
+		</script>		
     </body>
 </html>

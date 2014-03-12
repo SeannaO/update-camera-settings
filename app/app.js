@@ -30,7 +30,7 @@ this.launchRtspGrabber = function() {
 	exec('killall -9 rtsp_grabber', function( error, stdout, stderr) {
 		self.grabberProcess = exec('./rtsp_grabber > /dev/null', function( error, stdout, stderr ) {
 			self.grabberProcess.once('exit', function() {
-		//		self.launchRtspGrabber();	
+				self.launchRtspGrabber();	
 			});
 		});
 	});
@@ -40,7 +40,7 @@ this.launchThumbnailer = function() {
 	exec('killall -9 thumbnailer', function( error, stdout, stderr) {
 		self.thumbnailerProcess = exec('./thumbnailer > /dev/null', function( error, stdout, stderr ) {
 			self.thumbnailerProcess.once('exit', function() {
-		//		self.launchThumbnailer();	
+				self.launchThumbnailer();	
 			});
 		});
 	});

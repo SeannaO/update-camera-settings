@@ -299,12 +299,14 @@ var updateTimelines = function( data, options ) {
 
 var jumpTo = function(d) {
 	
-	var player    = document.getElementById("strobeMediaPlayback");
-	var time      = parseInt( d.attr('data-totalTime') );
+	var player = document.getElementById("strobeMediaPlayback");
+	var time   = parseInt( d.attr('data-totalTime') );
 // 	var dt        = time - timeline_begin;
 // 	var totalTime = 30*60*1000;
 //
 // 	var time = dt/1000;
+	console.log( d.attr('data-start') );
+	console.log( new Date( parseInt( d.attr('data-start') )));
 	console.log("seek to " + time);
 
 	if (player.canSeekTo(time) ) {
@@ -434,7 +436,7 @@ var launchTimeline = function(block_size, begin, end) {
 var playVideo = function( begin, end ) { 
 	
 	loadIndexer( begin, end, function() {
-		launchTimeline( 2, begin, end);
+		launchTimeline( 50, begin, end);
 	});
 		
 	$("#file-list").html("<span class='subtle'>loading...</span>");
@@ -455,4 +457,6 @@ var playVideo = function( begin, end ) {
 		launchNativePlayer( url );
 	}
 }
+
+
 
