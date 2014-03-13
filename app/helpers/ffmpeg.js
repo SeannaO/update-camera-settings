@@ -133,7 +133,7 @@ function calcDuration(input, cb) {
  */
 var checkH264 = function( url, cb ) {
 	var self = this;
-	var timeout = 15000;
+	var timeout = 20000;
 
 	var ffmpegProcess = spawn('ffmpeg', [
 			'-rtsp_transport', 'tcp',
@@ -149,7 +149,6 @@ var checkH264 = function( url, cb ) {
 	var streamIndex = -1;	
 	ffmpegProcess.stderr.on('data', function(data) {
 		var msg = data.toString();
-		console.error( msg );
 		if( streamIndex < 0 ) {
 			streamIndex = msg.indexOf('Stream');
 		}
