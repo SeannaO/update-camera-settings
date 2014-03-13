@@ -62,7 +62,6 @@ var getStreamsInfo = function(camId, cb) {
 
 var populateStreamSelector = function(streams) {
 	
-	
 	for (var s in streams) {
 
 		var text = '';
