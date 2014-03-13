@@ -400,15 +400,8 @@
 
                 addCamera( params.camera, function(data) {
 					console.log(data);
-                    if (data){
-                        var camera = data;
-                        $dialog = $("#add-new-camera-dialog");
-                        $dialog.modal('hide');
-                        addCameraItem( camera );
-                        for (var i in camera.streams) {
-                            
-                            timelineSetup(camera._id, camera.streams[i].id, camera.streams[i].name);
-                        }
+                    if (data) {
+						location.reload();
                     }
                 });
             });
