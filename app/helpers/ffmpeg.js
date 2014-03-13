@@ -146,9 +146,14 @@ var checkH264 = function( url, cb ) {
 		cb( false );
 	}, timeout);
 	
+	var streamIndex = -1;	
 	ffmpegProcess.stderr.on('data', function(data) {
 		var msg = data.toString();
-		if ( msg.indexOf('h264') > -1 ) {
+		console.error( msg );
+		if( streamIndex < 0 ) {
+			streamIndex = msg.indexOf('Stream');
+		}
+		if ( streamIndex > 0 && msg.indexOf('h264') > streamIndex ) {
 			clearTimeout( ffmpegTimeout );
 			cb( true );
 			ffmpegProcess.kill();
