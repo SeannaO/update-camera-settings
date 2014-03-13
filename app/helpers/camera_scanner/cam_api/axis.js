@@ -1,15 +1,14 @@
-var request = require('request');
-var xml2js = require('xml2js').parseString;
-var net = require('net');
-
+var request     = require('request');
+var xml2js      = require('xml2js').parseString;
+var net         = require('net');
 var axis_motion = require('./axis_motion.js');
 
 var baseUrl = 'http://{user}:{pass}@{ip}/axis-cgi/param.cgi?action=';
 var createProfileUrl = baseUrl + 'add&template=streamprofile&group=StreamProfile';
 var configureStreamUrl = baseUrl 
-+ 'update&StreamProfile.{temp_profile}.Name={name}'
-+ '&StreamProfile.{temp_profile}.Description={description}' 
-+ '&StreamProfile.{temp_profile}.Parameters={parameters}';
+	+ 'update&StreamProfile.{temp_profile}.Name={name}'
+	+ '&StreamProfile.{temp_profile}.Description={description}' 
+	+ '&StreamProfile.{temp_profile}.Parameters={parameters}';
 var parametersString = "videocodec=h264&framerate={framerate}&resolution={resolution}";
 //var rtspUrl = 'rtsp://{user}:{pass}@{ip}/axis-media/media.amp?{profile_name}&framerate={framerate}&resolution={resolution}';
 
@@ -28,7 +27,6 @@ Axis.server = net.createServer(function(socket) {
 });
 Axis.server.listen(8001, function() { 
 });
-
 
 
 Axis.prototype.apiName = function() {
@@ -175,8 +173,8 @@ Axis.prototype.updateProfile = function(profileId, profile, cb) {
 	}
 
 	var params = parametersString
-		.replace('{framerate}', profile.framerate)
-		.replace('{resolution}', profile.resolution);
+		.replace('{framerate}', profile.framerate || '15')
+		.replace('{resolution}', profile.resolution || 'half');
 
 	params = encodeURIComponent( params );
 
@@ -244,8 +242,8 @@ Axis.prototype.getRtspUrl = function ( profile ) {
 		.replace('{pass}', self.cam.password || '')
 		.replace('{profile_name}', profile.name)
 		.replace('{ip}', self.cam.ip)
-		.replace('{resolution}', profile.resolution)
-		.replace('{framerate}', profile.framerate)
+		.replace('{resolution}', profile.resolution || '800x600')
+		.replace('{framerate}', profile.framerate || '15')
 		.replace('{compression}', 40)
 		.replace('{max_bitrate}', 512);
 };
@@ -253,9 +251,9 @@ Axis.prototype.getRtspUrl = function ( profile ) {
 
 Axis.prototype.setCameraParams = function(params) {
 
-	this.cam.id = params.id || this.cam.id;
-	this.cam.ip = params.ip || this.cam.ip;
-	this.cam.user = params.user || params.username || this.cam.user || '';
+	this.cam.id       = params.id || this.cam.id;
+	this.cam.ip       = params.ip || this.cam.ip;
+	this.cam.user     = params.user || params.username || this.cam.user || '';
 	this.cam.password = params.password || this.cam.password || '';
 
 };

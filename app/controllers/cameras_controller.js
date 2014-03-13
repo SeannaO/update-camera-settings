@@ -572,7 +572,7 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
     }
 
 	var streamsHash = {};
-	if (cam.streams && cam.streams.length > 0){
+	if (cam.streams && cam.streams.length > 0) {
 		for (var s in cam.streams) {
 			if (typeof cam.streams[s].id == 'undefined' || !cam.streams[s].id || cam.streams[s].id.length <= 0) {
 				cam.streams[s].id = generateUUID();
@@ -580,7 +580,7 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 			streamsHash[ cam.streams[s].id ] = cam.streams[s];
 		}
 		cam.status = 'ready';
-	}else{
+	} else {
 		cam.status = 'missing camera stream(s)';
 	}
 

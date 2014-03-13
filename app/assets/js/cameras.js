@@ -792,7 +792,7 @@ var addStream = function( stream, cb ) {
         }
 	
 		var new_stream_tab_id = 'new-stream-' + current_stream_id;
-		$('#stream-tabs').append('<li><a href="#' + new_stream_tab_id + '" data-toggle="tab" id="tab_'+new_stream_tab_id+'">' + stream_name + '</a></li>');
+		$('#stream-tabs').append('<li style="max-width:200px; max-height:35px;overflow:hidden"><a href="#' + new_stream_tab_id + '" data-toggle="tab" id="tab_'+new_stream_tab_id+'">' + stream_name + '</a></li>');
 		$('#stream-panes').append('<div class="tab-pane" id="' + new_stream_tab_id + '"></div>');
 		$('#'+new_stream_tab_id).append(fieldset);
 		$('#stream-tabs a:last').tab('show');
@@ -842,7 +842,6 @@ var addStream = function( stream, cb ) {
 			}
 		});	
 
-
 		for (var attr in stream) {
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).val( stream[attr] );
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).attr( 'data-'+attr, stream[attr] );
@@ -874,6 +873,7 @@ var removeStream = function( stream ) {
 	} else {
 	}
 };
+
 
 var checkH264 = function(new_stream_id ) {
 

@@ -90,14 +90,23 @@ body {
 
 .timeline-container {
 	position:     relative;
-	margin-left:  100px;
+	margin-left:  130px;
+}
+
+.timeline-name:hover {
+	background: rgba(255,255,255,0.8);
+	overflow-x: visible;
+	width: auto;
+	display: inline-block;
+	z-index: 1000;
 }
 
 .timeline-name {
 	position:  absolute;
-	width:     100px;
+	width:     118px;
+	height:    20px;
 	overflow:  hidden;
-	left:      -100px;
+	left:      -130px;
 	top:       9px;
 }
 
