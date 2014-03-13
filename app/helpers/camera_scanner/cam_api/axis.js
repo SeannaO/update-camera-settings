@@ -174,7 +174,7 @@ Axis.prototype.updateProfile = function(profileId, profile, cb) {
 
 	var params = parametersString
 		.replace('{framerate}', profile.framerate || '15')
-		.replace('{resolution}', profile.resolution || 'half');
+		.replace('{resolution}', profile.resolution || '800x600');
 
 	params = encodeURIComponent( params );
 
