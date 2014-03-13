@@ -133,9 +133,10 @@ function calcDuration(input, cb) {
  */
 var checkH264 = function( url, cb ) {
 	var self = this;
-	var timeout = 10000;
+	var timeout = 15000;
 
 	var ffmpegProcess = spawn('ffmpeg', [
+			'-rtsp_transport', 'tcp',
 			'-i', url
 	]);
 

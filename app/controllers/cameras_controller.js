@@ -523,7 +523,7 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
             var whichCam = self.findCameraById( camId );
             var cam = whichCam.cam;
 
-            var i = whichCam.index;
+            var k = whichCam.index;
 
             cam.stopRecording();
 	
@@ -536,7 +536,7 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
             
             self.emit("delete", cam);
 
-            self.cameras.splice(i,1);            
+            self.cameras.splice(k,1);            
             refresh( function() {
                 cb( err, numRemoved );
             });    
