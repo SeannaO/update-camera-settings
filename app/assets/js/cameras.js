@@ -435,7 +435,7 @@ var editCamera = function(camId) {
 				current_camera = data.camera;
 				$('#add-new-camera-dialog .modal-title').html("edit camera");
                 $("#add-new-camera-dialog #camera-name").val(data.camera.name);
-                $("#add-new-camera-dialog #camera-ip").val(data.camera.ip).prop('disabled', 'disabled');;
+                $("#add-new-camera-dialog #camera-ip").val(data.camera.ip); //.prop('disabled', 'disabled');;
                 $("#add-new-camera-dialog #camera-manufacturer").val(data.camera.manufacturer).attr("selected", data.camera.manufacturer).prop('disabled', 'disabled').unbind();
                 $("#add-new-camera-dialog #camera-username").val(data.camera.username || '');
                 $("#add-new-camera-dialog #camera-password").val(data.camera.password || '');

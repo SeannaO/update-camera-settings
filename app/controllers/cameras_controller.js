@@ -647,7 +647,8 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 				password: camera.cam.password,
 				username: camera.cam.username
 			});
-
+			
+			debugger;
 			if (need_restart_all_streams) {
 				camera.cam.restartAllStreams();
 			}

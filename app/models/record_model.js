@@ -137,7 +137,7 @@ RecordModel.prototype.updateCameraInfo = function( camera, stream ) {
 RecordModel.prototype.stopRecording = function() {
 
 	var self = this;
-
+	debugger;
 	console.log(" - - - record model stop recording - - - ");
 
 	this.cleanTmpFolder();		// resets temp folder

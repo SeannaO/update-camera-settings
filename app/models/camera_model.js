@@ -428,7 +428,7 @@ Camera.prototype.updateStream = function( stream ) {
 
 	// these are the parameters that requires restarting the recorder when they change,
 	// because the rtsp url changes.
-	var restartParams = ['resolution', 'framerate', 'quality', 'url'];
+	var restartParams = ['resolution', 'framerate', 'quality', 'url', 'ip'];
 
 	// iterates through restart params, checks if any of them changed, 
 	// sets restarting if needed
@@ -493,7 +493,9 @@ Camera.prototype.restartStream = function( streamId ) {
 
 	var stream = self.streams[ streamId ];
 
-	self.streams[streamId].recordModel.stopRecording();
+	// self.streams[streamId].recordModel.stopRecording();
+	self.streams[streamId].recordModel.quitRecording();
+
 	delete self.streams[streamId].recordModel;
 	
 	// refreshes rtsp url
