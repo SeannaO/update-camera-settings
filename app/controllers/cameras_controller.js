@@ -407,17 +407,17 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 		cam.status = 'missing camera stream(s)';
 	}
 
-
 	self.db.insert( cam, function( err, newDoc ) {
 		if (err) {
 			console.error("[camerasController]  error when inserting camera: " + err);
 			cb( err, "{ success: false }" );
 		} else {
-			var c = new Camera(newDoc, self.videosFolder );
-			newDoc.streams = original_streams;
-			self.pushCamera( c );
-			self.emit("create", c);
-			cb( null, c );            
+			var c = new Camera(newDoc, self.videosFolder, function() {
+				newDoc.streams = original_streams;
+				self.pushCamera( c );
+				self.emit("create", c);
+				cb( null, c );          
+			});
 		}
 
 		//if (self.indexFilesInterval) {
