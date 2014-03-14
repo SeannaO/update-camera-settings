@@ -137,8 +137,7 @@ RecordModel.prototype.updateCameraInfo = function( camera, stream ) {
 RecordModel.prototype.stopRecording = function() {
 
 	var self = this;
-	debugger;
-	console.log(" - - - record model stop recording - - - ");
+	console.log("[RecordModel.stopRecording]  sending signal to pause rtsp_grabber thread");
 
 	this.cleanTmpFolder();		// resets temp folder
 
@@ -161,7 +160,7 @@ RecordModel.prototype.quitRecording = function() {
 
 	var self = this;
 
-	console.log(" - - - record model quit recording - - - ");
+	console.log(" [RecordModel.quitRecording]  sending signal to terminate rtsp_grabber thread");
 
 	self.sendSignal( 'quit', self.rtsp, self.folder + "/videos/tmp" );
 

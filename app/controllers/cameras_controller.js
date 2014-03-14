@@ -193,7 +193,6 @@ CamerasController.prototype.getMotion = function(camId, cb) {
 			cb( err, null );
 		} else {
 			cam.api.getMotionParams(function(motion_params){
-				console.log(motion_params);
 				cb( err, motion_params );
 			});
 		}
@@ -251,8 +250,6 @@ CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_id
 						return d;
 					});
 					
-					console.log('adding ' + maxChunksPerCamera + ' expired chunks for deletion: ');
-
 					self.addChunksToDeletionQueue( chunks );
 					self.periodicallyCheckForExpiredChunks( cam_ids_list );
 				}
@@ -267,10 +264,6 @@ CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_id
 CamerasController.prototype.addChunksToDeletionQueue = function( chunk_list ) {
 
 	var self = this;
-	if (chunk_list.length > 0){
-		console.log( chunk_list.length + ' new chunks to be deleted: ' );
-		//console.log( chunk_list );
-	}
 
 	for (var c in chunk_list) {
 		self.deletionQueue.push( chunk_list[c] );
@@ -328,7 +321,7 @@ CamerasController.prototype.deleteOldestChunks = function( numChunks, cb ) {
 	var self = this;
 
 	if ( self.deletionQueue.length > 0 ) {
-		console.log('- deleteOldestChunks: the deletion queue is not empty; i will wait before deleting old chunks');
+		// console.log('- deleteOldestChunks: the deletion queue is not empty; i will wait before deleting old chunks');
 		return;
 	}
 
@@ -463,7 +456,7 @@ CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
     var camera = this.findCameraById( camId );
 	
     if (!camera || !camera.cam) {
-        cb( "camera not found" );
+        cb( 'camera not found' );
         return;
     }	
 	camera = camera.cam;
@@ -479,14 +472,16 @@ CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
 		if (!err) {
 
 			if (!docs[0]) {
-				console.log('camera not found on db');
+				console.error('[CamerasController.removeStream] camera ' + camId + ' not found on db');
+				if(cb) cb('camera not found');
 				return;
 			}
 
 			streamsHash = docs[0].streams;	
 
 			if (!streamsHash || !streamsHash[streamId]) {
-				cb('stream not found on db');
+				console.error('[CamerasController.removeStream] stream ' + streamId + ' not found on db');
+				if(cb) cb('stream not found');
 				return;
 			}
 
@@ -525,45 +520,30 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
         if( err ) {
             cb( err, numRemoved );
         } else {
-            var whichCam = self.findCameraById( camId );
-            var cam = whichCam.cam;
+			var whichCam = self.findCameraById( camId );
+			var cam = whichCam.cam;
 
-            var k = whichCam.index;
+			var k = whichCam.index;
 
-            cam.stopRecording();
-	
-		for (var i in cam.streams){
-			cam.removeStream( i );	
-		}
+			cam.stopRecording();
+
+			for (var i in cam.streams){
+				cam.removeStream( i );	
+			}
 			//
 			// set camera.delete = true
 			//
-            
-            self.emit("delete", cam);
 
-            self.cameras.splice(k,1);            
-            refresh( function() {
-                cb( err, numRemoved );
-            });    
+			self.emit("delete", cam);
+
+			self.cameras.splice(k,1);            
+			refresh( function() {
+				cb( err, numRemoved );
+			});    
         }
     });
 };
 
-// CamerasController.prototype.removeNonH264Streams = function(in_streams, api, out_streams, cb) {
-// 	var self = this;
-// 	var profile = in_streams.shift();
-// 	if (typeof profile == "undefined"){
-// 		cb(out_streams);
-// 	}else{
-// 		var url = api.getRtspUrl(profile);
-// 		checkH264(url, function(isH264) {
-// 			if (isH264){
-// 				out_streams.push(profile);
-// 				self.removeNonH264Streams(in_streams, api, out_streams, cb);
-// 			}
-// 		});
-// 	}
-// }
 
 
 CamerasController.prototype.updateCamera = function(cam, cb) {
@@ -648,7 +628,6 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 				username: camera.cam.username
 			});
 			
-			debugger;
 			if (need_restart_all_streams) {
 				camera.cam.restartAllStreams();
 			}
