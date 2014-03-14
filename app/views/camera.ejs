@@ -21,7 +21,7 @@
 		<script src = "/js/timeline.js"></script>
 
 		<script type="text/javascript" src="/js/swfobject.js"></script>
-        <script src = "/js/cam.js"></script>
+        <script src = "/js/cam_init.js"></script>
 
         <script src="/js/timepicker.js"></script>
         <script src="/js/moment.min.js"></script>
@@ -37,31 +37,6 @@
 		<script src="/js/timeline-selector.js"></script>
 
         <script src="/js/player.js"></script>
-
-        <script>
-			var hlsEnabled = canPlayHLS();
-					
-            var socket = io.connect();
-        </script>
-
-        <style>
-            .shadow {
-                -moz-box-shadow:    inset 0 0 10px rgba(0,0,0,0.5);
-                -webkit-box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-                box-shadow:         inset 0 0 10px rgba(0,0,0,0.5);
-            }
-
-            .video-box {
-
-            }
-
-            .video-box-message {
-                position: relative;
-                top: 40%;
-                margin: 10px;
-            }
-            
-        </style>
     </head>
 
 
@@ -76,7 +51,6 @@
 
         <div id = "search-bar" class="form-inline">
             <input id="begin_date" type="text" placeholder="select a day" ></input>
-<!--             <input id="end_date" placeholder="end time" ></input> -->
             <button id = "search" class = 'btn btn-xs btn-info'>watch video</button>
 
             <button id = "get-snapshot" class = 'btn btn-xs btn-default'>get a snapshot</button>
@@ -88,8 +62,6 @@
 
 		<div id = "time-map">
 			<div id = "date-selector"></div>	
-			<!--div id = "zoom-out"></div>
-			<div id = "zoom-in"></div-->
 			<div id = "marker"></div>
 
 			<div id = "timeline">
@@ -98,19 +70,6 @@
 		</div>
 		 
 		<div id = "video" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px;" class = "shadow">
-			
-<!-- 			<div id = "snapshot" style="display:hidden"></div> -->
-<!--  -->
-<!-- 			<video id="nativePlayer" src = "" style = "display:none" controls autoplay width="640px" height="480px"></video> -->
-<!--  -->
-<!-- 			<object id="strobeMediaPlayback" style="display:none"> -->
-<!-- 				<p> -->
-<!-- 					( this player requires flash. check if it's enabled and make sure your browser supports flash ) -->
-<!-- 				</p> -->
-<!-- 			</object> -->
-<!--  -->
-<!-- 			<div style="width: 640px; height: 360px; display: none" id="live&#45;player"></div> -->
-
 		</div>
 
 		<div id = "thumb" style = "display:none; position: absolute; z-index: 1000">
@@ -119,113 +78,20 @@
         </div>
 					
         <script>
+			var camPage;
             $(function() {
-				$("#begin_date").change( function() {
-					
-					var begin_date = $("#begin_date").val();
-					if (!begin_date) return;
-
-					$("#begin_date")[0].blur();
-					$("#stream-selector")[0].focus();
-					$("body")[0].click();
-				
-					begin_date = new Date( begin_date );
-					var end_date = new Date(begin_date);
-
-					end_date.setHours(23);
-					end_date.setMinutes(59);
-					end_date.setSeconds(59);
-					
-					begin_date = Date.parse( begin_date );
-					end_date   = Date.parse( end_date );
-
-					var streamId = $("#stream-selector").val();
-					playVideo( camId, streamId, begin_date, end_date );
-				});
-			
-				$("#begin_date").pickadate();
-
-				$("#stream-selector").change( function() { 
-						
-					var begin_date = $("#begin_date").val();
-					
-					if (!begin_date) return;
-					begin_date = new Date( begin_date );
-					var end_date = new Date(begin_date);
-					
-					end_date.setHours(23);
-					end_date.setMinutes(59);
-					end_date.setSeconds(59);
-					
-					begin_date = Date.parse( begin_date );
-					end_date   = Date.parse( end_date );
-					
-					var streamId = $("#stream-selector").val();
-					playVideo( camId, streamId, begin_date, end_date );
-				});				
-
-
-				$("#download").click(function() {
-					var stream = $("#stream-selector").val();
-					var begin = 1000*moment( $("#begin_date").val() ).unix();
-					
-					var url = window.location.origin + "/cameras/"+camId+"/download?begin="+begin+"&end="+end+"&stream="+stream;
-					
-					window.location = url;
-				});
-
-                $("#search").click(function() {
-                    $("#file-list").html("<span class='subtle'>loading...</span>");
-
-                    // converts local time to gmt and then to unix format
-					var begin = 1000*moment( $("#begin_date").val() ).unix(); 
-					var stream = $("#stream-selector").val();
-
-					var url = window.location.origin + "/cameras/"+camId+"/video.m3u8?begin="+begin+"&end="+end+"&stream="+stream;
-					
-					if (!hlsEnabled) {
-						launchStrobePlayer({
-							url: url,
-							autoplay: true
-						});
-					} else {
-						launchNativePlayer( url );
-					}
-                });
-                
-                $("#get-snapshot").click(function() {
-                    
-                    $("#file-list").html("<span class='subtle'>loading...</span>");
-                    
-                    var time = 1000*moment( $("#begin_date").val() ).unix(); //.add("minutes", moment().zone()).unix();
-                    getSnapshot(time);
-                    
-                });
-                
-				$("#get-livestream").click(function() {
-					showLiveStream();
-				});
+				camPage = new CameraPage( camId );
+				camPage.setup();			
             });
-
         </script>
 
 		<script>
-			var dateSelector = new DateSelector("#date-selector");
+			// var dateSelector = new DateSelector("#date-selector");
 				
-			getStreamsInfo( camId, function() {
-				// list();
-			});
-			socket.on('newThumb', function(data) {
-			//	updateThumb( data );
-			});
+			// getStreamsInfo( camId, function() {
+			// 	// list();
+			// });
 
-			socket.on('newChunk', function (data) {
-			//	console.log(data);
-				$("#timeline-"+data.stream).animate({
-					backgroundColor: "none"
-				}, 1000);
-			//	updateTimelines(data, {updateThumb: false});
-			});
 		</script>
 
 		<script>
