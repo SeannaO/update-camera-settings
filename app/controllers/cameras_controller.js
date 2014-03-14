@@ -390,7 +390,12 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 		cam.password = '';
 	}
 
-    cam.schedule_enabled = true;
+	if (!cam.ip || !cam.manufacturer) {
+		cb('wrong params when creating camera', '{error: wrong params when creating cameras}');
+		return;
+	}
+    
+	cam.schedule_enabled = true;
     cam.schedule = {"sunday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"monday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"tuesday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"wednesday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"thursday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"friday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}},"saturday":{"open":{"hour":0, "minutes":0},"close":{"hour":23, "minutes":59}}};
 
 

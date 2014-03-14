@@ -123,6 +123,7 @@
 				$("#begin_date").change( function() {
 					
 					var begin_date = $("#begin_date").val();
+					if (!begin_date) return;
 
 					$("#begin_date")[0].blur();
 					$("#stream-selector")[0].focus();
@@ -138,10 +139,31 @@
 					begin_date = Date.parse( begin_date );
 					end_date   = Date.parse( end_date );
 
-					playVideo( begin_date, end_date );
+					var streamId = $("#stream-selector").val();
+					playVideo( camId, streamId, begin_date, end_date );
 				});
 			
 				$("#begin_date").pickadate();
+
+				$("#stream-selector").change( function() { 
+						
+					var begin_date = $("#begin_date").val();
+					
+					if (!begin_date) return;
+					begin_date = new Date( begin_date );
+					var end_date = new Date(begin_date);
+					
+					end_date.setHours(23);
+					end_date.setMinutes(59);
+					end_date.setSeconds(59);
+					
+					begin_date = Date.parse( begin_date );
+					end_date   = Date.parse( end_date );
+					
+					var streamId = $("#stream-selector").val();
+					playVideo( camId, streamId, begin_date, end_date );
+				});				
+
 
 				$("#download").click(function() {
 					var stream = $("#stream-selector").val();
@@ -187,12 +209,11 @@
 
         </script>
 
-
 		<script>
 			var dateSelector = new DateSelector("#date-selector");
 				
 			getStreamsInfo( camId, function() {
-				list();
+				// list();
 			});
 			socket.on('newThumb', function(data) {
 			//	updateThumb( data );

@@ -268,7 +268,7 @@ var updateTime = function( time ) {
 };
 
 
-var updateTimelines = function( data, options ) {
+var updateTimelines = function( camId, streamId, data, options ) {
 
 	if (!timeline) {
 		console.log("ERROR: no such timeline");
@@ -334,7 +334,8 @@ var showThumb = function( thumb ) {
 var timelineSetup = function( cam_id, id, name ) {
 
     var label = name ? name : id;
-
+	
+	$('#timeline').html('');
 	if (id) {
 		var timelineContainer = $("<div>", {
 			id:     "timeline-" + id,
@@ -345,7 +346,6 @@ var timelineSetup = function( cam_id, id, name ) {
 			class:  "timeline-name",
 			html:   "", //name
 		})
-
 		timelineContainer.append(timelineName);
 		timelineContainer.appendTo("#timeline").mouseleave( function() {
 			$("#thumb").hide();
@@ -380,14 +380,11 @@ var list = function() {
 }
 
 
-var loadIndexer = function( begin, end, cb ) {
+var loadIndexer = function( camId, streamId, begin, end, cb ) {
 
-	var id     = $("#stream-selector").val();
-	var cam_id = camera_data._id;
-	
 	indexer.clear();
 
-    $.getJSON( "/cameras/" + cam_id + "/streams/" + id + "/list_videos?start="+begin+"&end=" + end, function( data ) {
+    $.getJSON( "/cameras/" + camId + "/streams/" + streamId + "/list_videos?start="+begin+"&end=" + end, function( data ) {
 
         var videos = data.videos;
 	
@@ -411,7 +408,6 @@ var launchTimeline = function(block_size, begin, end) {
 	block_size = block_size || 2;
 	var elements = indexer.agglutinate(block_size);
 	
-	timeline.clear();
 	timeline.setEnd( end );
 	timeline.setBegin( begin );
 
@@ -432,10 +428,10 @@ var launchTimeline = function(block_size, begin, end) {
 }
 
 
-var playVideo = function( begin, end ) { 
+var playVideo = function( camId, streamId, begin, end ) { 
 	
-	loadIndexer( begin, end, function() {
-		launchTimeline( 50, begin, end);
+	loadIndexer( camId, streamId, begin, end, function() {
+		launchTimeline( 50, begin, end );
 	});
 		
 	$("#file-list").html("<span class='subtle'>loading...</span>");
