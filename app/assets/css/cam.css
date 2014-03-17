@@ -43,6 +43,11 @@
 	float:  bottom;
 }
 
+
+#native-player {
+}
+
+
 #timeline {
 	width:   100%;
 	height:  30px;
@@ -77,6 +82,10 @@
 	background:  none;
 }
 
+#timeline-container {
+	z-index: 100;
+}
+
 .timeline-selected-region {
 	position:        absolute;
 	background:      rgba(250,200,200,0.5);
@@ -91,5 +100,9 @@
 	height:      35px;
 	width:       2px;
 	z-index:     10;
+}
+
+.player-layer {
+	display: none;
 }
 

@@ -168,6 +168,7 @@ Timeline.prototype.append = function( data ) {
 Timeline.prototype.clear = function() {
 		
 	this.boxes.selectAll('rect').data([]).exit().remove()
+	console.log("clearing timeline");
 }
 
 
