@@ -121,9 +121,7 @@ OrphanFilesChecker.prototype.checkForOrphanStreams = function( folders, cb ) {
 				console.log( "\t!cam.streams: " + !cam.streams );
 				console.log( "\tcam.streams.length: " + cam.streams.length );
 				console.log( "\t!cam.streams[streamId]: " + !cam.streams[streamId] );
-				console.log( cam.streams );
 				console.log("---");
-				console.log( cam.streams[streamId] );
 	
 				var streamFolder = camFolder + '/' + streamId;
 				self.recursiveDeleteFiles( streamFolder, function() {

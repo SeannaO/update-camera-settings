@@ -70,34 +70,6 @@ CameraPage.prototype.setupEvents = function() {
 };
 
 
-CameraPage.prototype.updateTimelines = function() {
-
-	if (!timeline) {
-		console.log("ERROR: no such timeline");
-		console.log(data);
-		return;
-	}
-
-	var thumb = "/cameras/" + data.cam + "/streams/" + data.stream + "/thumb/" + data.thumb;
-
-	var img = new Image();
-		
-	var showThumbWrapper = function(d) { 
-		showThumb(d.attr("data-thumb"));
-		updateTime( parseInt(d.attr('data-start')) );
-	};
-
-	timeline.append({
-		start:       data.start,
-		w:           data.end - data.start,
-		thumb:       thumb,
-		totalTime:   data.totalTime,
-		mouseover:   showThumbWrapper,
-		mouseclick:  jumpTo
-	});
-};
-
-
 CameraPage.prototype.setupTimeline = function() {
 
 	$('#timeline').html('');
@@ -231,7 +203,6 @@ CameraPage.prototype.setupButtons = function() {
 		// $("#file-list").html("<span class='subtle'>loading...</span>");
 		// var time = 1000*moment( self.inputs.date.val() ).unix(); 
 		// getSnapshot(time);
-		
 	});
 
 	// livestream button
@@ -417,11 +388,7 @@ CameraPage.prototype.jumpTo = function(d) {
 	
 	var player = document.getElementById("strobeMediaPlayback");
 	var time   = parseInt( d.attr('data-totalTime') );
-// 	var dt        = time - timeline_begin;
-// 	q
-// 	var totalTime = 30*60*1000;
-//
-// 	var time = dt/1000;
+
 	if (player.canSeekTo(time) ) {
 		console.log("seek to " + time);
 		player.seek(time);

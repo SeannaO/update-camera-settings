@@ -38,12 +38,12 @@ var generatePlaylist = function( camId, streamId, videos, targetDuration, mediaS
     var content = "#EXTM3U\n" +
                   "#EXT-X-VERSION:3\n" +         
                   "#EXT-X-ALLOW-CACHE:YES\n" +
-                  "#EXT-X-TARGETDURATION: 10\n" +
+                  "#EXT-X-TARGETDURATION: 20 \n" +
                   "#EXT-X-MEDIA-SEQUENCE:0\n";
 
     for ( var i = 0; i < videos.length; i++ ) {
 		
-	    var duration = (videos[i].end - videos[i].start)/1000.0;
+	    var duration = (videos[i].end - videos[i].start + 10)/1000.0;
 
         if (duration > 100) {
 		console.error("[hls] invalid chunk duration, defaulting to 10s");
