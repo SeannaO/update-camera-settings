@@ -307,27 +307,29 @@ module.exports = function( app, passport, camerasController ) {
 	// gets thumbnail
 	app.get('/cameras/:cam_id/streams/:id/thumb/:thumb', passport.authenticate('basic', {session: false}), function(req, res) {
 
+		var self = this;
+
 		var camId = req.params.cam_id;
 		var streamId = req.params.id;
-		var thumb = req.params.thumb;
+		this.thumb = req.params.thumb;
 		thumb = path.basename(thumb);
-
+		
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err || !cam) {
-				console.error("*** getCamera within stream thumbnail : thumb:" + thumb + " : cam_id: " + camId + " : stream_id : " + streamId);
+				console.error("*** getCamera within stream thumbnail : thumb:" + self.thumb + " : cam_id: " + camId + " : stream_id : " + streamId);
 				console.error( err ) ;
 				console.error("* * *");
 				res.status(422).json( { error: err } );
 			} else {
 
-				var file = cam.videosFolder + "/" + streamId + "/thumbs/"+thumb+".jpg";
+				var file = cam.videosFolder + "/" + streamId + "/thumbs/" + self.thumb + ".jpg";
 
 				fs.exists( file, function(exists) {
 					if (exists) { 
 						res.setHeader("Content-Type", "image/jpeg"); 
 						res.sendfile(file);
 					} else {
-						res.end("no thumb " + thumb);
+						res.end("no thumb " + self.thumb);
 					}
 				}); 
 			}
@@ -408,7 +410,7 @@ module.exports = function( app, passport, camerasController ) {
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err) {
 				console.error("[/cameras/:id/download]  getCamera within mp4 inMem download: ");
-				console.error( err ) ;
+				console.error( err );
 				res.json( { error: err } );
 			} else {
 				if ( cam.streams.length == 0 ) {
@@ -442,13 +444,13 @@ module.exports = function( app, passport, camerasController ) {
 		var streamId = req.query.stream;
 
 		camerasController.getCamera( camId, function(err, cam) {
-			if (err) {
-				console.error("*** getCamera within video.m3u8: ");
-				console.error( err ) ;
-				console.error("* * *");
-				res.json( { error: err } );
-			} else {
 
+			if (err) {
+				console.error("[/cameras/:id/video.m3u8] :");
+				console.error( err ) ;
+				res.json( { error: err } );
+
+			} else {
 				// if no stream is not specified then just give the first stream
 
 				//for (var stream in cam.streams){

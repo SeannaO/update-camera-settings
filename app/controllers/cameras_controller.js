@@ -412,11 +412,15 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 			console.error("[camerasController]  error when inserting camera: " + err);
 			cb( err, "{ success: false }" );
 		} else {
-			var c = new Camera(newDoc, self.videosFolder, function() {
+			new Camera(newDoc, self.videosFolder, function( c ) {
+				if (!c) {
+					cb('undefined camera');
+					return;
+				}
 				newDoc.streams = original_streams;
 				self.pushCamera( c );
 				self.emit("create", c);
-				cb( null, c );          
+				cb( null, c);          
 			});
 		}
 
@@ -433,9 +437,11 @@ CamerasController.prototype.getCameraFromArray = function( i ) {
 };
 
 CamerasController.prototype.pushCamera = function( cam ) {
-   
-    var self = this;
+  
+	if (!cam) return;
 
+    var self = this;
+	
     self.cameras.push( cam );
 
     cam.on('new_chunk', function( data ) {
