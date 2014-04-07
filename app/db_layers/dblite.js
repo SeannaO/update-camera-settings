@@ -233,11 +233,11 @@ Dblite.prototype.getNewestChunks = function( numberOfChunks, cb ) {
  */
 Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
 
-    var t0 = (startTime - 1500);
-    var t1 = (startTime + 1500);
+    var t0 = (startTime - 0);
+    var t1 = (startTime + 35000);
 
-    // var query = 'SELECT start, end, file FROM videos WHERE start BETWEEN '+t0+' AND '+t1+' ORDER BY start ASC';
-    var query = 'SELECT start, end, file FROM videos WHERE start <= ' + startTime + ' AND end >= ' + startTime + ' ORDER BY start ASC';
+    var query = 'SELECT start, end, file FROM videos WHERE start BETWEEN '+t0+' AND '+t1+' ORDER BY start ASC';
+    //var query = 'SELECT start, end, file FROM videos WHERE start <= ' + startTime + ' AND end >= ' + startTime + ' ORDER BY start ASC';
 
 	console.error( 'searchVideoByTime : ' + query);
 
