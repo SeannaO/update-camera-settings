@@ -236,17 +236,22 @@ Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
     var t0 = (startTime - 1500);
     var t1 = (startTime + 1500);
 
-    var query = 'SELECT start, end, file FROM videos WHERE start BETWEEN '+t0+' AND '+t1+' ORDER BY start ASC';
+    // var query = 'SELECT start, end, file FROM videos WHERE start BETWEEN '+t0+' AND '+t1+' ORDER BY start ASC';
+    var query = 'SELECT start, end, file FROM videos WHERE start <= ' + startTime + ' AND end >= ' + startTime + ' ORDER BY start ASC';
+
+	console.error( 'searchVideoByTime : ' + query);
 
     var fileList = this.db.query( 
 			query, 
             ['start', 'end', 'file'], 
             function(err, data) {
                 if (err){
-                    console.log("searchVideoByTime");
-                    console.log(err);
+                    console.error("[searchVideoByTime]");
+                    console.error(err);
                 }
                 if (!data || data.length === 0) {
+					console.error('[searchVideoByTime] no data');
+					console.error(data);
                      cb( "", 0 );
                 } else {
                     offset = Math.round( (startTime - data[0].start)/1000.0 );

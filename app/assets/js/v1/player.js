@@ -1,37 +1,30 @@
-function Player( el ) {
+function Player() {
 
 	this.layers = {};
 	
-	this.layers.livePlayer = $("<div>", {
-		id:      'live-player',
+	this.layers.livePlayer = $("<div>", 
+		id:      '#live-player',
 		class:   'player-layer'
-	}).appendTo(el);
+	).appendTo(el);
 
-	
-	this.layers.nativePlayer = $("<video controls autoplay class='player-layer'>", {
-		id:      'native-player'
-	}).appendTo(el);
-	
-	this.layers.snapshot = $("<div>", {
-		id:      'snapshot',
+	this.layers.nativePlayer = $("<video>", 
+		id:      '#native-player',
 		class:   'player-layer'
-	}).appendTo(el);
+	).appendTo(el);
+	
+	this.layers.snapshot = $("<div>", 
+		id:      '#snapshot',
+		class:   'player-layer'
+	).appendTo(el);
 
-	this.layers.strobePlayer = $("<object>", {
+	this.layers.strobePlayer = $("<object>", 
 		id:      'strobeMediaPlayback',
 		class:   'player-layer'
-	}).appendTo(el);
+	).appendTo(el);
 
 	this.layers.strobePlayer.html(
 		"<p>( this player requires flash. check if it's enabled and make sure your browser supports flash )</p>"
 	);
-
-
-	window.onCurrentTimeChange = function (time, playerId) {
-		$(window).trigger( 'currentTimeChange', time );
-	}
-
-	this.currentPlayer = null;
 }
 
 
@@ -40,22 +33,12 @@ function Player( el ) {
  *		runs on safari (osx/ios) / some android devices
  */
 Player.prototype.launchNativePlayer = function( url ) {
-	
-	self = this; 
-
-	this.currentPlayer = 'native';
 
 	for( var i in this.layers ) {
 		this.layers[i].hide();
 	}
 	this.layers.nativePlayer.show();
-	this.layers.nativePlayer.attr("width", "640px");
-	this.layers.nativePlayer.attr("height", "480px");
-	this.layers.nativePlayer.attr("src", url);
-	this.layers.nativePlayer[0].addEventListener('timeupdate',function( e ){
-		var t = self.layers.nativePlayer[0].currentTime;
-		$(window).trigger('currentTimeChange', t );
-	});
+	this.layers.attr("src", url);
 };
 
 
@@ -64,8 +47,7 @@ Player.prototype.launchNativePlayer = function( url ) {
  *		doesnt run well on osx 
  */
 Player.prototype.showLiveStream = function( url ) {
-
-	console.log( url );	
+	
 	for( var i in this.layers ) {
 		this.layers[i].hide();
 	}
@@ -75,7 +57,6 @@ Player.prototype.showLiveStream = function( url ) {
 				'autoplay="yes" width="640" height="480"' +
 				'target="'+url+'" />';
 
-	this.hideAll();
 	this.layers.livePlayer.html( html );
 	this.layers.livePlayer.show();
 };
@@ -87,8 +68,6 @@ Player.prototype.showLiveStream = function( url ) {
  */
 Player.prototype.launchStrobePlayer = function( options ) {
 
-	this.currentPlayer = 'strobe';
-	
 	for( var i in this.layers ) {
 		this.layers[i].hide();
 	}
@@ -148,8 +127,6 @@ Player.prototype.launchStrobePlayer = function( options ) {
 // 	window.onDurationChange = function (time, playerId) {
 // 	}
 //
-	this.layers.strobePlayer = $("#strobeMediaPlayback");
-
 	var player;
 	window.onJavaScriptBridgeCreated = function(playerId) {
 		if (!player ) {
@@ -164,9 +141,10 @@ Player.prototype.launchStrobePlayer = function( options ) {
 				if (state == "ready" || state == "paused") {
 					player.play2();
 				}
-				else if (state == "playing") {
-					player.pause();
-				}
+				else 
+					if (state == "playing") {
+						player.pause();
+					}
 				return false;
 			};
 		}
@@ -174,52 +152,19 @@ Player.prototype.launchStrobePlayer = function( options ) {
 };
 
 
-Player.prototype.seek = function( time ) {
-	
-	if( this.currentPlayer == 'strobe' ) {
-		this.layers.strobePlayer[0].seek( time );
-	} else if (this.currentPlayer == 'native' ) {
-		this.layers.nativePlayer[0].currentTime = time;
-	}
-};
-
-
-Player.prototype.canSeekTo = function( time ) {
-
-	if( this.currentPlayer == 'strobe' ) {
-		return this.layers.strobePlayer[0].canSeekTo( time );
-	} else if( this.currentPlayer == 'native' ) {
-		return true;
-	}
-}
-
-Player.prototype.play = function() {
-	
-	if( this.currentPlayer == 'strobe' ) {
-		this.layers.strobePlayer[0].play2();
-	} else if( this.currentPlayer == 'native' ) {
-		console.log('native');
-		this.layers.nativePlayer[0].play();
-	}
-};
-
 /**
  * Jumps to specified time  
  *	@param { time } Number
  *		elapsed time in seconds
  */
 Player.prototype.jumpTo = function( time ) {
+	
+	var player = document.getElementById("strobeMediaPlayback");
+	// var time   = parseInt( d.attr('data-totalTime') );
 
-	if (this.player == 'strobe') {	
-		// var player = document.getElementById("strobeMediaPlayback");
-		var player = this.layers.strobePlayer[0];
-		if ( player.canSeekTo(time) ) {
-			console.log("seek to " + time);
-			player.seek(time);
-			player.play2();
-		}
-	} else if( this.player == 'native' ) {
-		this.layers.nativePlayer[0].currentTime = time;	
+	if (player.canSeekTo(time) ) {
+		console.log("seek to " + time);
+		player.seek(time);
 	}
 };
 
@@ -236,39 +181,31 @@ Player.prototype.jumpTo = function( time ) {
  *		end time (utc millisecs)
  *  
  */
-Player.prototype.playVideo = function( camId, streamId, begin, end ) { 
+Player.prototype.playVideo = function( stream, begin, end ) { 
 	
-	// loadIndexer( begin, end, function() {
-	// 	launchTimeline( 50, begin, end);
-	// });
+	loadIndexer( begin, end, function() {
+		launchTimeline( 50, begin, end);
+	});
 		
-	var url = window.location.origin +
-	   	"/cameras/" + camId + 
-		"/video.m3u8?begin=" + begin +
-		"&end=" + end +
-		"&stream=" + streamId;
+	// $("#file-list").html("<span class='subtle'>loading...</span>");
+
+	timeline_begin = begin; 
+	timeline_end   = end;
+
+	// var stream = $("#stream-selector").val();
+
+	var url = window.location.origin + "/cameras/"+camId+"/video.m3u8?begin="+timeline_begin+"&end="+timeline_end+"&stream="+stream;
 
 	if (!this.canPlayHLS()) {
-		this.launchStrobePlayer({
+		launchStrobePlayer({
 			url:       url,
 			autoplay:  true
 		});
 	} else {
-		this.launchNativePlayer( url );
+		launchNativePlayer( url );
 	}
 };
 
-
-Player.prototype.resume = function() {
-	
-
-	if( this.currentPlayer == 'strobe' ) {
-		this.layers.strobePlayer[0].play2();
-	} else if( this.currentPlayer == 'native' ) {
-		console.log('native');
-		this.layers.nativePlayer[0].play();
-	}
-}
 
 /**
  * Checks if broser supports hls natively
@@ -277,13 +214,3 @@ Player.prototype.resume = function() {
 Player.prototype.canPlayHLS = function() {
 	return document.createElement('video').canPlayType('application/vnd.apple.mpegURL') === 'maybe';
 };
-
-
-Player.prototype.hideAll = function() {
-	
-	var self = this;
-	for( var i in this.layers ) {
-		this.layers[i].hide();
-	}
-};
-

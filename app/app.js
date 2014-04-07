@@ -127,12 +127,12 @@ var lifelineAuthentication = function(username,password, done){
 		
 		var url = "https://" + username + ":" + password + "@localhost/cp/UserVerify?v=2&login=" + username + "&password=" + password;
 		request({ 
-			url: url,
-			strictSSL: false,
+			url:         url,
+			strictSSL:   false,
 			headers: {
-				'User-Agent': 'nodejs',
-				'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-				'Authorization': 'Basic ' + digest	
+				'User-Agent':      'nodejs',
+				'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+				'Authorization':   'Basic ' + digest
 			},
 		}, function( error, response, body) {
 			if (error){ return done(error); }
@@ -334,17 +334,23 @@ app.all('/*', function(req, res, next) {
 // - - - - -
 // disk space agent
 //
-var usageThreshold = 90; // usage threshold (%)
+var usageThreshold = 98; // usage threshold (%) // !!! CHANGE LATER TO 90
 
 var diskSpaceAgent = new DiskSpaceAgent( baseFolder );
 diskSpaceAgent.launch();
 diskSpaceAgent.on('disk_usage', function(usage) {
-	var nCameras = camerasController.getAllCameras().length;
+
 	if (usage > usageThreshold) {	// usage in %
-		console.log( "usage: " + usage + "%");
-		console.log('freeing disk space...');
-		camerasController.deleteOldestChunks( 10 * nCameras, function(data) {
-	// 		console.log( "added old files to deletion queue" );
+	    var cameras = camerasController.getAllCameras();
+		var nStreams = 0;
+		for (var i in cameras) {
+			nStreams += Object.keys(cameras[i].streams).length;
+		}
+		
+		console.log( "hdd usage: " + usage + "%");
+		console.log('[diskSpaceAgent]  freeing disk space... ');
+		camerasController.deleteOldestChunks( 20 * nStreams, function(data) {
+			// console.log(data);
 		});
 	}
 });
@@ -398,11 +404,11 @@ scheduler.setupListeners( camerasController );
 
 // - - -
 // static files
-app.use('/css', express.static(__dirname + '/assets/css'));		
-app.use('/js', express.static(__dirname + '/assets/js'));
-app.use('/img', express.static(__dirname + '/assets/img'));
-app.use('/swf', express.static(__dirname + '/assets/swf'));
-app.use('/fonts', express.static(__dirname + '/assets/fonts'));
+app.use('/css'   , express.static(__dirname + '/assets/css'));
+app.use('/js'    , express.static(__dirname + '/assets/js'));
+app.use('/img'   , express.static(__dirname + '/assets/img'));
+app.use('/swf'   , express.static(__dirname + '/assets/swf'));
+app.use('/fonts' , express.static(__dirname + '/assets/fonts'));
 app.use(express.static(__dirname + '/assets/public'));
 // end of static files
 // - - -
@@ -433,7 +439,7 @@ app.get('/cameras', passport.authenticate('basic', {session: false}), function(r
 // gets ts segment
 // TODO: get authentication to work with HLS video tag
 app.get('/cameras/:cam_id/ts/:stream_id/:file', function(req, res) {
-    
+   
     var camId    = req.params.cam_id;
 	var streamId = req.params.stream_id;
     var file     = req.params.file;

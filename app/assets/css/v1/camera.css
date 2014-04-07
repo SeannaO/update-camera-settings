@@ -1,0 +1,267 @@
+body {
+	margin:     0px 30px;
+	min-width:  460px;
+}
+
+#header{
+	/*height:105px;*/
+}
+
+#camera-scanner-container{
+	position:          absolute;
+	left:              0px;
+	top:               30px;
+	width:             237px;
+	z-index:           100;
+	border-radius:     0px 0px 5px 5px;
+	border:            1px solid #bbb;
+	border-top:        none;
+	background-color:  #eee;
+	padding:           5px;
+	display:           none;
+}
+
+#camera-scanner{
+	margin-bottom:  0px;
+}
+
+#camera-subnet{
+	width:  90px;
+}
+
+#device-info dl{
+	display:     none;
+	height:      60px;
+	/*overflow:  hidden;*/
+}
+
+#header .title{
+    padding:10px 0px;
+}
+
+#header dl .info-item{
+	text-align:  right;
+}
+#header dl {
+    float:   right;
+    margin:  0px;
+    width:   250px;
+}
+#header dl dt{
+    float:  left;
+}
+#storage-info{
+    float:        right;
+    margin-left:  10px;
+}
+
+#camera-auth-status{
+	margin-top:  32px;
+}
+
+#camera-auth-status .glyphicon{
+	font-size: 1.4em;
+}
+
+.status{
+	width:              12px;
+	height:             12px;
+	background-repeat:  no-repeat;
+	background-color:   transparent;
+	margin:             0px 2px;
+	display:            inline-block;
+}
+.status.red{
+	background-image:  url("../img/redstatus.png");
+}
+.status.green{
+	background-image:  url("../img/greenstatus.png");
+}
+.status.gray{
+	background-image:  url("../img/graystatus.png");
+}
+
+
+.thumb-container {
+	position:  absolute;
+	top:       0px;
+	left:      -180px;
+}
+
+.timeline-container {
+	position:     relative;
+	margin-left:  130px;
+}
+
+.timeline-name:hover {
+	background: rgba(255,255,255,0.8);
+	overflow-x: visible;
+	width: auto;
+	display: inline-block;
+	z-index: 1000;
+}
+
+.timeline-name {
+	position:  absolute;
+	width:     118px;
+	height:    20px;
+	overflow:  hidden;
+	left:      -130px;
+	top:       9px;
+}
+
+.timeline-end-time {
+	position:  absolute;
+	top:       28px;
+	right:     0px;
+	color:     #8F8F8F;
+}
+
+.timeline-start-time {
+	position:  absolute;
+	top:       28px;
+	left:      0px;
+	color:     #8F8F8F;
+}
+
+.camera-item {
+	position:   relative;
+	margin:     20px 0px 20px 180px;
+	height:     130px;
+	/*padding:  5px;*/
+}
+
+.camera-item-name {
+	display:  block;
+	height:   25px;
+}
+
+.camera-item-status {
+	margin-left:  10px;
+	font-size:    12pt;
+	display:      inline;
+}
+
+.camera-item-menu {
+
+}
+
+.camera-item-menu .glyphicon {
+	margin:  0px 3px;
+}
+
+.camera-motion-switch {
+	padding-bottom:  40px;
+	margin-left:     18px;
+}
+
+
+
+input.switch {
+    display: none;
+}
+
+input.switch:empty
+{
+	margin-left: -999px;
+}
+
+input.switch:empty ~ label
+{
+	position:             relative;
+	float:                left;
+	line-height:          1.6em;
+	text-indent:          4em;
+	margin:               0.2em 0;
+	cursor:               pointer;
+	-webkit-user-select:  none;
+	-moz-user-select:     none;
+	-ms-user-select:      none;
+	user-select:          none;
+}
+
+input.switch:empty ~ label:before, 
+input.switch:empty ~ label:after
+{
+	position:            absolute;
+	display:             block;
+	top:                 0;
+	bottom:              0;
+	left:                0;
+	content:             ' ';
+	width:               3.6em;
+	background-color:    #c33;
+	border-radius:       0.3em;
+	box-shadow:          inset 0 0.2em 0 rgba(0,0,0,0.3);
+	-webkit-transition:  all 100ms ease-in;
+	transition:          all 100ms ease-in;
+}
+
+input.switch:empty ~ label:after
+{
+	width:             1.4em;
+	top:               0.1em;
+	bottom:            0.1em;
+	margin-left:       0.1em;
+	background-color:  #fff;
+	border-radius:     0.15em;
+	box-shadow:        inset 0 -0.2em 0 rgba(0,0,0,0.2);
+}
+
+input.switch:checked ~ label:before
+{
+	background-color: #393;
+}
+
+input.switch:checked ~ label:after
+{
+	margin-left: 2.1em;
+}
+
+#camera-schedule-dialog .modal-dialog {
+	width: 850px;
+}
+
+#camera-schedule-dialog table th, #camera-schedule-dialog table td {
+	text-align: center;
+}
+
+.check-stream {
+	float:   left;
+	margin:  5px;
+}
+
+.check-stream-status {
+	float:   left;
+	margin:  8px;
+	color:   #555;
+}
+
+.stream-error {
+	color:  #a00;
+}
+
+.stream-ok {
+	color:  #0a0;
+}
+
+.remove-stream {
+	float:   left;
+	margin:  5px;
+}
+
+.camera-streams-retention{
+	width:85%;
+}
+.retention-unit{
+	width:       10%;
+	float:       right;
+	margin-top:  5px;
+}
+
+.unknown #check-stream-container{
+	margin-top:  40px;
+}
+.unknown #check-stream-container .btn.check-stream{
+	margin-left:  10px;
+}

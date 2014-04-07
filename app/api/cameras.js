@@ -203,6 +203,25 @@ module.exports = function( app, passport, camerasController ) {
 	// - - -
 
 
+	// - - -
+	// renders camera page
+	app.get('/v1/cameras/:id', passport.authenticate('basic', {session: false}), function(req, res) {
+
+		var camId = req.params.id;
+
+		camerasController.getCamera( camId, function(err, cam) {
+			if (err || (cam && cam.length === 0) || !cam) {
+				console.error("*** getCamera error: ");
+				console.error( err ) ;
+				console.error("* * *");
+				res.status(422).end({success:false, error: "couldn't find this camera"});
+			} else {
+				res.render('v1/camera', cam.toJSON());				
+			}
+		});
+	});
+	// end of camera page
+	// - - -
 
 	// - - -
 	// renders camera page
@@ -468,7 +487,7 @@ module.exports = function( app, passport, camerasController ) {
 
 					res.writeHead(200, { 
 						"Content-Type":"application/x-mpegURL",
-						'content-length': playlist.length 
+						'Content-Length': Buffer.byteLength(playlist) 
 					});
 
 					res.end(playlist);    

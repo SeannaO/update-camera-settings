@@ -4,24 +4,14 @@ var Timeline = function( el, options ) {
 
 	options = options || {};
 	
-	this.begin    = options.begin;
-	this.end      = options.end;
 	this.seekable = options.seekable;
-	
-	if ( isNaN(options.offset) ) {
-		this.offset = 15000;
-	} else {
-		this.offset = options.offset;
-	}
-
 	this.index = [];
 
-	this.el = $(el);
-	this.width = this.el.width();
+	this.width = 600;
 
-	this.setTimeSpan( options.timeSpan || options.totalTime || 30*60*1000 );
+	this.setTimeSpan( options.timeSpan || 30 );
 
-	// this.el = el;
+	this.el = el;
 
 	var chart = d3.select(el)
 		.append("svg")
@@ -43,6 +33,7 @@ var Timeline = function( el, options ) {
 		.attr("y2", 10)
 		.attr("stroke", "lightgray");
 
+	
 	this.startTime = $("<div>", {
 		html: '',
 		class: 'timeline-start-time'
@@ -82,37 +73,9 @@ Timeline.prototype.refresh = function() {
 
 	var start = formattedTimeFromTimestamp( Date.now() - this.timeSpan);
 	var end   = formattedTimeFromTimestamp( Date.now() - 15000 );
-	// var end   = formattedTimeFromTimestamp( Date.now() - 15000 );
 
 	$(this.startTime).html( start );
 	$(this.endTime).html( end );
-};
-
-
-Timeline.prototype.getFirstRectAfterTime = function( time, begin, end ) {
-	
-	var self = this;
-
-	if ( isNaN(begin) || isNaN(end) ) {
-
-		begin = 0;
-		end = self.index.length-1;
-
-		return self.getFirstRectAfterTime( time, begin, end );
-
-	} else {
-		console.log(begin + ' ' + end);
-		var middle = Math.floor( (end + begin)/2 );
-		if ( time > self.index[begin].start && time < self.index[middle].end ) {
-			end = middle;
-		} else if ( time > self.index[middle].start && time < self.index[middle].end ) {
-			start = middle;	
-		} else if ( time < self.index[begin].start ) {
-			return self.index[begin]
-		}
-
-		return self.getFirstRectAfterTime( relative_time, begin, end );
-	}
 };
 
 
@@ -134,20 +97,13 @@ Timeline.prototype.getRectByRelativeTime = function( relative_time, begin, end) 
 		}
 		return self.getRectByRelativeTime( relative_time, begin, end );
 	}
+								
 };
 
 
 Timeline.prototype.scaleX = function( t ) {
 	var self = this;
-	var x;
-
-	if (!self.end) {
-		x = 100 - this.dx * ( Date.now() - t - self.offset);
-		// x = 100 - this.dx * ( Date.now() - t - 15000);
-	} else {
-		x = 100 - this.dx * ( self.end - t - self.offset);
-		// x = 100 - this.dx * ( self.end - t - 15000);
-	}
+	var x = 100 - this.dx * ( Date.now() - 15000 - t );
 	
 	return x;
 };
@@ -159,46 +115,25 @@ Timeline.prototype.scaleW = function( t ) {
 };
 
 
-Timeline.prototype.setBegin = function( begin ) {
-	console.log("set begin: " + new Date(begin) ) ;
-	this.begin = begin;
-	this.setTimeSpan( this.end - this.begin );
-};
-
-Timeline.prototype.setEnd = function( end ) {
-	this.end = end;
-	this.setTimeSpan( this.end - this.begin );
-};
-
-Timeline.prototype.getFirstBox = function() {
-	if ( this.boxes.selectAll('rect').length > 0 ) {
-		return this.boxes.selectAll('rect')[0][0];
-	} else {
-		return;
-	}
-};
-
-
 Timeline.prototype.append = function( data ) {
-
+	
 	var self = this;
 
-	var rect = self.boxes.append('rect')
-		.attr('data-start',       data.start)
-		.attr('data-totalTime',   data.totalTime)
-		.attr('data-thumb',       data.thumb)
-		.attr('x',                self.scaleX( data.start ) + "%")
-		.attr('y',                10)
-		.attr('width',            self.scaleW(data.w) + "%" )
-		.attr('height',           15)
-		.style('fill',            'rgb(100,100,200)')
-		.style('stroke',          'rgb(100,100,200)')
-		.style('stroke-width',    '2')
-		.on('mouseover', function() {
+	var rect = self.boxes.append("rect")
+		.attr("data-start", data.start)
+		.attr("data-thumb", data.thumb)
+		.attr("x", self.scaleX( data.start ) + "%")
+		.attr("y", 10)
+		.attr("width", self.scaleW(data.w) + "%" )
+		.attr("height", 15)
+		.style("fill", "rgb(100,100,200)")
+		.style("stroke", "rgb(100,100,200)")
+		.style("stroke-width", "2")
+		.on("mouseover", function() {
 			var d = d3.select(this);
 			data.mouseover(d);
 		})
-		.on('click', function() {
+		.on("click", function() {
 			var d = d3.select(this);
 			data.mouseclick(d);
 		});
@@ -214,13 +149,6 @@ Timeline.prototype.append = function( data ) {
 };
 
 
-Timeline.prototype.clear = function() {
-		
-	this.boxes.selectAll('rect').data([]).exit().remove()
-	console.log("clearing timeline");
-}
-
-
 Timeline.prototype.pushToIndex = function( indexed_box ) {
 };
 
@@ -232,40 +160,28 @@ Timeline.prototype.totalTime = function() {
 	return totalTime;
 };
 
-//
-// Timeline.prototype.begin = function() {
-// 	var self = this;
-// 	var l = self.index.length;
-// 	if ( l <= 0 ) return 0;
-//
-// 	return self.index[0].start;
-// }
+
+Timeline.prototype.begin = function() {
+	var self = this;
+	var l = self.index.length;
+	if ( l <= 0 ) return 0;
+	
+	return self.index[0].start;
+}
 
 
 Timeline.prototype.end = function() {
 	var self = this;
 	var l = self.index.length;
 	if ( l <= 0 ) return 0;
-
+	
 	return self.index[l-1].start;
 }
 
 
 Timeline.prototype.setTimeSpan = function( t ) {
 	this.timeSpan = t;
-	this.dx = 100.0 / this.timeSpan;
-}
-
-
-Timeline.prototype.getTimeSpan = function() {
-	return this.timeSpan;
-}
-
-
-Timeline.prototype.getTimeByPosition = function( x ) {
-	
-	var dt = 1.0 * this.timeSpan / this.width;
-	return x * dt + this.begin;
+	this.dx = 100 / this.timeSpan;
 }
 
 

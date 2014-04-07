@@ -205,6 +205,7 @@ function takeSnapshot( db, cam, req, res, cb ) {
 					if (cb) cb();
 				});
             } else {
+				console.log('[takeSnapshot]  no such file: ' + file);
                 res.end( "sorry, no videos were recorded at " + (new Date(time)) );
 				if (cb) cb();
             }

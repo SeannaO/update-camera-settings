@@ -14,14 +14,6 @@ function TimelineSelector( el ) {
 		class: 'timeline-marker'
 	}).appendTo(el);
 
-	this.leftMarkerTime = $('<div>', {
-		class: 'timeline-marker-time'
-	}).appendTo(el);
-
-	this.rightMarkerTime = $('<div>', {
-		class: 'timeline-marker-time'
-	}).appendTo(el);
-
 	this.left = 0;
 	this.right = 0;
 
@@ -38,7 +30,7 @@ TimelineSelector.prototype.setBounds = function( pos ) {
 	} else if (pos < this.left) {
 		this.leadingMarker = -1;
 	}
-
+	
 	if (this.leadingMarker === 1) {
 		this.setRight( pos );
 	} else {
@@ -46,33 +38,11 @@ TimelineSelector.prototype.setBounds = function( pos ) {
 	}
 };
 
-
-TimelineSelector.prototype.showTimes = function() {
-	this.leftMarkerTime.fadeIn();
-	// this.rightMarkerTime.fadeIn();
-};
-
-
-TimelineSelector.prototype.hideTimes = function() {
-	this.leftMarkerTime.fadeOut();
-	// this.rightMarkerTime.fadeOut();
-};
-
-
-TimelineSelector.prototype.updateTimes = function(left){
-	this.leftMarkerTime.html( left );
-	// this.rightMarkerTime.html( right );
-};
-
-
 TimelineSelector.prototype.setLeft = function(left) {
 	this.left = left;
 	this.leftMarker.css('left', left + 'px');
 	this.el.css('left', left + 'px');
 	this.el.css('width', (this.right - this.left) + 'px' );
-
-	this.leftMarkerTime.css('left', (left-10) + 'px');
-	this.leftMarkerTime.css('top', '-17px');
 };
 
 

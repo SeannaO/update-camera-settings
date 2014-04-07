@@ -21,10 +21,10 @@
 		<script src = "/js/timeline.js"></script>
 
 		<script type="text/javascript" src="/js/swfobject.js"></script>
-        <script src = "/js/cam_init.js"></script>
+        <script src = "/js/cameraPage.js"></script>
 
-        <script src="/js/timepicker.js"></script>
         <script src="/js/moment.min.js"></script>
+        <script src="/js/lib/path.min.js"></script>
 
         <script src="/js/bootstrap.min.js"></script>
         <script src="/js/d3.v3.min.js"></script>
@@ -33,7 +33,6 @@
 		<script src="/js/lib/picker.js"></script>
 		<script src="/js/lib/picker.date.js"></script>
 
-		<script src="/js/date-selector.js"></script>
 		<script src="/js/timeline-selector.js"></script>
 
         <script src="/js/player.js"></script>
@@ -41,6 +40,10 @@
 
 
     <body style = "margin: 10px">
+		<div style = 'opacity: 0.5; position:absolute; top:0px; right:0px'>
+			<a href= "/v1/cameras/<%= _id  %>">v1</a> 
+		</div>
+
 	<h2 class = 'text-muted'> <a href ="/cameras">cameras</a> | <span id='camera_name'><%= name %></span> </h2> 
         <hr>
 		
@@ -50,20 +53,22 @@
 		</div>
 
         <div id = "search-bar" class="form-inline">
+
             <input id="begin_date" type="text" placeholder="select a day" ></input>
 
-            <button id = "get-snapshot" class = 'btn btn-xs btn-default'>get a snapshot</button>
+            <!-- <button id = "get&#45;snapshot" class = 'btn btn&#45;xs btn&#45;default'>get a snapshot</button> -->
             <button id = "get-livestream" class = 'btn btn-xs btn-default'>livestream</button>
-
 			<button id = "download" class = 'btn btn-xs btn-default'>download video</button>
-
         </div>
 
 		<div id = "time-map">
 			<div id = "date-selector"></div>	
 			<div id = "marker"></div>
-
+			<div id = "zoom-back"> zoom out </div>
 			<div id = "timeline">
+				<div id = "timeline-begin-time" class = 'timeline-time'> </div>
+				<div id = "timeline-end-time" class = 'timeline-time'> </div>
+
 				<div id = "timeline-selector"></div>
 			</div>				
 		</div>
@@ -82,52 +87,27 @@
 				camPage = new CameraPage( camId );
 				camPage.setup();			
             });
+	
+			Path.map("#/zoom/:begin").to(function(){
+				console.log("begin: " + this.params['begin']);
+			});
+
+//  Path.map("#/users/:user_id").to(function(){
+// 	             $("#output .content").html("You selected the user with ID: " + this.params["user_id"]);
+// 				         });
+//
+// 			Path.map("#/comments").to(function(){
+// 				alert("Comments!");
+// 			}).enter(clearPanel);
+//
+// 			Path.map("#/posts").to(function(){
+// 				alert("Posts!");
+// 			}).enter(clearPanel);
+
+			Path.root("#");
+
+			Path.listen();	
         </script>
 
-		<script>
-			// var dateSelector = new DateSelector("#date-selector");
-				
-			// getStreamsInfo( camId, function() {
-			// 	// list();
-			// });
-
-		</script>
-
-		<script>
-			var timelineSelector = new TimelineSelector("#timeline-selector");
-			var mousePressed = false;
-			var mouseDragged = false;
-			$('#timeline-selector').mousedown( function(e) {
-					var x = e.pageX - $(this).parent().offset().left;//left;
-					timelineSelector.setLeft( x );
-					timelineSelector.setRight( x ); 				
-					mousePressed = true;
-					mouseDragged = false;
-			});
-			$('#timeline-selector').mousemove( function(e) {
-				console.log("x");
-				if ( mousePressed ) {
-					mouseDragged = true;
-					var x = e.pageX - $(this).parent().offset().left;
-					timelineSelector.setBounds( x ); 				
-				}
-			});
-			$('#timeline-selector').mouseup( function(e) {
-					mousePressed = false;
-					if( !mouseDragged ) {
-						console.log("that was a click");
-						var left = $(window).scrollLeft();
-						var top = $(window).scrollTop();
-
-						$(this).css('display','none');
-						$(document.elementFromPoint(e.pageX-left, e.pageY-top)).click();
-						console.log( 	$(document.elementFromPoint(e.pageX-left, e.pageY-top)) );
-						$(this).css('display','block');
-					}
-					else { 
-						console.log("that was a drag");
-					}
-			});
-		</script>		
     </body>
 </html>

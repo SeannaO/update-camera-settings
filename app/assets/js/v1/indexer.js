@@ -3,9 +3,6 @@ function Indexer() {
 	this.elements = [];
 };
 
-Indexer.prototype.includesInterval = function( begin, end ) {
-	
-}
 
 Indexer.prototype.push = function( data ) {
 
@@ -13,7 +10,7 @@ Indexer.prototype.push = function( data ) {
 	var i = self.elements.length;
 	var totalTime = 0;
 
-	var mostRecent = i > 0 ? self.elements[ i - 1 ] : {start: -1, end: 1, totalTime: 0, duration: 0}; 	
+	var mostRecent = i > 0 ? self.elements[ i - 1 ] : {start: -1, totalTime: 0, duration: 0}; 	
 
 	while( data.start < mostRecent.start ) {
 		i--;
@@ -57,8 +54,7 @@ Indexer.prototype.agglutinate = function( size ) {
 	}
 
 	return agglutinated;
-};
-
+}
 
 Indexer.prototype.getAbsoluteTime = function( relative_time, begin, end ) {
 	
@@ -70,7 +66,7 @@ Indexer.prototype.getAbsoluteTime = function( relative_time, begin, end ) {
 	} else if (end - begin <= 1) {
 		var el = self.elements[begin];
 		var offset = parseInt(relative_time) - parseInt(el.totalTime);
-		return parseInt(el.start) + offset*1000;
+		return parseInt(el.start) + offset;
 	} else {
 		var middle = Math.floor( (end + begin)/2 );
 		if ( relative_time > self.elements[middle].totalTime ) {
