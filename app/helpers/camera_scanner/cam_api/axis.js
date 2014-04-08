@@ -16,7 +16,7 @@ var rtspUrl = 'rtsp://{user}:{pass}@{ip}/axis-media/media.amp?streamprofile={pro
 
 var listParamsUrl = baseUrl + 'list&group={group_name}';
 var listAllParamsUrl = baseUrl + 'list';
-var listResolutionsUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&group=ImageSource.I0.Sensor.CaptureMode";
+var listResolutionsUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&group=root.Properties.Image.Resolution";
 
 
 var Axis = function() {
@@ -328,12 +328,15 @@ Axis.prototype.stopListeningForMotionDetection = function(){
 
 
 Axis.prototype.getResolutionOptions = function (cb) {
+
 	var self = this;
 	var url = listResolutionsUrl
 		.replace('{user}', self.cam.user || '')
 		.replace('{pass}', self.cam.password || '')
 		.replace('{ip}', self.cam.ip);
+
 	var digest = new Buffer(self.cam.user + ":" + self.cam.password).toString('base64');
+
 	request({ 
 		url: url,
 		headers: {
@@ -342,28 +345,30 @@ Axis.prototype.getResolutionOptions = function (cb) {
 			'Authorization': 'Basic ' + digest			
 		},
 	}, function( error, response, body) {
-		if (!error && body){
-			var re = /(\d+)x(\d+)/
-			xml2js(body, function(err,result){
-				if (!err){
-					
-					try {
-						var output = result.parameterDefinitions.group[0].group[0].group[0].parameter[0].type[0].enum[0].entry.map(function(element){
-							return { value: re.exec(element['$'].niceValue)[0], name: element['$'].niceValue }
-						});
-						
-						output.push( {value: '800x600', name: 'small - 800x600'} );
-						console.log(output);
+		if (!error && body && body.indexOf('nauthorized') > -1) {
+			cb('not authorized', []);
+		}
+		if (!error && body)	{
 
-						cb(null, output);
-					} catch( e ) {
-						cb('not authorized', []);
-					}
-				}else{
-					cb(err, []);
-				}
-			});
-		}else{
+			var resDataBegin = body.indexOf('value');
+			resDataBegin = body.indexOf('"', resDataBegin);
+			resDataEnd = body.indexOf('"', resDataBegin+1);
+
+			var resolutions = body.substring(resDataBegin + 1, resDataEnd);
+			resolutions = resolutions.split(',');
+
+			if (!resolutions) {
+				if (cb) cb('no resolutions found', []);
+				return;
+			} 
+			else {
+				var re = /(\d+)x(\d+)/
+				var output = resolutions.map( function(res) {
+					return { value: res, name: res }
+				});	
+				cb(null, output);
+			}
+		} else{
 			cb(error, []);
 		}
 	}
