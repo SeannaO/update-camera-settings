@@ -42,7 +42,7 @@ SensorsInfo.prototype.requestNewData = function() {
 	var url = 'https://' + user + ':' + password + '@localhost/cp/Sensors?v=2';
 
 	if (self.developmentMode) {
-		url = 'https://' + user + ':' + password + '@192.168.215.129/cp/Sensors?v=2';
+		url = 'https://Administrator:password@192.168.215.108/cp/Sensors?v=2';
 	}
 
 	request( url, {

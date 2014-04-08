@@ -27,11 +27,11 @@ Diskstat.prototype.launch = function() {
 
 	var self = this;
 
-	if ( !this.development ) {
-		this.iostatProcess = spawn('iostat', ['-x', '2']);
-	} else {
-		this.iostatProcess = spawn('./helpers/fakestat.sh');
-	}
+	// if ( !this.development ) {
+		this.iostatProcess = spawn('iostat', ['-x', '1']);
+	// } else {
+		// this.iostatProcess = spawn('./helpers/fakestat.sh');
+	// }
 
 	this.iostatProcess.stdout.on('data', function(data) {
 

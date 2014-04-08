@@ -35,7 +35,7 @@ Smart.prototype.start = function() {
 				});
 			});
 		}
-	}, 15 * 60 * 1000);
+	}, 2 * 1000);
 };
 
 
