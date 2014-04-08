@@ -55,7 +55,7 @@ var updateSensors = function( data ) {
 	for (var sensor in data) {
 
 		for (var type in data[sensor]) {
-
+			if (!type || type === 'undefined') continue;
 			var row = $('<tr>');
 			var column = $('<td>', {
 				id: sensor + "-" + type,
