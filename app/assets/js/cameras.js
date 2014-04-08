@@ -524,6 +524,10 @@ var to12HourTime = function(hours){
 scanForCameras = function(subnet, cb) {
 	$("#camera-scanner-container").hide();
     $("#scan-spinner").show();
+	setTimeout( function() {
+    	$("#scan-spinner").fadeOut();
+	},  30 * 1000);
+
     $.ajax({
         type: "GET",
         url: "/scan.json?subnet=" + subnet,
