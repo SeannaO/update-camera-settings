@@ -92,8 +92,9 @@
                         <label for="scanner-subnet">subnet</label>
                         <input name="scanner[subnet]" type="text" id="camera-subnet" class="input-sm form-control" placeholder="192.168.1">
                     </div>
-                    <button id="reset-subnet-field" type="button" class="btn btn-xs btn-default">Reset</button>
-                    <button id="start-camera-scanner" type="button" class="btn btn-xs btn-default btn-success">GO</button>
+                    <button id="close-subnet-field" type="button" class="btn btn-xs btn-default">close</button>
+                    <button id="reset-subnet-field" type="button" class="btn btn-xs btn-info">reset</button>
+                    <button id="start-camera-scanner" type="button" class="btn btn-xs btn-success">go</button>
                 </form>
             </div>
         </div>
@@ -282,6 +283,7 @@
                     $("#device-info dl").show();
                 },
                 error: function( data ) {
+					default_subnet = "192.168.1"; //
                     $("#header .title").html("Unknown");
                 }
             });
@@ -412,15 +414,22 @@
             $("#start-camera-scanner").click(function() {
 
                 var subnet = $('#camera-subnet').val();
-                scanForCameras(subnet, function(){
-
-                });
+				var re = /^(?:[0-9]{1,3}\.){2}[0-9]{1,3}$/;
+				if (!re.exec(subnet)) {
+					alert('Invalid subdomain. Enter a subdomain of the type xxx.xxx.xxx'); 
+				} else {
+					scanForCameras(subnet, function(){
+					});
+				}
             });
 
             $("#reset-subnet-field").click(function() {
                 $('#camera-subnet').val(default_subnet);
             });            
 
+            $("#close-subnet-field").click(function() {
+				$('#camera-scanner-container').hide();
+            });            
 
             $("#add-stream").click(function(){
                 addStream();
