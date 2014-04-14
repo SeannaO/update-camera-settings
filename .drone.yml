@@ -1,0 +1,9 @@
+image: node0.8
+script:
+  - make
+services:
+  - postgres
+notify:
+  email:
+    recipients:
+      - email@example.com
