@@ -451,6 +451,46 @@ module.exports = function( app, passport, camerasController ) {
 	});
 	// - - -
 
+
+	// - - -
+	// - - -
+	// gets hls stream for live stream
+	// temporarily without authentication, to fix native hls player issues
+	// the next step will be using session cookies to handle auth
+	app.get('/cameras/:id/live.m3u8', function(req, res) {
+
+		var camId = req.params.id;
+		var streamId = req.query.stream;
+
+		camerasController.getCamera( camId, function(err, cam) {
+
+			if (err) {
+				console.error("[/cameras/:id/live.m3u8] :");
+				console.error( err ) ;
+				res.json( { error: err } );
+			} else {
+				// if no stream is not specified then just give the first stream
+				if (!cam.streams[streamId]) {
+					for (var s in cam.streams){
+						streamId = s;
+						break;
+					}
+				}
+
+				hlsHandler.generateLivePlaylist( streamId, function( playlist ) {
+					res.writeHead(200, { 
+						"Content-Type":"application/x-mpegURL",
+						'Content-Length': Buffer.byteLength(playlist) 
+					});
+
+					res.end(playlist);    
+				});
+			}
+		});
+	});
+
+
+	// - - -
 	// - - -
 	// gets hls stream for finite length video
 	// temporarily without authentication, to fix native hls player issues

@@ -61,6 +61,8 @@ util.inherits(RecordModel, EventEmitter);
  */
 RecordModel.prototype.setupFolders = function() {
    
+	var self = this;
+
     this.folder = this.camera.videosFolder + '/' + this.stream.id ;
 
 	this.setupFolderSync( this.camera.videosFolder );
@@ -69,9 +71,12 @@ RecordModel.prototype.setupFolders = function() {
     this.setupFolderSync(this.folder + "/videos");
     this.setupFolderSync(this.folder + "/videos/tmp");
     this.setupFolderSync(this.folder + "/thumbs");
- 
+
 	this.cleanTmpFolder();
 
+	exec('mkfifo ' + this.folder + '/videos/pipe.ts', function(error) {
+		if (error) console.error( error );
+	});
 };
 // end of setupFolders
 //

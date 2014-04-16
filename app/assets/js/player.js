@@ -1,5 +1,7 @@
 function Player( el ) {
 
+	var self = this;
+
 	this.layers = {};
 	
 	this.layers.livePlayer = $("<div>", {
@@ -31,6 +33,10 @@ function Player( el ) {
 		$(window).trigger( 'currentTimeChange', time );
 	}
 
+	$(window).on('currentTimeChange', function(e, t) {
+		self.currentTime = t;
+	});
+
 	this.currentPlayer = null;
 }
 
@@ -51,6 +57,7 @@ Player.prototype.launchNativePlayer = function( url ) {
 	this.layers.nativePlayer.show();
 	this.layers.nativePlayer.attr("width", "640px");
 	this.layers.nativePlayer.attr("height", "480px");
+	this.layers.nativePlayer.attr("position", "absolute");
 	this.layers.nativePlayer.attr("src", url);
 	this.layers.nativePlayer[0].addEventListener('timeupdate',function( e ){
 		var t = self.layers.nativePlayer[0].currentTime;
@@ -62,22 +69,10 @@ Player.prototype.launchNativePlayer = function( url ) {
 /**
  * Launches vlc plugin player
  *		doesnt run well on osx 
+ *		DEPRECATED
  */
 Player.prototype.showLiveStream = function( url ) {
-
-	console.log( url );	
-	for( var i in this.layers ) {
-		this.layers[i].hide();
-	}
-
-	var html = '<embed type="application/x-vlc-plugin"' +
-				'name="102"' +
-				'autoplay="yes" width="640" height="480"' +
-				'target="'+url+'" />';
-
-	this.hideAll();
-	this.layers.livePlayer.html( html );
-	this.layers.livePlayer.show();
+	console.log('deprecated function');
 };
 
 
@@ -209,8 +204,10 @@ Player.prototype.play = function() {
  *		elapsed time in seconds
  */
 Player.prototype.jumpTo = function( time ) {
-
-	if (this.player == 'strobe') {	
+	
+	// console.log(time);
+	// console.log(this.currentPlayer + ' jumpTo: ' + time ); 
+	if (this.currentPlayer  == 'strobe') {	
 		// var player = document.getElementById("strobeMediaPlayback");
 		var player = this.layers.strobePlayer[0];
 		if ( player.canSeekTo(time) ) {
@@ -218,11 +215,24 @@ Player.prototype.jumpTo = function( time ) {
 			player.seek(time);
 			player.play2();
 		}
-	} else if( this.player == 'native' ) {
+	} else if( this.currentPlayer  == 'native' ) {
 		this.layers.nativePlayer[0].currentTime = time;	
 	}
 };
 
+Player.prototype.stopFF = function() {
+	clearInterval(this.ffInterval);
+};
+
+Player.prototype.ff = function() {
+
+	var self = this;
+	var dt = this.currentTime;
+	this.ffInterval = setInterval( function() {
+		dt += 1;
+		self.jumpTo( dt );
+	}, 200/3.0);
+}
 
 /**
  * Plays video using compatible player 
@@ -241,12 +251,20 @@ Player.prototype.playVideo = function( camId, streamId, begin, end ) {
 	// loadIndexer( begin, end, function() {
 	// 	launchTimeline( 50, begin, end);
 	// });
-		
-	var url = window.location.origin +
-	   	"/cameras/" + camId + 
-		"/video.m3u8?begin=" + begin +
-		"&end=" + end +
-		"&stream=" + streamId;
+
+	var url = "";
+
+	if (!begin && !end) {
+		url = window.location.origin +
+			"/cameras/" + camId + 
+			"/live.m3u8";
+	} else {	
+		url = window.location.origin +
+			"/cameras/" + camId + 
+			"/video.m3u8?begin=" + begin +
+			"&end=" + end +
+			"&stream=" + streamId;
+	}
 
 	if (!this.canPlayHLS()) {
 		this.launchStrobePlayer({

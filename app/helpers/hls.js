@@ -8,21 +8,16 @@ var path = require('path');
 var ffmpeg = require('./ffmpeg');
 
 
-var livePlaylist = function( videos, targetDuration, mediaSequence, cb ) {
-    var content = "#EXTM3U\n" +
-                  "#EXT-X-VERSION:3\n" +          
-//                  "#EXT-X-PLAYLIST-TYPE:EVENT\n" + 
-                  "#EXT-X-ALLOW-CACHE:YES\n" +
-                  "#EXT-X-TARGETDURATION:" + targetDuration + "\n" +
-                  "#EXT-X-MEDIA-SEQUENCE:" + mediaSequence + "\n";
+var generateLivePlaylist = function( streamId, cb ) {
 
-    for ( var i = 0; i < videos.length; i++ ) {
-		
-		var duration = (videos[i].end - videos[i].start)/1000.0;
-		duration = 10;
-        content = content + "#EXTINF:" + duration + ",\n";
-        content = content + "/ts/" + path.basename(videos[i].file) + "\n";
-    }
+    var content = "#EXTM3U\n" +
+                  "#EXT-X-VERSION:3\n" +         
+                  "#EXT-X-ALLOW-CACHE:YES\n" +
+                  "#EXT-X-TARGETDURATION:1\n" +
+                  "#EXT-X-MEDIA-SEQUENCE:0\n";
+	var duration = 1;
+	content = content + "#EXTINF:1,\n";
+	content = content + "ts/" + streamId + "/live.ts\n";
     
     cb( content );
 };
@@ -33,7 +28,6 @@ var livePlaylist = function( videos, targetDuration, mediaSequence, cb ) {
  *
  */
 var generatePlaylist = function( camId, streamId, videos, targetDuration, mediaSequence, closed, cb ) {
-    
 
     var content = "#EXTM3U\n" +
                   "#EXT-X-VERSION:3\n" +         
@@ -42,22 +36,21 @@ var generatePlaylist = function( camId, streamId, videos, targetDuration, mediaS
                   "#EXT-X-MEDIA-SEQUENCE:0\n";
 
     for ( var i = 0; i < videos.length; i++ ) {
-		
-	    var duration = (videos[i].end - videos[i].start)/1000.0;
+		var duration = (videos[i].end - videos[i].start)/1000.0;
 
-        if (duration > 100) {
-		console.error("[hls] invalid chunk duration, defaulting to 10s");
+		if (duration > 100) {
+			console.error("[hls] invalid chunk duration, defaulting to 10s");
+		}
+
+		content = content + "#EXTINF:" + duration + ",\n";
+		content = content + "ts/" + streamId + "/" + path.basename(videos[i].file) + "\n";
 	}
 
-	content = content + "#EXTINF:" + duration + ",\n";
-        content = content + "ts/" + streamId + "/" + path.basename(videos[i].file) + "\n";
-    }
+	if ( closed ) {
+		content = content + "#EXT-X-ENDLIST\n";
+	}
 
-    if ( closed ) {
-        content = content + "#EXT-X-ENDLIST\n";
-    }
-
-    cb( content );
+	cb( content );
 };
 // - - end of generatePlaylist
 // - - - - - - - - - - - - - - - - - - - -
@@ -131,7 +124,7 @@ var calculateLengths = function( files, cb ) {
 
 // exports
 exports.generatePlaylist = generatePlaylist;
-exports.livePlaylist = livePlaylist;
+exports.generateLivePlaylist = generateLivePlaylist;
 exports.calculateLengths = calculateLengths;
 
 

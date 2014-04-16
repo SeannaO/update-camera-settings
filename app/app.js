@@ -444,10 +444,39 @@ app.get('/cameras/:cam_id/ts/:stream_id/:file', function(req, res) {
 	var streamId = req.params.stream_id;
     var file     = req.params.file;
 
-    tsHandler.deliverTsFile( camId, streamId, file, res );
+	console.info( file  );
+
+	if (file !== 'live.ts') {
+		tsHandler.deliverTsFile( camId, streamId, file, res );
+	} else {
+		camerasController.getCamera( camId, function(err, cam) {
+
+			if (err) {
+				console.error("[/cameras/:id/video.m3u8] :");
+				console.error( err ) ;
+				res.json( { error: err } );
+
+			} else {
+				// if no stream is not specified then just give the first stream
+				if (!cam.streams[streamId]) {
+					for (var s in cam.streams){
+						streamId = s;
+						break;
+					}
+				}
+			}
+			if (!cam.streams[streamId]) {
+				res.end();
+				return;
+			}
+			cam.streams[streamId].streamer.pipe(res);
+		});
+	}
 });
 // - - -
 
+
+// - - -
 // - - -
 //	gets hls live stream
 //	TODO: not yet implemented

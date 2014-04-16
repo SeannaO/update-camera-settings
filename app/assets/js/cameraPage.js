@@ -293,7 +293,7 @@ CameraPage.prototype.setupButtons = function() {
 		var stream = self.inputs.streams.val();
 		var begin  = new Date( self.currBegin );
 		var end    = new Date( self.currEnd );
-		
+
 		if ( !confirm('Download video\n\n FROM: ' + begin + '\n TO: ' + end  + '\n\n Confirm? ') ) {
 			return;	
 		}
@@ -316,8 +316,11 @@ CameraPage.prototype.setupButtons = function() {
 
 	// livestream button
 	this.buttons.livestream.click(function() {
-		var url = self.getRtsp().url;
-		self.player.showLiveStream( url );
+		var stream = self.inputs.streams.val();
+		if (!stream) {
+
+		}
+		self.player.playVideo( self.camId, stream );
 	});
 };
 

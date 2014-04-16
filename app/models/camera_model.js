@@ -6,6 +6,7 @@ var util           = require('util');                   // for inheritance
 var EventEmitter   = require('events').EventEmitter;    // events
 var find           = require('findit');
 var path           = require('path');
+var Streamer       = require('../helpers/live_streamer.js');
 
 function Camera( cam, videosFolder, cb ) {
 
@@ -117,6 +118,9 @@ Camera.prototype.addStream = function( stream, cb ) {
 
 			self.streams[stream.id] = stream;
 			stream.recordModel = new RecordModel( self, stream, function(recorder){
+    			var folder = self.videosFolder + '/' + stream.id;
+				stream.streamer = new Streamer(folder + '/videos/pipe.ts');
+
 				if ( self.shouldBeRecording() ) {
 					recorder.startRecording();
 				}

@@ -43,9 +43,9 @@
 
 
     <body style = "margin: 10px">
-		<div style = 'opacity: 0.5; position:absolute; top:0px; right:0px'>
-			<a href= "/v1/cameras/<%= _id  %>">v1</a> 
-		</div>
+		<!-- <div style = 'opacity: 0.5; position:absolute; top:0px; right:0px'> -->
+		<!-- 	<a href= "/v1/cameras/<%= _id  %>">v1</a>  -->
+		<!-- </div> -->
 
 	<h2 class = 'text-muted'> <a href ="/cameras">cameras</a> | <span id='camera_name'><%= name %></span> </h2> 
         <hr>
@@ -76,14 +76,68 @@
 			</div>				
 		</div>
 		 
-		<div id = "video" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px;" class = "shadow">
+		<div id = "video" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px;position:relative; overflow:hidden" class = "shadow">
 		</div>
 
 		<div id = "thumb" style = "display:none; position: absolute; z-index: 1000">
 			<div id = 'thumb-time'></div>
 			<img src = ""/>
         </div>
-					
+
+		<!-- <div id = "vd_zoom" style=" -->
+		<!-- 	position:  absolute; -->
+		<!-- 	width:  640px; -->
+		<!-- 	height: 480px; -->
+		<!-- 	top: 270px; -->
+		<!-- 	left: 30px; -->
+		<!-- "></div>	 -->
+
+		<script>
+// 			var left = 0;
+// 			var top = 0;
+// 			var drag = false;
+// 			var clicked = false;
+// 			var px, py;
+// 			$('#vd_zoom').click(function() {
+// 				if (drag) return;
+// 				var w = $('object').attr('width');
+// 				var h = $('object').attr('height');
+// 				$('object').attr('width', 1.2*w);
+// 				$('object').attr('height', 1.2*h);
+// 			});	
+// 			
+// 			$('#vd_zoom').on('mousedown', function(e) {
+// 				clicked = true;
+// 				drag = false;
+// 				px = e.pageX;
+// 				py = e.pageY;
+// 			});	
+// 			$('#vd_zoom').on('mousemove', function(e) {
+// 				if (!clicked) return;
+// 				var dx = e.pageX - px;
+// 				var dy = e.pageY - py;
+// 				px = e.pageX;
+// 				py = e.pageY;
+// 				console.log(dx);
+// 				console.log(dy);
+// 				if (Math.abs(dx) > 10 || Math.abs(dy) > 10) drag = true;
+// 				var l = parseInt( $('object').css('left') );
+// 				var t = parseInt( $('object').css('top') );
+// 				var w = parseInt( $('object').attr('width') );
+// 				var h = parseInt( $('object').attr('height') );
+// 				l += dx;
+// 				t += dy;
+// 				
+// 				$('object').css('left', l);
+// 				$('object').css('top', t);
+// 			});
+//
+// 			$('#vd_zoom').on('mouseup', function(e) {
+// 				clicked = false;
+// 			});	
+
+		</script>
+
         <script>
 			var camPage;
             $(function() {
