@@ -84,6 +84,7 @@ var scan = function(prefix, cb ) {
 	
 	var camList = [];
 	psiaScan( prefix, function(psia) {
+		console.log("ok, scanning onvif cameras now");
 		onvifScan( prefix, function(onvif) {
 			for(var i in psia){
 			   var shared = false;
@@ -96,6 +97,7 @@ var scan = function(prefix, cb ) {
 			}
 			camList = camList.concat(onvif);
 			if (cb) {
+				console.log("done scanning cameras");
 				cb(camList);
 			}
 		});
@@ -119,11 +121,21 @@ var addCam = function( cam, response, cb ) {
 
 var onvifScan = function( prefix, cb ) {
 	console.log("scanning for onvif cameras...");
+	var lock = false;
 
 	onvif.scan(prefix, function(list) {
 	
+		if (lock) return;
+		lock = true;
+
 		var camList = [];
 		
+		
+		if (list.length === 0) {
+			if (cb) cb([]);
+			return;
+		}
+
 		for (var c in list) {
 			onvif.getRtspUrl(list[c], 0, function(err, response, ip) {
 
@@ -158,16 +170,23 @@ var onvifScan = function( prefix, cb ) {
 var psiaScan = function( prefix, cb ) {
 
 	console.log("scanning for psia cameras...");
-
+	var lock = false;
 	psia.scan(prefix, function(list) {
-
+		if (lock) return;
+		lock = true;
 		var camList = [];
 		
+		if (list.length === 0) {
+			if (cb) cb([]);
+			return;
+		}
+
 		for (var c in list) {
 
 			addCam( list[c], function( cam ) {
 				cam.type = 'psia';
 				camList.push( cam );
+				console.log('add cam ' + camList.length);
 				if (camList.length === list.length && cb) {
 					cb(camList);
 					return;

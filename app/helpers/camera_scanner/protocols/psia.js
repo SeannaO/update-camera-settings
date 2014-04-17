@@ -45,18 +45,20 @@ var findPsiaCamera = function( ipPrefix, cb ) {
         
         var ip = ipPrefix + "." + i;
         testIpForPsiaCamera(ip, function( err, status, ip ) {
-            total++;
-            if (total == 254) cb(ipList);
-            
+
             if (err) {
             } 
             else if (status !== '') {
                 ipList.push({ip: ip, status: status});
             }
-            else {
-                total++;   
-                if (total == 255) cb(ipList);
-            }
+            
+			total++;
+            
+            if (total >= 254) {
+				console.log("done scanning psia cameras " + ipList.length);
+				console.log(cb);
+				cb(ipList);
+			}
         });
     }
 };
