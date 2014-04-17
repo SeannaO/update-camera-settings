@@ -435,6 +435,10 @@ app.get('/cameras', passport.authenticate('basic', {session: false}), function(r
 });
 // - - -
 
+app.get('/hls', passport.authenticate('basic', {session: false}), function(req, res) {
+	res.sendfile(__dirname + '/views/js_hls.html');			// main page - alternative route
+});
+// - - -
 // - - -
 // gets ts segment
 // TODO: get authentication to work with HLS video tag
