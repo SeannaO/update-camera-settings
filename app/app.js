@@ -25,7 +25,7 @@ exec('killall -9 smartctl', function( error, stdout, stderr) {});
 
 var self = this;
 
-// launches custom ffmpeg
+// // launches custom ffmpeg
 this.launchRtspGrabber = function() {
 	exec('killall -9 rtsp_grabber', function( error, stdout, stderr) {
 		self.grabberProcess = exec('./rtsp_grabber', function( error, stdout, stderr ) {

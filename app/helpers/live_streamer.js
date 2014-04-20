@@ -1,8 +1,10 @@
 var Stream = require('stream');
 var fs = require('fs');
+var net = require('net');
 var events = require('events');
 var util = require('util');
 
+// grab a random port.
 var Streamer = function( pipeFile ) {
 
 	this.sink;
@@ -10,12 +12,35 @@ var Streamer = function( pipeFile ) {
 	this.fileStream;
 	this.stream;
 	this.pipeFile = pipeFile;
-
-	this.refreshStream();
+	this.server;
 	
+	this.refreshStream();
 };
 
 util.inherits(Streamer, events.EventEmitter);
+
+Streamer.prototype.initServer = function() {
+
+	var self = this;
+
+	this.server = net.createServer( function(socket) {
+		console.log('new connection');
+		socket.on('data', function(data) {
+			self.stream.write(data);
+			console.info('!!!!! new data');
+			console.info('!!!!! new data');
+		});
+	});
+
+	fs.exists(this.pipeFile, function(exists) {
+		if (exists) fs.unlinkSync(self.pipeFile);
+		self.server.listen(self.pipeFile);
+	});
+	this.server.on('error', function(e) {
+		console.log(e);
+	});
+};
+
 
 Streamer.prototype.pipe = function(res) {
 	this.stream.pipe(res);
@@ -40,8 +65,9 @@ Streamer.prototype.refreshStream = function() {
 	this.createSink();
 	this.createPass();
 	this.createStream();
-	
+	this.initServer();
 };
+
 
 Streamer.prototype.createSink = function() {
 
@@ -66,7 +92,7 @@ Streamer.prototype.createPass = function() {
 
 
 Streamer.prototype.createStream = function() {
-
+	
 	var self = this;
 
 	console.info('=======================');
@@ -76,12 +102,7 @@ Streamer.prototype.createStream = function() {
 
 	var timer = Date.now();
 
-	this.fileStream = fs.createReadStream( self.pipeFile );
-	if (!this.fileStream) console.log('fileStream error');
-	this.fileStream.on('data', function(data) {
-		timer = Date.now();	
-	});
-
+	// return;
 	this.stream = new Stream.PassThrough();
 
 	if( !this.stream) { 
@@ -96,15 +117,15 @@ Streamer.prototype.createStream = function() {
 		console.error( err );
 	}
 
-	var t = setInterval( function() {
-
-		if (Date.now() - timer >= 5000) {
-			self.emit('refresh');
-			console.log(Date.now() + ' reopening pipe...');
-			clearInterval(t);
-			self.refreshStream();	
-		}
-	}, 5000);
+// 	var t = setInterval( function() {
+//
+// 		if (Date.now() - timer >= 5000) {
+// 			self.emit('refresh');
+// 			console.log(Date.now() + ' reopening pipe...');
+// 			clearInterval(t);
+// 			self.refreshStream();	
+// 		}
+// 	}, 5000);
 };
 
 module.exports = Streamer;
