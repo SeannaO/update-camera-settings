@@ -86,6 +86,7 @@ body {
 	position:  absolute;
 	top:       0px;
 	left:      -180px;
+	height:    140px;
 }
 
 .timeline-container {
@@ -127,7 +128,8 @@ body {
 .camera-item {
 	position:   relative;
 	margin:     20px 0px 20px 180px;
-	height:     130px;
+	height:     auto;
+	min-height: 160px;
 	/*padding:  5px;*/
 }
 
