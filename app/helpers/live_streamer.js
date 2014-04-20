@@ -26,9 +26,9 @@ Streamer.prototype.initServer = function() {
 	this.server = net.createServer( function(socket) {
 		console.log('new connection');
 		socket.on('data', function(data) {
-			self.stream.write(data);
-			console.info('!!!!! new data');
-			console.info('!!!!! new data');
+			self.pass.write(data);
+			// console.info('!!!!! new data');
+			// console.info('!!!!! new data');
 		});
 	});
 
@@ -110,8 +110,9 @@ Streamer.prototype.createStream = function() {
 	}
 
 	try {
-		this.fileStream.pipe( this.pass );
+		// this.fileStream.pipe( this.pass );
 		this.pass.pipe( self.stream ).pipe( self.sink );
+		// this.pass.pipe( self.stream );
 	} catch(err) {
 		console.log('piping error');
 		console.error( err );

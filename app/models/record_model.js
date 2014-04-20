@@ -74,9 +74,9 @@ RecordModel.prototype.setupFolders = function() {
 
 	this.cleanTmpFolder();
 
-	exec('mkfifo ' + this.folder + '/videos/pipe.ts', function(error) {
-		if (error) console.error( error );
-	});
+	// exec('mkfifo ' + this.folder + '/videos/pipe.ts', function(error) {
+	// 	if (error) console.error( error );
+	// });
 };
 // end of setupFolders
 //
