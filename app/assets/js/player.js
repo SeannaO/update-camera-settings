@@ -257,7 +257,8 @@ Player.prototype.playVideo = function( camId, streamId, begin, end ) {
 	if (!begin && !end) {
 		url = window.location.origin +
 			"/cameras/" + camId + 
-			"/live.m3u8";
+			"/live.m3u8" +
+			"?stream=" + streamId;
 	} else {	
 		url = window.location.origin +
 			"/cameras/" + camId + 
@@ -265,6 +266,7 @@ Player.prototype.playVideo = function( camId, streamId, begin, end ) {
 			"&end=" + end +
 			"&stream=" + streamId;
 	}
+	console.log( url );
 
 	if (!this.canPlayHLS()) {
 		this.launchStrobePlayer({
