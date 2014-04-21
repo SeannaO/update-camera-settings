@@ -24,18 +24,47 @@ Streamer.prototype.initServer = function() {
 	var self = this;
 
 	this.server = net.createServer( function(socket) {
-		console.log('new connection');
-		socket.on('data', function(data) {
-			self.pass.write(data);
-			// console.info('!!!!! new data');
-			// console.info('!!!!! new data');
+
+		// start the flow of data, discarding it.
+		socket.resume();
+
+		// socket.pipe( self.pass ).pipe( self.sink );
+		// socket.pipe( self.pass );
+		console.log( socket.bufferSize );
+		// socket.on('data', function(data) {
+		// // // 	self.pass.write(data);
+		// 	console.log('data');
+		// });
+		// socket.on('data', function(data) {
+		// 	self.pass.write(data);
+		// });
+		// setInterval( function() {
+		// 	socket.resume();
+		// }, 1000);
+	});
+	
+
+	this.server.on('connection', function(s) {
+		s.resume();
+		// var self = this;
+		s.pipe( self.pass ).pipe( self.sink );
+		s.on('data', function() {
+			// console.log('--');
 		});
+		s.on('end', function() {
+			console.log('I got your message (but didnt read it)\n');
+		});
+		s.on('close', function() {
+			console.log('closed socket');
+		});
+		console.log('-- new connection --');
 	});
 
 	fs.exists(this.pipeFile, function(exists) {
 		if (exists) fs.unlinkSync(self.pipeFile);
 		self.server.listen(self.pipeFile);
 	});
+
 	this.server.on('error', function(e) {
 		console.log(e);
 	});
@@ -71,7 +100,9 @@ Streamer.prototype.refreshStream = function() {
 
 Streamer.prototype.createSink = function() {
 
-	this.sink = new Stream.Writable();
+	this.sink = new Stream.Writable({
+		highWaterMark: '128kb'
+	});
 	this.sink.on('error', function(err) {
 		console.log('sink error');
 		console.log(err);
@@ -83,7 +114,9 @@ Streamer.prototype.createSink = function() {
 
 
 Streamer.prototype.createPass = function() {
-	this.pass = new Stream.PassThrough();
+	this.pass = new Stream.PassThrough({
+		highWaterMark: '128kb'
+	});
 	this.pass.on('error', function(err) {
 		console.log('passthrough error');
 		console.log(err);
@@ -103,14 +136,20 @@ Streamer.prototype.createStream = function() {
 	var timer = Date.now();
 
 	// return;
-	this.stream = new Stream.PassThrough();
+	this.stream = new Stream.PassThrough({
+		highWaterMark: '128kb'
+	});
+
+	this.pass.on('data', function() {
+		// console.log('...');
+		timer = Date.now();
+	});
 
 	if( !this.stream) { 
 		console.log('null stream');
 	}
 
 	try {
-		// this.fileStream.pipe( this.pass );
 		this.pass.pipe( self.stream ).pipe( self.sink );
 		// this.pass.pipe( self.stream );
 	} catch(err) {
@@ -120,7 +159,7 @@ Streamer.prototype.createStream = function() {
 
 // 	var t = setInterval( function() {
 //
-// 		if (Date.now() - timer >= 5000) {
+// 		if (Date.now() - timer >= 15000) {
 // 			self.emit('refresh');
 // 			console.log(Date.now() + ' reopening pipe...');
 // 			clearInterval(t);
