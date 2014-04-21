@@ -402,7 +402,10 @@ Camera.prototype.removeStream  = function( streamId ) {
 		self.streams[streamId].recordModel.quitRecording();
 	}
 	delete self.streams[streamId].recordModel;
-	
+
+	self.streams[streamId].streamer.stop();
+	delete self.streams[streamId].streamer;
+
 	self.streamsToBeDeleted[streamId] = self.streams[streamId];
 	self.streamsToBeDeleted[streamId].toBeDeleted = true;
 	delete self.streams[streamId];

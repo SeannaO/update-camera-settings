@@ -43,17 +43,27 @@ Streamer.prototype.initServer = function() {
 		// }, 1000);
 	});
 	
+	this.totalData = 0;
+	this.lastData = Date.now();
+
+	this.bpsInterval = setInterval( function() {
+		console.log( self.totalData	+ " bytes/sec" );
+		self.totalData = 0;
+	}, 1000);
 
 	this.server.on('connection', function(s) {
 		s.resume();
 		// var self = this;
 		s.pipe( self.pass ).pipe( self.sink );
-		s.on('data', function() {
+		s.on('data', function(data) {
 			// console.log('--');
+			self.totalData += data.length;
+			// console.log( self.totalData );
 		});
 		s.on('end', function() {
 			console.log('I got your message (but didnt read it)\n');
 		});
+
 		s.on('close', function() {
 			console.log('closed socket');
 		});
@@ -70,6 +80,22 @@ Streamer.prototype.initServer = function() {
 	});
 };
 
+Streamer.prototype.stop = function() {
+
+
+	if (this.fileStream) {
+		this.fileStream.unpipe();
+	}
+	if (this.stream) {
+		this.stream.unpipe();
+	}
+	if (this.pass) {
+		this.pass.unpipe();
+	}
+	this.server.close();
+
+	clearInterval( this.bpsInterval );
+}
 
 Streamer.prototype.pipe = function(res) {
 	this.stream.pipe(res);
