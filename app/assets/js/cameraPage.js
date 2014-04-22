@@ -139,6 +139,7 @@ CameraPage.prototype.setupEvents = function() {
 		
 		if ( !self.mouseDragged ) {
 			// console.log("that was a click");
+			// debugger;
 		}
 		else { 
 			// console.log("that was a drag");
@@ -320,6 +321,7 @@ CameraPage.prototype.setupButtons = function() {
 		if (!stream) {
 
 		}
+		self.mode = 'live';
 		self.player.playVideo( self.camId, stream );
 	});
 };

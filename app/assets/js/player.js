@@ -25,6 +25,7 @@ function Player( el ) {
 		id:      'strobeMediaPlayback-' + $(self.el).attr('id'),
 		class:   'player-layer'
 	}).appendTo(el);
+	console.log( this.layers.strobePlayer[0] );
 
 	this.layers.strobePlayer.html(
 		"<p>( this player requires flash. check if it's enabled and make sure your browser supports flash )</p>"
@@ -140,7 +141,7 @@ Player.prototype.launchStrobePlayer = function( options ) {
 				wmode: wmodeValue
 			}
 			, {
-				name: "strobeMediaPlayback"
+				name: "strobeMediaPlayback-" + $(self.el).attr('id')
 			}
 	);
 
@@ -156,7 +157,7 @@ Player.prototype.launchStrobePlayer = function( options ) {
 // 	window.onDurationChange = function (time, playerId) {
 // 	}
 //
-	this.layers.strobePlayer = $("#strobeMediaPlayback");
+	this.layers.strobePlayer = $("#strobeMediaPlayback-" + $(self.el).attr('id'));
 
 	var player;
 	window.onJavaScriptBridgeCreated = function(playerId) {
@@ -193,7 +194,7 @@ Player.prototype.seek = function( time ) {
 
 
 Player.prototype.canSeekTo = function( time ) {
-
+	
 	if( this.currentPlayer == 'strobe' ) {
 		return this.layers.strobePlayer[0].canSeekTo( time );
 	} else if( this.currentPlayer == 'native' ) {
@@ -268,11 +269,13 @@ Player.prototype.playVideo = function( camId, streamId, begin, end ) {
 	var url = "";
 
 	if (!begin && !end) {
+		this.mode = 'live';
 		url = window.location.origin +
 			"/cameras/" + camId + 
 			"/live.m3u8" +
 			"?stream=" + streamId;
 	} else {	
+		this.mode = 'archived';
 		url = window.location.origin +
 			"/cameras/" + camId + 
 			"/video.m3u8?begin=" + begin +
