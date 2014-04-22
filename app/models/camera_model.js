@@ -6,6 +6,7 @@ var util           = require('util');                   // for inheritance
 var EventEmitter   = require('events').EventEmitter;    // events
 var find           = require('findit');
 var path           = require('path');
+var Streamer       = require('../helpers/live_streamer.js');
 
 function Camera( cam, videosFolder, cb ) {
 
@@ -105,7 +106,7 @@ Camera.prototype.addAllStreams = function( streams, cb ) {
 Camera.prototype.addStream = function( stream, cb ) {
 
 	if (!stream) {
-		if(cb) cb();
+		if (cb) cb();
 		return;
 	}
 
@@ -122,6 +123,9 @@ Camera.prototype.addStream = function( stream, cb ) {
 
 			self.streams[stream.id] = stream;
 			stream.recordModel = new RecordModel( self, stream, function(recorder){
+    			var folder = self.videosFolder + '/' + stream.id;
+				stream.streamer = new Streamer(folder + '/videos/pipe.ts');
+
 				if ( self.shouldBeRecording() ) {
 					recorder.startRecording();
 				}
@@ -403,7 +407,10 @@ Camera.prototype.removeStream  = function( streamId ) {
 		self.streams[streamId].recordModel.quitRecording();
 	}
 	delete self.streams[streamId].recordModel;
-	
+
+	self.streams[streamId].streamer.stop();
+	delete self.streams[streamId].streamer;
+
 	self.streamsToBeDeleted[streamId] = self.streams[streamId];
 	self.streamsToBeDeleted[streamId].toBeDeleted = true;
 	delete self.streams[streamId];
