@@ -7,6 +7,11 @@ body {
 	/*height:105px;*/
 }
 
+.tab-pane {
+	position: relative;
+	overflow: auto;
+}
+
 #camera-scanner-container{
 	position:          absolute;
 	left:              0px;

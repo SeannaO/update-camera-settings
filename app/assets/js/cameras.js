@@ -267,14 +267,8 @@ var addCamera = function(camera, cb) {
     if (!camera.id) {
         camera.id = 'id_'+Math.random(100);
     }
-	
-	for (var i in camera.streams) {
-		if( !camera.streams[i] ) {
-			delete camera.streams[i];
-		}
-	}
-    
-	$.ajax({
+
+    $.ajax({
         type: "POST",
         url: "/cameras/new",
         data: JSON.stringify( camera ),
@@ -314,6 +308,8 @@ var deleteCamera = function(id) {
 };
 
 var getCameraOptions = function(cb) {
+	
+	console.log('getCameraOptions');
 
 	var username = $("#camera-username").val() || '';
 	var password = $("#camera-password").val() || '';
@@ -322,18 +318,20 @@ var getCameraOptions = function(cb) {
 	//if (username && password && username !== '' && password !== ''){
 	$.ajax({
 		type: "GET",
-		cache:false,
+		cache: false,
 		url: "/camera_options.json",
 		data: {camera:{username:username, password:password, manufacturer:manufacturer, ip:ip}},
 		contentType: 'application/json',
 		success: function(data) {
+			console.log('getCameraOptions got success');
 			if (data && data.resolutions && $.isArray(data.resolutions) && data.resolutions.length > 0){
 				cb( data );
-			}else{
+			} else{
 				cb( null );
 			}
 		},
 		error: function( data ) {
+			console.log('getCameraOptions got error');
 			console.log(data);
 			cb( null );
 		}
@@ -345,12 +343,6 @@ var getCameraOptions = function(cb) {
 var updateCamera = function(id, cb) {
     
     var params = $('#camera-form').serializeObject();
-
-	for (var i in params.camera.streams) {
-		if( !params.camera.streams[i] ) {
-			delete params.camera.streams[i];
-		}
-	}
 
     $.ajax({
         type: "PUT",
@@ -410,14 +402,13 @@ var updateMotion = function(id, cb) {
 
 var setAuthStatus = function(data, cb){
     var $auth_status = $("#camera-auth-status span");
-    if (data){
+    if (data) {
         if ($auth_status.hasClass('glyphicon-remove-circle') || !$auth_status.hasClass('glyphicon-ok-circle')){
             $("#camera-auth-status span").addClass("glyphicon-ok-circle").removeClass("glyphicon-remove-circle");    
         }
         
         if ($('#stream-panes').children().length === 0){
             addStream(function(){
-                setTimeout(cb(), 500);
             });
         }else{
             cb();
@@ -443,7 +434,6 @@ var editCamera = function(camId) {
         contentType: 'application/json',
         success: function(data) {
             if (data.success) {
-
 				current_camera = data.camera;
 				$('#add-new-camera-dialog .modal-title').html("edit camera");
                 $("#add-new-camera-dialog #camera-name").val(data.camera.name);
@@ -451,13 +441,14 @@ var editCamera = function(camId) {
                 $("#add-new-camera-dialog #camera-manufacturer").val(data.camera.manufacturer).attr("selected", data.camera.manufacturer).prop('disabled', 'disabled').unbind();
                 $("#add-new-camera-dialog #camera-username").val(data.camera.username || '');
                 $("#add-new-camera-dialog #camera-password").val(data.camera.password || '');
-                
 
 				current_number_of_streams = 0;
 				for (var i in data.camera.streams) {
 					var stream = data.camera.streams[i];
 					stream.camId = camId;
-					addStream( stream );
+					addStream( stream, function(id) {
+						addStreamFieldOverlay( '#' + id );
+					});
 				}
                 
                 $("#update-camera").unbind();
@@ -470,12 +461,21 @@ var editCamera = function(camId) {
                         }
                     });
                 });
+				// debugger;
                 getCameraOptions(function(data){
-                    setAuthStatus(data,function(){
-                        setConstraintsOnStreamFields(data, function(error){
-
-                        });
-                    });
+					console.log(data);
+					// debugger;
+					if (!data) {
+						// debugger;
+						console.log('remove');
+						removeStreamFieldOverlay();
+					} else {
+						setAuthStatus(data,function(){
+							setConstraintsOnStreamFields(data, function(error){
+								removeStreamFieldOverlay();
+							});
+						});
+					}
 	            });
                 // - -
 
@@ -794,7 +794,31 @@ var addStreamFieldset = function( cb ) {
 };
 
 
+var addStreamFieldOverlay = function( stream_tab_id ) {
+
+	var spinner = $('<div>', {
+		class: 'spinner',
+		html: 'loading configurations...<br><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div>',
+		style: 'color: rgba(100,100,100,0.8); width: 100%; margin-top:10%'
+	});
+
+	var overlay = $('<div>', {
+		class: 'stream-field-overlay',
+		style: 'position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; background: rgba(250,250,250,0.8); z-index:100'
+	}).appendTo(stream_tab_id);
+
+	spinner.appendTo(overlay);
+};
+
+
+var removeStreamFieldOverlay = function() {
+	console.log('remove stream field overlay');
+	$('.stream-field-overlay').remove();
+};
+
 var addStream = function( stream, cb ) {
+
+	if ( typeof stream === 'function' ) cb = stream;
 
 	addStreamFieldset( function(fieldset, current_stream_id) {
 		var idx = current_number_of_streams-1;
@@ -808,8 +832,12 @@ var addStream = function( stream, cb ) {
         }
 	
 		var new_stream_tab_id = 'new-stream-' + current_stream_id;
+		
+
 		$('#stream-tabs').append('<li style="max-width:200px; max-height:35px;overflow:hidden"><a href="#' + new_stream_tab_id + '" data-toggle="tab" id="tab_'+new_stream_tab_id+'">' + stream_name + '</a></li>');
+
 		$('#stream-panes').append('<div class="tab-pane" id="' + new_stream_tab_id + '"></div>');
+
 		$('#'+new_stream_tab_id).append(fieldset);
 		$('#stream-tabs a:last').tab('show');
 
@@ -850,21 +878,24 @@ var addStream = function( stream, cb ) {
 
 		remove_stream_button.click( function( e ) {
 			e.preventDefault();
-			if (!stream) {
+			console.log(stream);
+			if (typeof stream !== 'object') {
 				$('#'+new_stream_tab_id).remove();
 				$('#tab_'+new_stream_tab_id).remove();
 			} else {
 				removeStream( stream );
 			}
+			$('#stream-tabs a:last').tab('show');
 		});	
 
 		for (var attr in stream) {
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).val( stream[attr] );
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).attr( 'data-'+attr, stream[attr] );
 		}
-		if (typeof cb != "undefined"){
-			cb();
+		if (cb){
+			cb( new_stream_tab_id );
 		}
+		// addStreamFieldOverlay( '#' + new_stream_tab_id );
 	});
 };
 
@@ -878,7 +909,7 @@ var removeStream = function( stream ) {
 			url: '/cameras/' + stream.camId + '/streams/' + stream.id,
 			success: function(data) {
 				if (data.error) {
-					alert(error);
+					alert(data.error);
 					location.reload();		
 				} else {
 					location.reload();

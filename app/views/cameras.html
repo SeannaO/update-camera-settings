@@ -432,16 +432,22 @@
             });            
 
             $("#add-stream").click(function(){
-                addStream();
+
+				addStream( function(id) {
+					addStreamFieldOverlay( '#' + id );
+				});
+
 				var manufacturer = $("#camera-manufacturer").val();
 				if (manufacturer && manufacturer != 'unknown'){
-				getCameraOptions(function(data){
-					setAuthStatus(data,function(){
-						setConstraintsOnStreamFields(data, function(error){
+					getCameraOptions(function(data){
+						setAuthStatus(data,function(){
+							setConstraintsOnStreamFields(data, function(error){
+								removeStreamFieldOverlay();
+								});
 							});
 						});
-					});
-				}else{
+				} else {
+					removeStreamFieldOverlay();
 				}
             })
 
@@ -482,7 +488,5 @@
 
         </script>
     </body>
-
-
 
 </html>

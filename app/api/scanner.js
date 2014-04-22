@@ -38,8 +38,12 @@ module.exports = function( app, passport) {
 	app.get('/camera_options.json', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		var camera = req.query.camera;
-		if (camera && camera.manufacturer){
+
+		if (camera && camera.manufacturer) {
 			var api = require('../helpers/camera_scanner/cam_api/api.js').getApi( camera.manufacturer );
+			if (!api) {
+				console.error('no api found');
+			}
 			api.setCameraParams(camera);
 			api.getResolutionOptions(function(err, resolutions){
 				if (err) {
@@ -57,6 +61,5 @@ module.exports = function( app, passport) {
 
 	});
 	// - - -
-
 
 };

@@ -25,18 +25,26 @@ Generic.prototype.getRtspUrl = function ( profile ) {
 };
 
 
-Generic.prototype.getResolutionOptions = function() {
-
+Generic.prototype.getResolutionOptions = function(cb) {
+	
+	if (cb) cb(null, []);
 };
 
 Generic.prototype.setCameraParams = function(params) {
-	
 
 };
 
 
-Generic.prototype.setMotionParams = function(params){
 
+Generic.prototype.getFrameRateRange = function() {
+	return 0;
+};
+
+Generic.prototype.getVideoQualityRange = function() {
+	return 0;
+};
+
+Generic.prototype.setMotionParams = function(params){
 
 };
 
@@ -63,9 +71,3 @@ Generic.prototype.stopListeningForMotionDetection = function(){
 
 
 module.exports = Generic;
-
-
-
-
-
-
