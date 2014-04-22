@@ -3,7 +3,9 @@ function Player( el ) {
 	var self = this;
 
 	this.layers = {};
-	
+
+	this.el = el;
+
 	this.layers.livePlayer = $("<div>", {
 		id:      'live-player',
 		class:   'player-layer'
@@ -20,7 +22,7 @@ function Player( el ) {
 	}).appendTo(el);
 
 	this.layers.strobePlayer = $("<object>", {
-		id:      'strobeMediaPlayback',
+		id:      'strobeMediaPlayback-' + $(self.el).attr('id'),
 		class:   'player-layer'
 	}).appendTo(el);
 
@@ -55,8 +57,8 @@ Player.prototype.launchNativePlayer = function( url ) {
 		this.layers[i].hide();
 	}
 	this.layers.nativePlayer.show();
-	this.layers.nativePlayer.attr("width", "640px");
-	this.layers.nativePlayer.attr("height", "480px");
+	this.layers.nativePlayer.attr("width", "100%");
+	this.layers.nativePlayer.attr("height", "100%");
 	this.layers.nativePlayer.attr("position", "absolute");
 	this.layers.nativePlayer.attr("src", url);
 	this.layers.nativePlayer[0].addEventListener('timeupdate',function( e ){
@@ -82,6 +84,8 @@ Player.prototype.showLiveStream = function( url ) {
  */
 Player.prototype.launchStrobePlayer = function( options ) {
 
+	var self = this;
+
 	this.currentPlayer = 'strobe';
 	
 	for( var i in this.layers ) {
@@ -91,6 +95,9 @@ Player.prototype.launchStrobePlayer = function( options ) {
 	this.layers.strobePlayer.show();
 
 	options.url = encodeURIComponent( options.url );
+
+	var width = options.width || '100%';
+	var height = options.height || '100%';
 
 	var parameters = {
 		src:                         options.url,
@@ -122,9 +129,9 @@ Player.prototype.launchStrobePlayer = function( options ) {
 	// Embed the player SWF:	            
 	swfobject.embedSWF(
 			"/swf/StrobeMediaPlayback.swf"
-			, "strobeMediaPlayback"
-			, 640
-			, 480
+			, "strobeMediaPlayback-" + $(self.el).attr('id')
+			, width
+			, height
 			, "10.1.0"
 			, "/swf/expressInstall.swf"
 			, parameters

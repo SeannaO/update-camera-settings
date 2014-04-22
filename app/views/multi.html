@@ -8,33 +8,38 @@
 
         <script src = "/js/jquery.min.js"></script>        
         <script src = "/js/jquery-ui.min.js"></script>
-        <script src = "/js/cam.js"></script>
+		<script src = "/js/player.js"></script>
 
         <script src="/js/timepicker.js"></script>
         <script src="/js/moment.min.js"></script>
 
+		<script type="text/javascript" src="/js/swfobject.js"></script>
+
         <script src="/js/bootstrap.min.js"></script>
         <script src="/js/d3.v3.min.js"></script>
         <script src="/js/d3-timeline.js"></script>        
+
         <script>
             var playerHTML = function(id, rtsp, width, height) {
-
-                var html = '<object type="application/x-vlc-plugin" data="'+rtsp+'" width="'+ width +'" height="'+ height +'" id="' + id + '">';
-                    html += '<param name="movie" value="'+rtsp+'"/>';
-                    html += '<embed type="application/x-vlc-plugin" name="'+ id +'"';
-                    html += 'autoplay="no" loop="no" width="'+ width +'" height="'+ height +'"';
-                    html += 'target="'+rtsp+'" /> </object>';
-
-                    return html;
             }
-// 480x360 
-// 320x240
-            $(function(){
+			
+			var rootUrl = location.protocol + '//' + location.host
+
+			$(function(){
                 var $list = $("#cameras-list");
                 $.getJSON( "/cameras.json", function( data ) {
                     for (var i = 0; i < data.length; i++) {
                         if (data[i] && data[i].streams && data[i].streams.length > 0) {
-                            $list.append("<div id=\"video-container-" + i +"\" class=\"video-box\">" + playerHTML("video" + i, data[i].streams[0].url, 480, 360) + "</div>");
+							var playerDiv = $('<div>', {
+								id: 'video-container-' + i,
+								class: 'video-container',
+								style: 'position: relative; float: left; overflow: auto;width:480px; height:320px; margin: 5px'
+							}).appendTo($list);
+							console.log( playerDiv );
+							var player = new Player( playerDiv );
+							var camId = data[i]._id;
+							var streamId = data[i].streams[0].id;
+							player.playVideo( camId, streamId );
                         }
                     }
                 });
@@ -46,7 +51,7 @@
     <body style = "margin: 10px">
         <h2 class = 'text-muted'> <a href ="/cameras">cameras</a> | multiview </h2> 
         <hr>
-        <div id="cameras-list" class = "video-items">
+        <div id="cameras-list" class = "video-items" style = "">
             
         </div>
     </body>
