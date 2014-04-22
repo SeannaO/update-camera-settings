@@ -105,6 +105,11 @@ Camera.prototype.addAllStreams = function( streams, cb ) {
  */
 Camera.prototype.addStream = function( stream, cb ) {
 
+	if (!stream) {
+		if (cb) cb();
+		return;
+	}
+
 	var self = this;
 	stream.db = new Dblite( this.videosFolder + '/db_'+stream.id+'.sqlite', function(db){
 		if (!stream.toBeDeleted) {

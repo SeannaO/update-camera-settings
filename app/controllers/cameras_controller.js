@@ -396,6 +396,10 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 	var original_streams = cam.streams;
 	if (cam.streams && cam.streams.length > 0){
 		for (var s in cam.streams) {
+			if (!s || !cam.streams[s]) {
+				console.error('[camerasController]  attempt to insert null stream');
+				continue;
+			}
 			if (!cam.streams[s].id) {
 				cam.streams[s].id = generateUUID();
 			}

@@ -41,31 +41,50 @@ Streamer.prototype.initServer = function() {
 		// setInterval( function() {
 		// 	socket.resume();
 		// }, 1000);
+
 	});
 	
 	this.totalData = 0;
 	this.lastData = Date.now();
+	this.socket;
 
 	this.bpsInterval = setInterval( function() {
-		console.log( self.totalData	+ " bytes/sec" );
+		// console.log( self.totalData	+ " bytes/sec" );
 		self.totalData = 0;
 	}, 1000);
 
 	this.server.on('connection', function(s) {
 		s.resume();
-		// var self = this;
+		// if (self.socket) {
+		// 	self.socket.unpipe();
+		// }
+		// if (self.fileStream) {
+		// 	self.fileStream.unpipe();
+		// }
+		// if (self.stream) {
+		// 	self.stream.unpipe();
+		// }
+		// if (self.pass) {
+		// 	self.pass.unpipe();
+		// }
+		if (self.socket) {
+			self.socket.unpipe();	
+			self.socket.removeAllListeners();
+			console.log('--- cleaning socket ---');
+		}
+
+		self.socket = s;
+
 		s.pipe( self.pass ).pipe( self.sink );
 		s.on('data', function(data) {
 			// console.log('--');
 			self.totalData += data.length;
 			// console.log( self.totalData );
 		});
-		s.on('end', function() {
-			console.log('I got your message (but didnt read it)\n');
+		s.once('end', function() {
 		});
 
 		s.on('close', function() {
-			console.log('closed socket');
 		});
 		console.log('-- new connection --');
 	});

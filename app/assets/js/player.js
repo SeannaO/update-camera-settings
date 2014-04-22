@@ -100,7 +100,13 @@ Player.prototype.launchStrobePlayer = function( options ) {
 		controlBarPosition:          "bottom",
 		poster:                      "",
 		plugin_hls:                  "/swf/HLSDynamicPlugin.swf",
-		javascriptCallbackFunction:  "window.onJavaScriptBridgeCreated"
+		javascriptCallbackFunction:  "window.onJavaScriptBridgeCreated",
+		bufferTime: 0.1,
+		dvrBufferTime: 0.1,
+		initialBufferTime: 0.1,
+		dvrDynamicStreamingBufferTime: 0.1,
+		liveBufferTime: 0.1,
+		liveDynamicStreamingBufferTime: 0.1
 	};
 
 	var wmodeValue = "direct";

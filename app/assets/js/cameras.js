@@ -267,8 +267,14 @@ var addCamera = function(camera, cb) {
     if (!camera.id) {
         camera.id = 'id_'+Math.random(100);
     }
-
-    $.ajax({
+	
+	for (var i in camera.streams) {
+		if( !camera.streams[i] ) {
+			delete camera.streams[i];
+		}
+	}
+    
+	$.ajax({
         type: "POST",
         url: "/cameras/new",
         data: JSON.stringify( camera ),
@@ -339,6 +345,12 @@ var getCameraOptions = function(cb) {
 var updateCamera = function(id, cb) {
     
     var params = $('#camera-form').serializeObject();
+
+	for (var i in params.camera.streams) {
+		if( !params.camera.streams[i] ) {
+			delete params.camera.streams[i];
+		}
+	}
 
     $.ajax({
         type: "PUT",
