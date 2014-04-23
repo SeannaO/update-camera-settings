@@ -137,10 +137,13 @@ Camera.prototype.addStream = function( stream, cb ) {
 					console.log('emit: ' + stream.id);
 					self.emit('camera_status', { cam_id: self._id, status: data.status, stream_id: stream.id } );
 				});
+				
+				if (cb) cb();
 			});
 
 		} else {
 			self.streamsToBeDeleted[stream.id] = stream;
+			if (cb) cb();
 		}
 
 		db.db.on('error', function (err) {
@@ -150,7 +153,6 @@ Camera.prototype.addStream = function( stream, cb ) {
 		    	self.restoreBackupAndReindex(stream);
 		    }
 		});
-		if (cb) cb();
 	});
 };
 // end of addStream

@@ -643,11 +643,10 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 			}
 						
 			camera.cam.updateAllStreams( cam.streams, function() {
+				camera.cam.updateRecorder();
 				self.emit("update", camera.cam);
 				cb(err, camera.cam);
 			});
-
-	        camera.cam.updateRecorder();
 	    }
 	});
 };
