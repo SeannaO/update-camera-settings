@@ -399,11 +399,15 @@
             $("#add-new-camera").click(function() {
 
                 var params = $('#camera-form').serializeObject();
+				
+				addOverlayToPage('adding new camera...');
 
                 addCamera( params.camera, function(data) {
-                    if (data) {
-						location.reload();
-                    }
+					removeOverlayFromPage( function() {
+						if (data) {
+							location.reload();
+						}
+					});
                 });
             });
 

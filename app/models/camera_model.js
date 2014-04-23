@@ -351,7 +351,7 @@ Camera.prototype.startMotionDetection = function() {
  * @param { new_streams } Array
  *     new_streams is just an array of streams
  */
-Camera.prototype.updateAllStreams = function( new_streams ) {
+Camera.prototype.updateAllStreams = function( new_streams, cb ) {
 
 	var self = this;
 
@@ -361,14 +361,20 @@ Camera.prototype.updateAllStreams = function( new_streams ) {
 		username:  self.username
 	});
 
-	
+	var total = new_streams.length;
+
 	for ( var s in new_streams ) {
 		var stream = new_streams[s];
 
 		if ( !stream.id || !self.streams[ stream.id ] ) { 
-			self.addStream( stream );		// adds new stream if 'id' is blank or doesn't match
+			self.addStream( stream, function() {
+				total--;
+				if (total <= 0 && cb) cb(); 
+			});		// adds new stream if 'id' is blank or doesn't match
 		} else {
 			self.updateStream( stream );	// ...or updates exiting stream otherwise
+			total --;
+			if (total <= 0 && cb) cb();
 		}
 	}
 
@@ -385,6 +391,8 @@ Camera.prototype.updateAllStreams = function( new_streams ) {
 		// removes streams that are not in the array
 		if (streamId && ids.indexOf( streamId ) === -1) {
 			self.removeStream( streamId );
+			total --;
+			if (total <= 0 && cb) cb();
 		}
 	}
 };
@@ -408,8 +416,10 @@ Camera.prototype.removeStream  = function( streamId ) {
 	}
 	delete self.streams[streamId].recordModel;
 
-	self.streams[streamId].streamer.stop();
-	delete self.streams[streamId].streamer;
+	if (self.streams[streamId].streamer) {
+		self.streams[streamId].streamer.stop();
+		delete self.streams[streamId].streamer;
+	}
 
 	self.streamsToBeDeleted[streamId] = self.streams[streamId];
 	self.streamsToBeDeleted[streamId].toBeDeleted = true;
@@ -425,7 +435,7 @@ Camera.prototype.removeStream  = function( streamId ) {
  *
  * @param { stream } obj
  */
-Camera.prototype.updateStream = function( stream ) {
+Camera.prototype.updateStream = function( stream, cb ) {
 
 	var self = this;
 

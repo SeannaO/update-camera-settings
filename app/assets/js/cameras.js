@@ -130,38 +130,43 @@ var showThumb = function( thumb ) {
 
 
 var list = function() {
-            
-    $.getJSON( "/cameras.json", function( data ) {
 
-        $("#camera-list").html("listing cameras...");
+    $.ajax({ 
+		cache: false,
+		url: "/cameras.json", 
+		dataType: "json",
+		success: function( data ) {
 
-        if (data.length > 0) {
-            $("#camera-list").html("");
-        }
-        else {
-            $("#camera-list").html("<div id='no-cameras'>no cameras have been added<br></div>");
-        }
+			$("#camera-list").html("listing cameras...");
 
-        for (var i = 0; i < data.length; i++) {
-            if (data[i]) {
-                cameras.push( data[i] );
-                addCameraItem(data[i]);
+			if (data.length > 0) {
+				$("#camera-list").html("");
+			}
+			else {
+				$("#camera-list").html("<div id='no-cameras'>no cameras have been added<br></div>");
+			}
 
-                for (var j in data[i].streams) {
-					var text = '';
-					if ( data[i].streams[j].name ) {
-						text = data[i].streams[j].name;
-					}else if ( data[i].streams[j].resolution ) {
-						text = data[i].streams[j].resolution;
-					} else {
-						text = data[i].streams[j].url;
+			for (var i = 0; i < data.length; i++) {
+				if (data[i]) {
+					cameras.push( data[i] );
+					addCameraItem(data[i]);
+
+					for (var j in data[i].streams) {
+						var text = '';
+						if ( data[i].streams[j].name ) {
+							text = data[i].streams[j].name;
+						}else if ( data[i].streams[j].resolution ) {
+							text = data[i].streams[j].resolution;
+						} else {
+							text = data[i].streams[j].url;
+						}
+
+						timelineSetup(data[i]._id, data[i].streams[j].id, text);
 					}
-
-                    timelineSetup(data[i]._id, data[i].streams[j].id, text);
-                }
-            }
-        }
-    });
+				}
+			}
+		}
+	});
     
 };
 
@@ -288,6 +293,8 @@ var deleteCamera = function(id) {
 
 
 	if ( confirm("are you sure you want to remove this camera?") ) {
+	
+		addOverlayToPage('removing camera...');
 
 		$.ajax({
 			type: "DELETE",
@@ -295,9 +302,13 @@ var deleteCamera = function(id) {
 			contentType: 'application/json',
 			success: function(data) {
 				if (data.success) {
-					$("#camera-item-"+data._id).fadeOut();
+					removeOverlayFromPage( function() {
+						$("#camera-item-"+data._id).fadeOut();
+					});
 				} else {
-					alert("error: " + data.error);
+					removeOverlayFromPage( function() {
+						alert("error: " + data.error);
+					});
 				}
 			},
 			error: function( data ) {
@@ -339,6 +350,33 @@ var getCameraOptions = function(cb) {
 	});
 };
 
+var addOverlayToPage = function( msg ) {
+	
+	msg = msg || '';
+
+	var msgDiv = $('<div>', {
+		id: 'overlay-message',
+		class: 'spinner',
+		html: msg + '<br><br><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div>',
+		style: 'font-size: 20pt; color: rgba(100,100,100,0.8); width: 100%; margin-top:20%'
+	});
+
+	var overlay = $('<div>', {
+		id: 'camera-window-overlay',
+		style: 'position: fixed; width: 100%; height: 100%; background: rgba(220,220,220,0.8); z-index:10000; top:0px; left:0px; display:none'
+	});
+
+	msgDiv.appendTo(overlay);
+	overlay.appendTo('body').fadeIn();
+};
+
+var removeOverlayFromPage = function( cb ) {
+	var overlay = $('#camera-window-overlay');
+	overlay.fadeOut(function() {
+		overlay.remove();
+		if (cb) cb();
+	});
+};
 
 var updateCamera = function(id, cb) {
     
@@ -453,11 +491,18 @@ var editCamera = function(camId) {
                 
                 $("#update-camera").unbind();
                 $("#update-camera").click( function() {
+
+					addOverlayToPage('updating camera configurations...');
+
                     updateCamera( camId, function(data) {
                         if (data.success) {
-                            location.reload();
+							removeOverlayFromPage( function() {
+								location.reload();
+							});
                         } else {
-							console.log( data );
+							removeOverlayFromPage( function() {
+								console.log( data );
+							});
                         }
                     });
                 });
@@ -536,9 +581,6 @@ var to12HourTime = function(hours){
 scanForCameras = function(subnet, cb) {
 	$("#camera-scanner-container").hide();
     $("#scan-spinner").show();
-	// setTimeout( function() {
-    // 	$("#scan-spinner").fadeOut();
-	// },  30 * 1000);
 
     $.ajax({
         type: "GET",
@@ -903,16 +945,22 @@ var addStream = function( stream, cb ) {
 var removeStream = function( stream ) {
 
 	if ( confirm("are you sure you want to remove this stream?") ) {
-		
+	
+		addOverlayToPage('removing stream...');
+
 		$.ajax({
 			type: 'DELETE',
 			url: '/cameras/' + stream.camId + '/streams/' + stream.id,
 			success: function(data) {
 				if (data.error) {
-					alert(data.error);
-					location.reload();		
+					removeOverlayFromPage( function() {
+						alert(data.error);
+						location.reload();		
+					});
 				} else {
-					location.reload();
+					removeOverlayFromPage( function() {
+						location.reload();
+					});
 				}
 			}
 		});
@@ -1025,11 +1073,18 @@ var cameraSchedule = function(camId) {
 
                 $("#update-schedule").unbind();
                 $("#update-schedule").click( function() {
+					
+					addOverlayToPage('updating schedule...');
+
                     updateSchedule( camId, function(data) {
                         if (data.success) {
-                            location.reload();
+							removeOverlayFromPage( function() {
+								location.reload();
+							});
                         } else {
-                            alert(data.error);
+							removeOverlayFromPage( function() {
+								alert(data.error);
+							});
                         }
                     });
                 });
@@ -1066,11 +1121,18 @@ var cameraMotion = function(camId) {
 
                 $("#update-motion").unbind();
                 $("#update-motion").click( function() {
+					
+					addOverlayToPage('updating motion...');
+
                     updateMotion( camId, function(data) {
                         if (data.success) {
-                            location.reload();
+							removeOverlayFromPage( function() {
+								location.reload();
+							});
                         } else {
-                            alert(data.error);
+							removeOverlayFromPage( function() {
+								alert(data.error);
+							});
                         }
                     });
                 });
