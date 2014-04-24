@@ -33,13 +33,14 @@ function RecordModel( camera, stream, cb) {
 
     this.folder = "";                        // stream folder - it's empty until we setup the folders
 
-    this.setupFolders();                     // creates folders if necessary
+    this.setupFolders( function() {
+		self.filesToIndex = [];
+		
+		self.setupDbusListener();
 
-    this.filesToIndex = [];
-    
-	this.setupDbusListener();
+		if (cb) cb(self);
+	});                     // creates folders if necessary
 
-	if (cb) cb(self);
 }
 // end of constructor
 //
@@ -59,7 +60,7 @@ util.inherits(RecordModel, EventEmitter);
  *						[base folder]/:camera_id/:stream_id/videos/tmp	- new chunks
  *						[base folder]/:camera_id/:stream_id/thumbs		- thumbs
  */
-RecordModel.prototype.setupFolders = function() {
+RecordModel.prototype.setupFolders = function( cb ) {
    
 	var self = this;
 
@@ -74,6 +75,7 @@ RecordModel.prototype.setupFolders = function() {
 
 	this.cleanTmpFolder();
 
+	if (cb) cb();
 	// exec('mkfifo ' + this.folder + '/videos/pipe.ts', function(error) {
 	// 	if (error) console.error( error );
 	// });

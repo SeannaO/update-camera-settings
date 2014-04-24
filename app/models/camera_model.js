@@ -62,7 +62,9 @@ function Camera( cam, videosFolder, cb ) {
 		this.addAllStreams(streams, function(){
 			if (!self.recording && self.shouldBeRecording()) {
 				console.log("starting camera " + (self.name || self.ip));
-				self.startRecording();
+				// setTimeout( function() {
+					self.startRecording();
+				// }, 5000);
 			} else {
 				console.log("stopping camera " + (self.name || self.ip));
 				self.stopRecording();
@@ -137,6 +139,12 @@ Camera.prototype.addStream = function( stream, cb ) {
 					console.log('emit: ' + stream.id);
 					self.emit('camera_status', { cam_id: self._id, status: data.status, stream_id: stream.id } );
 				});
+
+				// stream.recordModel mught be null here, 
+				// so we assign it again with the object
+				// returned by the RecordModel callback
+				stream.recordModel = recorder;
+				//
 				
 				if (cb) cb();
 			});
@@ -866,9 +874,9 @@ Camera.prototype.startRecording = function() {
     } else {
         console.log("* * * " + (this.name || this.ip) + " will start recording...");
 		for (var i in self.streams) {
-			this.streams[i].recordModel.startRecording();
+			self.streams[i].recordModel.startRecording();
 		}
-		this.recording = true;
+		self.recording = true;
     }
 };
 // end of startRecording

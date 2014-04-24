@@ -742,12 +742,16 @@ CamerasController.prototype.setup = function( cb ) {
 				console.log(err);
 				cb( err );
 			} else {
+				var total = docs.length;
 				for ( var k = 0; k < docs.length; k++ ) {
 					var cam = docs[k];
-					var newCam = new Camera(cam, self.videosFolder );
-					self.pushCamera( newCam );
+					var newCam = new Camera(cam, self.videosFolder, function(cam) { 
+						self.pushCamera( cam );
+						total--;
+						if( total<=0 && cb ) cb();
+					});
 				}
-				cb();
+				// cb();
 			}
 		});    
 	});
