@@ -299,30 +299,31 @@ var addCamera = function(camera, cb) {
 var deleteCamera = function(id) {
 
 
-	if ( confirm("are you sure you want to remove this camera?") ) {
-	
-		addOverlayToPage('removing camera...');
+	bootbox.confirm("are you sure you want to remove this camera?", function(ok) {
+		if (ok) {
+			addOverlayToPage('removing camera...');
 
-		$.ajax({
-			type: "DELETE",
-			url: "/cameras/" + id,
-			contentType: 'application/json',
-			success: function(data) {
-				if (data.success) {
-					removeOverlayFromPage( function() {
-						$("#camera-item-"+data._id).fadeOut();
-					});
-				} else {
-					removeOverlayFromPage( function() {
-						alert("error: " + data.error);
-					});
+			$.ajax({
+				type: "DELETE",
+				url: "/cameras/" + id,
+				contentType: 'application/json',
+				success: function(data) {
+					if (data.success) {
+						removeOverlayFromPage( function() {
+							$("#camera-item-"+data._id).fadeOut();
+						});
+					} else {
+						removeOverlayFromPage( function() {
+							alert("error: " + data.error);
+						});
+					}
+				},
+				error: function( data ) {
+					console.log(data);
 				}
-			},
-			error: function( data ) {
-				console.log(data);
-			}
-		});
-	}
+			});
+		}
+	});
 };
 
 var getCameraOptions = function(cb) {
@@ -951,29 +952,30 @@ var addStream = function( stream, cb ) {
 
 var removeStream = function( stream ) {
 
-	if ( confirm("are you sure you want to remove this stream?") ) {
-	
-		addOverlayToPage('removing stream...');
+	bootbox.confirm("are you sure you want to remove this stream?", function(ok) {
 
-		$.ajax({
-			type: 'DELETE',
-			url: '/cameras/' + stream.camId + '/streams/' + stream.id,
-			success: function(data) {
-				if (data.error) {
-					removeOverlayFromPage( function() {
-						alert(data.error);
-						location.reload();		
-					});
-				} else {
-					removeOverlayFromPage( function() {
-						location.reload();
-					});
+		if( ok ) {
+			addOverlayToPage('removing stream...');
+
+			$.ajax({
+				type: 'DELETE',
+				url: '/cameras/' + stream.camId + '/streams/' + stream.id,
+				success: function(data) {
+					if (data.error) {
+						removeOverlayFromPage( function() {
+							alert(data.error);
+							location.reload();		
+						});
+					} else {
+						removeOverlayFromPage( function() {
+							location.reload();
+						});
+					}
 				}
-			}
-		});
-
-	} else {
-	}
+			});
+		} else {
+		}
+	});
 };
 
 

@@ -3,8 +3,7 @@
         <script src = "/js/jquery.min.js"></script>        
         <script src = "/js/jquery-ui.min.js"></script>
         <script src = "/js/jquery-serialize-object.js"></script>
-        <script src = "/js/cameras.js"></script>
-		<script src = "/js/timeline.js"></script>
+
 
         <link rel="stylesheet" href="/css/bootstrap.min.css">
         <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
@@ -14,6 +13,11 @@
         <script src="/js/bootstrap.min.js"></script>
         <script src="/js/d3.v3.min.js"></script>
         <script src="/js/d3-timeline.js"></script>
+
+		<script src="/js/lib/bootbox.min.js"></script>
+
+        <script src = "/js/cameras.js"></script>
+		<script src = "/js/timeline.js"></script>
 
         <script src="/js/socket.io.js"></script>
         <script src="/js/bootstrap-timepicker.js"></script>
@@ -420,7 +424,7 @@
                 var subnet = $('#camera-subnet').val();
 				var re = /^(?:[0-9]{1,3}\.){2}[0-9]{1,3}$/;
 				if (!re.exec(subnet)) {
-					alert('Invalid subnet. Enter a subnet of the form xxx.xxx.xxx'); 
+					bootbox.alert('Invalid subnet. Enter a subnet of the form xxx.xxx.xxx'); 
 				} else {
 					scanForCameras(subnet, function(){
 					});

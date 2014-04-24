@@ -287,7 +287,7 @@ CameraPage.prototype.setupButtons = function() {
 		// this.currEnd 
 		
 		if( !self.currBegin || !self.currEnd ) {
-			alert('select a day and a time interval first');
+			bootbox.alert('Select a day and a time interval first.');
 			return;
 		}
 
@@ -295,17 +295,21 @@ CameraPage.prototype.setupButtons = function() {
 		var begin  = new Date( self.currBegin );
 		var end    = new Date( self.currEnd );
 
-		if ( !confirm('Download video\n\n FROM: ' + begin + '\n TO: ' + end  + '\n\n Confirm? ') ) {
-			return;	
-		}
+		bootbox.confirm('Download video<br><br> <b>FROM</b>: ' + begin + '<br> <b>TO</b>: ' + end  + '<br><br> Confirm? ', function(ok) {
+			if(!ok) {
+				return;	
+			} else {
+				var url = window.location.origin 
+						+ "/cameras/" + self.camId
+						+ "/download?begin=" + self.currBegin
+						+ "&end=" + self.currEnd 
+						+ "&stream=" + stream;
 
-		var url = window.location.origin 
-				+ "/cameras/" + self.camId
-				+ "/download?begin=" + self.currBegin
-				+ "&end=" + self.currEnd 
-				+ "&stream=" + stream;
+				window.location = url;
+			}
+		});
 
-		window.location = url;
+
 	});
 
 	// snapshot button
