@@ -25,6 +25,13 @@ $(document).ready(function(){
 
 	$("#timelines").mouseleave( function() {
 	});
+
+	$("#camera-subnet").keypress(function(e) {
+		if(e.which == 13) {
+			e.preventDefault();
+			$("#start-camera-scanner").click();
+		}
+	});
 });
 
 
