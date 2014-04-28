@@ -257,9 +257,18 @@ CameraPage.prototype.setupStreamSelector = function() {
 	// debugger;
 	this.inputs.streams.change( function() { 
 
+		console.log('mode: ' + self.mode);
 		var begin_date = self.inputs.date.val();
 
-		if (!begin_date) return;
+		if (!begin_date && !self.mode === 'live') {
+			return;
+		} else if( self.mode === 'live') {
+			self.streamId = self.inputs.streams.val();
+			self.player.playVideo( self.camId, self.streamId );
+			return;
+		}
+			
+
 		begin_date = new Date( begin_date );
 		var end_date = new Date(begin_date);
 
@@ -432,6 +441,8 @@ CameraPage.prototype.zoom = function( begin, end ) {
 CameraPage.prototype.play = function( begin, end ) {
 
 	var self = this;
+
+	self.mode = 'archive';
 
 	this.loadIndexer( begin, end, function() {
 		self.launchTimeline( 5, begin, end); // 50
