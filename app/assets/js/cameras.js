@@ -79,10 +79,19 @@ var timelineSetup = function( cam_id, id, name ) {
 		});
 
 	}
+
 	
 	timelines[id] = new Timeline("#timeline-"+id);
 
+	var timelineOverlay = $('<div>', {
+		style:'position: absolute; z-index: 1000; top:0; left:0; width:100%; height:100%; background:rgba(250,250,250,0.8);margin:0; padding:6;color: rgba(100,100,100,0.5)',
+		class:'timelineOverlay csspinner line back-and-forth no-overlay',
+		html:'loading...'
+	}).appendTo("#timeline-"+id);
+
     $.getJSON( "/cameras/" + cam_id + "/streams/" + id + "/list_videos?start="+startTime+"&end="+Date.now(), function( data ) {
+
+		timelineOverlay.fadeOut();
 
         var videos = data.videos;
 
