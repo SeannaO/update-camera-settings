@@ -481,7 +481,9 @@ CameraPage.prototype.play = function( begin, end ) {
 	this.loadIndexer( begin, end, function() {
 		self.launchTimeline( 5, begin, end); // 50
 		self.player.playVideo( self.camId, self.streamId, begin, end );
-		timelineOverlay.fadeOut();
+		$('.timelineOverlay').fadeOut(function() {
+			$('.timelineOverlay').remove();
+		});
 	});
 }
 
