@@ -32,6 +32,7 @@ function CameraPage( camId ) {
 	this.zoomHistory = [];
 	this.currBegin;
 	this.currEnd;
+	this.posJump;
 };
 
 
@@ -140,6 +141,10 @@ CameraPage.prototype.setupEvents = function() {
 		if ( !self.mouseDragged ) {
 			// console.log("that was a click");
 			// debugger;
+			if (self.mode === 'live') {
+				console.log('switch to archive');
+				self.switchToArchive();
+			}
 		}
 		else { 
 			// console.log("that was a drag");
@@ -163,6 +168,27 @@ CameraPage.prototype.setupEvents = function() {
 	});
 };
 
+CameraPage.prototype.switchToArchive = function() {
+
+	self.mode = 'archive';
+	var dateInput = this.inputs.date;
+	var begin_date = dateInput.val();
+	if (!begin_date) return;
+	
+	begin_date = new Date( begin_date );
+	var end_date = new Date(begin_date);
+
+	end_date.setHours(23);
+	end_date.setMinutes(59);
+	end_date.setSeconds(59);
+
+	begin_date = Date.parse( begin_date );
+	end_date   = Date.parse( end_date );
+
+	self.streamId = self.inputs.streams.val();
+	self.player.playVideo( self.camId, self.streamId, begin_date, end_date );
+	// self.play( begin_date, end_date );
+}
 
 CameraPage.prototype.setupTimeline = function() {
 
@@ -568,7 +594,9 @@ CameraPage.prototype.showThumb = function( thumb ) {
 
 
 CameraPage.prototype.jumpTo = function(cameraPage, d) {
-	
+
+	console.log('jump to');
+
 	var self = cameraPage;
 
 	// var player = document.getElementById("strobeMediaPlayback");
@@ -581,7 +609,7 @@ CameraPage.prototype.jumpTo = function(cameraPage, d) {
 	var t_offset = offset * self.timeline.timeSpan / self.timeline.width;
 	t_offset /= 1000;
 	
-	if ( this.player.canSeekTo(time + t_offset) ) {
+	if ( this.player && this.player.canSeekTo(time + t_offset) ) {
 		this.player.seek(time + t_offset);
 		this.player.play();
 	}
