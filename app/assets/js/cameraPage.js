@@ -470,9 +470,16 @@ CameraPage.prototype.play = function( begin, end ) {
 
 	self.mode = 'archive';
 
+	var timelineOverlay = $('<div>', {
+		style:'position: absolute; z-index: 1000; top:0; left:0; width:100%; height:100%; background:rgba(250,250,250,0.8);margin:0; padding:6;color: rgba(100,100,100,0.5)',
+		class:'timelineOverlay csspinner line back-and-forth no-overlay',
+		html:'loading...'
+	}).appendTo('#timeline-container');
+
 	this.loadIndexer( begin, end, function() {
 		self.launchTimeline( 5, begin, end); // 50
 		self.player.playVideo( self.camId, self.streamId, begin, end );
+		timelineOverlay.fadeOut();
 	});
 }
 
