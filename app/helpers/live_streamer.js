@@ -25,12 +25,26 @@ Streamer.prototype.initServer = function() {
 
 	this.server = net.createServer( function(socket) {
 
+		socket.on('connection', function() {
+			// printf("* connection\n");
+		});
+
+		socket.on('end', function() {
+			self.refreshStream();
+			// socket.unpipe();
+			// self.pass.unpipe();
+			// self.sink.unpipe();
+			// socket.resume();
+			// socket.end('I got your message (but didnt read it)\n');
+		});
 		// start the flow of data, discarding it.
 		socket.resume();
+		// self.socket = socket;
+		socket.pipe( self.pass ).pipe( self.sink );
 
 		// socket.pipe( self.pass ).pipe( self.sink );
 		// socket.pipe( self.pass );
-		console.log( socket.bufferSize );
+		// console.log( socket.bufferSize );
 		// socket.on('data', function(data) {
 		// // // 	self.pass.write(data);
 		// 	console.log('data');
@@ -54,39 +68,46 @@ Streamer.prototype.initServer = function() {
 	}, 1000);
 
 	this.server.on('connection', function(s) {
-		s.resume();
-		// if (self.socket) {
-		// 	self.socket.unpipe();
-		// }
-		// if (self.fileStream) {
-		// 	self.fileStream.unpipe();
-		// }
-		// if (self.stream) {
-		// 	self.stream.unpipe();
-		// }
-		// if (self.pass) {
-		// 	self.pass.unpipe();
-		// }
-		if (self.socket) {
-			self.socket.unpipe();	
-			self.socket.removeAllListeners();
-			console.log('--- cleaning socket ---');
-		}
-
-		self.socket = s;
-
-		s.pipe( self.pass ).pipe( self.sink );
-		s.on('data', function(data) {
-			// console.log('--');
-			self.totalData += data.length;
-			// console.log( self.totalData );
-		});
-		s.once('end', function() {
-		});
-
-		s.on('close', function() {
-		});
-		console.log('-- new connection --');
+// 		s.resume();
+// 		// if (self.socket) {
+// 		// 	self.socket.unpipe();
+// 		// }
+// 		// if (self.fileStream) {
+// 		// 	self.fileStream.unpipe();
+// 		// }
+// 		// if (self.stream) {
+// 		// 	self.stream.unpipe();
+// 		// }
+// 		// if (self.pass) {
+// 		// 	self.pass.unpipe();
+// 		// }
+// 		// if (self.socket) {
+// 		// 	self.socket.unpipe();	
+// 		// 	self.socket.removeAllListeners();
+// 		// 	console.log('--- cleaning socket ---');
+// 		// }
+//
+// 		// self.socket = s;
+//
+// 		// s.pipe( self.pass ).pipe( self.sink );
+// 		s.on('data', function(data) {
+// 			// console.log('--');
+// 			self.totalData += data.length;
+// 			// console.log( self.totalData );
+// 		});
+// 		s.on('end', function() {
+// 			s.unpipe();
+// 			self.pass.unpipe();
+// 			console.error("end ##############################")
+// 		});
+//
+// 		s.on('close', function() {
+// 			s.unpipe();
+// 			self.pass.unpipe();
+// 			console.error("close ##############################")
+// 			s.destroy();
+// 		});
+// 		console.log('-- new connection --');
 	});
 
 	fs.exists(this.pipeFile, function(exists) {
@@ -94,8 +115,10 @@ Streamer.prototype.initServer = function() {
 		self.server.listen(self.pipeFile);
 	});
 
+	this.server.on('close', function(e) {
+	});
+
 	this.server.on('error', function(e) {
-		console.log(e);
 	});
 };
 

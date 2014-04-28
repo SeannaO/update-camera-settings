@@ -10,9 +10,13 @@
         <link rel="stylesheet" href="/css/camera.css">
         <link rel="stylesheet" href="/css/spinner.css">        
         <link rel="stylesheet" href="/css/bootstrap-timepicker.css">
-        <script src="/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" href="/css/lib/toastr.min.css" />
+
+		<script src="/js/bootstrap.min.js"></script>
         <script src="/js/d3.v3.min.js"></script>
         <script src="/js/d3-timeline.js"></script>
+
+		<script src="/js/lib/toastr.js"></script>
 
 		<script src="/js/lib/bootbox.min.js"></script>
 
@@ -22,7 +26,8 @@
         <script src="/js/socket.io.js"></script>
         <script src="/js/bootstrap-timepicker.js"></script>
         <script>
-
+		
+			// toastr.info("Scheduled successfully updated");
 					
             var socket = io.connect();
 

@@ -108,6 +108,10 @@ OrphanFilesChecker.prototype.checkForOrphanStreams = function( folders, cb ) {
 		for (var f in files) {
 			var streamId = files[f];
 			var sql_file_match = sqliteRegex.exec( streamId );
+			
+			if (streamId.indexOf('pipe') >= 0) {
+				console.error("trying to delete a pipe file");
+			}
 
 			var should_be_deleted = !cam.streams || 
 									( cam.streams.length === 0 ) || 

@@ -506,6 +506,7 @@ var editCamera = function(camId) {
                         if (data.success) {
 							removeOverlayFromPage( function() {
 								location.reload();
+								toastr.success('Camera configurations sucesfully updated.')
 							});
                         } else {
 							removeOverlayFromPage( function() {
@@ -963,8 +964,9 @@ var removeStream = function( stream ) {
 				success: function(data) {
 					if (data.error) {
 						removeOverlayFromPage( function() {
-							alert(data.error);
+							// alert(data.error);
 							location.reload();		
+							toastr.success("Camera was successfully removed");
 						});
 					} else {
 						removeOverlayFromPage( function() {
@@ -1088,7 +1090,10 @@ var cameraSchedule = function(camId) {
                     updateSchedule( camId, function(data) {
                         if (data.success) {
 							removeOverlayFromPage( function() {
-								location.reload();
+								toastr.success("Scheduled successfully updated");
+								$('#camera-schedule-dialog').close();
+								// location.reload();
+								// toastr.success("Scheduled successfully updated");
 							});
                         } else {
 							removeOverlayFromPage( function() {
@@ -1137,6 +1142,7 @@ var cameraMotion = function(camId) {
                         if (data.success) {
 							removeOverlayFromPage( function() {
 								location.reload();
+								toastr.success("Motion configuration successfully updated");
 							});
                         } else {
 							removeOverlayFromPage( function() {
