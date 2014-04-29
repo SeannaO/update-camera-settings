@@ -25,7 +25,14 @@ exec('killall -9 smartctl', function( error, stdout, stderr) {});
 
 var self = this;
 
-// // launches custom ffmpeg
+// launches cpulimit to control svcd process
+exec('killall -9 cpulimit', function( error, stdout, stderr) {
+	exec('./cpulimit -l20 -p `pgrep svcd`', function( error, stdout, stderr ) {
+		console.log('*** launching cpulimit');
+	});
+});
+
+// launches custom ffmpeg
 this.launchRtspGrabber = function() {
 	exec('killall -9 rtsp_grabber', function( error, stdout, stderr) {
 		self.grabberProcess = exec('./rtsp_grabber', function( error, stdout, stderr ) {
