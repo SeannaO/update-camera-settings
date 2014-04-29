@@ -47,11 +47,11 @@ Streamer.prototype.initServer = function() {
 		// socket.pipe( self.pass ).pipe( self.sink );
 		// socket.pipe( self.pass );
 		// console.log( socket.bufferSize );
-		socket.on('data', function(data) {
+		// socket.on('data', function(data) {
 		// // // 	self.pass.write(data);
 		// 	console.log('data');
-			self.bitrate += data.length;
-		});
+			// self.bitrate += data.length;
+		// });
 	
 		// -----
 		// fast connect/disconnect detection
