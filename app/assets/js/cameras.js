@@ -307,7 +307,6 @@ var addCamera = function(camera, cb) {
 
 var deleteCamera = function(id) {
 
-
 	bootbox.confirm("are you sure you want to remove this camera?", function(ok) {
 		if (ok) {
 			addOverlayToPage('removing camera...');
@@ -319,11 +318,12 @@ var deleteCamera = function(id) {
 				success: function(data) {
 					if (data.success) {
 						removeOverlayFromPage( function() {
+							toastr.success('Successfully removed camera');
 							$("#camera-item-"+data._id).fadeOut();
 						});
 					} else {
 						removeOverlayFromPage( function() {
-							alert("error: " + data.error);
+							toastr.error("error: " + data.error);
 						});
 					}
 				},
@@ -608,13 +608,17 @@ scanForCameras = function(subnet, cb) {
             var ip_addresses = $.map(cameras, function(n,i){
                return [ n.ip ];
             });
+			
+			var newCameras = 0;
+
             for (var idx in data) {
                 if ($.inArray(data[idx].ip, ip_addresses) === -1){
+					newCameras++;
                     addCamera( data[idx], function(result) {
                         if (result && result._id){
                             addCameraItem( result );
                             for (var j in result.streams) {
-
+								
 								var text = '';
 								if ( streams[j].name ) {
 									text = streams[j].name;
@@ -630,6 +634,12 @@ scanForCameras = function(subnet, cb) {
                     });                                
                 }
             }
+			if (newCameras) {
+				toastr.info('Found ' + newCameras + ' cameras.');
+			} else {
+				toastr.info('No new cameras found.');
+			}
+			
             $("#scan-spinner").hide();
             if (cb) cb();
         },
