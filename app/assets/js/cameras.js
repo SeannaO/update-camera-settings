@@ -32,6 +32,8 @@ $(document).ready(function(){
 			$("#start-camera-scanner").click();
 		}
 	});
+
+	$("#camera-subnet").mask("9?99.9?99.9?99");
 });
 
 

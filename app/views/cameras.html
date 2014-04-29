@@ -26,6 +26,9 @@
 
         <script src="/js/socket.io.js"></script>
         <script src="/js/bootstrap-timepicker.js"></script>
+
+		<script src="/js/lib/mask.min.js"></script>
+
         <script>
 		
 			// toastr.info("Scheduled successfully updated");
@@ -101,6 +104,7 @@
                     <div class="form-group">
                         <label for="scanner-subnet">subnet</label>
                         <input name="scanner[subnet]" type="text" id="camera-subnet" class="input-sm form-control" placeholder="192.168.1">
+
                     </div>
                     <button id="close-subnet-field" type="button" class="btn btn-xs btn-default">close</button>
                     <button id="reset-subnet-field" type="button" class="btn btn-xs btn-info">reset</button>
