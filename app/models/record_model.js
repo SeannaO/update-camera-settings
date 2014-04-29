@@ -366,6 +366,12 @@ RecordModel.prototype.startRecording = function() {
 };
 // end of startRecording
 //
+RecordModel.prototype.restart = function() {
+
+	var self = this;
+	self.lastChunkTime = Date.now();	// refreshes timer
+	self.sendSignal( 'restart', self.rtsp, self.folder + "/videos/tmp" );
+};
 
 
 /**

@@ -1107,10 +1107,15 @@ var cameraSchedule = function(camId) {
 					addOverlayToPage('updating schedule...');
 
                     updateSchedule( camId, function(data) {
+						console.log(data);
                         if (data.success) {
 							removeOverlayFromPage( function() {
 								toastr.success("Scheduled successfully updated");
-								$('#camera-schedule-dialog').close();
+								$('#camera-schedule-dialog').modal('toggle');
+								var enabled = $("#camera-schedule-enable").is(':checked');
+								console.log(enabled);
+								var statusColor = enabled ? 'green' : 'red';
+								$("#camera-item-" + camId + " .schedule .status").removeClass("gray green red").addClass(statusColor);
 								// location.reload();
 								// toastr.success("Scheduled successfully updated");
 							});

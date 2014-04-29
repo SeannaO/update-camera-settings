@@ -15,6 +15,8 @@ var Streamer = function( pipeFile ) {
 	this.server;
 	
 	this.refreshStream();
+	
+	this.bitrate = 0;
 };
 
 util.inherits(Streamer, events.EventEmitter);
@@ -45,10 +47,30 @@ Streamer.prototype.initServer = function() {
 		// socket.pipe( self.pass ).pipe( self.sink );
 		// socket.pipe( self.pass );
 		// console.log( socket.bufferSize );
-		// socket.on('data', function(data) {
+		socket.on('data', function(data) {
 		// // // 	self.pass.write(data);
 		// 	console.log('data');
-		// });
+			self.bitrate += data.length;
+		});
+	
+		// -----
+		// fast connect/disconnect detection
+		// !!! EXPERIMENTAL !!!
+		// self.lastReset = Date.now();
+		// clearInterval( self.bitrateCalculator );
+		// self.bitrateCalculator = setInterval( function() {
+		// 	if (self.bitrate === 0) {
+		// 		console.info('[live_streamer] camera disconnected!');
+		// 		self.emit('camera_disconnected');
+		// 	} else {
+		// 		self.emit('camera_connected');
+		// 	}
+		// 	// self.emit('bitrate', self.bitrate);
+		// 	self.bitrate = 0;
+		// }, 1000);
+		// -----
+		//
+		
 		// socket.on('data', function(data) {
 		// 	self.pass.write(data);
 		// });

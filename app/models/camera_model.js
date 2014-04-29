@@ -132,12 +132,34 @@ Camera.prototype.addStream = function( stream, cb ) {
 					recorder.startRecording();
 				}
 
+// 				// ---
+// 				// EXPERIMENTAL
+// 				stream.lastReset = Date.now();	
+// 				stream.streamer.on('camera_disconnected', function() {
+// 					self.emit('camera_status', { cam_id: self._id, status: 'disconnected', stream_id: stream.id });
+// 					if (Date.now() - stream.lastReset > 5000) {
+// 						recorder.restart();
+// 						stream.lastReset = Date.now();
+// 					}
+// 				});
+//
+// 				stream.streamer.on('camera_connected', function() {
+// 					recorder.lastChunkTime = Date.now();
+// 					self.emit('camera_status', { cam_id: self._id, status: 'online', stream_id: stream.id });
+// 				});
+// 				// EXPERIMENTAL
+// 				// ---
+
 				recorder.on('new_chunk', function(data) {
 					self.emit( 'new_chunk', data);
 				});
 				recorder.on('camera_status', function(data) {
 					console.log('emit: ' + stream.id);
+
+					// ---
+					// COMMENTED OUT FOR EXPERIMENTAL PURPOSES
 					self.emit('camera_status', { cam_id: self._id, status: data.status, stream_id: stream.id } );
+					// ---
 				});
 
 				// stream.recordModel mught be null here, 
@@ -840,7 +862,7 @@ Camera.prototype.setupEvents = function() {
             self.emit( 'new_chunk', data);
         });
         this.streams[i].recordModel.on('camera_status', function(data) {
-            self.emit('camera_status', { cam_id: self._id, status: data.status } );
+            // self.emit('camera_status', { cam_id: self._id, status: data.status } );
         });
     }
 	
