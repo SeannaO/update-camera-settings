@@ -233,8 +233,8 @@ Dblite.prototype.getNewestChunks = function( numberOfChunks, cb ) {
  */
 Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
 
-    var t0 = (startTime - 10000);
-    var t1 = (startTime + 25000);
+    var t0 = (startTime - 15000);
+    var t1 = (startTime + 15000);
 
     var query = 'SELECT start, end, file FROM videos WHERE start BETWEEN '+t0+' AND '+t1+' ORDER BY start ASC';
     //var query = 'SELECT start, end, file FROM videos WHERE start <= ' + startTime + ' AND end >= ' + startTime + ' ORDER BY start ASC';
@@ -254,11 +254,20 @@ Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
 					console.error(data);
                      cb( "", 0 );
                 } else {
-					// console.log("=== starttime: " + startTime );
-					// console.log("=== data start: " + data[0].start);
+					var k = 0;
+                    offset = Math.round( (startTime - data[k].start)/1000.0 );
+					var minOffset = 100*1000;
 
-                    offset = Math.round( (startTime - data[0].start)/1000.0 );
-                    cb(data[0].file, offset);
+					for (var i = 0; i < data.length; i++) {
+                    	var off = Math.round( (startTime - data[i].start)/1000.0 );
+						if(off < minOffset && off >= 0) {
+							minOffset = off;
+							offset = minOffset;
+							k = i;
+						}
+					}
+
+                    cb(data[k].file, offset);
                 }
             });
 };
