@@ -254,8 +254,8 @@ Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
 					console.error(data);
                      cb( "", 0 );
                 } else {
-					console.log("=== starttime: " + startTime );
-					console.log("=== data start: " + data[0].start);
+					// console.log("=== starttime: " + startTime );
+					// console.log("=== data start: " + data[0].start);
 
                     offset = Math.round( (startTime - data[0].start)/1000.0 );
                     cb(data[0].file, offset);

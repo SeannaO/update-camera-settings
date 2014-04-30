@@ -23,8 +23,8 @@ function inMemorySnapshot( file, offset, precision, res, options, cb) {
 		size = ' -s ' + options.size.width + 'x' + options.size.height;
 	}
 	
-	console.log("===== snapshot precision: " + precision );
-	console.log("===== offset: " + offset );
+	// console.log("===== snapshot precision: " + precision );
+	// console.log("===== offset: " + offset );
 
 	if (precision === 0) {
 		child = spawn( 'ffmpeg', 
@@ -38,7 +38,7 @@ function inMemorySnapshot( file, offset, precision, res, options, cb) {
 					'-loglevel', 'quiet',
 					'-'
 					]);
-	} else if (precision > 0) {
+	} else {
 		child = spawn( 'ffmpeg', 
 					['-y',
 					'-i', file,
