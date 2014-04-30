@@ -4,7 +4,7 @@ var fs = require('fs');
 var spawn = require('child_process').spawn;
 
 
-function inMemorySnapshot( file, offset, res, options, cb) {
+function inMemorySnapshot( file, offset, precision, res, options, cb) {
 
 	//	var child = spawn('ffmpeg', ['-y', '-i', file, '-vframes', '1', '-ss', '1', '-f', 'image2', '-loglevel', 'quiet', '-']);
 
@@ -17,22 +17,40 @@ function inMemorySnapshot( file, offset, res, options, cb) {
 		options = {};
 	}
 
+	var child;
+	
 	if (options.size) {
 		size = ' -s ' + options.size.width + 'x' + options.size.height;
 	}
+	
+	console.log("===== snapshot precision: " + precision );
+	console.log("===== offset: " + offset );
 
-	var child = spawn( 'ffmpeg', 
-				['-y',
-                '-i', file,
-                '-vframes', '1',
-                // '-ss', offset,
-                '-f', 'image2',
-                '-vcodec', 'mjpeg',
-                '-an',
-                '-loglevel', 'quiet',
-                '-'
-				]);
-
+	if (precision === 0) {
+		child = spawn( 'ffmpeg', 
+					['-y',
+					'-i', file,
+					'-vframes', '1',
+					// '-ss', offset,
+					'-f', 'image2',
+					'-vcodec', 'mjpeg',
+					'-an',
+					'-loglevel', 'quiet',
+					'-'
+					]);
+	} else if (precision > 0) {
+		child = spawn( 'ffmpeg', 
+					['-y',
+					'-i', file,
+					'-vframes', '1',
+					'-ss', offset,
+					'-f', 'image2',
+					'-vcodec', 'mjpeg',
+					'-an',
+					'-loglevel', 'quiet',
+					'-'
+					]);
+	}
 
 	child.stderr.on('data', function (data) {
 		console.log('inMem snapshot error: ' + data);
@@ -175,7 +193,10 @@ function takeSnapshot( db, cam, req, res, cb ) {
     
 	var width = parseInt(req.query.width, 10);
 	var height = parseInt(req.query.height, 10);
-	
+
+	var precision = req.query.precision || 0;
+	precision = parseInt(precision);
+
 	var options = {};
 
 	if ( !isNaN(width) && !isNaN(height) ) {
@@ -201,7 +222,7 @@ function takeSnapshot( db, cam, req, res, cb ) {
         
         fs.exists(file, function(exists) {
             if (exists) {
-				inMemorySnapshot(file, offset, res, function() {
+				inMemorySnapshot(file, offset, precision, res, function() {
 					if (cb) cb();
 				});
             } else {
