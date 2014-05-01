@@ -1,10 +1,8 @@
-#!/bin/sh
+#!/bin/bash
+echo "===== LAUNCHING NODE ====="
+node -v
+killall -9 node
+cd /opt/apps/solink/CameraManager
+node /opt/apps/solink/CameraManager/node_modules/forever/bin/real_forever /opt/apps/solink/CameraManager/app.js /nfs/solink
+echo "===== end of LAUNCHING NODE ====="
 
-n=$(pgrep node | wc -l)
-if [ "$n" -eq 0 ] 
-then 
-  echo "you shall pass" 
-  /opt/apps/solink/CameraManager/node /opt/apps/solink/CameraManager/app /nfs/solink
-else
-  echo `date` > /opt/apps/solink/forever_test
-fi
