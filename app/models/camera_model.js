@@ -560,11 +560,29 @@ Camera.prototype.restartStream = function( streamId ) {
 		suggested_url:  self.streams[streamId].url
 	});
 	
-	self.streams[streamId].recordModel = new RecordModel( self, self.streams[streamId] );
+	self.streams[streamId].recordModel = new RecordModel( self, self.streams[streamId], function(recorder) {
 
-	if ( self.shouldBeRecording() ) {
-		self.streams[streamId].recordModel.startRecording();
-	}
+			// var folder = self.videosFolder + '/' + stream.id;
+			// stream.streamer = new Streamer(folder + '/videos/pipe.ts');
+
+			if ( self.shouldBeRecording() ) {
+				recorder.startRecording();
+			}
+
+			recorder.on('new_chunk', function(data) {
+				self.emit( 'new_chunk', data);
+			});
+			recorder.on('camera_status', function(data) {
+				self.emit('camera_status', { cam_id: self._id, status: data.status, stream_id: stream.id } );
+			});
+
+			// stream.recordModel mught be null here, 
+			// so we assign it again with the object
+			// returned by the RecordModel callback
+			self.streams[streamId].recordModel = recorder;
+			//
+	});
+
 };
 // end of restartStream
 //
