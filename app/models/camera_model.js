@@ -385,6 +385,11 @@ Camera.prototype.startMotionDetection = function() {
  */
 Camera.prototype.updateAllStreams = function( new_streams, cb ) {
 
+	if (!new_streams) {
+		if (cb) cb();
+		return;
+	}
+
 	var self = this;
 
 	this.api.setCameraParams({
@@ -392,6 +397,7 @@ Camera.prototype.updateAllStreams = function( new_streams, cb ) {
 		password:  self.password,
 		username:  self.username
 	});
+
 
 	var total = new_streams.length;
 

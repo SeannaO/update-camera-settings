@@ -408,7 +408,10 @@ var updateCamera = function(id, cb) {
         contentType: 'application/json',
         success: function(data) {
             cb( data );
-        }
+        },
+		error: function(err) {
+			cb( {error: err} );
+		}
     });
 };
 
@@ -514,25 +517,21 @@ var editCamera = function(camId) {
 					addOverlayToPage('updating camera configurations...');
 
                     updateCamera( camId, function(data) {
-                        if (data.success) {
+                        if (data && data.success) {
 							removeOverlayFromPage( function() {
 								location.reload();
 								toastr.success('Camera configurations sucesfully updated.')
 							});
                         } else {
 							removeOverlayFromPage( function() {
-								console.log( data );
+								console.log( data.err );
 							});
                         }
                     });
                 });
 				// debugger;
                 getCameraOptions(function(data){
-					console.log(data);
-					// debugger;
 					if (!data) {
-						// debugger;
-						console.log('remove');
 						removeStreamFieldOverlay();
 					} else {
 						setAuthStatus(data,function(){
