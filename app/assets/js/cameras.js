@@ -469,6 +469,7 @@ var setAuthStatus = function(data, cb){
         
         if ($('#stream-panes').children().length === 0){
             addStream(function(){
+				cb();
             });
         }else{
             cb();
