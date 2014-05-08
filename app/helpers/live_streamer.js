@@ -25,6 +25,7 @@ Streamer.prototype.initServer = function() {
 
 	var self = this;
 
+	
 	this.server = net.createServer( function(socket) {
 
 		socket.on('connection', function() {
@@ -132,10 +133,8 @@ Streamer.prototype.initServer = function() {
 // 		console.log('-- new connection --');
 	});
 
-	fs.exists(this.pipeFile, function(exists) {
-		if (exists) fs.unlinkSync(self.pipeFile);
-		self.server.listen(self.pipeFile);
-	});
+	this.initSocketFile();
+
 
 	this.server.on('close', function(e) {
 	});
@@ -143,6 +142,34 @@ Streamer.prototype.initServer = function() {
 	this.server.on('error', function(e) {
 	});
 };
+
+
+Streamer.prototype.initSocketFile = function() { 
+	
+	var self = this;
+
+	clearInterval( this.socketFileChecker );
+
+	fs.exists(this.pipeFile, function(exists) {
+		try {
+			if (exists) fs.unlinkSync(self.pipeFile);
+		} catch(err) {
+			console.error("[live_streamer]  attempt to delete unexistent unix socket file");	
+		}
+		self.server.listen(self.pipeFile);
+
+		self.socketFileChecker = setInterval( function() {
+			fs.exists(self.pipeFile, function(exists) {
+				if(!exists) {
+					console.error('socket file was deleted: creating new one');
+					self.emit('restart_socket');
+					self.refreshStream();
+				}
+			});
+		}, 5000);
+	});
+};
+
 
 Streamer.prototype.stop = function() {
 
