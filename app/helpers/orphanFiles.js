@@ -63,7 +63,7 @@ OrphanFilesChecker.prototype.checkForOrphanCameras = function( cb ) {
 		} else {
 			for (var f in files) {
 
-				if ( !self.camerasController.findCameraById( files[f] ) && files[f] !== "cam_db" ) {
+				if ( !self.camerasController.findCameraById( files[f] ) && files[f] !== "cam_db" && files[f] !== "solink_server.db" ) {
 					self.recursiveDeleteFiles( self.camerasController.videosFolder + '/' + files[f], function() {
 						if (cb) {
 							cb(true);

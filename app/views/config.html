@@ -1,0 +1,185 @@
+<html>
+	<head>
+		<script src = "/js/jquery.min.js"></script>        
+		<script src = "/js/jquery-ui.min.js"></script>
+		<script src = "/js/jquery-serialize-object.js"></script>
+
+		<link rel="stylesheet" href="/css/bootstrap.min.css">
+		<link rel="stylesheet" href="/css/bootstrap-theme.min.css">
+		
+		<script src="/js/bootstrap.min.js"></script>
+		<style>
+			#isConnected .glyphicon.success{
+				color: green;
+			}
+			#isConnected .glyphicon.failure{
+				color: red;
+			}
+			#isConnected .alert .title{
+				font-size: 1.2em;
+				margin-left:10px;
+			}
+			#isConnected .alert .description{
+				margin-left:10px;
+			}			
+			#isConnected .alert .glyphicon{
+				font-size: 1.5em;
+				float: left;
+			}
+			#solinkRegistrationStatus.alert-danger #failureContainer,
+			#connectionStatus.alert-danger #failureContainer,			
+			#solinkRegistrationStatus.alert-success #successContainer,
+			#connectionStatus.alert-success #successContainer{
+				display: block;
+			}
+			#solinkRegistrationStatus.alert-success #failureContainer,
+			#connectionStatus.alert-success #failureContainer,
+			#solinkRegistrationStatus.alert-danger #successContainer,
+			#connectionStatus.alert-danger #successContainer{
+				display: none;
+			}
+		</style>
+	</head>
+	<body>
+	<div class="container">
+		<h2 class = 'text-muted'> <a href ="/cameras">cameras</a> | <span>configurations</span> </h2> 
+
+		<div class="row">
+			<div class="col-md-12">
+
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<h4>Solink Platform</h3>
+					</div>
+					<div class="panel-body">
+			    		<div id="solinkLoadingStatus" class="spinner" style="display:none;">loading...</div>
+						<!-- If added to platform then display the status of the nas on the platform -->
+						<div id="isConnected" style="display:none;">
+							<div id="connectionStatus" class="alert alert-success">
+								<div id="successContainer">
+									<span class="glyphicon glyphicon-ok-circle success"></span> 
+									<strong class="title">Connected</strong>
+									<span class="description"> Successfully connected to server at host <strong id="solinkHostIpSuccess"></strong>.</span>
+								</div>
+								<div id="failureContainer">
+									<span class="glyphicon glyphicon-remove-circle failure"></span> 
+									<strong class="title">Unreachable</strong>
+									<span class="description">The Solink Server is currently unreachable at <strong id="solinkHostIpError"></strong>.</span>
+								</div>
+							</div>
+							<div id="solinkRegistrationStatus" class="alert alert-danger">
+								<div id="successContainer">
+									<span class="glyphicon glyphicon-ok-circle success"></span>
+									<strong class="title">Registered</strong>
+									<span class="description">This device is registered and can be accessed from the <a id="solinkLoginLink" href="#">Solink Platform</a>.</span>						
+								</div>
+								<div id="failureContainer">
+									<span class="glyphicon glyphicon-remove-circle failure"></span>
+									<strong class="title">Not Registered</strong>
+									<span class="description">Visit the <a id="registrationLink" href="#">Solink License Page</a> to register this device.</span>
+								</div>
+							</div>
+						</div>
+
+						<!-- If not on platform then display a textfield to enter the host/ip of the solink server and a button to connect to the server -->
+						<div id="noConnection" style="display:none;">
+							<p>Enter the Host / IP address of the solink platform to add this device to the list of devices. (Note: this device will have to be registered on the platform to access this device)</p>
+							<form id="solink-config" class="form-inline" role="form">
+								<div class="form-group">
+									<label class="sr-only" for="solink-host">Host</label>
+									<input name="solink[host]" type="text" id="solink-host" class="input-sm form-control" placeholder="192.168.1.1">
+								</div>
+								<button id="connect-field" type="button" class="btn btn-xs btn-default">connect</button>
+							</form>
+						</div>
+
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+	<script>
+
+
+	var showConnectionSuccess = function(device){
+		$("#solinkLoadingStatus").hide();
+		$("#noConnection").hide();
+		$("#isConnected").show();
+		$("#solinkRegistrationStatus").show();
+		$("#solinkHostIpSuccess").text(device.host);
+		$("#connectionStatus").addClass("alert-success").removeClass("alert-danger");
+		// remove spinner
+		if (device.IsReg){
+			$("#solinkRegistrationStatus").addClass("alert-success").removeClass("alert-danger");
+			$("#solinkLoginLink").attr("href", "http://" + device.host + "/");
+		}else{
+			$("#solinkRegistrationStatus").removeClass("alert-success").addClass("alert-danger");
+			$("#registrationLink").attr("href", "http://" + device.host + "/DeviceManager.aspx");
+		}
+	};
+
+	var showConnectionFailure = function(device, error){
+		$("#solinkLoadingStatus").hide();
+		$("#noConnection").show();
+		$("#isConnected").show();
+		$("#solinkRegistrationStatus").hide();
+		$("#solinkHostIpError").text(device.host);
+		//console.log(error);
+		$("#connectionStatus").removeClass("alert-success").addClass("alert-danger");
+	};	
+
+	$(function(){
+		$("#solinkLoadingStatus").show();
+		// query to see if our device is already connected to the platform
+		// add spinner
+		$.ajax({
+			type: "GET",
+			url: "/solink",
+			contentType: 'application/json',
+			success: function(data){
+				console.log(data);
+				if (data == null || data.error){
+					$("#solinkLoadingStatus").hide();
+					$("#noConnection").show();
+					$("#isConnected").hide();
+				}else if (data.Id){
+					showConnectionSuccess(data);
+				}else {
+					showConnectionFailure(data);
+				}
+
+			},
+			error: function(err){
+				showConnectionFailure({host: "unknown"}, err);
+			}
+		});
+	});
+
+
+	$("#connect-field").click(function(e){
+		e.preventDefault();
+	    var params = $('#solink-config').serializeObject();
+		$("#solinkLoadingStatus").show();
+	    $.ajax({
+	        type: "POST",
+	        url: "/solink",
+	        data: JSON.stringify( params.solink ),
+	        contentType: 'application/json',
+	        success: function(data) {
+	            showConnectionSuccess(data);
+	        },
+			error: function(err) {
+				console.log(err);
+				showConnectionFailure(err);
+			}
+	    });
+	});
+
+
+	</script>
+
+	</body>
+	
+</html>

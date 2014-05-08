@@ -12,7 +12,6 @@ var DiskSpaceAgent    = require('./helpers/diskSpaceAgent.js');      // agent th
 
 var passport          = require('passport');
 var BasicStrategy     = require('passport-http').BasicStrategy;
-
 var authCache = {};
 
 // - - -
@@ -442,6 +441,13 @@ app.get('/cameras', passport.authenticate('basic', {session: false}), function(r
 });
 // - - -
 
+
+
+
+app.get('/config', passport.authenticate('basic', {session: false}), function (req, res) {								// main page
+    res.sendfile(__dirname + '/views/config.html');			
+});
+
 app.get('/hls', passport.authenticate('basic', {session: false}), function(req, res) {
 	res.sendfile(__dirname + '/views/js_hls.html');			// main page - alternative route
 });
@@ -503,6 +509,14 @@ app.get('/multiview', passport.authenticate('basic', {session: false}), function
 	res.sendfile(__dirname + '/views/multi.html');
 });
 // - - -
+
+
+var solink = require('./api/solink.js');
+
+app.get('/solink', passport.authenticate('basic', {session: false}), solink.getDevice);
+app.post('/solink', passport.authenticate('basic', {session: false}), solink.registerDevice);
+
+
 
 // server.listen(process.env.PORT || 8080);
 server.listen( 8080 );
