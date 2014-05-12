@@ -24,7 +24,7 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 	self.setup( function(err) {
 			setTimeout( function() {
 				this.orphanFilesChecker = new OrphanFilesChecker( self );
-				this.orphanFilesChecker.periodicallyCheckForOrphanFiles( 10 * 60 * 1000 );  // checks for orphan files each 10 minutes
+				this.orphanFilesChecker.periodicallyCheckForOrphanFiles( 120 * 60 * 1000 );  // checks for orphan files each 2 hours
 				
 				if (cb) {
 					cb(err);
