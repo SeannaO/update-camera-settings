@@ -462,7 +462,21 @@ CamerasController.prototype.pushCamera = function( cam ) {
 		self.emit('motion', data);
 	});
 
-	cam.startMotionDetection();
+	if (cam.api != null && Object.keys(cam.api).length > 0){
+		
+		cam.api.getMotionParams(function(motion){
+			if (motion) {
+				if (motion.enabled) {
+					cam.startMotionDetection();
+				} else {
+					cam.stopMotionDetection();
+				}
+			}else{
+			}
+		});		
+	}
+
+	
 
 };
 
@@ -560,8 +574,6 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
         }
     });
 };
-
-
 
 CamerasController.prototype.updateCamera = function(cam, cb) {
 
