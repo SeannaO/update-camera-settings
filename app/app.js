@@ -383,6 +383,11 @@ camerasController.on('new_thumb', function( data ) {
 	io.sockets.emit( 'newThumb', data );	
 });
 
+camerasController.on('motion', function( data ) {
+	console.log("Emitting Motion Event: " + JSON.stringify(data, null, 4) );
+	io.sockets.emit( 'motion', data );
+});
+
 
 camerasController.on('camera_status', function( data ) {
 	if (data.status === "disconnected" || data.status === "offline"){

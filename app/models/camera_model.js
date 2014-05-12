@@ -19,7 +19,7 @@ function Camera( cam, videosFolder, cb ) {
     } else {
         this.id = cam._id;		// _id: assigned from db
     } 
-
+    this.motion = null;
     this.name         = cam.name;
     this.ip           = cam.ip;
     this.status       = cam.status;
@@ -361,23 +361,35 @@ Camera.prototype.startMotionDetection = function() {
 		
 	var self = this;
 
-	this.api.startListeningForMotionDetection( function(data) {
+	this.api.startListeningForMotionDetection( function(timestamp, data) {
 
-		// Broadcast that motion occured
-		self.emit( 'motion', {action:"start", data: data});
 
-		if ( !self.recording ) {
-			self.startRecording();
+		// check to see if the camera already has a motion event
+		if (self.motion == null){
+			self.motion = {id: self._id, start: timestamp, duration:0, ip:self.ip, status: 'start', name: self.name, motion: { }};
+			self.motion.motion[timestamp] = data;
+			if ( !self.recording ) {
+				self.startRecording();
+			}
+			self.emit("motion", self.motion);
+		}else{
+			self.motion.status = 'open';
+			self.motion.duration = timestamp - self.motion.start;
+			self.motion.motion[timestamp] = data;
+			if (self.stopRecordingTimeout) {
+				clearTimeout( self.stopRecordingTimeout );
+			}
 		}
 
-		if (self.stopRecordingTimeout) {
-			clearTimeout( self.stopRecordingTimeout );
-		}
+
 		self.stopRecordingTimeout = setTimeout (function() {
+			var result = self.motion; 
+			self.motion = null;
 			self.stopRecording();
-
+			result.status = 'end';
+			result.duration = Date.now() - result.start;
 			// Broadcast that motion has ended with the duration, camera name, ID, and timestamp
-			self.emit( 'motion', {action:"end", duration: 30000});
+			self.emit( 'motion', result);
 		}, 30000);
 
 	});

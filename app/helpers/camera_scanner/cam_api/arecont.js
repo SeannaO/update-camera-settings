@@ -270,9 +270,24 @@ Arecont.prototype.startListeningForMotionDetection = function(cb){
 	self.process_id = setInterval(function(){
 		self.getParam('mdresult',function(error, result){
 			if (error){
-				cb(error);
+				console.error("[arecont] motion: " + error);
 			}else if (result && result !== 'no motion'){
-				cb(result);
+				var timestamp = Date.now()
+				var motion_arr = result.trim().split(" ");
+				var motion_mat = [], i, k;
+				var motion_sum = 0;
+				for (i = 0, k=-1; i < motion_arr.length; i++){
+					if (i % 8 === 0){
+						k++;
+						motion_mat[k] = [];
+					}
+					var motion_ele = parseInt(motion_arr[i], 16);
+					motion_mat[k].push(motion_ele);
+					motion_sum += motion_ele;
+				}
+
+				//cb(timestamp, {sum: motion_sum, data:motion_mat});
+				cb(timestamp, {sum: motion_sum});
 			}else{
 				//cb('no motion'); -- only callback when there's motion
 			}

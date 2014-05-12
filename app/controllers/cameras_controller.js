@@ -459,11 +459,10 @@ CamerasController.prototype.pushCamera = function( cam ) {
     });
 
 	cam.on('motion', function(data) {
-		data.camera_id = cam.id;
-		data.camera_name = cam.name;
-		data.camera_ip = cam.ip;
 		self.emit('motion', data);
 	});
+
+	cam.startMotionDetection();
 
 };
 
