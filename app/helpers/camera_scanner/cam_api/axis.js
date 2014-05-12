@@ -306,10 +306,12 @@ Axis.prototype.startListeningForMotionDetection = function(cb){
 
 	Axis.server.on('connection', function( socket ) {
 		try {
+			var timestamp = Date.now()
 			// console.log("==== " + socket.remoteAddress + " | " + self.cam.ip );
 			if ( socket.remoteAddress === self.cam.ip ) {
+				console.log(socket);
 				console.log('[Axis.motionDetection] movement detected');
-				if(cb) cb() ;
+				if(cb) cb(timestamp, socket) ;
 			}
 		} catch(e) {
 		}

@@ -390,7 +390,7 @@ Camera.prototype.startMotionDetection = function() {
 			result.duration = Date.now() - result.start;
 			// Broadcast that motion has ended with the duration, camera name, ID, and timestamp
 			self.emit( 'motion', result);
-		}, 30000);
+		}, 20000);
 
 	});
 };
