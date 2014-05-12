@@ -35,6 +35,11 @@
 					
             var socket = io.connect();
 
+
+            socket.on('motion', function(data){
+                console.log(data);
+            });
+
             /*
             socket.on('camera_connected', function(data) {
                 console.log('camera_connected');

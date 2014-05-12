@@ -363,6 +363,9 @@ Camera.prototype.startMotionDetection = function() {
 
 	this.api.startListeningForMotionDetection( function(data) {
 
+		// Broadcast that motion occured
+		self.emit( 'motion', {action:"start", data: data});
+
 		if ( !self.recording ) {
 			self.startRecording();
 		}
@@ -372,6 +375,9 @@ Camera.prototype.startMotionDetection = function() {
 		}
 		self.stopRecordingTimeout = setTimeout (function() {
 			self.stopRecording();
+
+			// Broadcast that motion has ended with the duration, camera name, ID, and timestamp
+			self.emit( 'motion', {action:"end", duration: 30000});
 		}, 30000);
 
 	});
