@@ -140,7 +140,6 @@ Axis.prototype.isMotionEnabled = function() {
 	return self.motion_enabled;
 };
 
-
 Axis.prototype.getMotionParams = function(cb) {
 	
 	var self = this;
@@ -309,11 +308,11 @@ Axis.prototype.startListeningForMotionDetection = function(cb){
 			var timestamp = Date.now()
 			// console.log("==== " + socket.remoteAddress + " | " + self.cam.ip );
 			if ( socket.remoteAddress === self.cam.ip ) {
-				console.log(socket);
 				console.log('[Axis.motionDetection] movement detected');
-				if(cb) cb(timestamp, socket) ;
+				if(cb) cb(timestamp, {fd: socket.fd, highWaterMark: socket.highWaterMark}) ;
 			}
 		} catch(e) {
+			console.error("[Axis.motionDetection] Error:" + e);
 		}
 	});	
 };
