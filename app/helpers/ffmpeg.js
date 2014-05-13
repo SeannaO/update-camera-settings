@@ -47,17 +47,25 @@ var inMemoryStitch = function( files, offset, req, res ) {
 			'-i', fileList, 
 			'-ss', offset.begin/1000, 
 			'-t', offset.duration/1000,
-			'-fflags', '+igndts',
+			// '-fflags', '+igndts',
 			'-loglevel', 'quiet',
 			'-c', 'copy', 
-			'-f', 'mp4',
-			'-frag_duration', '3600', 
+			// '-f', 'mp4',
+			// '-bsf', 'h264_mp4toannexb',
+			// '-flags' ,'+global_header',
+			// '-bsv', 'dump_extra',
+			'-f', 'mpegts',
+			// '-frag_duration', '3600', 
 			'-']);
 
+	var begin = parseInt( req.query.begin, 10 );
+	var end = parseInt( req.query.end, 10 );
+	var filename = 'vms_' + begin + '_' + end + '.ts';
+
 	res.writeHead(200, {
-		'Content-Type': 'video/mp4',
-		'Content-disposition': 'attachment',
-		'filename': 'vms_' + Date.now() + '.mp4'
+		// 'Content-Type': 'video/mp4',
+		'Content-Type': 'video/MP2T',
+		'Content-disposition': 'attachment; filename=' + filename
 	});
 	
 	//var vData = new Buffer(50000000);
