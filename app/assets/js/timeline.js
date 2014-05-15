@@ -7,6 +7,8 @@ var Timeline = function( el, options ) {
 	this.begin    = options.begin;
 	this.end      = options.end;
 	this.seekable = options.seekable;
+
+
 	
 	if ( isNaN(options.offset) ) {
 		this.offset = 15000;
@@ -101,7 +103,6 @@ Timeline.prototype.getFirstRectAfterTime = function( time, begin, end ) {
 		return self.getFirstRectAfterTime( time, begin, end );
 
 	} else {
-		console.log(begin + ' ' + end);
 		var middle = Math.floor( (end + begin)/2 );
 		if ( time > self.index[begin].start && time < self.index[middle].end ) {
 			end = middle;
@@ -160,7 +161,6 @@ Timeline.prototype.scaleW = function( t ) {
 
 
 Timeline.prototype.setBegin = function( begin ) {
-	console.log("set begin: " + new Date(begin) ) ;
 	this.begin = begin;
 	this.setTimeSpan( this.end - this.begin );
 };
@@ -179,16 +179,72 @@ Timeline.prototype.getFirstBox = function() {
 };
 
 
+Timeline.prototype.paintRectByTime = function( time, duration, color ) {
+
+	var self = this;
+
+
+	if ( !color ) {
+		color = duration || 'rgba(200,200,100)';
+		duration = 0;
+	}
+
+	for (var i = 0; i <= duration; i += 5000) {
+		var t = time + i;
+
+		var rect = self.findRectByTime( t );
+
+		if (rect) {
+			$(rect).css('fill', color);
+			$(rect).css('stroke', color);
+		} else {
+			console.log('no rect');
+		}
+	}
+
+};
+
+
+Timeline.prototype.findRectByTime = function( time, begin, end ) {
+
+	var self = this;
+
+	var rects = self.boxes.selectAll('rect')[0];
+	
+	if ( isNaN(begin) || isNaN(end) ) {
+		begin = 0; 
+		end = rects.length-1; 
+	}
+
+	if (begin > end) {
+		return;
+	}
+
+	var middle = Math.round( (begin + end)/2 );
+	var middle_time = parseInt( $(rects[middle]).attr('data-start') );
+	var middle_duration = parseInt( $(rects[middle]).attr('data-duration') );
+
+	if ( time >= middle_time & time <= middle_time + middle_duration) {
+		return rects[middle];
+	} else if (time < middle_time) {
+		return self.findRectByTime( time, begin, middle-1 );
+	} else {
+		return self.findRectByTime( time, middle+1, end);
+	}
+
+};
+
+
 Timeline.prototype.append = function( data ) {
 
 	var self = this;
 
-	console.log(data);
 	var colour = (data.cause && data.cause === 'motion') ? 'rgb(200,100,100)' : 'rgb(100,100,200)'
 
 	var rect = self.boxes.append('rect')
 		.attr('data-start',       data.start)
 		.attr('data-totalTime',   data.totalTime)
+		.attr('data-duration',    data.w)
 		.attr('data-thumb',       data.thumb)
 		.attr('x',                self.scaleX( data.start ) + "%")
 		.attr('y',                10)

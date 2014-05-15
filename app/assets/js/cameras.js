@@ -83,7 +83,10 @@ var timelineSetup = function( cam_id, id, name ) {
 	}
 
 	
-	timelines[id] = new Timeline("#timeline-"+id);
+	timelines[id] = new Timeline("#timeline-"+id, { seekable: true });
+
+	// events_timeline[id] = {};
+	// events_timeline[id].motion = new Timeline("#motion-timeline-"+id);
 
 	var timelineOverlay = $('<div>', {
 		style:'position: absolute; z-index: 1000; top:0; left:0; width:100%; height:100%; background:rgba(250,250,250,0.8);margin:0; padding:6;color: rgba(100,100,100,0.5)',
@@ -98,8 +101,15 @@ var timelineSetup = function( cam_id, id, name ) {
         var videos = data.videos;
 
 		for (var i = 0; i < videos.length; i++) {
+
 			if ( videos[i].start && videos[i].end) {
-				timelineData[0].times.push({ thumb: "/cameras/" + cam_id + "/streams/" + id + "/thumb/" + videos[i].start + '_' + (videos[i].end-videos[i].start), starting_time: (parseInt(videos[i].start)-1000), ending_time: (parseInt(videos[i].end) + 1000)}); 
+
+				timelineData[0].times.push({ 
+					thumb: "/cameras/" + cam_id + "/streams/" + id + "/thumb/" + videos[i].start + '_' + (videos[i].end-videos[i].start), 
+					starting_time: (parseInt(videos[i].start)-1000), 
+					ending_time: (parseInt(videos[i].end) + 1000)
+				}); 
+
 				var start = videos[i].start;
 
 				updateTimelines({
@@ -120,19 +130,6 @@ var timelineSetup = function( cam_id, id, name ) {
 var showThumb = function( thumb ) {
     
 	var currentThumb = $("#thumb img").attr('src');
-
-/*
-	if (mouseX < $(window).width()/2) { 
-		$("#thumb").css('left', mouseX+'px');
-	} else {
-		$("#thumb").css('left', (mouseX-160)+'px');
-	}
-	if (mouseY < $(window).height()/2) {
-		$("#thumb").css('top', (mouseY+15)+'px');
-	} else {
-		$("#thumb").css('top', (mouseY-120)+'px');
-	}
-	*/
 
 	$("#thumb").show();
 

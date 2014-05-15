@@ -38,6 +38,15 @@
 
             socket.on('motion', function(data){
                 console.log(data);
+				for (var i in cameras) {
+					if (cameras[i]._id === data.id) {
+						var cam = cameras[i];
+						for (var j in cam.streams) {
+							var stream_id = cam.streams[j]._id;
+							timelines[stream_id].paintRectByTime( data.start, data.duration, 'rgb(130,100,200)' );
+						}
+					}
+				}
             });
 
             /*
