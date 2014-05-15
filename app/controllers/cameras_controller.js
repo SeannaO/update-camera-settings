@@ -462,6 +462,10 @@ CamerasController.prototype.pushCamera = function( cam ) {
 		self.emit('motion', data);
 	});
 
+	cam.on('motionEvent', function(data) {
+		self.emit('motionEvent', data);
+	});
+
 	if (cam.api != null && Object.keys(cam.api).length > 0){
 		
 		cam.api.getMotionParams(function(motion){

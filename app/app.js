@@ -384,6 +384,11 @@ camerasController.on('new_thumb', function( data ) {
 });
 
 camerasController.on('motion', function( data ) {
+	console.log("Emitting Motion Data: " + JSON.stringify(data, null, 4) );
+	io.sockets.emit( 'motion', data );
+});
+
+camerasController.on('motionEvent', function( data ) {
 	console.log("Emitting Motion Event: " + JSON.stringify(data, null, 4) );
 	io.sockets.emit( 'motion', data );
 });
