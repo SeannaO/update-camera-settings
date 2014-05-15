@@ -369,13 +369,26 @@ Camera.prototype.startMotionDetection = function() {
 		self.emit("motion", motion_data);
 		// check to see if the camera already has a motion event
 		if (self.motion == null){
-			self.motion = {id: self._id, start: timestamp, duration:0, ip:self.ip, status: 'start', name: self.name, motion: { }};
+
+			self.motion = {
+				id:        self._id,
+				start:     timestamp,
+				duration:  0,
+				ip:        self.ip,
+				status:    'start',
+				name:      self.name,
+				motion:    {}
+			};
+
 			self.motion.motion[timestamp] = data;
+
 			if ( !self.recording ) {
 				self.startRecording();
 			}
 			self.emit("motionEvent", self.motion);
-		}else{
+
+		} else {
+
 			self.motion.status = 'open';
 			self.motion.duration = timestamp - self.motion.start;
 			self.motion.motion[timestamp] = data;
@@ -383,7 +396,6 @@ Camera.prototype.startMotionDetection = function() {
 				clearTimeout( self.stopRecordingTimeout );
 			}
 		}
-
 
 		self.stopRecordingTimeout = setTimeout (function() {
 			var result = self.motion; 
@@ -601,7 +613,7 @@ Camera.prototype.restartStream = function( streamId ) {
 
 			recorder.on('new_chunk', function(data) {
 				data.cause = 'schedule';
-				if (self.motion != null){
+				if (self.motion){
 					data.cause = 'motion';
 				}
 				self.emit( 'new_chunk', data);
