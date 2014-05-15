@@ -183,6 +183,9 @@ Timeline.prototype.append = function( data ) {
 
 	var self = this;
 
+	console.log(data);
+	var colour = (data.cause && data.cause === 'motion') ? 'rgb(200,100,100)' : 'rgb(100,100,200)'
+
 	var rect = self.boxes.append('rect')
 		.attr('data-start',       data.start)
 		.attr('data-totalTime',   data.totalTime)
@@ -191,8 +194,8 @@ Timeline.prototype.append = function( data ) {
 		.attr('y',                10)
 		.attr('width',            self.scaleW(data.w) + "%" )
 		.attr('height',           15)
-		.style('fill',            'rgb(100,100,200)')
-		.style('stroke',          'rgb(100,100,200)')
+		.style('fill',            colour)
+		.style('stroke',          colour)
 		.style('stroke-width',    '2')
 		.on('mouseover', function() {
 			var d = d3.select(this);
