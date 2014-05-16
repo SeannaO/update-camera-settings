@@ -384,12 +384,12 @@ camerasController.on('new_thumb', function( data ) {
 });
 
 camerasController.on('motion', function( data ) {
-	console.log("Emitting Motion Data: " + JSON.stringify(data, null, 4) );
+	// console.log("Emitting Motion Data: " + JSON.stringify(data, null, 4) );
 	io.sockets.emit( 'motion', data );
 });
 
 camerasController.on('motionEvent', function( data ) {
-	console.log("Emitting Motion Event: " + JSON.stringify(data, null, 4) );
+	// console.log("Emitting Motion Event: " + JSON.stringify(data, null, 4) );
 	io.sockets.emit( 'motion', data );
 });
 
@@ -398,7 +398,7 @@ camerasController.on('camera_status', function( data ) {
 	if (data.status === "disconnected" || data.status === "offline"){
 		console.error("[camera_status] " + data.cam_id + " : " + data.stream_id + " is " + data.status);
 	}else{
-		console.log("[camera_status] " + data.cam_id + " : " + data.stream_id + " is "+ data.status);	
+		// console.log("[camera_status] " + data.cam_id + " : " + data.stream_id + " is "+ data.status);	
 	}
 	io.sockets.emit( 'cameraStatus', data );
 });
