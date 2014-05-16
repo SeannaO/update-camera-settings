@@ -8,7 +8,7 @@ var Timeline = function( el, options ) {
 	this.end      = options.end;
 	this.seekable = options.seekable;
 
-
+	this.awaitingTags = [];
 	
 	if ( isNaN(options.offset) ) {
 		this.offset = 15000;
@@ -183,7 +183,6 @@ Timeline.prototype.paintRectByTime = function( time, duration, color ) {
 
 	var self = this;
 
-
 	if ( !color ) {
 		color = duration || 'rgba(200,200,100)';
 		duration = 0;
@@ -198,7 +197,21 @@ Timeline.prototype.paintRectByTime = function( time, duration, color ) {
 			$(rect).css('fill', color);
 			$(rect).css('stroke', color);
 		} else {
-			console.log('no rect');
+			if ( Date.now() - t < 30000 ) {
+			    var tag = self.awaitingTags[self.awaitingTags.length-1];
+				var lastTime = 0;
+				if (tag) lastTime = tag.time;
+				if ( time - lastTime > 25000 )	{
+					self.awaitingTags.push({
+						time: time, 
+						duration: duration,
+						color: color
+					});
+				}
+			}
+			else {
+				// console.log('no rect');
+			}
 		}
 	}
 
@@ -270,6 +283,16 @@ Timeline.prototype.append = function( data ) {
 		}
 		self.pushToIndex( indexed_box );
 	}
+
+	if (Date.now() - data.start < 30000) {
+		for (var i = 0; i < 1; i++) {
+			var tag = self.awaitingTags.pop();
+			if (tag && Date.now() - tag.time < 30000) {
+				self.paintRectByTime( tag.time, tag.duration, tag.color );
+			}
+		}
+	}
+	
 };
 
 

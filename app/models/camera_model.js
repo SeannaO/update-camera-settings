@@ -364,6 +364,8 @@ Camera.prototype.startMotionDetection = function() {
 	this.api.startListeningForMotionDetection( function(timestamp, data) {
 
 		var motion_data = data;
+		motion_data.id = self._id;
+		motion_data.start = timestamp || Date.now();
 		motion_data.timestamp = timestamp;
 
 		self.emit("motion", motion_data);
