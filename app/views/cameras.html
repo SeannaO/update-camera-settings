@@ -37,7 +37,17 @@
 
 
             socket.on('motion', function(data){
-                console.log(data);
+				for (var i in cameras) {
+					if (cameras[i]._id === data.id) {
+						var cam = cameras[i];
+						for (var j in cam.streams) {
+							var stream_id = cam.streams[j].id;
+							var start = data.start || data.timestamp;
+							var duration = data.duration || 30000;
+							timelines[stream_id].paintRectByTime( start, duration, 'rgb(200,200,50)' );
+						}
+					}
+				}
             });
 
             /*
@@ -393,7 +403,6 @@
 					updateTime( parseInt(d.attr('data-start')) );
 				};
 
-                console.lof(data);
 				timeline.append({
 					start:	data.start,
 					w: data.end - data.start,

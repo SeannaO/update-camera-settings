@@ -368,19 +368,33 @@ Camera.prototype.startMotionDetection = function() {
 	this.api.startListeningForMotionDetection( function(timestamp, data) {
 
 		var motion_data = data;
-		motion_data.id = self._id
+		motion_data.id = self._id;
+		motion_data.start = timestamp || Date.now();
 		motion_data.timestamp = timestamp;
 
 		self.emit("motion", motion_data);
 		// check to see if the camera already has a motion event
 		if (self.motion == null){
-			self.motion = {id: self._id, start: timestamp, duration:0, ip:self.ip, status: 'start', name: self.name, motion: { }};
+
+			self.motion = {
+				id:        self._id,
+				start:     timestamp,
+				duration:  0,
+				ip:        self.ip,
+				status:    'start',
+				name:      self.name,
+				motion:    {}
+			};
+
 			self.motion.motion[timestamp] = data;
+
 			if ( !self.recording ) {
 				self.startRecording();
 			}
 			self.emit("motionEvent", self.motion);
-		}else{
+
+		} else {
+
 			self.motion.status = 'open';
 			self.motion.duration = timestamp - self.motion.start;
 			self.motion.motion[timestamp] = data;
