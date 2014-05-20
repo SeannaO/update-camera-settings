@@ -287,7 +287,7 @@ Arecont.prototype.startListeningForMotionDetection = function(cb){
 				}
 
 				//cb(timestamp, {sum: motion_sum, data:motion_mat});
-				cb(timestamp, {sum: motion_sum});
+				cb(timestamp, {value: motion_sum});
 			}else{
 				//cb('no motion'); -- only callback when there's motion
 			}

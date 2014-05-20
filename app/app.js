@@ -384,12 +384,12 @@ camerasController.on('new_thumb', function( data ) {
 });
 
 camerasController.on('motion', function( data ) {
-	console.log("Emitting Motion Data: " + JSON.stringify(data, null, 4) );
+	//console.log("Emitting Motion Data: " + JSON.stringify(data, null, 4) );
 	io.sockets.emit( 'motion', data );
 });
 
 camerasController.on('motionEvent', function( data ) {
-	console.log("Emitting Motion Event: " + JSON.stringify(data, null, 4) );
+	//console.log("Emitting Motion Event: " + JSON.stringify(data, null, 4) );
 	io.sockets.emit( 'motion', data );
 });
 
@@ -526,6 +526,13 @@ var solink = require('./api/solink.js');
 app.get('/solink', passport.authenticate('basic', {session: false}), solink.getDevice);
 app.post('/solink', passport.authenticate('basic', {session: false}), solink.registerDevice);
 
+
+
+var sensors = require('./api/sensors.js');
+
+app.get('/cameras/:camera_id/sensors', passport.authenticate('basic', {session: false}), function(req, res){
+	sensors.getSensorData(baseFolder, req, res);
+});
 
 
 // server.listen(process.env.PORT || 8080);

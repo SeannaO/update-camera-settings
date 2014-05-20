@@ -54,6 +54,10 @@ function Camera( cam, videosFolder, cb ) {
 			fs.mkdirSync( this.videosFolder );
 		}
 
+		if ( !fs.existsSync( this.videosFolder + "/sensor") ){
+			fs.mkdirSync( this.videosFolder + "/sensor");
+		}		
+
 		var streams = []
 		for (var i in cam.streams){
 			streams.push(cam.streams[i]);
@@ -113,7 +117,7 @@ Camera.prototype.addStream = function( stream, cb ) {
 	}
 
 	var self = this;
-	stream.db = new Dblite( this.videosFolder + '/db_'+stream.id+'.sqlite', function(db){
+	stream.db = new Dblite( this.videosFolder + '/db_' + stream.id + '.sqlite', function(db){
 		if (!stream.toBeDeleted) {
 
 			stream.url = self.api.getRtspUrl({
@@ -364,6 +368,7 @@ Camera.prototype.startMotionDetection = function() {
 	this.api.startListeningForMotionDetection( function(timestamp, data) {
 
 		var motion_data = data;
+		motion_data.id = self._id
 		motion_data.timestamp = timestamp;
 
 		self.emit("motion", motion_data);
