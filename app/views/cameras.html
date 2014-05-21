@@ -406,7 +406,7 @@
 				timeline.append({
 					start:	data.start,
 					w: data.end - data.start,
-                    cause: data.cause,
+                    colour: (data.cause && data.cause === 'motion') ? 'rgb(200,100,100)' : 'rgb(100,100,200)',
 					thumb: thumb,
 					mouseover: showThumbWrapper
 				});

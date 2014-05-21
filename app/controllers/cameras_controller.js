@@ -6,8 +6,7 @@ var checkH264          = require('../helpers/ffmpeg.js').checkH264;
 var find               = require('findit');
 var OrphanFilesChecker = require('../helpers/orphanFiles.js');
 var Thumbnailer        = require('../helpers/thumbnailer.js');
-var SensorDblite 	   = require('../db_layers/sensor_dblite.js');
-var SimpleCache 		= require("simple-lru-cache")
+var SensorData 	   = require('../models/sensor_model.js');
 
  // sqlite layer
 
@@ -35,8 +34,6 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 				}
 			}, 1000);
 	});
-
-	this.sensorCache = new SimpleCache({"maxSize":10})
 
     this.videosFolder = videosFolder;
 
@@ -447,25 +444,6 @@ CamerasController.prototype.getCameraFromArray = function( i ) {
 };
 
 
-CamerasController.prototype.getSensorDb = function( dbFilename, cb ) {
-
-	var self = this;
-	//check to see if it is in cache
-	var sdb = self.sensorCache.get(dbFilename);
-	
-	if (!sdb){
-		// add to the cache and then call callback
-		var sdb = new SensorDblite( dbFilename , function(db){
-			self.sensorCache.set(dbFilename, db);
-			cb(db);
-		});
-	}else{
-		cb(sdb);
-	}
-
-};
-
-
 CamerasController.prototype.pushCamera = function( cam ) {
   
 	if (!cam) return;
@@ -484,20 +462,11 @@ CamerasController.prototype.pushCamera = function( cam ) {
 		self.emit('camera_status', data);
     });
 
-	var dateFileName = function(dateObj){
-		return dateObj.getUTCFullYear() + '-' + (dateObj.getMonth() + 1) + '-' + dateObj.getDate();
-	};
-
 	cam.on('motion', function(data) {
 
-		//add the motion event to the database
-		var d = new Date(data.timestamp);
+		var sensorData = new SensorData(self.videosFolder + '/' + data.id + '/sensor', 10);
 
-		var dbFile = self.videosFolder + '/' + data.id + '/sensor/' + '/db_sensor_data_' + dateFileName(d) + '.sqlite';
-
-		self.getSensorDb(dbFile, function(sdb){
-			sdb.insert({timestamp: data.timestamp, value: data.value, datatype: "motion"});
-		});
+		sensorData.insert({timestamp: data.timestamp, value: data.value, datatype: "motion"})
 
 		self.emit('motion', data);
 	});

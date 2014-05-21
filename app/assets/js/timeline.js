@@ -252,7 +252,7 @@ Timeline.prototype.append = function( data ) {
 
 	var self = this;
 
-	var colour = (data.cause && data.cause === 'motion') ? 'rgb(200,100,100)' : 'rgb(100,100,200)'
+	var colour = data.colour || 'rgb(100,100,200)';
 
 	var rect = self.boxes.append('rect')
 		.attr('data-start',       data.start)

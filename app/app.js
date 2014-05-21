@@ -526,7 +526,11 @@ var solink = require('./api/solink.js');
 app.get('/solink', passport.authenticate('basic', {session: false}), solink.getDevice);
 app.post('/solink', passport.authenticate('basic', {session: false}), solink.registerDevice);
 
+var sensors = require('./api/sensors.js');
 
+app.get('/cameras/:camera_id/sensors', passport.authenticate('basic', {session: false}), function(req, res){
+	sensors.getSensorData(baseFolder, req, res);
+});
 
 // server.listen(process.env.PORT || 8080);
 server.listen( 8080 );

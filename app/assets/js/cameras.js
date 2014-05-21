@@ -94,6 +94,24 @@ var timelineSetup = function( cam_id, id, name ) {
 		html:'loading...'
 	}).appendTo("#timeline-"+id);
 
+
+	// request Motion Sensor Data
+	// $.ajax({
+	// 	type: "GET",
+	// 	url: "/cameras/" + cam_id + "/sensors?start=" + startTime + "&end=" Date.now(),
+	// 	contentType: 'application/json',
+	// 	success: function(data) {
+	// 		// Overlay the motion sensor data
+	// 	},
+	// 	error: function( data ) {
+	// 		console.log(data);
+	// 	}
+	// });
+
+
+
+
+
     $.getJSON( "/cameras/" + cam_id + "/streams/" + id + "/list_videos?start="+startTime+"&end="+Date.now(), function( data ) {
 
 		timelineOverlay.fadeOut();

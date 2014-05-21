@@ -109,12 +109,6 @@ SensorDblite.prototype.sortByTimestampAsc = function(a, b) {
  */
 SensorDblite.prototype.find = function( options, cb ) {
 
-
-	if ( isNaN( options.start ) || isNaN( options.end ) )  {
-		console.error( "[SensorDblite.findBetween] invalid interval error: " + options.start + " : " + options.end );
-		cb('invalid interval error');
-		return;
-	}
     var q = 'SELECT timestamp, value, datatype FROM sensor_data';
     var queryArgs = [];
     var queryStatements = [];
@@ -122,14 +116,14 @@ SensorDblite.prototype.find = function( options, cb ) {
         queryStatements.push('datatype = ?');
         queryArgs.push(options.type);
     }
-    if (options && options.start && options.end){
+    if (options && !isNaN(options.start) && !isNaN(options.end)){
         queryStatements.push('timestamp BETWEEN ? AND ?');
         queryArgs.push(options.start);
         queryArgs.push(options.end);
-    }else if (start && !end){
+    }else if (!isNaN(options.start) && isNaN(options.end)){
         queryStatements.push('timestamp > ?');
         queryArgs.push(options.start);
-    }else if (!start && end){
+    }else if (isNaN(options.start) && !isNaN(options.end)){
         queryStatements.push('timestamp < ?');
         queryArgs.push(options.end);
     }else{
@@ -141,7 +135,7 @@ SensorDblite.prototype.find = function( options, cb ) {
         q += ' ORDER BY timestamp ASC';
     }
     
-    console.log(q);
+    // console.log(q);
 
 //    var fileList = this.db.query('SELECT start, end, file FROM videos WHERE start < ? AND end > ? ORDER BY start ASC', 
 	var fileList = this.db.query(q, 
@@ -149,12 +143,11 @@ SensorDblite.prototype.find = function( options, cb ) {
             ['timestamp', 'value', 'datatype'], 
             function(err, data) {
 
-                    var offset = {
-                        begin: 0,
-                        end: 0,
-                        duration: 0
-                    };
-
+                var offset = {
+                    begin: 0,
+                    end: 0,
+                    duration: 0
+                };
                 if (!data || data.length === 0) {
                     cb(err, [], offset);
                 } else {
