@@ -466,6 +466,8 @@ CamerasController.prototype.pushCamera = function( cam ) {
 
 		var sensorData = new SensorData(self.videosFolder + '/' + data.id + '/sensor', 10);
 
+		data.value = isNaN( data.value ) ? 1 : data.value;
+
 		sensorData.insert({timestamp: data.timestamp, value: data.value, datatype: "motion"})
 
 		self.emit('motion', data);

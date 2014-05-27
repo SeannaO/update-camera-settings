@@ -19,7 +19,10 @@ function Camera( cam, videosFolder, cb ) {
     } else {
         this.id = cam._id;		// _id: assigned from db
     } 
+
     this.motion = null;
+	this.lastMotion = 0;
+
     this.name         = cam.name;
     this.ip           = cam.ip;
     this.status       = cam.status;
@@ -372,7 +375,10 @@ Camera.prototype.startMotionDetection = function() {
 		motion_data.start = timestamp || Date.now();
 		motion_data.timestamp = timestamp;
 
-		self.emit("motion", motion_data);
+		if (Date.now() - self.lastMotion > 1000) {
+			self.emit("motion", motion_data);
+			self.lastMotion = Date.now();
+		}
 		// check to see if the camera already has a motion event
 		if (self.motion == null){
 
