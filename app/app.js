@@ -532,6 +532,26 @@ app.get('/cameras/:camera_id/sensors', passport.authenticate('basic', {session: 
 	sensors.getSensorData(baseFolder, req, res);
 });
 
+
+
+/////////////
+///// dev only ////////
+/////////////
+app.get('/dev/motion', passport.authenticate('basic', {session: false}), function(req, res){
+
+	request({
+		uri: "http://Administrator:password@192.168.215.108:8080/cameras/VHYcWYVtjAu6MlWO/sensors?start="+req.query.start+"&end="+req.query.end,
+		method: "GET",
+	}, function(error, response, body){
+			console.log(body);
+			res.end(body);
+		});
+});
+/////////////
+///// dev only ////////
+/////////////
+
+
 // server.listen(process.env.PORT || 8080);
 server.listen( 8080 );
 

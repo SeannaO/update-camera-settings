@@ -53,16 +53,17 @@ function removeTsExt(fileName) {
     return fileName.replace('.ts', '');
 }
 
-var timelineSetup = function( cam_id, id, name ) {
+var timelineSetup = function( cam_id, id, name, cb ) {
 
     var label = name ? name : id;
 
     var timelineData = [];
     timelineData.push({label: label, times: []});
 
-    var startTime = Date.now() - 1*60*60*1000; // 1hour from now
+	var endTime = Date.now();
+    var startTime = endTime - 1*60*60*1000; // 1hour from now
 
-	var count = 0;
+	// var count = 0;
 
 	if (id) {
 		var timelineContainer = $("<div>", {
@@ -109,9 +110,6 @@ var timelineSetup = function( cam_id, id, name ) {
 	// });
 
 
-
-
-
     $.getJSON( "/cameras/" + cam_id + "/streams/" + id + "/list_videos?start="+startTime+"&end="+Date.now(), function( data ) {
 
 		timelineOverlay.fadeOut();
@@ -138,10 +136,35 @@ var timelineSetup = function( cam_id, id, name ) {
 				});
 			} 
 		}
-		
-		count++;
+
+		// count++;
+
+		if (cb) cb({
+			cam_id: cam_id,
+		    stream_id: id,
+		    start: startTime,
+		    end: endTime
+		});
 	});
                
+};
+
+
+var loadMotionData = function( cam_id, start, end, cb ) {
+
+	$.getJSON(	"/cameras/" + cam_id + 
+			"/sensors?start=" + start + 
+			"&end=" + end,
+			function( data ) {
+				if (cb) cb(data);
+			}
+		);
+	
+//	development
+	// $.getJSON( "/dev/motion?start=" + start + "&end=" + end,
+	// 		function(data) {
+	// 			if( cb ) cb(data);
+	// 		});
 };
 
 
@@ -183,6 +206,9 @@ var list = function() {
 				if (data[i]) {
 					cameras.push( data[i] );
 					addCameraItem(data[i]);
+					
+					var streamsCounter = 0;
+					var totalStreams = data[i].streams.length;
 
 					for (var j in data[i].streams) {
 						var text = '';
@@ -194,13 +220,35 @@ var list = function() {
 							text = data[i].streams[j].url;
 						}
 
-						timelineSetup(data[i]._id, data[i].streams[j].id, text);
+						timelineSetup(data[i]._id, data[i].streams[j].id, text, function(timeline_data) {
+							streamsCounter++;
+							if (streamsCounter >= totalStreams) {
+								addMotionData( timeline_data.cam_id, timeline_data.start, timeline_data.end );
+							}
+						});
 					}
 				}
 			}
 		}
 	});
     
+};
+
+
+var addMotionData = function( cam_id, start, end ) {
+
+	var cam = getCameraById( cam_id );
+
+	loadMotionData( cam._id, start, end, function(motionData) {
+		for (var s in cam.streams) {
+			var id = cam.streams[s].id;
+			for (var i in motionData.data) {
+				var start = parseInt( motionData.data[i].t );
+				var duration = 5000;
+				timelines[id].paintRectByTime( start, duration, 'rgb(240,160,60)' );
+			}
+		}
+	});
 };
 
 
@@ -1154,6 +1202,11 @@ var cameraSchedule = function(camId) {
     });
 };
 
+var getCameraById = function(id) {
+	for (var i in cameras ) {
+		if (cameras[i]._id == id) return cameras[i];
+	}
+}
 
 var cameraMotion = function(camId) {
 
