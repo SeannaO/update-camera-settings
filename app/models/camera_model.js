@@ -413,7 +413,9 @@ Camera.prototype.startMotionDetection = function() {
 		self.stopRecordingTimeout = setTimeout (function() {
 			var result = self.motion; 
 			self.motion = null;
-			self.stopRecording();
+			if (!self.shouldBeRecording() ) {	
+				self.stopRecording();
+			}
 			result.status = 'end';
 			result.duration = Date.now() - result.start;
 			// Broadcast that motion has ended with the duration, camera name, ID, and timestamp
