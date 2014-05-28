@@ -109,7 +109,7 @@ SensorDblite.prototype.sortByTimestampAsc = function(a, b) {
  */
 SensorDblite.prototype.find = function( options, cb ) {
 
-    var q = 'SELECT timestamp, value, datatype FROM sensor_data';
+    var q = 'SELECT timestamp, value FROM sensor_data';
     var queryArgs = [];
     var queryStatements = [];
     if (options && options.type){
@@ -140,7 +140,7 @@ SensorDblite.prototype.find = function( options, cb ) {
 //    var fileList = this.db.query('SELECT start, end, file FROM videos WHERE start < ? AND end > ? ORDER BY start ASC', 
 	var fileList = this.db.query(q, 
             queryArgs, 
-            ['timestamp', 'value', 'datatype'], 
+            ['t', 'v'], 
             function(err, data) {
 
                 var offset = {

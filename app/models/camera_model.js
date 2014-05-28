@@ -375,7 +375,7 @@ Camera.prototype.startMotionDetection = function() {
 		motion_data.start = timestamp || Date.now();
 		motion_data.timestamp = timestamp;
 
-		if (Date.now() - self.lastMotion > 1000) {
+		if (Date.now() - self.lastMotion > 7000) {
 			self.emit("motion", motion_data);
 			self.lastMotion = Date.now();
 		}
