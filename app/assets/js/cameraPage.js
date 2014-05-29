@@ -589,6 +589,9 @@ CameraPage.prototype.loadMotionData = function( start, end, cb ) {
 
 
 CameraPage.prototype.toggleMotion = function() {
+	
+	var self = this;
+
 	if (!self.showMotion) {
 		self.showMotion = true;
 		self.overlayMotionData();
