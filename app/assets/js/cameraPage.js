@@ -607,6 +607,8 @@ CameraPage.prototype.hideMotionData = function() {
 
 CameraPage.prototype.overlayMotionData = function() {
 
+	var self = this;
+
 	if (self.motionData && self.motionData.data) {
 		var prevTime = 0;
 		for (var i in self.motionData.data) {
