@@ -12,9 +12,10 @@ function CameraPage( camId ) {
 	this.inputs.date    = $('#begin_date');
 	this.inputs.streams = $('#stream-selector');
 	
-	this.buttons.download   = $('#download');
-	this.buttons.snapshot   = $('#snapshot');
-	this.buttons.livestream = $('#get-livestream');
+	this.buttons.download     = $('#download');
+	this.buttons.snapshot     = $('#snapshot');
+	this.buttons.livestream   = $('#get-livestream');
+	this.buttons.toggleMotion = $('#toggle-motion');
 
 	this.marker      = $('#marker');
 	this.thumb       = $('#thumb');
@@ -33,6 +34,8 @@ function CameraPage( camId ) {
 	this.currBegin;
 	this.currEnd;
 	this.posJump;
+
+	this.showMotion = false;
 };
 
 
@@ -363,6 +366,11 @@ CameraPage.prototype.setupButtons = function() {
 		self.mode = 'live';
 		self.player.playVideo( self.camId, stream );
 	});
+
+
+	this.buttons.toggleMotion.click(function() {
+		self.toggleMotion();
+	});
 };
 
 
@@ -484,7 +492,22 @@ CameraPage.prototype.play = function( begin, end ) {
 		$('.timelineOverlay').fadeOut(function() {
 			$('.timelineOverlay').remove();
 		});
+
+		self.buttons.toggleMotion.fadeIn();
+		self.buttons.toggleMotion.prop('disabled', true);
+		self.buttons.toggleMotion.html('loading motion data...');
+
+		self.loadMotionData( begin, end, function() {
+			self.buttons.toggleMotion.prop('disabled', false);
+			if (self.showMotion) {
+				self.overlayMotionData();
+			} else {
+				self.hideMotionData();
+			}
+		});
 	});
+
+
 }
 
 
@@ -537,6 +560,65 @@ CameraPage.prototype.launchTimeline = function( block_size, begin, end) {
 			thumb:      elements[i].thumb
 		});
 	}
+
+	if (self.showMotion) {
+		self.overlayMotionData();
+	}
+};
+
+CameraPage.prototype.loadMotionData = function( start, end, cb ) {
+
+	var self = this;
+
+	$.getJSON(	"/cameras/" + self.camId + 
+			"/sensors?start=" + start + 
+			"&end=" + end,
+			function( data ) {
+				self.motionData = data;
+				if (cb) cb(data);
+			}
+		);
+	
+//	development
+	// $.getJSON( "/dev/motion?start=" + start + "&end=" + end,
+	// 		function(data) {
+	// 			self.motionData = data;
+	// 			if( cb ) cb(data);
+	// 		});
+};
+
+
+CameraPage.prototype.toggleMotion = function() {
+	if (!self.showMotion) {
+		self.showMotion = true;
+		self.overlayMotionData();
+	} else {
+		self.showMotion = false;
+		self.hideMotionData();
+	}
+}
+
+
+CameraPage.prototype.hideMotionData = function() {
+	self.timeline.resetColors();	
+	self.buttons.toggleMotion.html('show motion');
+}
+
+CameraPage.prototype.overlayMotionData = function() {
+
+	if (self.motionData && self.motionData.data) {
+		var prevTime = 0;
+		for (var i in self.motionData.data) {
+			var start = parseInt( self.motionData.data[i].t );
+			var duration = 1000;
+			if (self.timeline && start - prevTime > duration) {
+				prevTime = start;
+				self.timeline.paintRectByTime( start, duration, 'rgb(240,160,60)' );
+			}
+		}
+	}
+
+	self.buttons.toggleMotion.html('hide motion');
 };
 
 

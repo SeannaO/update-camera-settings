@@ -218,6 +218,20 @@ Timeline.prototype.paintRectByTime = function( time, duration, color ) {
 };
 
 
+Timeline.prototype.resetColors = function() {
+
+	var self = this;
+
+	var color = 'rgb(100,100,200)';
+
+	var rects = self.boxes.selectAll('rect')[0];
+	for (var i in rects) {
+		$(rects[i]).css('fill', color);
+		$(rects[i]).css('stroke', color);
+	}
+};
+
+
 Timeline.prototype.findRectByTime = function( time, begin, end ) {
 
 	var self = this;

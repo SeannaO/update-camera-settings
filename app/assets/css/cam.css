@@ -47,6 +47,13 @@ object {
 	opacity: 0.7;
 }
 
+#toggle-motion {
+	position: absolute;
+	left: 102%;
+	top: 9px;
+	background: white;
+	display: none;
+}
 
 #time-map {
 	margin:      20px;

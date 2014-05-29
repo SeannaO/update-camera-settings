@@ -118,7 +118,8 @@ OrphanFilesChecker.prototype.checkForOrphanStreams = function( folders, cb ) {
 									( !sql_file_match && 
 									  cam.streams && 
 									  !cam.streams[streamId] &&
-									  streamId !== 'backup');
+									  streamId !== 'backup' && 
+									  streamId !== 'sensor');
 
 			if ( should_be_deleted ) {			
 				console.log( "\n======= DELETING stream " + streamId + " because: \n");
