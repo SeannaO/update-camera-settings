@@ -600,6 +600,7 @@ CameraPage.prototype.toggleMotion = function() {
 
 
 CameraPage.prototype.hideMotionData = function() {
+	var self = this;
 	self.timeline.resetColors();	
 	self.buttons.toggleMotion.html('show motion');
 }
