@@ -1,6 +1,7 @@
 var path       = require('path');												// for parsing path urls
 var fs         = require('fs');													// for sending files
 var hlsHandler = require('../controllers/hls_controller.js');
+var zlib       = require('zlib');
 
 module.exports = function( app, passport, camerasController ) {
 
@@ -482,7 +483,6 @@ module.exports = function( app, passport, camerasController ) {
 						"Content-Type":"application/x-mpegURL",
 						'Content-Length': Buffer.byteLength(playlist) 
 					});
-
 					res.end(playlist);    
 				});
 			}
@@ -527,11 +527,15 @@ module.exports = function( app, passport, camerasController ) {
 
 					res.writeHead(200, {
 						"Content-Type":    "application/x-mpegURL",
-						"Cache-Control":   "max-age=15",
-						'Content-Length':  Buffer.byteLength(playlist)
+						'Content-Encoding': 'gzip',
+						"Cache-Control":   "max-age=60"
 					});
 
-					res.end(playlist);    
+					var buf = new Buffer(playlist, 'utf-8');
+					zlib.gzip(buf, function(_, result) {
+						res.end(result);
+					});
+					// res.end(playlist);    
 				});
 				// support so that a finite length is not required (ie no end variable)
 
