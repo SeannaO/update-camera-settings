@@ -269,7 +269,7 @@ io.configure(function (){
 // - - -
 
 app.configure(function() {
-	// app.use(express.compress());
+	app.use(express.compress());
 	app.use(express.static('public'));
 	app.use(express.cookieParser());				// cookies middleware
 	// - - - -

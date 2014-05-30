@@ -525,9 +525,10 @@ module.exports = function( app, passport, camerasController ) {
 
 				hlsHandler.generateFinitePlaylist( cam.streams[streamId].db, camId, streamId, begin, end, function( playlist ) {
 
-					res.writeHead(200, { 
-						"Content-Type":"application/x-mpegURL",
-						'Content-Length': Buffer.byteLength(playlist) 
+					res.writeHead(200, {
+						"Content-Type":    "application/x-mpegURL",
+						"Cache-Control":   "max-age=15",
+						'Content-Length':  Buffer.byteLength(playlist)
 					});
 
 					res.end(playlist);    
