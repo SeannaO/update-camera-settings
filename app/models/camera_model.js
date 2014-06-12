@@ -168,7 +168,7 @@ Camera.prototype.addStream = function( stream, cb ) {
 
 					// ---
 					// COMMENTED OUT FOR EXPERIMENTAL PURPOSES
-					self.emit('camera_status', { cam_id: self._id, status: data.status, stream_id: stream.id } );
+					self.emit('camera_status', { cam_id: self._id, cam_name: self.name, status: data.status, stream_id: stream.id } );
 					// ---
 				});
 
@@ -634,7 +634,7 @@ Camera.prototype.restartStream = function( streamId ) {
 				self.emit( 'new_chunk', data);
 			});
 			recorder.on('camera_status', function(data) {
-				self.emit('camera_status', { cam_id: self._id, status: data.status, stream_id: stream.id } );
+				self.emit('camera_status', { cam_id: self._id, cam_name: selt.name, status: data.status, stream_id: data.stream_id } );
 			});
 
 			// stream.recordModel mught be null here, 
@@ -938,6 +938,7 @@ Camera.prototype.setupEvents = function() {
     var self = this;
     for (var i in self.streams) {
         this.streams[i].recordModel.on( 'new_chunk', function(data) {
+        	data.cam_name = self.name;
             self.emit( 'new_chunk', data);
         });
         this.streams[i].recordModel.on('camera_status', function(data) {
