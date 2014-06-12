@@ -168,7 +168,7 @@ Camera.prototype.addStream = function( stream, cb ) {
 
 					// ---
 					// COMMENTED OUT FOR EXPERIMENTAL PURPOSES
-					self.emit('camera_status', { cam_id: self._id, cam_name: self.name, status: data.status, stream_id: stream.id } );
+					self.emit('camera_status', { cam_id: self._id, cam_name: self.cameraName(), status: data.status, stream_id: stream.id } );
 					// ---
 				});
 
@@ -374,6 +374,7 @@ Camera.prototype.startMotionDetection = function() {
 		motion_data.id = self._id;
 		motion_data.start = timestamp || Date.now();
 		motion_data.timestamp = timestamp;
+		motion_data.name = self.cameraName();
 
 		if (Date.now() - self.lastMotion > 7000) {
 			self.emit("motion", motion_data);
@@ -388,7 +389,7 @@ Camera.prototype.startMotionDetection = function() {
 				duration:  0,
 				ip:        self.ip,
 				status:    'start',
-				name:      self.name,
+				name:      self.cameraName(),
 				motion:    {}
 			};
 
@@ -587,6 +588,11 @@ Camera.prototype.restartAllStreams = function() {
 //
 
 
+Camera.prototype.cameraName = function(){
+	var name = this.name && this.name.length > 0 ? this.name : this.ip + " | " + this.manufacturer;
+	return name;
+}
+
 /**
  * Restarts a stream
  *	by stopping and deleting the corresponding recordModel,
@@ -634,7 +640,7 @@ Camera.prototype.restartStream = function( streamId ) {
 				self.emit( 'new_chunk', data);
 			});
 			recorder.on('camera_status', function(data) {
-				self.emit('camera_status', { cam_id: self._id, cam_name: selt.name, status: data.status, stream_id: data.stream_id } );
+				self.emit('camera_status', { cam_id: self._id, cam_name: self.cameraName(), status: data.status, stream_id: data.stream_id } );
 			});
 
 			// stream.recordModel mught be null here, 
@@ -938,7 +944,7 @@ Camera.prototype.setupEvents = function() {
     var self = this;
     for (var i in self.streams) {
         this.streams[i].recordModel.on( 'new_chunk', function(data) {
-        	data.cam_name = self.name;
+        	data.cam_name = self.cameraName();
             self.emit( 'new_chunk', data);
         });
         this.streams[i].recordModel.on('camera_status', function(data) {
