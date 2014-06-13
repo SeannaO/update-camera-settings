@@ -277,6 +277,7 @@ RecordModel.prototype.setupDbusListener = function() {
 
 			video = {
 				cam:     self.camId,
+				cam_name: self.camera.cameraName(),
 				stream:  self.stream.id,         // appends stream id to the chunk
 				start:   new_chunk.start_time * 1000,
 				end:     ( Math.round(1000*new_chunk.start_time) + Math.round(1000*new_chunk.duration_secs ) ),

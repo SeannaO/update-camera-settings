@@ -42,6 +42,7 @@ Thumbnailer.prototype.checkForChunks = function() {
 		       	chunk_file:  chunk.file,
 		       	folder:      chunk.thumbFolder,
 		       	cam:         chunk.cam,
+            cam_name:    chunk.cam_name,
 		       	stream:      chunk.stream
 		};
 
