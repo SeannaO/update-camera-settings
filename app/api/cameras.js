@@ -525,16 +525,18 @@ module.exports = function( app, passport, camerasController ) {
 
 				hlsHandler.generateFinitePlaylist( cam.streams[streamId].db, camId, streamId, begin, end, function( playlist ) {
 
-					res.writeHead(200, {
-						"Content-Type":    "application/x-mpegURL",
-						'Content-Encoding': 'gzip',
-						"Cache-Control":   "max-age=60"
-					});
-
 					var buf = new Buffer(playlist, 'utf-8');
 					zlib.gzip(buf, function(_, result) {
+						res.writeHead(200, {
+							"Content-Type":      "application/x-mpegURL",
+							'Content-Encoding':  'gzip',
+							"Cache-Control":     "max-age=60"
+						});
 						res.end(result);
 					});
+
+
+
 					// res.end(playlist);    
 				});
 				// support so that a finite length is not required (ie no end variable)

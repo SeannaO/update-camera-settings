@@ -16,6 +16,7 @@ var Timeline = function( el, options ) {
 		this.offset = options.offset;
 	}
 
+
 	this.index = [];
 
 	this.el = $(el);
@@ -23,6 +24,32 @@ var Timeline = function( el, options ) {
 
 	this.setTimeSpan( options.timeSpan || options.totalTime || 30*60*1000 );
 
+//
+	this.streamId = options.streamId;
+	this.camId = options.camId;
+	this.indexer = new Indexer();
+	this.zoomHistory = [];
+
+	this.thumb       = $('#thumb');
+	this.thumbImg    = $('#thumb img');
+	this.marker      = $('#marker');
+
+	this.timelineSelectorEl = $("#timeline-selector");
+	this.timelineSelector   = new TimelineSelector("#timeline-selector");
+
+	this.overlay = $('<div>', {
+			style:'position: absolute; z-index: 1000; top:0; left:0; width:100%; height:100%; background:rgba(250,250,250,0.8);margin:0; padding:6;color: rgba(100,100,100,0.5)',
+			class:'timelineOverlay csspinner line back-and-forth no-overlay',
+			html:'loading...'
+		}).hide().appendTo(el);
+
+	this.mouse = {
+		pressed:   false,
+		dragged:  false,
+		x:             0,
+		y:             0
+	};
+//
 	// this.el = el;
 
 	var chart = d3.select(el)
@@ -62,8 +89,397 @@ var Timeline = function( el, options ) {
 			self.refresh();
 		}, 1000);
 	}
+
+	////
+	this.setupEvents();
+	////
 };
 
+//
+//
+//
+
+Timeline.prototype.setupEvents = function() {
+
+	var self = this;
+	
+	$(window).on('currentTimeChange', function(e, time) {
+
+		var timelineWidth      = self.el.width();
+	    var totalTime          = self.getTimeSpan()/1000.0;
+		var absolute_time      = self.indexer.getAbsoluteTime( time );
+		var dt                 = ( absolute_time - self.begin )/1000.0;
+		var pos                = dt * (1.0 * timelineWidth) / totalTime;
+
+		self.marker.css("left", pos);
+
+		if ( parseInt(self.marker.css('left')) > timelineWidth*1.05 ) {
+			self.marker.hide();
+		} else {
+			self.marker.show();
+		}
+	});
+
+
+	this.el.mousedown( function(e) {
+		var x = e.pageX - self.timelineSelectorEl.parent().offset().left;//left;
+		self.timelineSelector.setLeft( x );
+		self.timelineSelector.setRight( x ); 				
+		self.mouse.pressed = true;
+		self.mouse.dragged = false;
+		$('.timeline-marker').fadeIn();
+	});
+
+	this.el.mousemove( function(e) {
+
+		var px = e.pageX - self.timelineSelectorEl.parent().offset().left;
+	
+		var posTime = self.getTimeByPosition( px );
+		self.updateTime( posTime );		
+
+		if ( self.mouse.pressed ) {
+			self.mouse.dragged = true;
+			var x = e.pageX - self.timelineSelectorEl.parent().offset().left;
+			self.timelineSelector.setBounds( x ); 				
+		}
+	});
+
+	this.el.mouseup( function(e) {
+		
+		self.timelineSelector.hideTimes();
+
+		self.mouse.pressed = false;
+		$('.timeline-marker').fadeOut();
+		
+		if ( !self.mouse.dragged ) {
+			// console.log("that was a click");
+			if (self.mode === 'live') {
+				console.log('switch to archive');
+				// self.switchToArchive();
+			}
+		} else { 
+			// console.log("that was a drag");
+			var startTime = self.getTimeByPosition(
+				self.timelineSelector.left
+			);
+
+			var endTime = self.getTimeByPosition(
+				self.timelineSelector.right
+			);
+			
+			self.zoom(startTime, endTime);	
+
+			self.timelineSelector.setLeft( 0 );
+			self.timelineSelector.setRight( 0 ); 				
+		}
+	});
+	
+	this.el.mouseleave( function() {
+		self.thumb.hide();
+	});
+
+	$(document).mousemove(function(e){
+
+		self.mouse.x = e.pageX;
+		self.mouse.y = e.pageY;
+
+		if (self.mouse.x < $(window).width()/2) { 
+			self.thumb.css('left', (self.mouse.x+10)+'px');
+		} else {
+			self.thumb.css('left', (self.mouse.x-170)+'px');
+		}
+		if (self.mouse.y < $(window).height()/2) {
+			self.thumb.css('top', (self.mouse.y+10)+'px');
+		} else {
+			self.thumb.css('top', (self.mouse.y-130)+'px');
+		}
+	});
+
+
+	$('#zoom-back').click( function() {
+		self.zoomBack();
+	});
+};
+
+Timeline.prototype.updateTime = function( time ) {
+
+	var t       = new Date(time);
+	var hours   = t.getHours();
+	var minutes = t.getMinutes();
+	var seconds = t.getSeconds();
+
+	if ( parseInt(seconds) < 10) seconds = '0' + seconds;
+	if ( parseInt(minutes) < 10) minutes = '0' + minutes;
+
+	var formattedTime = hours + ':' + minutes + ':' + seconds;
+	$('#thumb-time').html(formattedTime);
+};
+
+Timeline.prototype.load = function(begin, end, cb) {
+
+	var self = this;
+	this.overlay.fadeIn();
+
+	self.loadIndexer( begin, end, function() {
+		self.overlay.fadeOut();
+		self.render(5, begin, end);
+
+		self.loadMotionData( begin, end );
+
+		if (cb) cb();
+	});
+};
+
+
+Timeline.prototype.loadIndexer = function(begin, end, cb) {
+	
+	var self = this;
+	
+	this.indexer.clear();
+
+    $.getJSON(	"/cameras/" + this.camId + 
+				"/streams/" + this.streamId + 
+				"/list_videos?start=" + begin +
+				"&end=" + end, 
+		function( data ) {
+
+			for (var i = 0; i < data.videos.length; i++) {
+				
+				var start = data.videos[i].start;
+				var end   = data.videos[i].end;
+
+				self.indexer.push( data.videos[i] );	
+			}
+			if(cb) cb();
+		}
+	);
+};
+
+
+Timeline.prototype.zoomBack = function() {
+	
+	var self = this;
+	var z = this.zoomHistory.pop();
+	if ( z ) {
+		self.render( 5, z.begin, z.end );	
+	} 
+	if ( !this.zoomHistory.length ) {
+		$('#zoom-back').fadeOut();
+	}
+};
+
+
+Timeline.prototype.zoom = function( begin, end ) {
+
+	var self = this;
+
+	this.zoomHistory.push({
+		begin:  this.currBegin,
+		end:    this.currEnd
+	});
+	
+	$('#zoom-back').fadeIn();
+
+	self.render( 5, begin, end ); // 50
+};
+
+
+Timeline.prototype.loadMotionData = function(start, end, cb) {
+	
+	var self = this;
+
+	// $.getJSON( "/dev/motion?start=" + start + "&end=" + end,   // <-- development
+
+	$.getJSON(	"/cameras/" + self.camId + 
+			"/sensors?start=" + start + 
+			"&end=" + end,
+			function( data ) {
+				self.motionData = data;
+
+				$(window).trigger('motion_loaded', {
+					streamId: self.streamId,
+					camId: self.camId,
+					shown: self.showMotion
+				});
+
+				if (self.showMotion) {
+					self.overlayMotionData();
+				} else {
+					self.hideMotionData();
+				};
+
+				if (cb) cb(data);
+			}
+		);
+	
+
+	
+//	development
+	// $.getJSON( "/dev/motion?start=" + start + "&end=" + end,
+	// 		function(data) {
+	// 			self.motionData = data;
+	// 			if( cb ) cb(data);
+	// 		});
+};
+
+
+Timeline.prototype.toggleMotion = function() {
+	
+	var self = this;
+
+	if (!self.showMotion) {
+		self.showMotion = true;
+		self.overlayMotionData();
+	} else {
+		self.showMotion = false;
+		self.hideMotionData();
+	}
+};
+
+
+Timeline.prototype.overlayMotionData = function() {
+
+	var self = this;
+
+	$(window).trigger('toggle_motion', {
+		show: true
+	});
+
+	if (self.motionData && self.motionData.data) {
+		var prevTime = 0;
+		for (var i in self.motionData.data) {
+			var start = parseInt( self.motionData.data[i].t );
+			var duration = 1000;
+			if (self.timeline && start - prevTime > duration) {
+				prevTime = start;
+				self.paintRectByTime( start, duration, 'rgb(240,160,60)' );
+			}
+		}
+	}
+};
+
+
+Timeline.prototype.hideMotionData = function() {
+	var self = this;
+
+	$(window).trigger('toggle_motion', {
+		show: false
+	});
+
+	self.resetColors();	
+};
+
+
+Timeline.prototype.render = function(block_size, begin, end) {
+	
+	var self = this;
+
+	var beginTime = Timeline.formattedTimeFromTimestamp( begin );
+	var endTime   = Timeline.formattedTimeFromTimestamp( end );
+
+	$('#timeline-begin-time').html( beginTime );
+	$('#timeline-end-time').html( endTime );
+
+	this.currBegin = begin;
+	this.currEnd   = end;
+
+	this.clear();
+
+	block_size = block_size || 2;
+	var elements;
+	if (block_size == 1) {
+		elements = this.indexer.elements;
+	} else {
+		elements = this.indexer.agglutinate(block_size);
+	}
+
+	this.setEnd( end );
+	this.setBegin( begin );
+
+	for( var i in elements ) {
+
+		var start = elements[i].start;
+		var end   = elements[i].end;
+	
+		var thumb = "/cameras/" + this.camId + "/streams/" + this.streamId + "/thumb/" + elements[i].thumb;
+
+		var img = new Image();
+
+		var showThumbWrapper = function(d) { 
+			self.showThumb(d.attr("data-thumb"));
+		};
+
+		self.append({
+			start:       start,
+			w:           end - start,
+			thumb:       thumb,
+			totalTime:   elements[i].totalTime,
+			mouseover:   showThumbWrapper,
+			mouseclick:  function(d) {
+				self.jumpTo(d);
+			}
+		});
+	}
+	
+	if (self.showMotion) {
+		self.overlayMotionData();
+	}
+
+};
+
+
+Timeline.prototype.jumpTo = function( d ) {
+
+	var self = this;
+
+	var time   = parseInt( d.attr('data-totalTime') );
+
+	var rx = d3.mouse(d[0][0])[0];
+	rx = rx / self.width;
+	var px = parseFloat( d.attr('x') )/100.0;
+	var offset = (rx - px) * self.width;
+	var t_offset = offset * self.timeSpan / self.width;
+	t_offset /= 1000;
+
+	$(window).trigger('jumpTo', {
+		camId: self.camId,
+		streamId: self.streamId,
+		time: time + t_offset
+	});
+};
+
+Timeline.prototype.showThumb = function( thumb ) {
+   
+	var currentThumb = this.thumbImg.attr('src');
+
+	this.thumb.show();
+
+	this.lastThumbRequest = this.lastThumbRequest || Date.now() - 1000;
+	var dt = Date.now() - this.lastThumbRequest;
+	
+	if (currentThumb !== thumb && dt > 100) {
+		this.lastThumbRequest = Date.now();
+		this.thumbImg.attr('src', thumb);
+	} else {
+		
+	}
+};
+
+
+Timeline.formattedTimeFromTimestamp = function( timestamp ) {
+
+    var
+        date          = new Date(timestamp),
+        hours         = (date.getHours()   < 10 ? '0' + date.getHours()   : date.getHours()),
+        minutes       = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()),
+        seconds       = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds()),
+        formattedTime = hours + ':' + minutes + ':' + seconds;
+
+    return formattedTime;
+};
+// 
+//
+// 
 
 Timeline.prototype.refresh = function() {
 	var self = this;

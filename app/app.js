@@ -539,13 +539,30 @@ app.get('/cameras/:camera_id/sensors', passport.authenticate('basic', {session: 
 /////////////
 app.get('/dev/motion', passport.authenticate('basic', {session: false}), function(req, res){
 
-	request({
-		uri: "http://Administrator:password@192.168.215.108:8080/cameras/VHYcWYVtjAu6MlWO/sensors?start="+req.query.start+"&end="+req.query.end,
-		method: "GET",
-	}, function(error, response, body){
-			console.log(body);
-			res.end(body);
-		});
+	// request({
+	// 	uri: "http://Administrator:password@192.168.215.108:8080/cameras/VHYcWYVtjAu6MlWO/sensors?start="+req.query.start+"&end="+req.query.end,
+	// 	method: "GET",
+	// }, function(error, response, body){
+	// 		console.log(body);
+	// 		res.end(body);
+	// 	});
+	var d = {};
+	d.data = [];
+
+	var start = parseInt( req.query.start );
+	var end = parseInt( req.query.end );
+
+	console.log("start: " + start );
+	console.log("end: " + end);
+	for (var t = start; t < end; t = t+10000) {
+		if (Math.random() > 0.8) {
+			d.data.push({
+				t: t
+			});
+		}
+	};
+
+	res.json(d);
 });
 /////////////
 ///// dev only ////////
