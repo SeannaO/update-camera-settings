@@ -310,6 +310,7 @@ CameraPage.prototype.play = function( begin, end ) {
 
 
 CameraPage.prototype.toggleMotion = function() {
+	var self = this;
 	self.timeline.toggleMotion();
 };
 
