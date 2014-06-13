@@ -38,7 +38,6 @@ var Timeline = function( el, options ) {
 	this.timelineSelector   = new TimelineSelector("#timeline-selector");
 
 	this.overlay = $('<div>', {
-			style:'position: absolute; z-index: 1000; top:0; left:0; width:100%; height:100%; background:rgba(250,250,250,0.8);margin:0; padding:6;color: rgba(100,100,100,0.5)',
 			class:'timelineOverlay csspinner line back-and-forth no-overlay',
 			html:'loading...'
 		}).hide().appendTo(el);
@@ -289,7 +288,6 @@ Timeline.prototype.loadMotionData = function(start, end, cb) {
 	var self = this;
 
 	// $.getJSON( "/dev/motion?start=" + start + "&end=" + end,   // <-- development
-
 	$.getJSON(	"/cameras/" + self.camId + 
 			"/sensors?start=" + start + 
 			"&end=" + end,
@@ -377,11 +375,37 @@ Timeline.prototype.render = function(block_size, begin, end) {
 	var beginTime = Timeline.formattedTimeFromTimestamp( begin );
 	var endTime   = Timeline.formattedTimeFromTimestamp( end );
 
-	$('#timeline-begin-time').html( beginTime );
-	$('#timeline-end-time').html( endTime );
+	// $('#timeline-begin-time').html( beginTime );
+	// $('#timeline-end-time').html( endTime );
 
 	this.currBegin = begin;
 	this.currEnd   = end;
+
+	var dx = self.width/10.0;
+	var dt = Math.round( (end - begin)/10 );
+
+	$('.tick').remove();
+	$('.timeline-time').remove();
+
+	var prevTime;
+
+	for (var i = 0; i <= 10; i++) {
+		var tick = $('<div>', {
+			class: 'tick',
+		}).appendTo(self.el);
+		tick.css('left', i*dx + 'px');
+		
+		var t = begin + i*dt; 
+		var showSeconds = dt < 60000;
+
+		var time = Timeline.formattedTimeFromTimestamp( t, showSeconds );
+
+		var timeEl = $('<div>', {
+			class: 'timeline-time',
+			html: time
+		}).appendTo(self.el);
+		timeEl.css('left', i*dx - 15 + 'px')
+	}
 
 	this.clear();
 
@@ -466,14 +490,16 @@ Timeline.prototype.showThumb = function( thumb ) {
 };
 
 
-Timeline.formattedTimeFromTimestamp = function( timestamp ) {
+Timeline.formattedTimeFromTimestamp = function( timestamp, showSeconds ) {
 
     var
         date          = new Date(timestamp),
         hours         = (date.getHours()   < 10 ? '0' + date.getHours()   : date.getHours()),
         minutes       = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()),
         seconds       = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds()),
-        formattedTime = hours + ':' + minutes + ':' + seconds;
+        formattedTime = hours + ':' + minutes;
+		
+	if (showSeconds) formattedTime = formattedTime + ':' + seconds;
 
     return formattedTime;
 };
@@ -696,6 +722,7 @@ Timeline.prototype.append = function( data ) {
 		.style('fill',            colour)
 		.style('stroke',          colour)
 		.style('stroke-width',    '2')
+		// .attr('class', 'basicChunk')
 		.on('mouseover', function() {
 			var d = d3.select(this);
 			data.mouseover(d);
@@ -781,17 +808,6 @@ Timeline.prototype.getTimeByPosition = function( x ) {
 }
 
 
-function formattedTimeFromTimestamp(timestamp) {
-
-    var
-        date          = new Date(timestamp),
-        hours         = (date.getHours()   < 10 ? '0' + date.getHours()   : date.getHours()),
-        minutes       = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()),
-        seconds       = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds()),
-        formattedTime = hours + ':' + minutes + ':' + seconds;
-
-    return formattedTime;
-}
 
 
 
