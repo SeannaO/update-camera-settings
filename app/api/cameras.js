@@ -118,7 +118,7 @@ module.exports = function( app, passport, camerasController ) {
 		
 		if (!cam) { 
 			console.error("******* camera already deleted");
-			res.json({success:false, error: 'camera already deleted'});
+			res.json({success:false, error: 'camera already deleted; please refresh the page'});
 			return;
 		}
 
