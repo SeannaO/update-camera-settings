@@ -133,7 +133,7 @@ Player.prototype.launchStrobePlayer = function( options ) {
 			, "strobeMediaPlayback-" + $(self.el).attr('id')
 			, width
 			, height
-			, "10.1.0"
+			, "10.0.0"
 			, "/swf/expressInstall.swf"
 			, parameters
 			, {

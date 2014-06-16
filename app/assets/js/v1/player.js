@@ -103,7 +103,7 @@ Player.prototype.launchStrobePlayer = function( options ) {
 			, "strobeMediaPlayback"
 			, 640
 			, 480
-			, "10.1.0"
+			, "10.0.0"
 			, "/swf/expressInstall.swf"
 			, parameters
 			, {
