@@ -199,7 +199,7 @@
 
                             <div id="camera-streams-tabs" style = 'width: 100%;'>
 								
-								<button type="button" class="btn btn-default btn-sm" id="add-stream">add stream</button>
+								<!--<button type="button" class="btn btn-default btn-sm" id="add-stream">add stream</button>-->
 								<br><br>
 								<!-- stream tabs -->
 								<ul id = 'stream-tabs' class="nav nav-tabs" data-tabs='tabs'>
@@ -466,24 +466,33 @@
 				$('#camera-scanner-container').hide();
             });            
 
+
+            var addStreamForm = function(){
+                addStream( function(id) {
+                    //addStreamFieldOverlay( '#' + id );
+                });
+
+                var manufacturer = $("#camera-manufacturer").val();
+                if (manufacturer && manufacturer != 'unknown'){
+                    getCameraOptions(function(data){
+                        if (data != null){
+                            setAuthStatus(data,function(){
+                                setConstraintsOnStreamFields(data, function(error){
+                                    //removeStreamFieldOverlay();
+                                });
+                            });
+                        }else{
+                            //removeStreamFieldOverlay();
+                        }
+                    });
+                } else {
+                    //removeStreamFieldOverlay();
+                }
+
+            }
+
             $("#add-stream").click(function(){
-
-				addStream( function(id) {
-					addStreamFieldOverlay( '#' + id );
-				});
-
-				var manufacturer = $("#camera-manufacturer").val();
-				if (manufacturer && manufacturer != 'unknown'){
-					getCameraOptions(function(data){
-						setAuthStatus(data,function(){
-							setConstraintsOnStreamFields(data, function(error){
-								removeStreamFieldOverlay();
-								});
-							});
-						});
-				} else {
-					removeStreamFieldOverlay();
-				}
+                addStreamForm();
             })
 
             $("#camera-username, #camera-password").keyup(function(){
@@ -510,8 +519,26 @@
                 $dialog.find("#camera-ip").prop('disabled', false);
                 $("#stream-tabs").html("");
                 $("#stream-panes").html("");
+
+
+                // We are temporarily setting up one stream at start until thing start to actually use multiple streams
+                addStreamForm();
+
+
+
                 $dialog.modal('show');
             }
+
+
+
+            $("#camera-manufacturer").change(function(){
+                $("#stream-tabs").html("");
+                $("#stream-panes").html("");
+                addStreamForm();
+            });
+
+
+
             // - -
             //
             $('#add-new-camera-dialog').on('hidden.bs.modal', function () {

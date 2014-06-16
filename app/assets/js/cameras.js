@@ -567,12 +567,34 @@ var editCamera = function(camId) {
                 $("#add-new-camera-dialog #camera-password").val(data.camera.password || '');
 
 				current_number_of_streams = 0;
-				for (var i in data.camera.streams) {
-					var stream = data.camera.streams[i];
-					stream.camId = camId;
-					addStream( stream, function(id) {
-						addStreamFieldOverlay( '#' + id );
+				if (data.camera.streams.length > 0){
+					for (var i in data.camera.streams) {
+						var stream = data.camera.streams[i];
+						stream.camId = camId;
+						addStream( stream, function(id) {
+							addStreamFieldOverlay( '#' + id );
+						});
+					}
+				}else{
+					addStream(function(id) {
+						//addStreamFieldOverlay( '#' + id );						
 					});
+	                var manufacturer = $("#camera-manufacturer").val();
+	                if (manufacturer && manufacturer != 'unknown'){
+	                    getCameraOptions(function(data){
+	                        if (data != null){
+	                            setAuthStatus(data,function(){
+	                                setConstraintsOnStreamFields(data, function(error){
+	                                    //removeStreamFieldOverlay();
+	                                });
+	                            });
+	                        }else{
+	                            //removeStreamFieldOverlay();
+	                        }
+	                    });
+	                } else {
+	                    //removeStreamFieldOverlay();
+	                }					
 				}
                 
                 $("#update-camera").unbind();
@@ -982,11 +1004,11 @@ var addStream = function( stream, cb ) {
 			html: 'check stream'
 		});                
 
-		var remove_stream_button = $('<button>', {
-			id: 'remove-stream-button-'+new_stream_tab_id,
-			class: 'btn btn-danger btn-sm remove-stream',
-			html: 'remove stream'
-		});
+//		var remove_stream_button = $('<button>', {
+//			id: 'remove-stream-button-'+new_stream_tab_id,
+//			class: 'btn btn-danger btn-sm remove-stream',
+//			html: 'remove stream'
+//		});
 
 		var spinner = $('<div class="spinner" id="check-stream-spinner-'+current_stream_id+'">' +
 				'<div class="bounce1"></div>' +
@@ -1002,7 +1024,7 @@ var addStream = function( stream, cb ) {
 		});        
 
 		$('#'+new_stream_tab_id).append(check_stream_button);                  
-		$('#'+new_stream_tab_id).append(remove_stream_button); 
+		//$('#'+new_stream_tab_id).append(remove_stream_button); 
 		$('#'+new_stream_tab_id).append(spinner);
 		$('#'+new_stream_tab_id).append(check_stream_status);  
 
@@ -1011,17 +1033,17 @@ var addStream = function( stream, cb ) {
 			checkH264( current_stream_id );
 		});
 
-		remove_stream_button.click( function( e ) {
-			e.preventDefault();
-			console.log(stream);
-			if (typeof stream !== 'object') {
-				$('#'+new_stream_tab_id).remove();
-				$('#tab_'+new_stream_tab_id).remove();
-			} else {
-				removeStream( stream );
-			}
-			$('#stream-tabs a:last').tab('show');
-		});	
+//		remove_stream_button.click( function( e ) {
+//			e.preventDefault();
+//			console.log(stream);
+//			if (typeof stream !== 'object') {
+//				$('#'+new_stream_tab_id).remove();
+//				$('#tab_'+new_stream_tab_id).remove();
+//			} else {
+//				removeStream( stream );
+//			}
+//			$('#stream-tabs a:last').tab('show');
+//		});	
 
 		for (var attr in stream) {
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).val( stream[attr] );
