@@ -159,7 +159,7 @@ var launchStrobePlayer = function( options ) {
 			, "StrobeMediaPlayback"
 			, 640
 			, 480
-			, "10.0.0"
+			, "10.1.0"
 			, "/swf/expressInstall.swf"
 			, parameters
 			, {
