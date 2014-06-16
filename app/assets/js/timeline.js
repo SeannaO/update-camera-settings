@@ -152,10 +152,6 @@ Timeline.prototype.setupEvents = function() {
 		
 		if ( !self.mouse.dragged ) {
 			// console.log("that was a click");
-			if (self.mode === 'live') {
-				console.log('switch to archive');
-				// self.switchToArchive();
-			}
 		} else { 
 			// console.log("that was a drag");
 			var startTime = self.getTimeByPosition(

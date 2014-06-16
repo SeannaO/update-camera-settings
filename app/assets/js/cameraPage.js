@@ -49,7 +49,11 @@ CameraPage.prototype.setupEvents = function() {
 	this.mouseDragged = false;
 
 	$(window).on('jumpTo', function(e, d) {
-		self.jumpTo(d);
+		if (self.mode === 'live') {
+			self.switchToArchive();
+		} else {
+			self.jumpTo(d);
+		}
 	});
 
 	$(window).on('motion_loaded', function(e, d) {

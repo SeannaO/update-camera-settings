@@ -565,7 +565,16 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
             cb( err, numRemoved );
         } else {
 			var whichCam = self.findCameraById( camId );
+			if (!whichCam) {
+				cb( err, 0 );
+				return;
+			}
+
 			var cam = whichCam.cam;
+			if (!cam) {
+				cb( err, 0 );
+				return;
+			}
 
 			var k = whichCam.index;
 

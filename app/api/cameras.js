@@ -115,6 +115,12 @@ module.exports = function( app, passport, camerasController ) {
 	app.delete('/cameras/:id', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		var cam = camerasController.findCameraById( req.params.id ).cam;
+		
+		if (!cam) { 
+			console.error("******* camera already deleted");
+			res.json({success:false, error: 'camera already deleted'});
+			return;
+		}
 
 		camerasController.removeCamera( req.params.id, function( err, numRemoved ) {
 			if (err) {
