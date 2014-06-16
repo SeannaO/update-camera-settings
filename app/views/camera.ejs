@@ -12,14 +12,21 @@
 		<link rel="stylesheet" href="/css/lib/cspinners.css" />
 
         <link rel="stylesheet" href="/css/cam.css">
+
+		<!-- timeline css -->
+        <link rel="stylesheet" href="/css/timeline.css">
+		<!-- timeline css -->
 		
         <script src = "/js/jquery.min.js"></script>        
         <script src = "/js/jquery-ui.min.js"></script>
 
         <script src="/js/socket.io.js"></script>
 
+		<!-- those three lines are needed for the timeline -->
 		<script src = "/js/indexer.js"></script> 
 		<script src = "/js/timeline.js"></script>
+		<script src="/js/timeline-selector.js"></script>
+		<!-- those three lines are needed for the timeline -->
 
 		<script type="text/javascript" src="/js/swfobject.js"></script>
         <script src = "/js/cameraPage.js"></script>
@@ -35,11 +42,6 @@
 
 		<script src="/js/lib/picker.js"></script>
 		<script src="/js/lib/picker.date.js"></script>
-
-		<script src="/js/timeline-selector.js"></script>
-
-        <script src="/js/video-js/video.js"></script>
-        <script src="/js/video-js/videojs.hls.js"></script>
 
         <script src="/js/player.js"></script>
     </head>
@@ -69,78 +71,28 @@
 
 		<div id = "time-map">
 			<div id = "date-selector"></div>	
+
+
+			<!-- include those lines to add a timeline to your page -->
 			<div id = "marker"></div>
 			<div id = "zoom-back"> zoom out </div>
 			<div id = "timeline">
-				<div id = "timeline-begin-time" class = 'timeline-time'> </div>
-				<div id = "timeline-end-time" class = 'timeline-time'> </div>
-
 				<div id = "timeline-selector"></div>
 			</div>				
+			<!-- include those lines to add a timeline to your page -->
+
+
 		<button id = "toggle-motion" class = 'toggle-motion btn btn-default btn-xs'></button>
+
 		</div>
 		 
 		<div id = "video" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px;position:relative; overflow:hidden" class = "shadow">
 		</div>
 
-		<div id = "thumb" style = "display:none; position: absolute; z-index: 1000">
+		<div id = "thumb">
 			<div id = 'thumb-time'></div>
 			<img src = ""/>
         </div>
-
-		<!-- <div id = "vd_zoom" style=" -->
-		<!-- 	position:  absolute; -->
-		<!-- 	width:  640px; -->
-		<!-- 	height: 480px; -->
-		<!-- 	top: 270px; -->
-		<!-- 	left: 30px; -->
-		<!-- "></div>	 -->
-
-		<script>
-// 			var left = 0;
-// 			var top = 0;
-// 			var drag = false;
-// 			var clicked = false;
-// 			var px, py;
-// 			$('#vd_zoom').click(function() {
-// 				if (drag) return;
-// 				var w = $('object').attr('width');
-// 				var h = $('object').attr('height');
-// 				$('object').attr('width', 1.2*w);
-// 				$('object').attr('height', 1.2*h);
-// 			});	
-// 			
-// 			$('#vd_zoom').on('mousedown', function(e) {
-// 				clicked = true;
-// 				drag = false;
-// 				px = e.pageX;
-// 				py = e.pageY;
-// 			});	
-// 			$('#vd_zoom').on('mousemove', function(e) {
-// 				if (!clicked) return;
-// 				var dx = e.pageX - px;
-// 				var dy = e.pageY - py;
-// 				px = e.pageX;
-// 				py = e.pageY;
-// 				console.log(dx);
-// 				console.log(dy);
-// 				if (Math.abs(dx) > 10 || Math.abs(dy) > 10) drag = true;
-// 				var l = parseInt( $('object').css('left') );
-// 				var t = parseInt( $('object').css('top') );
-// 				var w = parseInt( $('object').attr('width') );
-// 				var h = parseInt( $('object').attr('height') );
-// 				l += dx;
-// 				t += dy;
-// 				
-// 				$('object').css('left', l);
-// 				$('object').css('top', t);
-// 			});
-//
-// 			$('#vd_zoom').on('mouseup', function(e) {
-// 				clicked = false;
-// 			});	
-
-		</script>
 
         <script>
 			var camPage;
@@ -148,26 +100,6 @@
 				camPage = new CameraPage( camId );
 				camPage.setup();			
             });
-	
-			Path.map("#/zoom/:begin").to(function(){
-				console.log("begin: " + this.params['begin']);
-			});
-
-//  Path.map("#/users/:user_id").to(function(){
-// 	             $("#output .content").html("You selected the user with ID: " + this.params["user_id"]);
-// 				         });
-//
-// 			Path.map("#/comments").to(function(){
-// 				alert("Comments!");
-// 			}).enter(clearPanel);
-//
-// 			Path.map("#/posts").to(function(){
-// 				alert("Posts!");
-// 			}).enter(clearPanel);
-
-			Path.root("#");
-
-			Path.listen();	
         </script>
 
     </body>
