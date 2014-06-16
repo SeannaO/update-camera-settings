@@ -471,8 +471,9 @@ module.exports = function( app, passport, camerasController ) {
 
 		camerasController.getCamera( camId, function(err, cam) {
 
-			if (err) {
+			if (err || !cam) {
 				console.error("[/cameras/:id/live.m3u8] :");
+				if (!cam) err = 'camera does not exist; ' + err;
 				console.error( err ) ;
 				res.json( { error: err } );
 			} else {
