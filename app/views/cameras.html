@@ -486,7 +486,7 @@
 				}
             })
 
-            $("#camera-username, #camera-password").keyup(function(){
+            $("#camera-ip, #camera-username, #camera-password").keyup(function(){
                 var manufacturer = $("#camera-manufacturer").val();
                 if (manufacturer && manufacturer != 'unknown'){
                     getCameraOptions(function(data){

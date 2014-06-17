@@ -258,12 +258,21 @@ input.switch:checked ~ label:after
 }
 
 .camera-streams-retention{
-	width:85%;
+	/* width:85%; */
+	width: 80px;
 }
 .retention-unit{
 	width:       10%;
 	float:       right;
 	margin-top:  5px;
+	left: 110px;
+	width: 10px;
+	position: absolute;
+}
+.retention-info { 
+	float: right;
+	color: #888;
+	/* margin-left: 10px; */
 }
 
 .unknown #check-stream-container{
