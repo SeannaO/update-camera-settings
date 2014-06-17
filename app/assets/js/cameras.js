@@ -416,7 +416,7 @@ var getCameraOptions = function(cb) {
 		data: {camera:{username:username, password:password, manufacturer:manufacturer, ip:ip}},
 		contentType: 'application/json',
 		success: function(data) {
-			console.log('getCameraOptions got success');
+			// console.log('getCameraOptions got success');
 			if (data && data.resolutions && $.isArray(data.resolutions) && data.resolutions.length > 0){
 				cb( data );
 			} else{
@@ -424,7 +424,7 @@ var getCameraOptions = function(cb) {
 			}
 		},
 		error: function( data ) {
-			console.log('getCameraOptions got error');
+			// console.log('getCameraOptions got error');
 			console.log(data);
 			cb( null );
 		}
@@ -809,7 +809,7 @@ var generateScheduleTable = function() {
 
 
 var addStreamFieldset = function( cb ) {
-	
+
 	var current_stream_id = current_number_of_streams;
 
 	//
@@ -843,7 +843,7 @@ var addStreamFieldset = function( cb ) {
 	
 	camera_stream_name_group.append( camera_stream_name );
 
-		//
+	//
 	// retention field
 	var camera_stream_retention_group = $('<div>', {
 		class: 'form-group  col-xs-4',
@@ -852,14 +852,28 @@ var addStreamFieldset = function( cb ) {
 
 	var camera_stream_retention = $('<input>', {
 		type: 'number',
-		min: 1,
+		min: 0,
 		class: 'form-control camera-streams-retention',
 		id: 'camera-streams-' + current_stream_id + '-retention',
 		name: 'camera[streams][' + current_stream_id + '][retention]'
 	});
+	camera_stream_retention_info = $("<span id='retention-info-" + current_stream_id + "' class='retention-info'>recording until disk is full</span>");
 	camera_stream_retention_unit = $("<span class='retention-unit'>days</span>");
 	camera_stream_container = $("<div>").append(camera_stream_retention_unit).append(camera_stream_retention);
 	camera_stream_retention_group.append( camera_stream_container );
+	camera_stream_container.append(camera_stream_retention_info);
+
+	// camera_stream_retention_info.hide();
+
+	camera_stream_retention.change(function() {
+		var v = camera_stream_retention.val();
+			
+		if (!v || !parseInt(v)) {
+			camera_stream_retention_info.fadeIn();
+		} else {
+			camera_stream_retention_info.fadeOut();
+		}
+	});
 	// end of retention field
 	//
 
@@ -1068,6 +1082,13 @@ var addStream = function( stream, cb ) {
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).val( stream[attr] );
 			$("#add-new-camera-dialog #camera-streams-" + idx + "-" + attr).attr( 'data-'+attr, stream[attr] );
 		}
+		var retention =  $("#camera-streams-" + idx + "-retention").val(); 
+		if ( !retention || !parseInt(retention) ) {
+			$("#retention-info-" + idx).fadeIn(); 
+		} else {
+			$("#retention-info-" + idx).fadeOut(); 
+		}
+
 		if (cb){
 			cb( new_stream_tab_id );
 		}
