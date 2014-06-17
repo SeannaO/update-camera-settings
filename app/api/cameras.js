@@ -101,7 +101,7 @@ module.exports = function( app, passport, camerasController ) {
 			if (err) {
 				console.error("*** updateCameraMotion error: ");
 				console.error( err ) ;
-				console.error("* * *");
+				console.errlor("* * *");
 				res.status(422).json({success: false, error: err});
 			} else {
 				res.json({success: true});
@@ -262,7 +262,7 @@ module.exports = function( app, passport, camerasController ) {
 
 	// - - -
 	// lists all videos
-	app.get('/cameras/:cam_id/streams/:id/list_videos', passport.authenticate('basic', {session: false}), function(req, res) {
+	app.get('/cameras/:cam_id/streams/:id/list_videos', function(req, res) {
 		var camId = req.params.cam_id;
 		var streamId = req.params.id;
 
