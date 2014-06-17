@@ -101,7 +101,7 @@ module.exports = function( app, passport, camerasController ) {
 			if (err) {
 				console.error("*** updateCameraMotion error: ");
 				console.error( err ) ;
-				console.errlor("* * *");
+				console.error("* * *");
 				res.status(422).json({success: false, error: err});
 			} else {
 				res.json({success: true});

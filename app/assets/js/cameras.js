@@ -37,7 +37,7 @@ $(document).ready(function(){
 });
 
 
-var cameras = [];
+var cameras = {};
 var charts = [];
 
 function basename(path) {
@@ -204,7 +204,7 @@ var list = function() {
 
 			for (var i = 0; i < data.length; i++) {
 				if (data[i]) {
-					cameras.push( data[i] );
+					cameras[data[i]._id]= data[i];
 					addCameraItem(data[i]);
 					
 					var streamsCounter = 0;
@@ -461,8 +461,18 @@ var removeOverlayFromPage = function( cb ) {
 };
 
 var updateCamera = function(id, cb) {
-    
+
     var params = $('#camera-form').serializeObject();
+
+	// Check if the camera previously had any streams
+	var current_camera = cameras[id];
+	var manufacturer = params.camera.manufacturer || $("#camera-manufacturer").val();
+	var enable_motion = false;
+	if ((typeof current_camera.streams == 'undefined' || current_camera.streams.length == 0) && params.camera.streams.length > 0 && typeof manufacturer !== 'undefined' && manufacturer !== 'unknown'){
+		enable_motion = true;
+	}
+
+	// if it had zero streams and it is adding new streams then we should send a request afterwards to enable motion
 
     $.ajax({
         type: "PUT",
@@ -470,7 +480,14 @@ var updateCamera = function(id, cb) {
         data: JSON.stringify( params.camera ),
         contentType: 'application/json',
         success: function(data) {
+
             cb( data );
+
+            if (enable_motion){
+            	enableMotion(id,function(){
+
+            	});
+            }
         },
 		error: function(err) {
 			cb( {error: err} );
@@ -692,9 +709,10 @@ scanForCameras = function(subnet, cb) {
         url: "/scan.json?subnet=" + subnet,
         contentType: 'application/json',
         success: function(data) {
-            var ip_addresses = $.map(cameras, function(n,i){
-               return [ n.ip ];
-            });
+        	var ip_addresses = [];
+        	for (var i in cameras){
+        		ip_addresses.push(cameras[i].ip)
+        	}
 			
 			var newCameras = 0;
 
@@ -703,6 +721,7 @@ scanForCameras = function(subnet, cb) {
 					newCameras++;
                     addCamera( data[idx], function(result) {
                         if (result && result._id){
+                        	cameras[result._id]= result;
                             addCameraItem( result );
                             for (var j in result.streams) {
 								
@@ -1226,7 +1245,7 @@ var cameraSchedule = function(camId) {
 
 var getCameraById = function(id) {
 	for (var i in cameras ) {
-		if (cameras[i]._id == id) return cameras[i];
+		if (i == id) return cameras[i];
 	}
 }
 

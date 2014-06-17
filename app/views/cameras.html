@@ -38,7 +38,7 @@
 
             socket.on('motion', function(data){
 				for (var i in cameras) {
-					if (cameras[i]._id === data.id) {
+					if (i === data.id) {
 						var cam = cameras[i];
 						for (var j in cam.streams) {
 							var stream_id = cam.streams[j].id;
@@ -439,7 +439,7 @@
 							//location.reload();
                             //add the the camera to the page
 
-                            cameras.push( data );
+                            cameras[data._id] = data;
                             addCameraItem(data);
                             
                             var streamsCounter = 0;
@@ -469,27 +469,32 @@
                             //issue request to enable motion
                             if (data.manufacturer !== 'undefined' && data.manufacturer !== 'unknown'){
                                 var camera_id = data._id;
-                                var params = {"camera_id":camera_id, "camera":{"motion":{"enabled":"1"}}};
+                                enableMotion(camera_id, function(){
 
-                                $.ajax({
-                                    type: "PUT",
-                                    url: "/cameras/" + camera_id + "/motion",
-                                    data: JSON.stringify( params ),
-                                    contentType: 'application/json',
-                                    success: function(data) {
-                                        // update the camera status
-                                        console.log(data);
-                                        if (data){
-                                            $("#camera-item-" + camera_id + " .motion .status").removeClass("gray green red").addClass("green");
-                                        }
-
-                                    }
                                 });
                             }
 						}
 					});
                 });
             });
+
+            var enableMotion = function(camera_id, cb){
+                var params = {"camera_id":camera_id, "camera":{"motion":{"enabled":"1"}}};
+
+                $.ajax({
+                    type: "PUT",
+                    url: "/cameras/" + camera_id + "/motion",
+                    data: JSON.stringify( params ),
+                    contentType: 'application/json',
+                    success: function(data) {
+                        // update the camera status
+                        if (data){
+                            $("#camera-item-" + camera_id + " .motion .status").removeClass("gray green red").addClass("green");
+                        }
+                        if (cb){ cb(data);}
+                    }
+                });
+            }
 
             $("#camera-scanner-btn").click(function() {
                 $("#camera-scanner-container").toggle();
