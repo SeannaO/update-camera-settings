@@ -20,6 +20,7 @@ body {
 
 #camStatus.panel .panel-heading{
 	text-align: center;
+	height:170px;
 }
 
 #camera-scanner-container{

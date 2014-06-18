@@ -726,8 +726,6 @@ scanForCameras = function(subnet, cb) {
 					newCameras++;
 					ip_addresses.push(data[idx].ip);
                     addCamera( data[idx], function(result) {
-						cameras.push(result);
-
                         if (result && result._id){
                         	cameras[result._id]= result;
                             addCameraItem( result );
