@@ -68,12 +68,12 @@ function Camera( cam, videosFolder, cb ) {
 
 		this.addAllStreams(streams, function(){
 			if (!self.recording && self.shouldBeRecording()) {
-				console.log("starting camera " + (self.name || self.ip));
+				console.log("[cameraModel] starting camera " + (self.name || self.ip));
 				// setTimeout( function() {
 					self.startRecording();
 				// }, 5000);
 			} else {
-				console.log("stopping camera " + (self.name || self.ip));
+				console.log("[cameraModel] stopping camera " + (self.name || self.ip));
 				self.stopRecording();
 			}
 			if (cb) cb(self);
@@ -86,7 +86,6 @@ function Camera( cam, videosFolder, cb ) {
 }
 // end of constructor
 //
-
 
 util.inherits(Camera, EventEmitter);
 
@@ -570,7 +569,6 @@ Camera.prototype.updateStream = function( stream, cb ) {
  *
  */
 Camera.prototype.restartAllStreams = function() {
-	
 	
 	var self = this;
 

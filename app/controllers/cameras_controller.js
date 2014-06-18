@@ -6,7 +6,7 @@ var checkH264          = require('../helpers/ffmpeg.js').checkH264;
 var find               = require('findit');
 var OrphanFilesChecker = require('../helpers/orphanFiles.js');
 var Thumbnailer        = require('../helpers/thumbnailer.js');
-var SensorData 	   = require('../models/sensor_model.js');
+var SensorData         = require('../models/sensor_model.js');
 
  // sqlite layer
 
@@ -810,6 +810,14 @@ CamerasController.prototype.findCameraById = function( id ) {
         }
     }
     return false;
+};
+
+
+CamerasController.prototype.restartRecording = function() {
+	console.log('[CamerasController] restart recording');
+	for (var i in this.cameras) {
+		this.cameras[i].restartAllStreams();
+	}
 };
 
 module.exports = CamerasController;

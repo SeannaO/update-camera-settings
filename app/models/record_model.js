@@ -346,6 +346,7 @@ RecordModel.prototype.sendSignal = function( command, url, path ) {
  *  
  */
 RecordModel.prototype.startRecording = function() {    
+	console.log('[RecordModel]  startRecording');
 
     var self = this;
 	if (this.status === RECORDING) {

@@ -118,7 +118,7 @@ Dblite.prototype.searchVideosByInterval = function( start, end, cb ) {
 
 //    var fileList = this.db.query('SELECT start, end, file FROM videos WHERE start < ? AND end > ? ORDER BY start ASC', 
 	var fileList = this.db.query('SELECT start, end, file FROM videos WHERE start BETWEEN ? AND ? ORDER BY start ASC', 
-            [start-500, end], 
+            [start-30000, end], 
             ['start', 'end', 'file'], 
             function(err, data) {
 
@@ -129,8 +129,8 @@ Dblite.prototype.searchVideosByInterval = function( start, end, cb ) {
                     };
 
                 if (err){
-                    console.log("searchVideosByInterval");
-                    console.log(err);
+                    console.error("[Dblite.searchVideosByInterval]");
+                    console.error(err);
                 }
 
                 if (!data || data.length === 0) {
