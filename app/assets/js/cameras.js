@@ -717,8 +717,9 @@ scanForCameras = function(subnet, cb) {
 			var newCameras = 0;
 
             for (var idx in data) {
-                if ($.inArray(data[idx].ip, ip_addresses) === -1){
+                if (ip_addresses.indexOf(data[idx].ip) === -1){
 					newCameras++;
+					ip_addresses.push(data[idx].ip);
                     addCamera( data[idx], function(result) {
                         if (result && result._id){
                         	cameras[result._id]= result;
