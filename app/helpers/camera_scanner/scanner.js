@@ -82,7 +82,7 @@ var detectCamByHttpResponse = function( ip, response, cb ) {
 
 var scan = function(prefix, cb ) {
 	
-	camList = [];
+	foundCams = [];
 	psiaScan( prefix, function(psia) {
 		console.log("ok, scanning onvif cameras now");
 		onvifScan( prefix, function(onvif) {
@@ -93,12 +93,12 @@ var scan = function(prefix, cb ) {
 			           shared = true;
 			           break;
 			       }
-			   if(!shared) camList.push(psia[i])
+			   if(!shared) foundCams.push(psia[i])
 			}
-			camList = camList.concat(onvif);
+			foundCams = foundCams.concat(onvif);
 			if (cb) {
 				console.log("done scanning cameras");
-				cb(camList);
+				cb(foundCams);
 			}
 		});
 	});
@@ -128,7 +128,7 @@ var onvifScan = function( prefix, cb ) {
 		if (lock) return;
 		lock = true;
 
-		camList = [];
+		var onvifCamList = [];
 		
 		
 		if (list.length === 0) {
@@ -156,9 +156,9 @@ var onvifScan = function( prefix, cb ) {
 				};
 
 				addCam( new_cam, response, function( cam ) {
-					camList.push( cam );
-					if (camList.length === list.length && cb) {
-						cb(camList);
+					onvifCamList.push( cam );
+					if (onvifCamList.length === list.length && cb) {
+						cb(onvifCamList);
 					}
 				});
 			});
@@ -172,11 +172,13 @@ var psiaScan = function( prefix, cb ) {
 	console.log("scanning for psia cameras...");
 	var lock = false;
 	psia.scan(prefix, function(list) {
-		if (lock) return;
+		if (lock) {
+			return;
+		}
 		lock = true;
-		camList = [];
+		var psiaCamList = [];
 		
-		if (list.length === 0) {
+		if (!list || list.length === 0) {
 			if (cb) cb([]);
 			return;
 		}
@@ -185,10 +187,9 @@ var psiaScan = function( prefix, cb ) {
 
 			addCam( list[c], function( cam ) {
 				cam.type = 'psia';
-				camList.push( cam );
-				console.log('add cam ' + camList.length);
-				if (camList.length === list.length && cb) {
-					cb(camList);
+				psiaCamList.push( cam );
+				if (psiaCamList.length === list.length && cb) {
+					cb(psiaCamList);
 					return;
 				}
 			});

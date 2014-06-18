@@ -7,20 +7,25 @@
 var request = require('request');
 
 var testIpForPsiaCamera = function( ip, cb ) {
+	// if (ip !== '192.168.215.102') {
+	// 	cb( '', '', 0);
+	// 	return;
+	// }
     request({ 
             method: 'GET', 
             uri: 'http://' + ip + '/PSIA/index',
-            timeout: 5000
+			timeout: 8000
+			// pool: {maxSockets: 600}
         }, function (error, response, body) {
             if ( !error && body.length === 0 && response.statusCode !== 404 ) {
-                console.log(ip);
-                console.log('unauthorized');
-                console.log(body);
+                // console.log(ip);
+                // console.log('unauthorized');
+                // console.log(body);
                 cb( error, 'unauthorized', ip );
             } else if ( !error && body.indexOf("psialliance-org") > -1 ) {
-                console.log(ip);
-                console.log('missing camera stream(s)');
-                console.log(body);
+                // console.log(ip);
+                // console.log('missing camera stream(s)');
+                // console.log(body);
 				cb( error, 'missing camera stream(s)', ip );
 			} else {
                 cb( error, '', ip );

@@ -382,6 +382,11 @@ var deleteCamera = function(id) {
 				contentType: 'application/json',
 				success: function(data) {
 					if (data.success) {
+						for (var i = 0; i < cameras.length; i++) {
+							if (cameras[i]._id === id) {
+								cameras.splice(i, 1);
+							}
+						}
 						removeOverlayFromPage( function() {
 							toastr.success('Successfully removed camera');
 							$("#camera-item-"+data._id).fadeOut();
@@ -721,6 +726,8 @@ scanForCameras = function(subnet, cb) {
 					newCameras++;
 					ip_addresses.push(data[idx].ip);
                     addCamera( data[idx], function(result) {
+						cameras.push(result);
+
                         if (result && result._id){
                         	cameras[result._id]= result;
                             addCameraItem( result );
