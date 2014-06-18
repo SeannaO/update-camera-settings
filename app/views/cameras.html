@@ -549,7 +549,20 @@
                 addStreamForm();
             })
 
-            $("#camera-ip, #camera-username, #camera-password").keyup(function(){
+            $("#camera-ip").change(function(){
+                var manufacturer = $("#camera-manufacturer").val();
+                if (manufacturer && manufacturer != 'unknown'){
+                    getCameraOptions(function(data){
+                        setAuthStatus(data,function(){
+                            setConstraintsOnStreamFields(data, function(error){
+
+                            });
+                        });
+                    });
+                }else{
+                }
+            });
+            $("#camera-username, #camera-password").keyup(function(){
                 var manufacturer = $("#camera-manufacturer").val();
                 if (manufacturer && manufacturer != 'unknown'){
                     getCameraOptions(function(data){
