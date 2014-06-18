@@ -461,7 +461,7 @@ var removeOverlayFromPage = function( cb ) {
 };
 
 var updateCamera = function(id, cb) {
-
+    
     var params = $('#camera-form').serializeObject();
 
 	// Check if the camera previously had any streams
@@ -709,18 +709,11 @@ scanForCameras = function(subnet, cb) {
         url: "/scan.json?subnet=" + subnet,
         contentType: 'application/json',
         success: function(data) {
-<<<<<<< HEAD
         	var ip_addresses = [];
         	for (var i in cameras){
         		ip_addresses.push(cameras[i].ip)
         	}
-			
-=======
-            var ip_addresses = $.map(cameras, function(n,i){
-               return [ n.ip ];
-            });
 		
->>>>>>> c60472e... fix some scanner issues
 			var newCameras = 0;
 
             for (var idx in data) {
