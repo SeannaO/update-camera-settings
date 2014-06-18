@@ -3,6 +3,12 @@ body {
 	min-width:  460px;
 }
 
+#camerasHeader .summary{
+	position:absolute;
+	bottom:25px;
+	right:15px;
+}
+
 #header{
 	/*height:105px;*/
 }
@@ -10,6 +16,10 @@ body {
 .tab-pane {
 	position: relative;
 	overflow: auto;
+}
+
+#camStatus.panel .panel-heading{
+	text-align: center;
 }
 
 #camera-scanner-container{

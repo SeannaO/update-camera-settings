@@ -23,7 +23,20 @@ var tpAttr = [
 ];
 
 
+var cameras = {};
+var camera_status_counts = {};
+
+var $recordingCount = null;
+var $idleCount = null;
+var $disconnectedCount = null;
+$(function(){
+	$recordingCount = $("#recordingCount");
+	$idleCount = $("#idleCount");
+	$disconnectedCount = $("#disconnectedCount");
+});
 var setupHealth = function() {
+
+	setupCameraStatus();
 
 	var socket = io.connect();
 
@@ -41,11 +54,95 @@ var setupHealth = function() {
 
 	socket.on('sensorsData', function(data) {
 		updateSensors( data );
-	});		
+	});
+
+	socket.on('cameraStatus', function(data) {
+		updateCameraStatus(data);
+	});
+
+	socket.on('newThumb', function(data) {
+		var thumb = "/cameras/" + data.cam + "/streams/" + data.stream + "/thumb/"+data.start + "_" + (data.end-data.start);
+		updateThumb(data.cam, thumb );
+	});
+
+	socket.on('newChunk', function(data) {
+		updateRecordingStatus(data);
+	});
 
 	setupSensorsInfo();
 };
 
+
+var updateThumb = function(id, thumb ){
+	
+	var img = new Image();
+
+	$(img).attr({
+		src: thumb,
+		style:"margin: 0 auto;",
+		class:"img-responsive img-thumbnail"
+	}).load(function(){
+		$("#thumb-"+id).html( $(this) );
+	}).error(function(){
+		console.log("unable to load image")
+	});
+};
+
+var updateCameraStatus = function(data){
+	if (data.status === 'offline' || data.status === 'disconnected') {
+		if (cameras[data.cam_id].status !== 'disconnected'){
+			if (cameras[data.cam_id].status === 'idle'){
+				// remove the count from idle
+				camera_status_counts.idle -= 1;
+			}else if (cameras[data.cam_id].status === 'recording'){
+				// remove count from ok
+				camera_status_counts.recording -= 1;
+			}
+			camera_status_counts.disconnected += 1;
+			cameras[data.cam_id].status = 'disconnected';
+			updateStatus(data.cam_id, "panel-danger");
+		}
+	} else if (data.status === 'online' || data.status === 'connected') {
+		// if we are receiving a status of online or connected and the camera is disconnected
+		if (cameras[data.cam_id].status === 'disconnected'){
+			if (cameras[data.cam_id].recording == true){
+				// remove the count from disconnected to ok
+				camera_status_counts.recording += 1;
+				cameras[data.cam_id].status = 'recording';
+				updateStatus(data.cam_id, "panel-success");
+			}else{
+				// remove count from disconnected to idle
+				camera_status_counts.idle += 1;
+				cameras[data.cam_id].status = 'idle';
+				updateStatus(data.cam_id, "panel-warning");
+			}
+			camera_status_counts.disconnected -= 1;
+		}else if (cameras[data.cam_id].status === 'idle' && cameras[data.cam_id].recording == true){
+			//then we need to move it to ok
+			camera_status_counts.recording += 1;
+			camera_status_counts.idle -= 1;
+			cameras[data.cam_id].status = 'recording';
+			updateStatus(data.cam_id, "panel-success");
+		}
+	}
+	updateCounts();
+}
+
+var updateRecordingStatus = function(data){
+	var cam_id = data.cam;
+	if (cameras[cam_id].interval){
+		clearInterval(cameras[cam_id].interval);
+	}
+	cameras[cam_id].recording = true;
+	cameras[cam_id].interval = setTimeout(function(){
+		cameras[cam_id].recording = false;
+		camera_status_counts.recording -= 1;
+		camera_status_counts.idle += 1;
+		cameras[cam_id].status = 'idle';
+		updateStatus(data.cam_id, "panel-warning");
+		updateCounts();
+	}, 20000);	
+};
 
 var updateSensors = function( data ) {
 
@@ -108,6 +205,55 @@ var updateHddThroughput = function( data ) {
 			}
 		}
 	}
+};
+
+
+var updateStatus = function(cam_id, klass){
+	$("#status_" + cam_id + " .panel").removeClass("panel-danger panel-warning panel-success").addClass(klass);
+}
+
+var updateCounts = function(){
+	if ($recordingCount && $idleCount && $disconnectedCount){
+		$recordingCount.html(camera_status_counts["recording"]);
+		$idleCount.html(camera_status_counts["idle"]);
+		$disconnectedCount.html(camera_status_counts["disconnected"]);
+	}
+};
+
+var setupCameraStatus = function(){
+	// Query the camera list and add the elements to the DOM
+$.ajax({ 
+		url: "/cameras.json", 
+		dataType: "json",
+		success: function( data ) 
+{			if (data){
+				camera_status_counts['recording'] = 0;
+				camera_status_counts['idle'] = data.length;
+				camera_status_counts['disconnected'] = 0;
+				updateCounts();
+				var class_name = "col-sm-3";
+				var $cameras = $("#cameras");
+
+		
+				for (var i = 0; i < data.length; i++) {
+
+					var cam_name = data[i].name || data[i].ip + " | " + data[i].manufacturer;
+					cameras[data[i]._id] = {recording: false, status:'idle', interval: null};
+					var html = $("<div id=\"status_" + data[i]._id + "\" class=\"" + class_name + "\"><div id=\"camStatus\" class=\"panel panel-warning\"><div class=\"panel-heading\"><div id=\"thumb-" + data[i]._id +"\"></div><div>" + cam_name + "</div></div></div></div>");
+					$cameras.append(html);
+
+					if (typeof data[i].streams !== 'undefined' && data[i].streams.length > 0 && typeof data[i].streams[0].latestThumb !== 'undefined'){
+						var thumb = "/cameras/" + data[i]._id + "/streams/" + data[i].streams[0].id + "/thumb/" + data[i].streams[0].latestThumb;
+						updateThumb(data[i]._id, thumb );						
+					}else{
+						var thumb = "/img/no-image.png";
+						updateThumb(data[i]._id, thumb );	
+					}				
+				}	
+			}
+
+		}
+	});
 };
 
 
