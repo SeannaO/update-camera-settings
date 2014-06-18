@@ -82,7 +82,7 @@ var detectCamByHttpResponse = function( ip, response, cb ) {
 
 var scan = function(prefix, cb ) {
 	
-	var camList = [];
+	camList = [];
 	psiaScan( prefix, function(psia) {
 		console.log("ok, scanning onvif cameras now");
 		onvifScan( prefix, function(onvif) {
@@ -128,7 +128,7 @@ var onvifScan = function( prefix, cb ) {
 		if (lock) return;
 		lock = true;
 
-		var camList = [];
+		camList = [];
 		
 		
 		if (list.length === 0) {
@@ -174,7 +174,7 @@ var psiaScan = function( prefix, cb ) {
 	psia.scan(prefix, function(list) {
 		if (lock) return;
 		lock = true;
-		var camList = [];
+		camList = [];
 		
 		if (list.length === 0) {
 			if (cb) cb([]);
