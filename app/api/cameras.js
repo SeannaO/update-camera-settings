@@ -338,7 +338,7 @@ module.exports = function( app, passport, camerasController ) {
 		var camId = req.params.cam_id;
 		var streamId = req.params.id;
 		this.thumb = req.params.thumb;
-		thumb = path.basename(thumb);
+		this.thumb = path.basename(this.thumb);
 		
 		camerasController.getCamera( camId, function(err, cam) {
 			if (err || !cam) {

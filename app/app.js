@@ -1,5 +1,5 @@
 //require('look').start(); // -- profiler ( NOT for production )
-//var agent = require('webkit-devtools-agent');
+//var agent           = require('webkit-devtools-agent');
 var winston           = require('winston');
 var express           = require('express');                          // express
 var request           = require('request');                          // request
@@ -32,14 +32,19 @@ exec('killall -9 cpulimit', function( error, stdout, stderr) {
 });
 
 // launches custom ffmpeg
-this.launchRtspGrabber = function() {
+console.log('[app] launching rtsp_grabber');
+this.launchRtspGrabber = function( cb ) {
 	exec('killall -9 rtsp_grabber', function( error, stdout, stderr) {
 		self.grabberProcess = exec('./rtsp_grabber', function( error, stdout, stderr ) {
+			if (cb) cb();
 		});
-		console.log('*** launching rtsp_grabber');
 		self.grabberProcess.on('exit', function(code) {
-			console.error('*** relaunching rtsp_grabber');
-			self.launchRtspGrabber();
+			console.error('[app] rtsp_grabber exited; relaunching...');
+			self.launchRtspGrabber( function() {
+				console.log('[app] restarting recorder');
+				// camerasController.restartRecording();
+			});
+			console.log('[app] rtsp_grabber relaunched'); 
 		});
 	});
 };

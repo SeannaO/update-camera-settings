@@ -215,8 +215,8 @@ CameraPage.prototype.setupButtons = function() {
 			} else {
 				var url = window.location.origin 
 						+ "/cameras/" + self.camId
-						+ "/download?begin=" + self.timeline.currBegin
-						+ "&end=" + self.timeline.currEnd 
+						+ "/download?begin=" + parseInt( self.timeline.currBegin )
+						+ "&end=" + parseInt( self.timeline.currEnd )
 						+ "&stream=" + stream;
 
 				window.location = url;
