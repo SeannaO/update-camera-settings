@@ -1,5 +1,6 @@
 var fs = require('fs');
 var find = require('../node_modules/findit');
+var exec = require('child_process').exec;
 
 var OrphanFilesChecker = function( camerasController ) {
 
@@ -7,94 +8,46 @@ var OrphanFilesChecker = function( camerasController ) {
 };
 
 
-OrphanFilesChecker.prototype.recursiveDeleteFiles = function(folder, cb) {
-	
-	var finder = find( folder );
-
-	var counter = 0;
-
-	var stopTimeout = setTimeout( function() {
-		
-		if( cb ) cb();
-		if (finder) finder.stop();
-	}, 5000);	// limits deletion time to 5 seconds
-
-	finder.on('path', function(dir, stat) {
-
-		if (stat.isDirectory() ) {
-			fs.rmdir(dir, function(err) {
-				if (err) {
-				} else {
-					console.log( '*** orphan folder deleted: ' + dir );
-					counter++;
-				}
-			});
-		}
-		else if ( stat.isFile() ) {
-			fs.unlink(dir, function(err) {
-				if (err) {
-				} else {
-					console.log( '*** orphan file deleted: ' + dir );
-					counter++;
-				}
-			});
-		}
-		
-		if (counter > 50) {
-			if( cb ) cb();
-			clearInterval( stopTimeout );
-			finder.stop();
-		}
-	});
-};
-
-
 OrphanFilesChecker.prototype.checkForOrphanCameras = function( cb ) {
-	
+
+	var baseFolder = process.env['BASE_FOLDER'];
+	var reservedFiles = ['cam_db', 'trash', 'solink_server.db'];
+
 	var self = this;
 
-	fs.readdir( this.camerasController.videosFolder, function(err, files) {
+	fs.readdir( baseFolder, function(err, files) {
 		
-		var found = false;
-
 		if (err) {
-			cb ( false );
-			return;
+			console.error('[orphanFiles]  error when reading cameras folder: ' + err);
 		} else {
 			for (var f in files) {
 
-				if ( !self.camerasController.findCameraById( files[f] ) && files[f] !== "cam_db" && files[f] !== "solink_server.db" ) {
-					self.recursiveDeleteFiles( self.camerasController.videosFolder + '/' + files[f], function() {
-						if (cb) {
-							cb(true);
-						}
-					});
-					return;
+				if ( !self.camerasController.findCameraById( files[f] ) && reservedFiles.indexOf(files[f]) < 0 ) {
+					console.info('[orphanFiles] moving camera ' + files[f] + ' to trash');
+					try {
+						var from = baseFolder + '/' + files[f];
+						var to = baseFolder + '/trash';
+						exec( 'mv ' + from + ' ' + to, function(error, stdout, stderr) {}); 
+					} catch( err ) {
+						console.error('[orphanFile]  error when moving camera folder to trash: ' + err);
+					}
+				} else if (self.camerasController.findCameraById( files[f] )) {
+					self.checkForOrphanStreams( files[f] );
 				}
 			}
-		}
-	
-		if (cb) {
-			cb( false );
 		}
 	});
 };
 
 
-OrphanFilesChecker.prototype.checkForOrphanStreams = function( folders, cb ) {
+OrphanFilesChecker.prototype.checkForOrphanStreams = function( camId ) {
 
 	var self = this;
+	var baseFolder = process.env['BASE_FOLDER'];
 
-	if (folders.length === 0) {
-		if (cb) cb();
-		return;
-	}
-
-	var camId = folders.shift();
 	var cam = self.camerasController.findCameraById( camId );
-
-	if ( !cam || !cam.cam) {
-		self.checkForOrphanStreams( folders, cb );
+	if (!cam || !cam.cam) {
+		console.error('[orphanFiles] undefined camera: ' + camId);
 		return;
 	}
 
@@ -102,17 +55,13 @@ OrphanFilesChecker.prototype.checkForOrphanStreams = function( folders, cb ) {
 
 	var camFolder = self.camerasController.videosFolder + '/' + camId;
 
-	var sqliteRegex = /.sqlite$/;
+	var sqliteRegex = /.sqlite/;
 
 	fs.readdir( camFolder, function(err, files) {
 		for (var f in files) {
 			var streamId = files[f];
 			var sql_file_match = sqliteRegex.exec( streamId );
 			
-			if (streamId.indexOf('pipe') >= 0) {
-				console.error("trying to delete a pipe file");
-			}
-
 			var should_be_deleted = !cam.streams || 
 									( cam.streams.length === 0 ) || 
 									( !sql_file_match && 
@@ -122,23 +71,18 @@ OrphanFilesChecker.prototype.checkForOrphanStreams = function( folders, cb ) {
 									  streamId !== 'sensor');
 
 			if ( should_be_deleted ) {			
-				console.log( "\n======= DELETING stream " + streamId + " because: \n");
-				console.log( "\t!cam.streams: " + !cam.streams );
-				console.log( "\tcam.streams.length: " + cam.streams.length );
-				console.log( "\t!cam.streams[streamId]: " + !cam.streams[streamId] );
-				console.log("---");
+				console.info( "\n[orphanFile]  moving stream " + streamId + " to trash folder because: \n");
+				console.info( "\t!cam.streams: " + !cam.streams );
+				console.info( "\tcam.streams.length: " + cam.streams.length );
+				console.info( "\t!cam.streams[streamId]: " + !cam.streams[streamId] );
+				console.info("---");
 	
-				var streamFolder = camFolder + '/' + streamId;
-				self.recursiveDeleteFiles( streamFolder, function() {
-					if (cb) {
-						cb( true );
-					}
-				});
-				return;
+				var from = camFolder + '/' + streamId;
+				var to = baseFolder + '/trash/';
+
+				exec( 'mv ' + from + ' ' + to, function(error, stdout, stderr) {}); 
 			}
 		}
-		
-		self.checkForOrphanStreams( folders, cb );
 	});
 };
 
@@ -150,24 +94,13 @@ OrphanFilesChecker.prototype.periodicallyCheckForOrphanFiles = function( periodi
 	console.log("*** checking for orphan files...");
 
 	if (!periodicity) periodicity = 15 * 60 * 1000;
-	
-	self.checkForOrphanCameras( function( found ) {
-		if (found) {
-			clearTimeout( self.checkTimeout );
-			self.checkTimeout = setTimeout( function() {
-				self.periodicallyCheckForOrphanFiles( periodicity );
-			}, periodicity);
-		} else {
-			fs.readdir( self.camerasController.videosFolder, function(err, files) {
-				self.checkForOrphanStreams( files, function( found ) {
-					clearTimeout( self.checkTimeout );
-					self.checkTimeout = setTimeout( function() {
-						self.periodicallyCheckForOrphanFiles( periodicity );
-					}, periodicity);
-				});
-			});
-		}		
-	});
+
+	clearInterval( this.checkOrphanFilesInterval );
+
+	this.checkOrphanFilesInterval = setInterval( function() {
+		self.checkForOrphanCameras();
+	}, periodicity);
+
 };
 
 

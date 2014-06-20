@@ -14,6 +14,8 @@ var passport          = require('passport');
 var BasicStrategy     = require('passport-http').BasicStrategy;
 var authCache = {};
 
+var Trash = require('./helpers/trash.js');
+
 // - - -
 // kills any ffmpeg, iostat and smartctl processes that might be already running
 var exec = require('child_process').exec;
@@ -33,7 +35,6 @@ portChecker.check(8080, function(err, found) {
 	}
 	//
 	console.log('launching app...');
-
 	exec('killall -9 iostat', function( error, stdout, stderr) {});
 	exec('killall -9 smartctl', function( error, stdout, stderr) {});
 	// - - 
@@ -331,6 +332,8 @@ portChecker.check(8080, function(err, found) {
 	// - - -
 	process.env['BASE_FOLDER'] = baseFolder;
 
+	var trashFolder = baseFolder + '/trash';
+	var trash = new Trash( trashFolder, 10 * 60 * 1000 );
 
 	// - - - - -
 	// sets environment mode 
@@ -592,6 +595,4 @@ portChecker.check(8080, function(err, found) {
 
 	// server.listen(process.env.PORT || 8080);
 	server.listen( 8080 );
-
 });
-
