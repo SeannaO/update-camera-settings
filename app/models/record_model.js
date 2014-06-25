@@ -170,6 +170,8 @@ RecordModel.prototype.quitRecording = function() {
 	console.log(" [RecordModel.quitRecording]  sending signal to terminate rtsp_grabber thread");
 
 	self.sendSignal( 'quit', self.rtsp, self.folder + "/videos/tmp" );
+	
+	self.removeAllListeners();
 
 	this.status = STOPPING;							// didn't stop yet
 	clearInterval( this.isRecordingIntervalId );	// clears listener that checks if recording is going ok
@@ -266,7 +268,7 @@ RecordModel.prototype.setupDbusListener = function() {
 		}
 	}
 	
-	RecordModel.dbusMonitorSignal.on ("signalReceipt", function () {
+	RecordModel.dbusMonitorSignal.on("signalReceipt", function () {
 
 		var new_chunk = JSON.parse( arguments[1] );
 		new_chunk.id = new_chunk.id.trim();
@@ -294,40 +296,45 @@ RecordModel.prototype.setupDbusListener = function() {
 			});
 		}
 	});
-}
+};
 
 
 RecordModel.prototype.sendSignal = function( command, url, path ) {
 
         var id = this.stream.id;
 
-        var dbusSignal = Object.create(dbus.DBusMessage, {
-                  path: {
-                    value:     '/ffmpeg/signal/Object',
-                    writable:  true
-                  },
-                  iface: {
-                    value:     'ffmpeg.signal.Type',
-                    writable:  true
-                  },
-                  member: {
-                    value:     'rtsp',
-                    writable:  true
-                  },
-                  bus: {
-                    value:     dbus.DBUS_BUS_SYSTEM,
-                    writable:  true
-                  },
-                  variantPolicy: {
-                    value:     dbus.NDBUS_VARIANT_POLICY_DEFAULT,
-                    writable:  true
-                  },
-                  type: {
-                    value: dbus.DBUS_MESSAGE_TYPE_SIGNAL
-                  }
-        });
-
-        dbusSignal.appendArgs('svviasa{sv}',
+		if (!this.dbusSignal) {
+		// if(true) {
+			console.log('[RecordModel.sendSignal] creating dbusSignal object');
+			this.dbusSignal = Object.create(dbus.DBusMessage, {
+					  path: {
+						value:     '/ffmpeg/signal/Object',
+						writable:  true
+					  },
+					  iface: {
+						value:     'ffmpeg.signal.Type',
+						writable:  true
+					  },
+					  member: {
+						value:     'rtsp',
+						writable:  true
+					  },
+					  bus: {
+						value:     dbus.DBUS_BUS_SYSTEM,
+						writable:  true
+					  },
+					  variantPolicy: {
+						value:     dbus.NDBUS_VARIANT_POLICY_DEFAULT,
+						writable:  true
+					  },
+					  type: {
+						value: dbus.DBUS_MESSAGE_TYPE_SIGNAL
+					  }
+			});
+		}
+		
+		this.dbusSignal.clearArgs();
+        this.dbusSignal.appendArgs('svviasa{sv}',
                                 command + ' ' + id + ' ' + url + ' ' + path,
                                 'non-container variant',
                               {type:'default variant policy', value:0, mixedPropTypes:true},
@@ -337,7 +344,7 @@ RecordModel.prototype.sendSignal = function( command, url, path ) {
         //send signal on session bus
         //check signal receipt in 'test-signal-listener' process
         //or on your terminal with $dbus-monitor --session
-        dbusSignal.send();
+        this.dbusSignal.send();
 };
 
 
@@ -384,6 +391,8 @@ RecordModel.prototype.restart = function() {
 RecordModel.prototype.launchMonitor = function() {
 		
 	var self = this;
+
+	clearInterval( this.isRecordingIntervalId );
 
 	this.isRecordingIntervalId = setInterval( function() {
 

@@ -8,7 +8,6 @@ var Streamer = function( pipeFile ) {
 
 	this.sink;
 	this.pass;
-	this.fileStream;
 	this.stream;
 	this.pipeFile = pipeFile;
 	this.server;
@@ -26,37 +25,51 @@ Streamer.prototype.initServer = function() {
 
 	try {
 		console.log('[live_stream initServer] closing server if already running');
-		this.server.close();
+		if (this.server) this.server.close();
 	} catch(err) {
 		console.log('[live_stream initServer] server not running');
 	}	
 
-	this.server = net.createServer( function(socket) {
 
-		socket.on('connection', function() {
+	this.server = net.createServer( function(socket) {
+		
+		if (self.socket) {
+			console.log('[live_streamer.js] deleting socket');
+			self.socket.removeAllListeners();
+			self.socket.unpipe();
+			self.socket.destroy();
+		}
+		self.socket = socket;
+
+		self.socket.on('connection', function() {
 			console.log('[socket] new connection');
 		});
 
-		socket.on('end', function() {
-			socket.unpipe();
+		self.socket.on('end', function() {
+			try {
+				self.socket.removeAllListeners();
+				self.socket.unpipe();
+				self.socket.destroy();
+			} catch(err) {
+				console.error('[socket] no method unpipe');
+			}
 			self.pass.unpipe();
 			self.refreshStream();
 		});
 		// start the flow of data, discarding it.
-		socket.resume();
+		// self.socket.resume();
 		// self.socket = socket;
-		socket.unpipe();
-		socket.pipe( self.pass );
+		// self.socket.unpipe();
+		self.socket.pipe( self.pass );
 	});
 	
 	this.totalData = 0;
 	this.lastData = Date.now();
-	this.socket;
 
-	this.bpsInterval = setInterval( function() {
-		// console.log( self.totalData	+ " bytes/sec" );
-		self.totalData = 0;
-	}, 1000);
+	// this.bpsInterval = setInterval( function() {
+	// 	// console.log( self.totalData	+ " bytes/sec" );
+	// 	self.totalData = 0;
+	// }, 1000);
 
 	this.initSocketFile();
 };
@@ -65,8 +78,6 @@ Streamer.prototype.initServer = function() {
 Streamer.prototype.initSocketFile = function() { 
 	
 	var self = this;
-
-	clearInterval( this.socketFileChecker );
 
 	fs.exists(this.pipeFile, function(exists) {
 
@@ -82,40 +93,45 @@ Streamer.prototype.initSocketFile = function() {
 
 Streamer.prototype.stop = function() {
 
-
-	if (this.fileStream) {
-		this.fileStream.unpipe();
-	}
 	if (this.stream) {
+		console.log('[live_streamer.js : stop] deleting stream');
+		this.stream.removeAllListeners();
 		this.stream.unpipe();
+		this.stream.end();
 	}
 	if (this.pass) {
+		console.log('[live_streamer.js : stop] deleting pass');
+		this.pass.removeAllListeners();
 		this.pass.unpipe();
+		this.pass.end();
+	}
+	if (this.sink) {
+		console.log('[live_streamer.js : stop] deleting sink');
+		this.sink.removeAllListeners();
+		this.sink.end();
+	}
+	if (this.socket) {
+		console.log('[live_streamer.js : stop] deleting socket');
+		this.socket.removeAllListeners();
+		this.socket.unpipe();
+		this.socket.destroy();
 	}
 	this.server.close();
 
-	clearInterval( this.bpsInterval );
+	// clearInterval( this.bpsInterval );
 }
 
 Streamer.prototype.pipe = function(res) {
+	var self = this;
 	this.stream.pipe(res);
-	res.on('close', function() {
-		console.log('closed connection');
+	res.on('close', function() {	
+		console.log('[live_streamer.js : pipe] closed connection');
+		self.stream.unpipe(res);
 	});
 }
 
 
 Streamer.prototype.refreshStream = function() {
-
-	if (this.fileStream) {
-		this.fileStream.unpipe();
-	}
-	if (this.stream) {
-		this.stream.unpipe();
-	}
-	if (this.pass) {
-		this.pass.unpipe();
-	}
 
 	this.createSink();
 	this.createPass();
@@ -126,13 +142,20 @@ Streamer.prototype.refreshStream = function() {
 
 Streamer.prototype.createSink = function() {
 
+	if (this.sink) {
+		console.error('[sink exists] creating new sink');
+		this.sink.removeAllListeners();
+		this.sink.end();
+		delete this.skink;
+	}
+
 	this.sink = new Stream.Writable({
-		highWaterMark: '128kb'
+		// highWaterMark: '128kb'
 	});
-	this.sink.on('error', function(err) {
-		console.log('sink error');
-		console.log(err);
-	});
+	// this.sink.on('error', function(err) {
+	// 	console.log('sink error');
+	// 	console.log(err);
+	// });
 	this.sink._write = function (chunk, enc, next) {
 		next();
 	};
@@ -140,13 +163,22 @@ Streamer.prototype.createSink = function() {
 
 
 Streamer.prototype.createPass = function() {
+
+	if (this.pass) {
+		console.error('[deleting existint passthrough]');
+		this.pass.unpipe();
+		this.pass.removeAllListeners();
+		this.pass.end();
+		delete this.pass;
+	}
+
 	this.pass = new Stream.PassThrough({
-		highWaterMark: '128kb'
+		// highWaterMark: '128kb'
 	});
-	this.pass.on('error', function(err) {
-		console.log('passthrough error');
-		console.log(err);
-	});
+	// this.pass.on('error', function(err) {
+	// 	console.log('passthrough error');
+	// 	console.log(err);
+	// });
 };
 
 
@@ -159,32 +191,33 @@ Streamer.prototype.createStream = function() {
 	console.info('-- ' + self.pipeFile + '--');
 	console.info('=======================');
 
-	var timer = Date.now();
+	if (this.stream) {
+		this.stream.removeAllListeners();
+		this.stream.unpipe();
+		this.stream.end();
+		delete this.stream;
+	}
+	// var timer = Date.now();
 
 	// return;
 	this.stream = new Stream.PassThrough({
-		highWaterMark: '128kb'
+		// highWaterMark: '128kb'
 	});
 
-	this.pass.on('data', function() {
-		// console.log('...');
-		timer = Date.now();
-	});
-
-	if( !this.stream) { 
-		console.log('null stream');
-	}
+	// this.pass.on('data', function() {
+	// 	// console.log('...');
+	// 	timer = Date.now();
+	// });
 
 	try {
-		this.pass.unpipe();
-		this.stream.unpipe();
+		// this.pass.unpipe();
+		// this.stream.unpipe();
 		this.pass.pipe( self.stream ).pipe( self.sink );
 		// this.pass.pipe( self.stream );
 	} catch(err) {
-		console.log('piping error');
+		console.error('[live_stream.js] piping error');
 		console.error( err );
 	}
-
 };
 
 module.exports = Streamer;

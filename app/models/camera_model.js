@@ -133,9 +133,9 @@ Camera.prototype.addStream = function( stream, cb ) {
 			stream.recordModel = new RecordModel( self, stream, function(recorder){
     			var folder = self.videosFolder + '/' + stream.id;
 				stream.streamer = new Streamer(folder + '/videos/pipe.ts');
-				stream.streamer.on('restart_socket', function() {
-					recorder.restart();
-				}); 
+				// stream.streamer.on('restart_socket', function() {
+				// 	recorder.restart();
+				// }); 
 
 				if ( self.shouldBeRecording() ) {
 					recorder.startRecording();
@@ -368,6 +368,10 @@ Camera.prototype.startMotionDetection = function() {
 	var self = this;
 
 	this.api.startListeningForMotionDetection( function(timestamp, data) {
+		
+		if (!data) {
+			return;
+		}
 
 		var motion_data = data;
 		motion_data.id = self._id;

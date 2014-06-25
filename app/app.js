@@ -391,9 +391,6 @@ portChecker.check(8080, function(err, found) {
 	require('./controllers/health.js')( io );
 	// - - -
 
-	io.on('connection', function(socket) {
-		
-	});
 
 	// - - - -
 	// socket.io broadcasts setup

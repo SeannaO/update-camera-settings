@@ -46,7 +46,8 @@ SensorsInfo.prototype.requestNewData = function() {
 	}
 
 	request( url, {
-				strictSSL: false
+				strictSSL: false,
+				timeout:  5000
 			}, 
 			function (error, response, body) {
 				if (!error && response.statusCode == 200) {

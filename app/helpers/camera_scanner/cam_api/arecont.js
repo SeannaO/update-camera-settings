@@ -186,8 +186,9 @@ Arecont.prototype.getParam = function(name, cb){
 			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
 			'Authorization': 'Basic ' + digest
 		},
+		timeout: 5000
 	}, function( error, response, body) {
-		
+			digest = null;	
 			if (!error && body) {
 				var ele = body.toString().split("=");
 				if (ele[1] && ele[1].length > 0){
@@ -264,14 +265,16 @@ Arecont.prototype.setupMotionDetection = function(){
 	setMotionParams({enabled: true});
 };
 
-Arecont.prototype.startListeningForMotionDetection = function(cb){
+Arecont.prototype.startListeningForMotionDetection = function(cb){	
 	var self = this;
 	
+	clearInterval(self.process_id);
+
 	self.process_id = setInterval(function(){
 		self.getParam('mdresult',function(error, result){
 			if (error){
-				console.error("[arecont] motion: " + error);
-			}else if (result && result !== 'no motion'){
+				cb('no motion');
+			} else if (result && result !== 'no motion'){
 				var timestamp = Date.now()
 				var motion_arr = result.trim().split(" ");
 				var motion_mat = [], i, k;
@@ -289,10 +292,10 @@ Arecont.prototype.startListeningForMotionDetection = function(cb){
 				//cb(timestamp, {sum: motion_sum, data:motion_mat});
 				cb(timestamp, {value: motion_sum});
 			}else{
-				//cb('no motion'); -- only callback when there's motion
+				cb('no motion');// -- only callback when there's motion
 			}
 		});
-	},100);
+	}, 500);
 };
 
 Arecont.prototype.stopListeningForMotionDetection = function(){
