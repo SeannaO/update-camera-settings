@@ -1,7 +1,7 @@
 var Stream = require('stream');
 var fs = require('fs');
 var net = require('net');
-var events = require('events');
+// var events = require('events');
 var util = require('util');
 
 var Streamer = function( pipeFile ) {
@@ -17,7 +17,7 @@ var Streamer = function( pipeFile ) {
 	this.bitrate = 0;
 };
 
-util.inherits(Streamer, events.EventEmitter);
+// util.inherits(Streamer, events.EventEmitter);
 
 Streamer.prototype.initServer = function() {
 
@@ -57,7 +57,7 @@ Streamer.prototype.initServer = function() {
 			self.refreshStream();
 		});
 		// start the flow of data, discarding it.
-		// self.socket.resume();
+		self.socket.resume();
 		// self.socket = socket;
 		// self.socket.unpipe();
 		self.socket.pipe( self.pass );
