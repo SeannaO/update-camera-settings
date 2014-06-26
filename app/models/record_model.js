@@ -172,6 +172,7 @@ RecordModel.prototype.quitRecording = function() {
 	self.sendSignal( 'quit', self.rtsp, self.folder + "/videos/tmp" );
 	
 	self.removeAllListeners();
+	RecordModel.dbusMonitorSignal.removeListener( 'signalReceipt', self.receiveSignalCallback );
 
 	this.status = STOPPING;							// didn't stop yet
 	clearInterval( this.isRecordingIntervalId );	// clears listener that checks if recording is going ok
@@ -267,37 +268,50 @@ RecordModel.prototype.setupDbusListener = function() {
 			console.log( e );
 		}
 	}
-	
-	RecordModel.dbusMonitorSignal.on("signalReceipt", function () {
 
-		var new_chunk = JSON.parse( arguments[1] );
-		new_chunk.id = new_chunk.id.trim();
+	if (!self.receiveSignalCallback) {
+		self.receiveSignalCallback = self.receiveSignal.bind(self);
+	}
 
-		if ( new_chunk.id === self.stream.id ) { // && self.lastIdReceived != parseInt( new_chunk.file_id) ) {
-
-			self.lastIdReceived = parseInt( new_chunk.file_id );
-
-			video = {
-				cam:     self.camId,
-				cam_name: self.camera.cameraName(),
-				stream:  self.stream.id,         // appends stream id to the chunk
-				start:   new_chunk.start_time * 1000,
-				end:     ( Math.round(1000*new_chunk.start_time) + Math.round(1000*new_chunk.duration_secs ) ),
-				file:    new_chunk.file_id + '.ts'
-			};
-
-			self.status = RECORDING;
-			self.lastChunkTime = Date.now();
-
-			self.emit('camera_status', {status: 'online', stream_id: self.stream.id});
-
-			self.moveFile( video, function( err, v ) {
-				if ( !err ) self.emit( 'new_chunk', v );
-			});
-		}
-	});
+	RecordModel.dbusMonitorSignal.on("signalReceipt", self.receiveSignalCallback);
 };
 
+
+RecordModel.prototype.receiveSignal = function( msg_info, args ) {
+
+	var self = this;
+
+
+	// var new_chunk = JSON.parse( arguments[1] );
+	var new_chunk = JSON.parse( args );
+	new_chunk.id = new_chunk.id.trim();
+	
+
+	if ( new_chunk.id === self.stream.id ) { // && self.lastIdReceived != parseInt( new_chunk.file_id) ) {
+
+		self.lastIdReceived = parseInt( new_chunk.file_id );
+
+		video = {
+			cam:     self.camId,
+			cam_name: self.camera.cameraName(),
+			stream:  self.stream.id,         // appends stream id to the chunk
+			start:   new_chunk.start_time * 1000,
+			end:     ( Math.round(1000*new_chunk.start_time) + Math.round(1000*new_chunk.duration_secs ) ),
+			file:    new_chunk.file_id + '.ts'
+		};
+
+		self.status = RECORDING;
+
+		self.moveFile( video, function( err, v ) {
+			if ( !err ) {
+				self.lastChunkTime = Date.now();
+
+				self.emit('camera_status', {status: 'online', stream_id: self.stream.id});
+				self.emit( 'new_chunk', v );
+			}
+		});
+	}
+};
 
 RecordModel.prototype.sendSignal = function( command, url, path ) {
 
