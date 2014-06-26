@@ -173,6 +173,7 @@ RecordModel.prototype.quitRecording = function() {
 	
 	self.removeAllListeners();
 	RecordModel.dbusMonitorSignal.removeListener( 'signalReceipt', self.receiveSignalCallback );
+	self.dbusSignal.removeAllListeners();
 
 	this.status = STOPPING;							// didn't stop yet
 	clearInterval( this.isRecordingIntervalId );	// clears listener that checks if recording is going ok
@@ -316,6 +317,11 @@ RecordModel.prototype.receiveSignal = function( msg_info, args ) {
 RecordModel.prototype.sendSignal = function( command, url, path ) {
 
         var id = this.stream.id;
+
+		if (!id || !url || !path) {
+			console.error('[sendSignal]  empty arguments');
+			return;
+		}
 
 		if (!this.dbusSignal) {
 		// if(true) {
