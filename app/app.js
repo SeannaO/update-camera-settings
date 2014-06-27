@@ -3,6 +3,7 @@
 var winston           = require('winston');
 var express           = require('express');                          // express
 var request           = require('request');                          // request
+var moment            = require('moment');
 var tsHandler         = require('./helpers/ts');                     // ts abstraction
 var hlsHandler        = require('./controllers/hls_controller');     // hls abstraction
 var mp4Handler        = require('./controllers/mp4_controller');     // mp4 abstraction
@@ -423,6 +424,15 @@ portChecker.check(8080, function(err, found) {
 		}
 		io.sockets.emit( 'cameraStatus', data );
 	});
+	
+	setInterval( function() {
+		var unixTime = Date.now();
+		var time = moment().format('HH:mm:ss');
+		io.sockets.emit( 'time', {
+			unix: unixTime,
+			string: time
+		});
+	}, 1000);
 	// end of socket.io broadcasts setup
 	// - - -
 

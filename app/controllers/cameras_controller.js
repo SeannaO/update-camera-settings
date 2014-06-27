@@ -152,9 +152,13 @@ CamerasController.prototype.listVideosByCamera = function( camId, streamId, star
     var cam = self.findCameraById( camId ).cam;    
 
     if (!cam) {
-        cb("camera not found");
+        cb('camera ' + camId + ' not found');
         return;
     }
+	if (!cam.streams[streamId]) {
+		cb('stream ' + streamId + ' of camera ' + camId + ' not found');
+		return;
+	}
 
     start = parseInt( start, 10 );
     end   = parseInt( end, 10 );
