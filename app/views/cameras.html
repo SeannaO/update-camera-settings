@@ -4,7 +4,7 @@
         <script src = "/js/jquery-ui.min.js"></script>
         <script src = "/js/jquery-serialize-object.js"></script>
 
-
+        <link rel="shortcut icon" type="image/x-icon" href="/img/favicon.ico" />
         <link rel="stylesheet" href="/css/bootstrap.min.css">
         <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
         <link rel="stylesheet" href="/css/camera.css">
@@ -89,11 +89,14 @@
                             <dd class="model"></dd>
                     </div>
                     <div class="info-item">
-                        <dt>Version:</dt>
+                        <dt>Firmware Version:</dt>
                             <dd class="version"></dd>
                     </div>
+                    <div class="info-item">
+                        <dt>Version:</dt>
+                            <dd>1.0</dd>
+                    </div>                    
                 </dl>
-
                 <h1 class="title">Loading...</h1>
             </div>
 
@@ -121,7 +124,7 @@
                         <label for="scanner-subnet">subnet</label>
                         <input name="scanner[subnet]" type="text" id="camera-subnet" class="input-sm form-control" placeholder="192.168.1">
 
-                    </div>
+                    </div>V
                     <button id="close-subnet-field" type="button" class="btn btn-xs btn-default">close</button>
                     <button id="reset-subnet-field" type="button" class="btn btn-xs btn-info">reset</button>
                     <button id="start-camera-scanner" class="btn btn-xs btn-success" type="button">go</button>
@@ -616,6 +619,9 @@
             // - - -
 
         </script>
+        <div class="footer">
+            <img class="logo" src="/img/solink-logo-Scaled21.png"></img>
+        </div>
     </body>
 
 </html>

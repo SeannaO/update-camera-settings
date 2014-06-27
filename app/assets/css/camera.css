@@ -9,6 +9,11 @@ body {
 	right:15px;
 }
 
+.logo{
+	display:block;
+	margin: 0 auto 20px auto;
+}
+
 #header{
 	/*height:105px;*/
 }
