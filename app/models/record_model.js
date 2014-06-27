@@ -170,6 +170,10 @@ RecordModel.prototype.quitRecording = function() {
 	console.log(" [RecordModel.quitRecording]  sending signal to terminate rtsp_grabber thread");
 
 	self.sendSignal( 'quit', self.rtsp, self.folder + "/videos/tmp" );
+	
+	self.removeAllListeners();
+	RecordModel.dbusMonitorSignal.removeListener( 'signalReceipt', self.receiveSignalCallback );
+	self.dbusSignal.removeAllListeners();
 
 	this.status = STOPPING;							// didn't stop yet
 	clearInterval( this.isRecordingIntervalId );	// clears listener that checks if recording is going ok
@@ -265,69 +269,92 @@ RecordModel.prototype.setupDbusListener = function() {
 			console.log( e );
 		}
 	}
+
+	if (!self.receiveSignalCallback) {
+		self.receiveSignalCallback = self.receiveSignal.bind(self);
+	}
+
+	RecordModel.dbusMonitorSignal.on("signalReceipt", self.receiveSignalCallback);
+};
+
+
+RecordModel.prototype.receiveSignal = function( msg_info, args ) {
+
+	var self = this;
+
+
+	// var new_chunk = JSON.parse( arguments[1] );
+	var new_chunk = JSON.parse( args );
+	new_chunk.id = new_chunk.id.trim();
 	
-	RecordModel.dbusMonitorSignal.on ("signalReceipt", function () {
 
-		var new_chunk = JSON.parse( arguments[1] );
-		new_chunk.id = new_chunk.id.trim();
+	if ( new_chunk.id === self.stream.id ) { // && self.lastIdReceived != parseInt( new_chunk.file_id) ) {
 
-		if ( new_chunk.id === self.stream.id ) { // && self.lastIdReceived != parseInt( new_chunk.file_id) ) {
+		self.lastIdReceived = parseInt( new_chunk.file_id );
 
-			self.lastIdReceived = parseInt( new_chunk.file_id );
+		video = {
+			cam:     self.camId,
+			cam_name: self.camera.cameraName(),
+			stream:  self.stream.id,         // appends stream id to the chunk
+			start:   new_chunk.start_time * 1000,
+			end:     ( Math.round(1000*new_chunk.start_time) + Math.round(1000*new_chunk.duration_secs ) ),
+			file:    new_chunk.file_id + '.ts'
+		};
 
-			video = {
-				cam:     self.camId,
-				cam_name: self.camera.cameraName(),
-				stream:  self.stream.id,         // appends stream id to the chunk
-				start:   new_chunk.start_time * 1000,
-				end:     ( Math.round(1000*new_chunk.start_time) + Math.round(1000*new_chunk.duration_secs ) ),
-				file:    new_chunk.file_id + '.ts'
-			};
+		self.status = RECORDING;
 
-			self.status = RECORDING;
-			self.lastChunkTime = Date.now();
+		self.moveFile( video, function( err, v ) {
+			if ( !err ) {
+				self.lastChunkTime = Date.now();
 
-			self.emit('camera_status', {status: 'online', stream_id: self.stream.id});
-
-			self.moveFile( video, function( err, v ) {
-				if ( !err ) self.emit( 'new_chunk', v );
-			});
-		}
-	});
-}
-
+				self.emit('camera_status', {status: 'online', stream_id: self.stream.id});
+				self.emit( 'new_chunk', v );
+			}
+		});
+	}
+};
 
 RecordModel.prototype.sendSignal = function( command, url, path ) {
 
         var id = this.stream.id;
 
-        var dbusSignal = Object.create(dbus.DBusMessage, {
-                  path: {
-                    value:     '/ffmpeg/signal/Object',
-                    writable:  true
-                  },
-                  iface: {
-                    value:     'ffmpeg.signal.Type',
-                    writable:  true
-                  },
-                  member: {
-                    value:     'rtsp',
-                    writable:  true
-                  },
-                  bus: {
-                    value:     dbus.DBUS_BUS_SYSTEM,
-                    writable:  true
-                  },
-                  variantPolicy: {
-                    value:     dbus.NDBUS_VARIANT_POLICY_DEFAULT,
-                    writable:  true
-                  },
-                  type: {
-                    value: dbus.DBUS_MESSAGE_TYPE_SIGNAL
-                  }
-        });
+		if (!id || !url || !path) {
+			console.error('[sendSignal]  empty arguments');
+			return;
+		}
 
-        dbusSignal.appendArgs('svviasa{sv}',
+		if (!this.dbusSignal) {
+		// if(true) {
+			console.log('[RecordModel.sendSignal] creating dbusSignal object');
+			this.dbusSignal = Object.create(dbus.DBusMessage, {
+					  path: {
+						value:     '/ffmpeg/signal/Object',
+						writable:  true
+					  },
+					  iface: {
+						value:     'ffmpeg.signal.Type',
+						writable:  true
+					  },
+					  member: {
+						value:     'rtsp',
+						writable:  true
+					  },
+					  bus: {
+						value:     dbus.DBUS_BUS_SYSTEM,
+						writable:  true
+					  },
+					  variantPolicy: {
+						value:     dbus.NDBUS_VARIANT_POLICY_DEFAULT,
+						writable:  true
+					  },
+					  type: {
+						value: dbus.DBUS_MESSAGE_TYPE_SIGNAL
+					  }
+			});
+		}
+		
+		this.dbusSignal.clearArgs();
+        this.dbusSignal.appendArgs('svviasa{sv}',
                                 command + ' ' + id + ' ' + url + ' ' + path,
                                 'non-container variant',
                               {type:'default variant policy', value:0, mixedPropTypes:true},
@@ -337,7 +364,7 @@ RecordModel.prototype.sendSignal = function( command, url, path ) {
         //send signal on session bus
         //check signal receipt in 'test-signal-listener' process
         //or on your terminal with $dbus-monitor --session
-        dbusSignal.send();
+        this.dbusSignal.send();
 };
 
 
@@ -384,6 +411,8 @@ RecordModel.prototype.restart = function() {
 RecordModel.prototype.launchMonitor = function() {
 		
 	var self = this;
+
+	clearInterval( this.isRecordingIntervalId );
 
 	this.isRecordingIntervalId = setInterval( function() {
 

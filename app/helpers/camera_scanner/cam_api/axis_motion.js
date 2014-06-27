@@ -396,6 +396,11 @@ var recreateRecipient = function( cam_ip, username, password, cb ) {
 
 	getRecipientConfigurations(cam_ip, username, password, function( err, response, body ) {
 
+		if (err || !body) {
+			console.error('[axis_motion.js / recreateRecipient] : empty body | ' + err);
+			cb(err + ' | empty body', res, null);
+		}
+
 		var names = parseXml(body, 'Name', 0, body.length);
 		var ids = parseXml(body, 'ConfigurationID', 0, body.length);
 		
@@ -429,6 +434,12 @@ var recreateRecipient = function( cam_ip, username, password, cb ) {
 var recreateActionConfigandRule = function( cam_ip, username, password, cb ) {
 
 	getActionRules(cam_ip, username, password, function( err, response, body ) {
+
+		if (err || !body) {
+			console.error('[axis_motion.js / recreateActionConfigandRule] : empty body | ' + err);
+			cb(err + ' | empty body');
+			return;
+		}
 
 		var names = parseXml(body, 'Name', 0, body.length);
 		var ids = parseXml(body, 'RuleID', 0, body.length);

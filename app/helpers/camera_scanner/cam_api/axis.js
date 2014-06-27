@@ -23,6 +23,12 @@ var Axis = function() {
 	this.cam = {};
 };
 
+if (Axis.server) {
+	console.log('[Axis.js]  destroying Axis.server');
+	Axis.server.close();
+	Axis.server.destroy();
+}
+
 Axis.server = net.createServer(function(socket) { 
 });
 Axis.server.listen(8001, function() { 
@@ -202,20 +208,18 @@ Axis.prototype.updateProfile = function(profileId, profile, cb) {
 };
 
 
-
-
-Axis.prototype.getRtspUrl = function ( profile ) {
+Axis.prototype.createProfile = function( profile ) {
 
 	var self = this;
 
+	console.log('[Axis.createProfile] checking for existing profiles');
+
 	if ( !profile ) {
-		console.error('[Axis.getRtspUrl] ERROR - empty profile');
+		console.error('[Axis.createProfile] ERROR - empty profile');
 		return;
 	}
 
 	profile.name = 'solink';
-
-	// console.log('[Axis.getRtspUrl] checking for existing profiles');
 
 	self.checkForExistingProfile( profile.name, function( profileId ) {
 		// console.log('[Axis.getRtspUrl] profile id: ' + profileId);
@@ -235,6 +239,21 @@ Axis.prototype.getRtspUrl = function ( profile ) {
 			});
 		}
 	});
+};
+
+
+Axis.prototype.getRtspUrl = function ( profile ) {
+
+	var self = this;
+
+	if ( !profile ) {
+		console.error('[Axis.getRtspUrl] ERROR - empty profile');
+		return;
+	}
+
+	profile.name = 'solink';
+
+	self.createProfile( profile );
 
 	return rtspUrl
 		.replace('{user}', self.cam.user || '')

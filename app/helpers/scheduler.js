@@ -4,13 +4,14 @@ function Scheduler( interval ) {
 
     // var self = this;
     // If it is a number greater than 0 otherwise 10000
-    this.interval = typeof interval !== 'undefined' ? interval : 10000;
+    this.interval = typeof interval !== 'undefined' ? interval : 5000;
     this.processes = {};
-}
+};
 
 
 
 Scheduler.prototype.launchForAllCameras = function( cameras , cb) {
+	
     for (var i = 0; i < cameras.length; i++) {
         this.launchForCamera(cameras[i]);
     }
@@ -19,23 +20,22 @@ Scheduler.prototype.launchForAllCameras = function( cameras , cb) {
 
 Scheduler.prototype.launchForCamera = function( camera ) {
 
+	var timer = Date.now();
+
     if ( !(camera._id in this.processes)){
 
         // console.log("Launching Scheduler for camera:" + camera.name);
         this.processes[camera._id] = setInterval( function(){
-
-            // console.log("Checking Schedule for camera:" + camera.name);
             // self.emit("recording", { cameraId: camera._id, scheduled: schedule.isOpen() }))
             if (!camera.isRecording() && camera.shouldBeRecording()){
-				console.log("[scheduler]  Starting camera:" + camera.name);
+				console.log("[scheduler]  Starting camera: " + camera.name);
                 camera.startRecording();
 
             } else if (camera.isRecording() && !camera.shouldBeRecording() && !camera.api.motion_enabled){
-
-                console.log("[schduler]  Stopping camera:" + camera.name);
+                console.log("[scheduler]  Stopping camera: " + camera.name);
                 camera.stopRecording();
             }
-        }, 10000);        
+        }, 5000);        
     }
 };
 
@@ -66,18 +66,16 @@ Scheduler.prototype.setupListeners = function( emitter ) {
 
 	emitter.on('create', function(camera) {
 		console.log("[scheduler.js]  camera created calling launchForCamera on scheduler");
-
 		scheduler.launchForCamera(camera);
 	});
 
 	emitter.on('delete', function(camera) {
-		// console.log("camera deleted, removing scheduler");
+		console.log("[scheduler.js]  camera deleted, removing scheduler");
 		scheduler.clearForCamera(camera);
 	});
 
 	emitter.on('schedule_update', function(camera) {
 		console.log("[scheduler.js]  camera scheduler updated, relaunching scheduler");
-		
 		scheduler.clearForCamera(camera);
 		scheduler.launchForCamera(camera);
 	});

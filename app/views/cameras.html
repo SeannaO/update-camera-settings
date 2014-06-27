@@ -34,7 +34,11 @@
 			// toastr.info("Scheduled successfully updated");
 					
             var socket = io.connect();
-
+			
+			socket.on('time', function(data) {
+				console.log(data);
+				$("#device-time").html(data.string);
+			});
 
             socket.on('motion', function(data){
 				for (var i in cameras) {
@@ -92,13 +96,21 @@
                         <dt>Firmware Version:</dt>
                             <dd class="version"></dd>
                     </div>
+					<div class="info-item .device-time">
+						<dt>Device time:</dt>
+						<dd id="device-time"></dd>
+					</div>
                     <div class="info-item">
                         <dt>Version:</dt>
                             <dd>1.0</dd>
                     </div>                    
                 </dl>
+
                 <h1 class="title">Loading...</h1>
+
             </div>
+
+			<br>
 
             <div style ="position:relative;">
                 <span id="storage-info"></span>
@@ -124,7 +136,7 @@
                         <label for="scanner-subnet">subnet</label>
                         <input name="scanner[subnet]" type="text" id="camera-subnet" class="input-sm form-control" placeholder="192.168.1">
 
-                    </div>V
+                    </div>
                     <button id="close-subnet-field" type="button" class="btn btn-xs btn-default">close</button>
                     <button id="reset-subnet-field" type="button" class="btn btn-xs btn-info">reset</button>
                     <button id="start-camera-scanner" class="btn btn-xs btn-success" type="button">go</button>
