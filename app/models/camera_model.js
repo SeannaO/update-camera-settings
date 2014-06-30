@@ -980,7 +980,7 @@ Camera.prototype.startRecording = function() {
     var self = this;
 
     if (this.recording) {	// avoids calling startRecording twice
-        console.log( (this.name || this.ip) + " is already recording.");
+        console.error( (this.name || this.ip) + " is already recording.");
     } else {
         console.log("* * * " + (this.name || this.ip) + " will start recording...");
 		for (var i in self.streams) {
@@ -1008,7 +1008,7 @@ Camera.prototype.stopRecording = function() {
 			this.streams[i].recordModel.stopRecording();
 		}
     } else { 
-        console.log( (this.name || this.ip) + " is already stopped.");
+        console.error( (this.name || this.ip) + " has already stopped.");
     }
 };
 // stopRecording

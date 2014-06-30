@@ -57,7 +57,7 @@ Streamer.prototype.initServer = function() {
 			self.refreshStream();
 		});
 		// start the flow of data, discarding it.
-		self.socket.resume();
+		// self.socket.resume();
 		// self.socket = socket;
 		// self.socket.unpipe();
 		self.socket.pipe( self.pass );

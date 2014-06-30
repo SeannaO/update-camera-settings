@@ -440,7 +440,7 @@ portChecker.check(8080, function(err, found) {
 	// - - - -
 	// scheduler setup
 	var Scheduler = require('./helpers/scheduler.js');
-	var scheduler = new Scheduler(10000);
+	var scheduler = new Scheduler(5000);
 	setTimeout(function(){
 		scheduler.launchForAllCameras(camerasController.getCameras());
 	}, 10000);

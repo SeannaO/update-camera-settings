@@ -36,7 +36,6 @@
             var socket = io.connect();
 			
 			socket.on('time', function(data) {
-				console.log(data);
 				$("#device-time").html(data.string);
 			});
 

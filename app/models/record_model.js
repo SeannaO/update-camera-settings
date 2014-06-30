@@ -11,7 +11,8 @@ var dbus         = require('node-dbus');
 var RECORDING = 2,
     STOPPING  = 1,
     STOPPED   = 0,
-    ERROR     = -1;
+    ERROR     = -1,
+	CREATED   = 3;
 
 function RecordModel( camera, stream, cb) {
 
@@ -22,7 +23,7 @@ function RecordModel( camera, stream, cb) {
     this.lastChunkTime = 0;                  // last time a new chunk was recorded
     this.lastErrorTime = 0;                  // last time ffmpeg threw an error
 
-    this.status = ERROR;                     // starts as an error until we actually have a chunk
+    this.status = CREATED;                     // starts as CREATED  until we actually have a chunk
 
     this.camera = camera;
     this.camId  = camera._id;
@@ -301,6 +302,10 @@ RecordModel.prototype.receiveSignal = function( msg_info, args ) {
 			file:    new_chunk.file_id + '.ts'
 		};
 
+		if (self.status != RECORDING) {
+			self.emit('camera_status', {status: 'connected', stream_id: self.stream.id});
+		}
+
 		self.status = RECORDING;
 
 		self.moveFile( video, function( err, v ) {
@@ -376,7 +381,7 @@ RecordModel.prototype.startRecording = function() {
 	console.log('[RecordModel]  startRecording');
 
     var self = this;
-	if (this.status === RECORDING) {
+	if (this.status === RECORDING || this.status === ERROR) {
 													// avoids start recording twice,
 													// which would launch multiple watchers,
 													// which in turn would cause multiple events 
