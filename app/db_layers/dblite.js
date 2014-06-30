@@ -239,7 +239,7 @@ Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
     var query = 'SELECT start, end, file FROM videos WHERE start BETWEEN '+t0+' AND '+t1+' ORDER BY start ASC';
     //var query = 'SELECT start, end, file FROM videos WHERE start <= ' + startTime + ' AND end >= ' + startTime + ' ORDER BY start ASC';
 
-	console.error( 'searchVideoByTime : ' + query);
+	// console.error( 'searchVideoByTime : ' + query);
 
     var fileList = this.db.query( 
 			query, 
