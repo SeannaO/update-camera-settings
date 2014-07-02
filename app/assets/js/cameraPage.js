@@ -68,29 +68,20 @@ CameraPage.prototype.setupEvents = function() {
 			self.buttons.toggleMotion.html('show motion');
 		}
 	});
+
+	$(window).on('switch_to_archive', function(e, d) {
+		if (self.mode === 'live') {
+			self.switchToArchive();
+		}
+	});
 };
 
 
 CameraPage.prototype.switchToArchive = function() {
 
 	self.mode = 'archive';
-	var dateInput = this.inputs.date;
-	var begin_date = dateInput.val();
-	if (!begin_date) return;
-	
-	begin_date = new Date( begin_date );
-	var end_date = new Date(begin_date);
-
-	end_date.setHours(23);
-	end_date.setMinutes(59);
-	end_date.setSeconds(59);
-
-	begin_date = Date.parse( begin_date );
-	end_date   = Date.parse( end_date );
-
-	self.streamId = self.inputs.streams.val();
-	self.player.playVideo( self.camId, self.streamId, begin_date, end_date );
-	// self.play( begin_date, end_date );
+	var dateInput = this.inputs.date.pickadate('picker');
+	dateInput.set( 'select', Date.now() );
 }
 
 CameraPage.prototype.setupTimeline = function() {
@@ -234,10 +225,14 @@ CameraPage.prototype.setupButtons = function() {
 	this.buttons.livestream.click(function() {
 		var stream = self.inputs.streams.val();
 		if (!stream) {
-
+			console.log('[livestream] no stream selected');
+			// return;
 		}
 		self.mode = 'live';
+		self.inputs.date.val('');
+		self.timeline.liveOverlay.fadeIn();
 		self.player.playVideo( self.camId, stream );
+
 	});
 
 
@@ -299,10 +294,12 @@ CameraPage.prototype.play = function( begin, end ) {
 
 	self.mode = 'archive';
 
+	$('.liveOverlay').fadeOut();
+
 	this.timeline.load( begin, end, function() {
 		self.player.playVideo( self.camId, self.streamId, begin, end );
-		$('.timelineOverlay').fadeOut(function() {
-			$('.timelineOverlay').remove();
+		$('.loadingOverlay').fadeOut(function() {
+			// $('.loadingOverlay').remove();
 		});
 
 		self.buttons.toggleMotion.fadeIn();

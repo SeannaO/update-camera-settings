@@ -30,15 +30,20 @@ var Timeline = function( el, options ) {
 	this.indexer = new Indexer();
 	this.zoomHistory = [];
 
-	this.thumb       = $('#thumb');
-	this.thumbImg    = $('#thumb img');
-	this.marker      = $('#marker');
+	this.thumb    = $('#thumb');
+	this.thumbImg = $('#thumb img');
+	this.marker   = $('#marker');
 
 	this.timelineSelectorEl = $("#timeline-selector");
 	this.timelineSelector   = new TimelineSelector("#timeline-selector");
 
+	this.liveOverlay = $('<div>', {
+			class:'liveOverlay timelineOverlay',
+			html:'showing live stream... click here or select a date to play archived video'
+		}).hide().appendTo(el);
+
 	this.overlay = $('<div>', {
-			class:'timelineOverlay csspinner line back-and-forth no-overlay',
+			class:'loadingOverlay timelineOverlay csspinner line back-and-forth no-overlay',
 			html:'loading...'
 		}).hide().appendTo(el);
 
@@ -110,6 +115,9 @@ Timeline.prototype.setupEvents = function() {
 		var dt                 = ( absolute_time - self.begin )/1000.0;
 		var pos                = dt * (1.0 * timelineWidth) / totalTime;
 
+		var formattedCurrTime = new Date(absolute_time);
+		$("#curr-time").html(formattedCurrTime);
+
 		self.marker.css("left", pos);
 
 		if ( parseInt(self.marker.css('left')) > timelineWidth*1.05 ) {
@@ -119,6 +127,9 @@ Timeline.prototype.setupEvents = function() {
 		}
 	});
 
+	this.liveOverlay.click( function() {
+		$(window).trigger('switch_to_archive');
+	});
 
 	this.el.mousedown( function(e) {
 		var x = e.pageX - self.timelineSelectorEl.parent().offset().left;//left;

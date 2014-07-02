@@ -12,7 +12,7 @@ function Player( el ) {
 	}).appendTo(el);
 
 	
-	this.layers.nativePlayer = $("<video controls autoplay class='player-layer'>", {
+	this.layers.nativePlayer = $("<video autoplay class='player-layer'>", {
 		id:      'native-player'
 	}).appendTo(el);
 	
@@ -101,20 +101,21 @@ Player.prototype.launchStrobePlayer = function( options ) {
 	var height = options.height || '100%';
 
 	var parameters = {
-		src:                         options.url,
-		autoPlay:                    options.autoplay,
-		verbose:                     true,
-		controlBarAutoHide:          "true",
-		controlBarPosition:          "bottom",
-		poster:                      "",
-		plugin_hls:                  "/swf/HLSDynamicPlugin.swf",
-		javascriptCallbackFunction:  "window.onJavaScriptBridgeCreated",
-		bufferTime: 0.1,
-		dvrBufferTime: 0.1,
-		initialBufferTime: 0.1,
-		dvrDynamicStreamingBufferTime: 0.1,
-		liveBufferTime: 0.1,
-		liveDynamicStreamingBufferTime: 0.1
+		src:                             options.url,
+		autoPlay:                        options.autoplay,
+		verbose:                         true,
+		controlBarMode:                  "none",
+		// controlBarAutoHide:           "true",
+		// controlBarPosition:           "bottom",
+		poster:                          "",
+		plugin_hls:                      "/swf/HLSDynamicPlugin.swf",
+		javascriptCallbackFunction:      "window.onJavaScriptBridgeCreated",
+		bufferTime:                      0.1,
+		dvrBufferTime:                   0.1,
+		initialBufferTime:               0.1,
+		dvrDynamicStreamingBufferTime:   0.1,
+		liveBufferTime:                  0.1,
+		liveDynamicStreamingBufferTime:  0.1
 	};
 
 	var wmodeValue = "direct";
