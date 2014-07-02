@@ -506,7 +506,11 @@
                             $("#camera-item-" + camera_id + " .motion .status").removeClass("gray green red").addClass("green");
                         }
                         if (cb){ cb(data);}
-                    }
+					}, 
+					error: function(data) {
+						console.log('motion error');
+						console.log(data);
+					}
                 });
             }
 

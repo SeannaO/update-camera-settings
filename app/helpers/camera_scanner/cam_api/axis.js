@@ -280,7 +280,7 @@ Axis.prototype.setCameraParams = function(params) {
 Axis.prototype.setMotionParams = function(params, cb){
 
 	var self = this;
-	self.motion_enabled = params.enabled;
+	// self.motion_enabled = params.enabled;
 
 	if (!params.enabled) {
 		cb();
@@ -298,6 +298,8 @@ Axis.prototype.setMotionParams = function(params, cb){
 	axis_motion.configureMotion( self.cam.ip, self.cam.user, self.cam.password, self.cam.id, motion_params, function( err ) {
 		if (err) { 
 			console.error( '[Axis.setMotionParams] error: ' + err );
+		} else {
+			self.motion_enabled = params.enabled;
 		}
 		if (cb) cb( err );
 	});

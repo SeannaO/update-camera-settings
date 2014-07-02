@@ -534,10 +534,16 @@ var updateMotion = function(id, cb) {
         type: "PUT",
         url: "/cameras/" + id + "/motion",
         data: JSON.stringify( params ),
+		dataType: "json",
         contentType: 'application/json',
         success: function(data) {
+			data = $.parseJSON(data.responseText);
             cb( data );
-        }
+        },
+		error: function(data) {
+			data = $.parseJSON(data.responseText);
+			cb( data );
+		}
     });
 };
 
@@ -633,7 +639,6 @@ var editCamera = function(camId) {
                         }
                     });
                 });
-				// debugger;
                 getCameraOptions(function(data){
 					if (!data) {
 						removeStreamFieldOverlay();
@@ -1295,8 +1300,8 @@ var cameraMotion = function(camId) {
                 $("#update-motion").click( function() {
 					
 					addOverlayToPage('updating motion...');
-
                     updateMotion( camId, function(data) {
+
                         if (data.success) {
 							removeOverlayFromPage( function() {
 								location.reload();
@@ -1304,7 +1309,8 @@ var cameraMotion = function(camId) {
 							});
                         } else {
 							removeOverlayFromPage( function() {
-								alert(data.error);
+								$('#camera-motion-enable').prop('checked', false);
+								toastr.error(data.error);
 							});
                         }
                     });
@@ -1315,7 +1321,7 @@ var cameraMotion = function(camId) {
             }
         },
 		error: function( data ) {
-			console.log(data);
+			console.log('motion error: ' + data);
 		}
     });
 };
