@@ -416,6 +416,7 @@ var getCameraOptions = function(cb) {
 		url: "/camera_options.json",
 		data: {camera:{username:username, password:password, manufacturer:manufacturer, ip:ip}},
 		contentType: 'application/json',
+		timeout: 30000,
 		success: function(data) {
 			// console.log('getCameraOptions got success');
 			if (data && data.resolutions && $.isArray(data.resolutions) && data.resolutions.length > 0){
@@ -424,9 +425,12 @@ var getCameraOptions = function(cb) {
 				cb( null );
 			}
 		},
-		error: function( data ) {
-			// console.log('getCameraOptions got error');
-			console.log(data);
+		error: function( data, t ) {
+			if (t === 'timeout') {
+				toastr.error('camera is timing out');
+			} else if (data.error) {
+				toastr.error('there was an error when requesting configuration the camera');
+			}
 			cb( null );
 		}
 
@@ -603,22 +607,22 @@ var editCamera = function(camId) {
 					addStream(function(id) {
 						//addStreamFieldOverlay( '#' + id );						
 					});
-	                var manufacturer = $("#camera-manufacturer").val();
-	                if (manufacturer && manufacturer != 'unknown'){
-	                    getCameraOptions(function(data){
-	                        if (data != null){
-	                            setAuthStatus(data,function(){
-	                                setConstraintsOnStreamFields(data, function(error){
-	                                    //removeStreamFieldOverlay();
-	                                });
-	                            });
-	                        }else{
-	                            //removeStreamFieldOverlay();
-	                        }
-	                    });
-	                } else {
-	                    //removeStreamFieldOverlay();
-	                }					
+	                // var manufacturer = $("#camera-manufacturer").val();
+	                // if (manufacturer && manufacturer != 'unknown'){
+	                //     getCameraOptions(function(data){
+	                //         if (data != null){
+	                //             setAuthStatus(data,function(){
+	                //                 setConstraintsOnStreamFields(data, function(error){
+	                //                     //removeStreamFieldOverlay();
+	                //                 });
+	                //             });
+	                //         }else{
+	                //             //removeStreamFieldOverlay();
+	                //         }
+	                //     });
+	                // } else {
+	                //     //removeStreamFieldOverlay();
+	                // }					
 				}
                 
                 $("#update-camera").unbind();
@@ -639,17 +643,24 @@ var editCamera = function(camId) {
                         }
                     });
                 });
-                getCameraOptions(function(data){
-					if (!data) {
-						removeStreamFieldOverlay();
-					} else {
-						setAuthStatus(data,function(){
-							setConstraintsOnStreamFields(data, function(error){
-								removeStreamFieldOverlay();
+
+				var manufacturer = $("#camera-manufacturer").val();
+				if (manufacturer && manufacturer != 'unknown'){
+					getCameraOptions(function(data){
+						if (!data) {
+							removeStreamFieldOverlay();
+							$("#add-new-camera-dialog").modal('hide');
+						} else {
+							setAuthStatus(data,function(){
+								setConstraintsOnStreamFields(data, function(error){
+									removeStreamFieldOverlay();
+								});
 							});
-						});
-					}
-	            });
+						}
+					});
+				} else {
+					removeStreamFieldOverlay();
+				}					
                 // - -
 
                 $("#add-new-camera-dialog").modal('show');
