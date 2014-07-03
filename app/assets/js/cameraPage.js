@@ -210,7 +210,14 @@ CameraPage.prototype.setupButtons = function() {
 						+ "&end=" + parseInt( self.timeline.currEnd )
 						+ "&stream=" + stream;
 
-				window.location = url;
+				var w = window.open( url );
+				window.focus();
+				w.onload = function() {
+					if (w.document.body.innerHTML.length > 0) {
+						w.close();
+						toastr.error('couldn\'t find the requested video');
+					}
+				};
 			}
 		});
 
