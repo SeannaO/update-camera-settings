@@ -204,7 +204,7 @@ CameraPage.prototype.setupButtons = function() {
 			if(!ok) {
 				return;	
 			} else {
-				var url = window.location.origin 
+				var url = window.location.protocol + "//" + window.location.host +
 						+ "/cameras/" + self.camId
 						+ "/download?begin=" + parseInt( self.timeline.currBegin )
 						+ "&end=" + parseInt( self.timeline.currEnd )

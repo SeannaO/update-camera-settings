@@ -441,7 +441,7 @@ var playVideo = function( camId, streamId, begin, end ) {
 
 	var stream = $("#stream-selector").val();
 
-	var url = window.location.origin + "/cameras/"+camId+"/video.m3u8?begin="+timeline_begin+"&end="+timeline_end+"&stream="+stream;
+	var url = window.location.protocol + "//" + window.location.host + "/cameras/"+camId+"/video.m3u8?begin="+timeline_begin+"&end="+timeline_end+"&stream="+stream;
 
 	if (!canPlayHLS()) {
 		launchStrobePlayer({

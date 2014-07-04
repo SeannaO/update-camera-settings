@@ -271,13 +271,13 @@ Player.prototype.playVideo = function( camId, streamId, begin, end ) {
 
 	if (!begin && !end) {
 		this.mode = 'live';
-		url = window.location.origin +
+		url = window.location.protocol + "//" + window.location.host +
 			"/cameras/" + camId + 
 			"/live.m3u8" +
 			"?stream=" + streamId;
 	} else {	
 		this.mode = 'archived';
-		url = window.location.origin +
+		url = window.location.protocol + "//" + window.location.host +
 			"/cameras/" + camId + 
 			"/video.m3u8?begin=" + begin +
 			"&end=" + end +
