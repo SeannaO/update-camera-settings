@@ -429,7 +429,8 @@ var getCameraOptions = function(cb) {
 			if (t === 'timeout') {
 				toastr.error('camera is timing out');
 			} else if (data.error) {
-				toastr.error('there was an error when requesting configuration the camera');
+				// toastr.error('there was an error when requesting configuration the camera');
+				// console.log(data);
 			}
 			cb( null );
 		}
@@ -541,11 +542,15 @@ var updateMotion = function(id, cb) {
 		dataType: "json",
         contentType: 'application/json',
         success: function(data) {
-			data = $.parseJSON(data.responseText);
+			if (data && data.responseText) {
+				data = $.parseJSON(data.responseText);
+			}
             cb( data );
         },
 		error: function(data) {
-			data = $.parseJSON(data.responseText);
+			if (data && data.responseText) {
+				data = $.parseJSON(data.responseText);
+			}
 			cb( data );
 		}
     });
@@ -648,8 +653,8 @@ var editCamera = function(camId) {
 				if (manufacturer && manufacturer != 'unknown'){
 					getCameraOptions(function(data){
 						if (!data) {
-							removeStreamFieldOverlay();
-							$("#add-new-camera-dialog").modal('hide');
+							// removeStreamFieldOverlay();
+							// $("#add-new-camera-dialog").modal('hide');
 						} else {
 							setAuthStatus(data,function(){
 								setConstraintsOnStreamFields(data, function(error){
