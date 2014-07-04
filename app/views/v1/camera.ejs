@@ -122,7 +122,7 @@
 					var begin = 1000*moment( $("#begin_date").val() ).unix();
                     var end = 1000*moment( $("#end_date").val() ).unix();
 					
-					var url = window.location.origin + "/cameras/"+camId+"/download?begin="+begin+"&end="+end+"&stream="+stream;
+					var url = window.location.protocol + "//" + window.location.host + "/cameras/"+camId+"/download?begin="+begin+"&end="+end+"&stream="+stream;
 					
 					window.location = url;
 				});
