@@ -137,14 +137,27 @@ portChecker.check(8080, function(err, found) {
 	};
 
 	// - - -
+	// - - -
 	// stores machine ip
 	var localIp = "";
 	var hostname = require('os').hostname();
-	require('dns').lookup(require('os').hostname(), function (err, add, fam) {
-		localIp = add;
-		process.env['IP'] = localIp;
-	});
+	var ipModule = require('ip');
+
+	process.env['IP'] = ipModule.address();
+	localIp = process.env['IP'];
+
+	setInterval( function() {
+		var ip = ipModule.address();
+		if (process.env['IP'] !== ip) {
+			console.error('IP changed; restarting...');
+			process.exit();
+		}
+	}, 10000);
 	// - - -
+	// - - -
+	//
+
+	//
 	var lifelineAuthentication = function(username,password, done){
 
 		if (process.env['NODE_ENV'] === 'development') {
