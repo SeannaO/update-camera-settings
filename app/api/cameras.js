@@ -221,7 +221,7 @@ module.exports = function( app, passport, camerasController ) {
 				console.error("*** getCamera error: ");
 				console.error( err ) ;
 				console.error("* * *");
-				res.status(422).end({success:false, error: "couldn't find this camera"});
+				res.status(422).json({success:false, error: "couldn't find this camera"});
 			} else {
 				res.render('v1/camera', cam.toJSON());				
 			}
@@ -241,7 +241,7 @@ module.exports = function( app, passport, camerasController ) {
 				console.error("*** getCamera error: ");
 				console.error( err ) ;
 				console.error("* * *");
-				res.status(422).end({success:false, error: "couldn't find this camera"});
+				res.status(422).json({success:false, error: "couldn't find this camera"});
 			} else {
 				res.render('camera', cam.toJSON());				
 			}
