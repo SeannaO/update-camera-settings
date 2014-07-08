@@ -1,0 +1,411 @@
+#include <gtest\gtest.h>
+
+#include <stdio.h>
+#include <unistd.h>
+#include <libgen.h>
+//#include <sys/time.h>
+#include <string.h>
+#include <glib-object.h>
+#include <libsoup/soup-xmlrpc.h>
+#include <libsoup/soup-value-utils.h>
+#include <nanohttp/nanohttp-client.h>
+
+
+#include <sqlite3.h>
+
+#include <CP/CPapi.h>
+
+
+/*
+ * Schema
+ */
+const char * DB_CAMERA_TBL = "cameras";
+const int DB_NUM_CAMERA_COLS = 5;
+
+const char * DB_CAMERA_COLS[] = {
+	"id",
+	"name",
+	"model",
+	"state",
+	"rtsp_url"
+};
+
+
+class JoinStrings : public testing::Test
+ {
+ 		const char * arrayOfStrings[] = {
+		"one",
+		"two",
+		"three",
+		"four",
+		"five"
+	};
+ };
+
+const char * JoinStrings::arrayOfStrings = NULL;
+
+TEST_F(JoinStrings, WholeArrayOfStringsTest){
+	const char * expected = "one, two, three, four, five"; 
+	char * actual = join_strings(arrayOfStrings, ", ", 0, 5);
+	
+	EXPECT_EQ(actual, expected);
+}
+
+TEST_F(JoinStrings, SubsetOfArrayOfStringsTest){
+
+	const char * expected = "three, four";
+	char * actual = join_strings(arrayOfStrings, ", ", 2, 2);
+	
+	EXPECT_EQ(actual, expected);
+}
+
+TEST_F(selectCamerasCallback, SomeTest){
+
+	const char * values[] = {
+		"id",
+		"name",
+		"model",
+		"state",
+		"rtsp_url"
+	};
+
+	CameraInfo* myRec = malloc(sizeof(CameraInfo));
+
+    RecordProcessor myProcessor;
+
+    myProcessor.pRecordSet = myRec;
+    myProcessor.nRecordSetActual = 0;
+    myProcessor.nRecordSetMax = 2;
+	int code;
+	code = selectCamerasCallback (myProcessor, 5, values, DB_CAMERA_COLS);
+	code = selectCamerasCallback (myProcessor, 5, values, DB_CAMERA_COLS);
+	
+	CameraInfo *cameras = (CameraInfo *)((RecordProcessor *)records)->pRecordSet;
+	
+	EXPECT_EQ(2, results.nRecordSetActual);
+
+	for (i = 0; i < results.nRecordSetActual; i++) {
+		cameras[i].name = values[0][i]
+	}
+}
+
+
+// database
+
+class CameraInfoDatabase : public testing::Test
+ {
+	protected:
+		// Per-test-case set-up.
+		// Called before the first test in this test case.
+		// Can be omitted if not needed.
+		static void SetUpTestCase() {
+		db = db_open(NULL);
+	        char *errMsg;
+	        char sql_stmt[128];
+			sprintf (sql_stmt, "CREATE TABLE IF NOT EXISTS %s (%s INTEGER PRIMARY KEY AUTOINCREMENT, %s TEXT, %s TEXT, %s TEXT, %s TEXT)", DB_CAMERA_TBL, DB_CAMERA_COLS[0], DB_CAMERA_COLS[1], DB_CAMERA_COLS[2], DB_CAMERA_COLS[3], DB_CAMERA_COLS[4]);
+			//const char *sql_stmt = "CREATE TABLE IF NOT EXISTS CONTACTS (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT, ADDRESS TEXT, PHONE TEXT)";
+
+			if (sqlite3_exec(db, sql_stmt, NULL, NULL, &errMsg) != SQLITE_OK) {
+				syslog(LOG_DEBUG, "Failed to create table '%s':%s", DB_CAMERA_TBL, errMsg);
+				g_free(errMsg);
+			}
+
+		}
+
+		// Per-test-case tear-down.
+		// Called after the last test in this test case.
+		// Can be omitted if not needed.
+		static void TearDownTestCase() {
+			sqlite3_close(db);
+			db = NULL;
+		}
+
+		sqlite3 *db; 
+ };
+
+TEST_F(CameraInfoDatabase, AddCameraTest){
+
+	CameraInfo camera;
+	camera.name = "camera1";
+	camera.model = "axis";
+	camera.state = "recording";
+	camera.rtsp_url = "rtsp://localhost/video";
+	// add a few records
+	bool success = addCamera (db, camera);
+	EXPECT_TRUE(success);
+	EXPECT_TRUE(NULL != camera.id);
+}
+
+TEST_F(CameraInfoDatabase, UpdateCameraTest){
+	CameraInfo camera1, camera2;
+	camera1.name = "camera1";
+	camera1.model = "axis";
+	camera1.state = "recording";
+	camera1.rtsp_url = "rtsp://localhost/video";
+	// add a few records
+	bool success = addCamera (db, camera1);
+	camera2.id = camera1.id;
+	camera2.name = "camera2";
+	camera2.model = "bosche";
+	camera2.state = "pending";
+	camera2.rtsp_url = "rtsp://localhost/video";
+	bool success = updateCamera (db, camera2);
+	EXPECT_TRUE(success);
+}
+
+TEST_F(CameraInfoDatabase, DeleteCameraTest){
+	CameraInfo camera;
+	camera.name = "camera1";
+	camera.model = "axis";
+	camera.state = "recording";
+	camera.rtsp_url = "rtsp://localhost/video";
+	// add a few records
+	bool success = addCamera (db, camera);
+
+	bool success = deleteCamera (db, camera.id);
+	EXPECT_TRUE(success);
+}
+
+TEST_F(CameraInfoDatabase, SelectCameraTest){
+	CameraInfo camera;
+	camera.name = "camera1";
+	camera.model = "axis";
+	camera.state = "recording";
+	camera.rtsp_url = "rtsp://localhost/video";
+	// add a few records
+	bool success = addCamera (db, camera);
+
+	RecordProcessor processor = selectCameras (db, 0, 2);
+
+	//CameraInfo *cameras = (CameraInfo *)((RecordProcessor *)records)->pRecordSet;
+
+	EXPECT_EQ(2, processor.nRecordSetActual);
+}
+
+TEST_F(CameraInfoDatabase, FindCameraTest){
+	CameraInfo camera;
+	camera.name = "camera1";
+	camera.model = "axis";
+	camera.state = "recording";
+	camera.rtsp_url = "rtsp://localhost/video";
+	// add a few records
+	bool success = addCamera (db, camera);
+
+	RecordProcessor processor = findCameras (db, camera.id);
+
+	CameraInfo returned_camera = (CameraInfo *)((RecordProcessor *)records)->pRecordSet[0];
+
+	EXPECT_EQ(camera.name, returned_camera.name);
+	EXPECT_EQ(camera.model, returned_camera.model);
+	EXPECT_EQ(camera.state, returned_camera.state);
+	EXPECT_EQ(camera.rtsp_url, returned_camera.rtsp_url);
+}
+
+
+class ReadAndWriteData : public testing::Test
+ {
+	protected:
+		// Per-test-case set-up.
+		// Called before the first test in this test case.
+		// Can be omitted if not needed.
+		static void SetUpTestCase() {
+			GHashTable *resp_struct = soup_value_hash_new();
+			GValue *tmpval = g_new0(GValue, 1);
+			key = "mykey";
+		}
+
+		// Per-test-case tear-down.
+		// Called after the last test in this test case.
+		// Can be omitted if not needed.
+		static void TearDownTestCase() {
+
+		}
+		static char* key;
+		static GValue *tmpval;
+		static GHashTable *resp_struct;
+ };
+
+TEST_F(ReadAndWriteData, readAndWriteBooleanTest){
+	bool expected = true;
+	bool actual = false;
+	GType type = G_TYPE_BOOLEAN;
+	writeToHash(key, expected, type, resp_struct, tmpval);
+	readFromHash(key, actual, type, resp_struct, tmpval);
+	EXPECT_EQ(actual, expected);
+}
+
+TEST_F(ReadAndWriteData, readAndWriteIntTest){
+	int expected = 10;
+	int actual = 1;
+	GType type = G_TYPE_INT;
+	writeToHash(key, expected, type, resp_struct, tmpval);
+	readFromHash(key, actual, type, resp_struct, tmpval);
+	EXPECT_EQ(actual, expected);
+}
+
+TEST_F(ReadAndWriteData, readAndWriteUIntTest){
+	unsigned int expected = 10;
+	unsigned int actual = 1;
+	GType type = G_TYPE_UINT;
+	writeToHash(key, expected, type, resp_struct, tmpval);
+	readFromHash(key, actual, type, resp_struct, tmpval);
+	EXPECT_EQ(actual, expected);
+}
+
+TEST_F(ReadAndWriteData, readAndWriteLongTest){
+	long expected = 10;
+	long actual = 1;
+	GType type = G_TYPE_LONG;
+	writeToHash(key, expected, type, resp_struct, tmpval);
+	readFromHash(key, actual, type, resp_struct, tmpval);
+	EXPECT_EQ(actual, expected);
+}
+
+TEST_F(ReadAndWriteData, readAndWriteULongTest){
+	unsigned long expected = 10;
+	unsigned long actual = 1;
+	GType type = G_TYPE_ULONG;
+	writeToHash(key, expected, type, resp_struct, tmpval);
+	readFromHash(key, actual, type, resp_struct, tmpval);
+	EXPECT_EQ(actual, expected);
+}
+
+TEST_F(ReadAndWriteData, readAndWriteFloatTest){
+	float expected = 10.1F;
+	float actual = 1.1F;
+	GType type = G_TYPE_FLOAT;
+	writeToHash(key, expected, type, resp_struct, tmpval);
+	readFromHash(key, actual, type, resp_struct, tmpval);
+	EXPECT_EQ(actual, expected);
+}
+
+TEST_F(ReadAndWriteData, readAndWriteFloatTest){
+	double expected = 10.1;
+	double actual = 1.1;
+	GType type = G_TYPE_DOUBLE;
+	writeToHash(key, expected, type, resp_struct, tmpval);
+	readFromHash(key, actual, type, resp_struct, tmpval);
+	EXPECT_EQ(actual, expected);
+}
+
+TEST_F(ReadAndWriteData, readAndWriteDoubleTest){
+	double expected = 10.1;
+	double actual = 1.1;
+	GType type = G_TYPE_DOUBLE;
+	writeToHash(key, expected, type, resp_struct, tmpval);
+	readFromHash(key, actual, type, resp_struct, tmpval);
+	EXPECT_EQ(actual, expected);
+}
+
+TEST_F(ReadAndWriteData, readAndWriteStringTest){
+	char * expected = "hello";
+	char * actual = "world";
+	GType type = G_TYPE_STRING;
+	writeToHash(key, expected, type, resp_struct, tmpval);
+	readFromHash(key, actual, type, resp_struct, tmpval);
+	EXPECT_EQ(actual, expected);
+}
+
+// bool parseXMLToHash(const char *xmlin, GHashTable *paramshash, CPResult_t *result)
+
+TEST(ParseXMLToHash, firstTest){
+	const char *xmlin = "hello";
+	GHashTable *actual = NULL;
+	GHashTable *expected;
+	CPResult_t *result;
+	bool success = parseXMLToHash(xmlin, actual, result);
+	EXPECT_EQ(true, success);
+}
+
+
+// API Callbacks
+
+// getCameraListCallback(const char *contextin, const char *xmlin, char **xmlout, CPResult_t *result)
+
+TEST(API_CallbackTests, GetCameraListCallbackTest){
+	const char *xmlin = "hello";
+	const char *contextin = "";
+	CPResult_t *result;
+	char **xmlout;
+	getCameraListCallback(contextin, xmlin, xmlout, result);
+}
+
+// void getCameraCallback(const char *contextin, const char *xmlin, char **xmlout, CPResult_t *result)
+
+TEST(API_CallbackTests, GetCameraCallbackTest){
+	const char *xmlin = "hello";
+	const char *contextin = "";
+	CPResult_t *result;
+	char **xmlout;
+	getCameraCallback(contextin, xmlin, xmlout, result);
+}
+
+TEST(API_CallbackTests, GetCameraCallbackTest){
+	const char *xmlin = "hello";
+	const char *contextin = "";
+	CPResult_t *result;
+	char **xmlout;
+	getCameraCallback(contextin, xmlin, xmlout, result);
+}
+
+TEST(API_CallbackTests, AddOrUpdateCameraCallbackTest){
+	const char *xmlin = "hello";
+	const char *contextin = "";
+	CPResult_t *result;
+	char **xmlout;
+	addOrUpdateCameraCallback(contextin, xmlin, xmlout, result);
+}
+
+TEST(API_CallbackTests, DeleteCameraCallbackTest){
+	const char *xmlin = "hello";
+	const char *contextin = "";
+	CPResult_t *result;
+	char **xmlout;
+	deleteCameraCallback(contextin, xmlin, xmlout, result);
+}
+
+TEST(API_CallbackTests, ShareDeleteCallbackTest){
+	const char *xmlin = "hello";
+	const char *contextin = "";
+	CPResult_t *result;
+	char **xmlout;
+	ShareDeleteCallback(contextin, xmlin, xmlout, result);
+}
+
+TEST(API_CallbackTests, SetupFuncCallbackTest){
+	const char *xmlin = "hello";
+	const char *contextin = "";
+	CPResult_t *result;
+	char **xmlout;
+	setupFuncCallback(contextin, xmlin, xmlout, result);
+}
+
+TEST(API_CallbackTests, authenticateFuncCallbackTest){
+	const char *xmlin = "hello";
+	const char *contextin = "";
+	CPResult_t *result;
+	char **xmlout;
+	authenticateFuncCallback(contextin, xmlin, xmlout, result);	
+}
+
+// SDK Helpers
+
+// TEST(SDK_Shares, ShareCreateTest){
+// 	shareCreate();	
+// }
+
+// TEST(SDK_Shares, ShareExistsTest){
+// 	shareExists();	
+// }
+
+int main(int argc, char** argv)
+{
+	openlog(APPID, 0, LOG_USER);
+
+	cpIpcInit();
+	cout << "##teamcity[importData type='gtest' path='bin\\Release\\test_results.xml']" << endl;
+	testing::InitGoogleTest(&argc, argv);
+    RUN_ALL_TESTS();
+    closelog();
+	return 0;
+}

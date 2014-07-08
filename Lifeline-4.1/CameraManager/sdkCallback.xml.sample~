@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<APIDoc>
+<Subsection vendor="solink" app="CameraManager">
+	<Callback Name="CameraManagerShareDeleteCallback" Reference="ShareDeleteCheck" />
+</Subsection>
+</APIDoc>
