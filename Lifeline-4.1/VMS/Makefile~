@@ -1,0 +1,27 @@
+##
+## Application Set info
+##
+SET_ID = VMS
+SET_VENDOR = solink
+SET_VERSION = 1.0.1
+
+##
+## Applications
+##
+APPS_ROOT_DIR = ..
+SET_APPS =  CameraManager
+
+SET_PKG_NAME := $(shell echo $(SET_VENDOR)_$(SET_ID)_$(SET_VERSION)_$(target) | tr '[A-Z]' '[a-z]')
+UPGRADE_SCRIPTS = 
+
+all: package-create
+
+##
+## Include LifeLine Makefile
+##
+include $(LLSDK_HOME)/Makefile.in
+
+clean: $(appset-clean)
+	rm -rf $(target)
+
+.PHONY: all $(SET_APPS) package-create clean_pkg_lists descriptor_begin descriptor_end upgrade_descriptor
