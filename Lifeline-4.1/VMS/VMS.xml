@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<vendor name="solink">
+	<copyright>solink</copyright>
+	<description>Solink bundles ip surveillance video with other existing data sources to help you make smarter decisions.</description>
+	<applicationSet id="VMS" displayName="VMS" version="@@VERSION@@" blockuninstall="0" blockstartstop="0" _gettext_="displayName">
+		<description>A video management service for EMC NAS devices.</description>
+		<upgradeInfo>http://127.0.0.1/upgradeInfo_VMS_@@TARGET@@.xml</upgradeInfo>
+		<!-- BEGIN_APPLICATIONS - DO NOT EDIT THIS SECTION - Use "o2 manage-set" -->
+		<application id="@@APP_ID@@"/>
+		<!-- END_APPLICATIONS -->
+	</applicationSet>
+</vendor>

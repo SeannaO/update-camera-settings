@@ -595,7 +595,7 @@ var editCamera = function(camId) {
 				$('#add-new-camera-dialog .modal-title').html("edit camera");
                 $("#add-new-camera-dialog #camera-name").val(data.camera.name);
                 $("#add-new-camera-dialog #camera-ip").val(data.camera.ip); //.prop('disabled', 'disabled');;
-                $("#add-new-camera-dialog #camera-manufacturer").val(data.camera.manufacturer).attr("selected", data.camera.manufacturer).prop('disabled', 'disabled').unbind();
+                $("#add-new-camera-dialog #camera-manufacturer").val(data.camera.manufacturer).attr("selected", data.camera.manufacturer).prop('disabled', 'disabled');
                 $("#add-new-camera-dialog #camera-username").val(data.camera.username || '');
                 $("#add-new-camera-dialog #camera-password").val(data.camera.password || '');
 
@@ -610,7 +610,7 @@ var editCamera = function(camId) {
 					}
 				}else{
 					addStream(function(id) {
-						//addStreamFieldOverlay( '#' + id );						
+						addStreamFieldOverlay( '#' + id );						
 					});
 	                // var manufacturer = $("#camera-manufacturer").val();
 	                // if (manufacturer && manufacturer != 'unknown'){
@@ -929,8 +929,8 @@ var addStreamFieldset = function( cb ) {
 		fieldset.append( camera_stream_name_group );		
 		fieldset.append( camera_stream_rtsp_group );
 		fieldset.append( camera_stream_retention_group );
-	}else{
-		
+
+	} else{
 		//
 		// resolution field
 		var camera_stream_resolution_group = $('<div>', {
