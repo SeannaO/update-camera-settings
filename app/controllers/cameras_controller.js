@@ -131,12 +131,12 @@ CamerasController.prototype.takeSnapshot = function( camId, req, res, cb ) {
 		}
 
         if ( err || !cam || !cam.streams || !cam.streams[streamId]) {
-            res.json( { error: err } );
+            res.json(500, { error: err } );
 			if (cb) cb();
         } else {
 			
             self.mp4Handler.takeSnapshot( cam.streams[streamId].db, cam, req, res, function() {
-            	res.json();
+            	res.json(500, {error:"unable to take snapshot because no data was found at this selected time."});
 				if (cb) {
 					cb();
 				}

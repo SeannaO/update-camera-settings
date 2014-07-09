@@ -54,13 +54,12 @@ function inMemorySnapshot( file, offset, precision, res, options, cb) {
 
 	child.stderr.on('data', function (data) {
 		console.log('inMem snapshot error: ' + data);
-		res.end( 'there was an error, please try again' );
+		res.end( 'there was an error, please try again' , 500);
 	});
 	
 	res.writeHead(200, {
 		'Content-Type': 'image/jpeg'
 	});
-
 	child.stdout.pipe( res );
 	
 	child.on('close', function(code) {
@@ -187,7 +186,7 @@ function generateMp4Video( db, cam, streamId, begin, end, cb ) {
 //
 */
 
-//
+//s
 function takeSnapshot( db, cam, req, res, cb ) {
     var time = parseInt(req.query.time, 10);
     
@@ -211,7 +210,7 @@ function takeSnapshot( db, cam, req, res, cb ) {
     var camId = cam._id;
 
     if ( isNaN(time) ) {
-        res.end("invalid time");
+        res.end("invalid time",500);
 		if (cb) cb();
         return;
     }
@@ -232,7 +231,7 @@ function takeSnapshot( db, cam, req, res, cb ) {
 				});
             } else {
 				console.log('[takeSnapshot]  no such file: ' + file);
-                res.end( "sorry, no videos were recorded at " + (new Date(time)) );
+                res.end( "sorry, no videos were recorded at " + (new Date(time)), 500 );
 				if (cb) cb();
             }
         });
