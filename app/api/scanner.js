@@ -4,7 +4,7 @@ module.exports = function( app, passport) {
 	
 	app.get('/scan.json', passport.authenticate('basic', {session: false}), function( req, res ) {
 		var prefix = req.query.subnet;
-		if(!prefix) res.end([]);
+		if(!prefix) res.json([]);
 		console.log(prefix);
 		scan(prefix, function( camlist ) {
 			res.json( camlist );
