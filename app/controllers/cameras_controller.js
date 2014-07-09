@@ -817,6 +817,14 @@ CamerasController.prototype.findCameraById = function( id ) {
 };
 
 
+CamerasController.prototype.simplyRestartRecording = function() {
+	console.log('[CamerasController] simply restart recording');
+	for (var i in this.cameras) {
+		this.cameras[i].simplyRestartAllStreams();
+	}
+};
+
+
 CamerasController.prototype.restartRecording = function() {
 	console.log('[CamerasController] restart recording');
 	for (var i in this.cameras) {

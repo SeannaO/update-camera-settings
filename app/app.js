@@ -53,14 +53,20 @@ portChecker.check(8080, function(err, found) {
 	console.log('[app] launching rtsp_grabber');
 	this.launchRtspGrabber = function( cb ) {
 		exec('killall -9 rtsp_grabber', function( error, stdout, stderr) {
+
+			if (self.grabberProcess) {
+				self.grabberProcess.removeAllListeners();
+			}
+
 			self.grabberProcess = exec('./rtsp_grabber', function( error, stdout, stderr ) {
-				if (cb) cb();
+				setTimeout( function() {
+					console.log('[app] restarting recorder');
+					camerasController.simplyRestartRecording();
+				}, 1000);
 			});
-			self.grabberProcess.on('exit', function(code) {
+			self.grabberProcess.once('exit', function(code) {
 				console.error('[app] rtsp_grabber exited; relaunching...');
 				self.launchRtspGrabber( function() {
-					console.log('[app] restarting recorder');
-					// camerasController.restartRecording();
 				});
 				console.log('[app] rtsp_grabber relaunched'); 
 			});
