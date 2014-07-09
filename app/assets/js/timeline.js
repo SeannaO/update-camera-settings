@@ -388,6 +388,8 @@ Timeline.prototype.render = function(block_size, begin, end) {
 	this.currBegin = begin;
 	this.currEnd   = end;
 
+	if ( isNaN(begin) || isNaN(end) ) return;
+
 	var dx = self.width/10.0;
 	var dt = Math.round( (end - begin)/10 );
 
