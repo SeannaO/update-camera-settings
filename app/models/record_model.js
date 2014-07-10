@@ -340,7 +340,7 @@ RecordModel.setupRtspGrabberMonitor = function() {
 			}
 	 
 			clearTimeout( RecordModel.rtspGrabberMonitorTimeout );
-			setTimeout( RecordModel.pingRtspGrabber, 5000 );
+			setTimeout( RecordModel.pingRtspGrabber, 10000 );
 		});
 
 		RecordModel.pingRtspGrabber();
@@ -361,7 +361,7 @@ RecordModel.pingRtspGrabber = function(arg1, arg2, arg3) {
 	RecordModel.rtspGrabberMonitorTimeout = setTimeout( function() {
 		console.error('[RecordModel:rtspGrabber monitor] rtsp grabber did not respond'); 
 		exec('killall rtsp_grabber');
-		RecordModel.pingRtspGrabber();
+		setTimeout ( RecordModel.pingRtspGrabber, 10000 );
 	}, 30000);
 };
 

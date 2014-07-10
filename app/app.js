@@ -394,7 +394,7 @@ portChecker.check(8080, function(err, found) {
 	// - - - - -
 	// disk space agent
 	//
-	var usageThreshold = 98; // usage threshold (%) // !!! CHANGE LATER TO 90
+	var usageThreshold = 90; // usage threshold (%) // 
 
 	var diskSpaceAgent = new DiskSpaceAgent( baseFolder );
 	diskSpaceAgent.launch();
