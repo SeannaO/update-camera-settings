@@ -49,18 +49,34 @@ portChecker.check(8080, function(err, found) {
 		});
 	});
 
+
+	// monitor memory usage of rtsp_grabber
+	// kills process if memory usage is greater than 30%
+	self.rtspMemMonitor = exec('./mem.sh rtsp_grabber 30');
+	self.rtspMemMonitor.stderr.on('data', function(data) {
+		console.error('[app] rtsp_grabber is becoming memory hungry');
+		console.error(data);
+	});
+
+
 	// launches custom ffmpeg
 	console.log('[app] launching rtsp_grabber');
 	this.launchRtspGrabber = function( cb ) {
 		exec('killall -9 rtsp_grabber', function( error, stdout, stderr) {
+
+			if (self.grabberProcess) {
+				self.grabberProcess.removeAllListeners();
+			}
+
 			self.grabberProcess = exec('./rtsp_grabber', function( error, stdout, stderr ) {
-				if (cb) cb();
+				setTimeout( function() {
+					console.log('[app] restarting recorder');
+					camerasController.simplyRestartRecording();
+				}, 1000);
 			});
-			self.grabberProcess.on('exit', function(code) {
+			self.grabberProcess.once('exit', function(code) {
 				console.error('[app] rtsp_grabber exited; relaunching...');
 				self.launchRtspGrabber( function() {
-					console.log('[app] restarting recorder');
-					// camerasController.restartRecording();
 				});
 				console.log('[app] rtsp_grabber relaunched'); 
 			});
@@ -378,7 +394,7 @@ portChecker.check(8080, function(err, found) {
 	// - - - - -
 	// disk space agent
 	//
-	var usageThreshold = 98; // usage threshold (%) // !!! CHANGE LATER TO 90
+	var usageThreshold = 90; // usage threshold (%) // 
 
 	var diskSpaceAgent = new DiskSpaceAgent( baseFolder );
 	diskSpaceAgent.launch();

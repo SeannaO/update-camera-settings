@@ -276,6 +276,93 @@ RecordModel.prototype.setupDbusListener = function() {
 	}
 
 	RecordModel.dbusMonitorSignal.on("signalReceipt", self.receiveSignalCallback);
+	RecordModel.setupRtspGrabberMonitor();
+};
+
+
+RecordModel.setupRtspGrabberMonitor = function() {
+
+	if( !RecordModel.rtspGrabberMonitorSignal ) {
+		console.log('setting up RecordModel rtspGrabberMonitorSignal');
+		RecordModel.rtspGrabberMonitorSignal  = Object.create(dbus.DBusMessage, {
+			path: {
+				value:     '/ffmpeg/signal/Object',
+				writable:  true
+			},
+			iface: {
+				value:     'ffmpeg.signal.Type',
+				writable:  true
+			},
+			member: {
+				value:     'pong',
+				writable:  true
+				},
+			bus: {
+				value:     dbus.DBUS_BUS_SYSTEM,
+				writable:  true
+			},
+			variantPolicy: {
+				value:     dbus.NDBUS_VARIANT_POLICY_DEFAULT,
+				writable:  true
+			},
+			type: {
+				value: dbus.DBUS_MESSAGE_TYPE_SIGNAL
+			  }
+		});
+
+		RecordModel.arg1 = 'hello';
+		RecordModel.arg2 = 'there';
+		RecordModel.arg3 = Date.now();
+
+		try {
+			RecordModel.rtspGrabberMonitorSignal.addMatch();
+		} catch( e ) {
+			console.error( e );
+		}
+
+		RecordModel.rtspGrabberMonitorSignal.on('signalReceipt', function(msg_info, args) {
+			
+			var pongResponse, arg1, arg2, arg3;
+
+			try {
+				pongResponse = JSON.parse( args );
+				if (pongResponse.arg1.trim() != RecordModel.arg1 ||
+					pongResponse.arg2.trim() != RecordModel.arg2 ||
+					pongResponse.arg3.trim() != RecordModel.arg3) {
+						console.error('[RecordModel: rtspGrabberMonitor]  pong response is different from expected: ');
+						console.error(pongResponse);
+						console.error(RecordModel.arg1 + ' ' + RecordModel.arg2 + ' ' + RecordModel.arg3);
+						exec('killall rtsp_grabber');
+					}
+			} catch(err) {
+				console.error('[RecordModel: rtspGrabberMonitor]  ' + err);
+				exec('killall rtsp_grabber');
+			}
+	 
+			clearTimeout( RecordModel.rtspGrabberMonitorTimeout );
+			setTimeout( RecordModel.pingRtspGrabber, 10000 );
+		});
+
+		RecordModel.pingRtspGrabber();
+	}
+
+};
+
+RecordModel.pingRtspGrabber = function(arg1, arg2, arg3) {
+	
+	clearTimeout( RecordModel.rtspGrabberMonitorTimeout );
+
+	var arg1 = RecordModel.arg1,
+		arg2 = RecordModel.arg2,
+		arg3 = RecordModel.arg3;
+
+	RecordModel.sendMessage('ping', arg1, arg2, arg3);
+
+	RecordModel.rtspGrabberMonitorTimeout = setTimeout( function() {
+		console.error('[RecordModel:rtspGrabber monitor] rtsp grabber did not respond'); 
+		exec('killall rtsp_grabber');
+		setTimeout ( RecordModel.pingRtspGrabber, 10000 );
+	}, 30000);
 };
 
 
@@ -318,6 +405,50 @@ RecordModel.prototype.receiveSignal = function( msg_info, args ) {
 		});
 	}
 };
+
+
+RecordModel.sendMessage = function( command, arg1, arg2, arg3 ) {
+
+		if (!RecordModel.dbusSignal) {
+			console.log('[RecordModel.sendMessage] creating dbusSignal object');
+			RecordModel.dbusSignal = Object.create(dbus.DBusMessage, {
+					  path: {
+						value:     '/ffmpeg/signal/Object',
+						writable:  true
+					  },
+					  iface: {
+						value:     'ffmpeg.signal.Type',
+						writable:  true
+					  },
+					  member: {
+						value:     'rtsp',
+						writable:  true
+					  },
+					  bus: {
+						value:     dbus.DBUS_BUS_SYSTEM,
+						writable:  true
+					  },
+					  variantPolicy: {
+						value:     dbus.NDBUS_VARIANT_POLICY_DEFAULT,
+						writable:  true
+					  },
+					  type: {
+						value: dbus.DBUS_MESSAGE_TYPE_SIGNAL
+					  }
+			});
+		}
+		
+		RecordModel.dbusSignal.clearArgs();
+        RecordModel.dbusSignal.appendArgs('svviasa{sv}',
+                                command + ' ' + arg1 + ' ' + arg2 + ' ' + arg3,
+                                'non-container variant',
+                              {type:'default variant policy', value:0, mixedPropTypes:true},
+                              73,
+                              ['strArray1','strArray2'],
+                              {dictPropInt: 31, dictPropStr: 'dictionary', dictPropBool: true});
+        RecordModel.dbusSignal.send();
+};
+
 
 RecordModel.prototype.sendSignal = function( command, url, path ) {
 

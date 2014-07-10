@@ -657,6 +657,17 @@ Camera.prototype.restartStream = function( streamId ) {
 //
 
 
+Camera.prototype.simplyRestartAllStreams = function() {
+
+	var self = this;
+
+	for (var i in self.streams) {
+		if ( self.streams[i] && self.streams[i].recordModel ) {
+			self.streams[i].recordModel.restart();
+		}
+	}
+};
+
 /**
  * Checks if camera should be recording
  *	it depends on the scheduler
