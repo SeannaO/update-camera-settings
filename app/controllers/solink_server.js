@@ -181,7 +181,7 @@ SolinkServer.prototype.setHost = function( newhost, cb ) {
 				cb(null, oldhost);
 			}else{
 				// 
-				db.update({ host: oldhost }, {$set:{ host: newhost}}, { multi: false }, function (err, numReplaced) {
+				self.db.update({ host: oldhost }, {$set:{ host: newhost}}, { multi: false }, function (err, numReplaced) {
 					if (err) {
 			            cb(err);
 			        } else {
