@@ -53,7 +53,7 @@ function inMemorySnapshot( file, offset, precision, res, options, cb) {
 	}
 
 	child.stderr.on('data', function (data) {
-		console.log('inMem snapshot error: ' + data);
+		console.error('inMem snapshot error: ' + data);
 		res.end( 'there was an error, please try again' , 500);
 	});
 	
@@ -231,7 +231,7 @@ function takeSnapshot( db, cam, req, res, cb ) {
 				});
             } else {
 				console.log('[takeSnapshot]  no such file: ' + file);
-                res.end( "sorry, no videos were recorded at " + (new Date(time)), 500 );
+                res.json( 500, {error: "no videos were recorded at " + (new Date(time))} );
 				if (cb) cb();
             }
         });
