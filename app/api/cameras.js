@@ -532,6 +532,11 @@ module.exports = function( app, passport, camerasController ) {
 
 				hlsHandler.generateFinitePlaylist( cam.streams[streamId].db, camId, streamId, begin, end, function( playlist ) {
 
+					if (!playlist) {
+						res.end('');
+						return;
+					}
+					
 					var buf = new Buffer(playlist, 'utf-8');
 					zlib.gzip(buf, function(_, result) {
 						res.writeHead(200, {
