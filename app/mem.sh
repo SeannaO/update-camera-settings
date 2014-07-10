@@ -21,4 +21,5 @@ while [ 1 ]; do
 		fi
 		# echo "$1 is not running";
 	fi
+	sleep 5
 done
