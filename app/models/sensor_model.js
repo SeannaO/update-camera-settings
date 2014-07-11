@@ -19,7 +19,7 @@ function SensorData(sensorFolder, cacheSize) {
 SensorData.checkCache = function() {
 	// console.log('checking cache');
 	// console.log( "cache size: " + Object.keys( SensorData.cache ).length );
-	var maxAge = 10*60*1000; // will close after 10 min
+	var maxAge = 30*60*1000; // will close after 30 min
 	for (var i in SensorData.cache) {
 		if ( Date.now() - SensorData.cache[i].time > maxAge ) {
 			(function(i){
