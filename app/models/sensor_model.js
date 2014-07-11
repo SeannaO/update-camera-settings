@@ -1,11 +1,33 @@
 var SensorDblite = require('../db_layers/sensor_dblite.js');
-var SimpleCache  = require("simple-lru-cache")
-
 
 function SensorData(sensorFolder, cacheSize) {
 	this.folder = sensorFolder;
-	if (!SensorData.cache){
-		SensorData.cache = new SimpleCache({"maxSize":cacheSize || 10})
+
+	SensorData.maxSize = 20; // maybe 30?
+
+	if (!SensorData.cache) {
+		SensorData.cache = {};
+	}
+	if (!SensorData.checkCacheInterval) {
+		SensorData.checkCacheInterval = setInterval( function() {
+			SensorData.checkCache()
+		}, 30*1000); // check every 30s
+	}
+};
+
+
+SensorData.checkCache = function() {
+	// console.log('checking cache');
+	// console.log( "cache size: " + Object.keys( SensorData.cache ).length );
+	var maxAge = 10*60*1000; // will close after 10 min
+	for (var i in SensorData.cache) {
+		if ( Date.now() - SensorData.cache[i].time > maxAge ) {
+			(function(i){
+				SensorData.cache[i].db.close( function() {
+					delete SensorData.cache[i];
+				});
+			})(i); 
+		}
 	}
 };
 
@@ -34,6 +56,12 @@ SensorData.prototype._dbFileName = function(startTime) {
 
 SensorData.prototype._aggregateShardedSensorData = function( options, currentDate, results, cb){
 
+	var oneDay = 1000*60*60*24;
+
+	if (options.end - options.start > 2*oneDay) {
+		console.error('[SensorData]  ignoring request for more than 2 days of data');
+		cb('requesting too much data: more than 2 days');
+	}
 
 	var self = this;
 	if (!currentDate){
@@ -84,16 +112,43 @@ SensorData.cache = null;
 
 SensorData._getDbFile = function( dbFilename, cb ) {
 	//check to see if it is in cache
-	var sdb = SensorData.cache.get(dbFilename);
-	
+	var sdb = SensorData.cache[dbFilename];
+
 	if (!sdb){
 		// add to the cache and then call callback
+		if (Object.keys( SensorData.cache ).length > SensorData.maxSize) {
+			// console.error('exceeded max number of objects in cache');
+			var oldest;
+			var oldest_i;
+			for (var i in SensorData.cache) {
+
+				if (!oldest) {
+					oldest = SensorData.cache[i];
+					oldest_i = i;
+				} else if (SensorData.cache[i].time < oldest.time) {
+					oldest = SensorData.cache[i];
+					oldest_i = i;
+				}
+			}
+			if ( SensorData.cache[oldest_i] && SensorData.cache[oldest_i].db ) {
+				SensorData.cache[oldest_i].db.close( function() {
+					delete SensorData.cache[oldest_i];
+					// console.error( "deleting cache: " + Object.keys( SensorData.cache ).length );
+				});
+			}
+		}
+
 		var sdb = new SensorDblite( dbFilename , function(db){
-			SensorData.cache.set(dbFilename, db);
+			SensorData.cache[dbFilename] = {
+				db: db,
+				time: Date.now()
+			}
+			// console.error( "adding cache: " + dbFilename );
 			cb(db);
 		});
 	}else{
-		cb(sdb);
+		SensorData.cache[dbFilename].time = Date.now();
+		cb(sdb.db);
 	}
 };
 

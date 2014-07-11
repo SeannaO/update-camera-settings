@@ -16,12 +16,18 @@ var SensorDblite = function( db_path, cb ) {
     this.db_path = db_path;
     this.db = dblite( self.db_path );
 
-//    this.backup = new FileBackup(db_path, function(backup){
-    //     backup.launch();
-    // });
     this.createTableIfNotExists(function(){
         if(cb) cb(self);
     });
+};
+
+SensorDblite.prototype.close = function(cb) {
+	var self = this;
+	this.db.query('.exit', function(err) {
+	});
+	this.db.once('close', function() {
+		if (cb) cb();
+	});
 };
 
 SensorDblite.prototype.deleteById = function( id, cb ) {
@@ -42,20 +48,15 @@ SensorDblite.prototype.createTableIfNotExists = function( cb ) {
 	var createTimestampIndex = 'CREATE INDEX idx_timestamp ON sensor_data(timestamp)';
 	var createDataTypeIndex = 'CREATE INDEX idx_datatype ON sensor_data(datatype)';
 
-	fs.exists(self.db_path, function(exist) {        
-        if (typeof self.db === 'undefined' || !exist){
-            self.db = dblite( self.db_path );
-        }
-		self.db.query(createTable, function() {
-				self.db.query(createTimestampIndex, function() {
-					console.log('created start index');
-					self.db.query(createDataTypeIndex, function() {
-						self.db.query('.show');
-						if (cb) cb();
-					});
-				});
-        });
-    });
+	self.db.query(createTable, function() {
+		self.db.query(createTimestampIndex, function() {
+			console.log('created start index');
+			self.db.query(createDataTypeIndex, function() {
+				self.db.query('.show');
+				if (cb) cb();
+			});
+		});
+	});
 };
 
 /**
