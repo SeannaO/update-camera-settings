@@ -584,7 +584,7 @@
                     getCameraOptions(function(data){
                         setAuthStatus(data,function(){
                             setConstraintsOnStreamFields(data, function(error){
-
+								removeStreamFieldOverlay();
                             });
                         });
                     });
