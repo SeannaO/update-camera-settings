@@ -197,6 +197,7 @@ var updateHddThroughput = function( data ) {
 
 			for (var i in tpAttr) {
 				var bar =  $("#"+ hdd + "-" + tpAttr[i].id + "-bar");
+				if ( isNaN(data[hdd][tpAttr[i].label]) ) continue;
 				bar.stop().animate({
 					width: 2*data[hdd][tpAttr[i].label],
 				}, 500);
@@ -299,7 +300,11 @@ var setupTpInfo = function( hdd ) {
 
 var updateSmartStatus = function( data ) {
 
+	var validData = ['sda', 'sdb', 'sdc', 'sdd', 'sde'];
+
 	var hdd = data.hdd.replace("/dev/", "");
+	if ( validData.indexOf(hdd) < 0 ) return;
+	
 
 	var hddinfo =  $('#' +  hdd + '-info');
 	var smartinfo = $('#' +  hdd + '-smart-info');
