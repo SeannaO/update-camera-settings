@@ -33,7 +33,7 @@ $(document).ready(function(){
 		}
 	});
 
-	$("#camera-subnet").mask("9?99.9?99.9?99");
+	// $("#camera-subnet").mask("9?99.9?99.9?99");
 });
 
 
