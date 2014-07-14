@@ -10,7 +10,7 @@ while [ 1 ]; do
 		perc=`top -bd .10 -p $1 -n 1  | grep node | awk '{print \$10}'`
 		## print the results
 		perc=`printf "%0.0f\n" $perc`
-		echo -e "$perc";
+		# echo -e "$perc";
 		# If the process is not running
 		if [ "$perc" -gt "$2" ]; then
 			echo killing $1 process >&2
