@@ -35,6 +35,11 @@ var generatePlaylist = function( camId, streamId, videos, targetDuration, mediaS
                   "#EXT-X-TARGETDURATION: 30\n" +
                   "#EXT-X-MEDIA-SEQUENCE:0\n";
 
+	if (!videos) {
+		cb( content );
+		return;
+	}
+
     for ( var i = 0; i < videos.length; i++ ) {
 		var duration = (videos[i].end - videos[i].start)/1000.0;
 

@@ -370,7 +370,13 @@ module.exports = function( app, passport, camerasController ) {
 
 		var camId = req.params.id;
 		
-		camerasController.requestSnapshot( camId, req, res );
+		camerasController.getCamera( camId, function(err, cam) {
+			if (err || !cam) {
+				res.json(500, {error: 'no such camera'});
+			} else {
+				camerasController.requestSnapshot( camId, req, res );
+			}
+		});
 	});
 	// - - -
 
@@ -515,7 +521,10 @@ module.exports = function( app, passport, camerasController ) {
 				console.error("[/cameras/:id/video.m3u8] :");
 				console.error( err ) ;
 				res.json( { error: err } );
-
+			} else if (!cam) {
+				console.error("[/cameras/:id/video.m3u8] :");
+				console.error('no such camera' ) ;
+				res.json( { error: 'no such camera' } );
 			} else {
 				// if no stream is not specified then just give the first stream
 
