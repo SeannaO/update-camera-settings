@@ -21,7 +21,7 @@ SDKAPI_TEMPLATE=$(LLSDK_HOME)/bin/scripts/sdkRpcTable.xml.template
 ## application bundle
 ## 
 
-TARGET_BINARY_FILES= bin/$(LINUX_ARCH)/ffmpeg bin/$(LINUX_ARCH)/node bin/$(LINUX_ARCH)/cpulimit bin/$(LINUX_ARCH)/rtsp_grabber bin/$(LINUX_ARCH)/thumbnailer bin/$(LINUX_ARCH)/mem.sh
+TARGET_BINARY_FILES= bin/$(LINUX_ARCH)/ffmpeg bin/$(LINUX_ARCH)/node bin/$(LINUX_ARCH)/cpulimit bin/$(LINUX_ARCH)/rtsp_grabber bin/$(LINUX_ARCH)/thumbnailer bin/$(LINUX_ARCH)/mem.sh bin/$(LINUX_ARCH)/mem_pid.sh
 NODEAPP_TARGET_FILES= $(NODE_APP_PATH)/assets $(NODE_APP_PATH)/controllers $(NODE_APP_PATH)/helpers $(NODE_APP_PATH)/db_layers  $(NODE_APP_PATH)/api $(NODE_APP_PATH)/models $(NODE_APP_PATH)/views $(NODE_APP_PATH)/node_modules $(NODE_APP_PATH)/app.js $(NODE_APP_PATH)/logs
 
 CAMERAMANAGER_TARGET_FILES=$(TARGET_BUILD_PATH)/$(target)/CameraManager
