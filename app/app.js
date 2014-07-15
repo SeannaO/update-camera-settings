@@ -1,5 +1,5 @@
 //require('look').start(); // -- profiler ( NOT for production )
-var agent           = require('webkit-devtools-agent');
+// var agent           = require('webkit-devtools-agent');
 var winston           = require('winston');
 var express           = require('express');                          // express
 var request           = require('request');                          // request
@@ -59,8 +59,8 @@ portChecker.check(8080, function(err, found) {
 	});
 
 	// monitor node memory usage
-	// kills node if memory usage is greater than 35%
-	self.nodeMemMonitor = exec('./mem_pid.sh '+ process.pid +' 35');
+	// kills node if memory usage is greater than 30%
+	self.nodeMemMonitor = exec('./mem_pid.sh '+ process.pid +' 30');
 	self.nodeMemMonitor.stderr.on('data', function(data) {
 		console.error('[app] node is getting memory hungry');
 		console.error(data);
