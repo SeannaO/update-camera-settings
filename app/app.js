@@ -1,5 +1,5 @@
 //require('look').start(); // -- profiler ( NOT for production )
-//var agent           = require('webkit-devtools-agent');
+var agent           = require('webkit-devtools-agent');
 var winston           = require('winston');
 var express           = require('express');                          // express
 var request           = require('request');                          // request
@@ -51,16 +51,16 @@ portChecker.check(8080, function(err, found) {
 
 
 	// monitor memory usage of rtsp_grabber
-	// kills rtsp_grabber if memory usage is greater than 30%
-	self.rtspMemMonitor = exec('./mem.sh rtsp_grabber 30');
+	// kills rtsp_grabber if memory usage is greater than 20%
+	self.rtspMemMonitor = exec('./mem.sh rtsp_grabber 20');
 	self.rtspMemMonitor.stderr.on('data', function(data) {
 		console.error('[app] rtsp_grabber is getting memory hungry');
 		console.error(data);
 	});
 
 	// monitor node memory usage
-	// kills node if memory usage is greater than 55%
-	self.nodeMemMonitor = exec('./mem_pid.sh '+ process.pid +' 55');
+	// kills node if memory usage is greater than 35%
+	self.nodeMemMonitor = exec('./mem_pid.sh '+ process.pid +' 35');
 	self.nodeMemMonitor.stderr.on('data', function(data) {
 		console.error('[app] node is getting memory hungry');
 		console.error(data);
