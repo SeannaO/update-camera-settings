@@ -24,7 +24,7 @@ function SolinkServer(filename, cb ) {
 SolinkServer.prototype.getStatus = function(cb){
 	var self = this;
 	self.getHost(function(err, host){
-		console.log(host);
+		// console.log(host);
 		// Check if we have the ip address of the solink server stored
 		if (host){
 			console.log("getting the device ID");
@@ -50,7 +50,7 @@ SolinkServer.prototype.getStatus = function(cb){
 						console.error("* * *");
 						cb(error, {host: host});
 					}else{
-						console.log(body);
+						// console.log(body);
 						var device = JSON.parse(body);
 						if (host){
 							// send the post request to the server to add the nas device to solink
@@ -69,15 +69,14 @@ SolinkServer.prototype.getStatus = function(cb){
 									cb(error, {host: host});
 								}else{
 									if (!body) {
-										console.error('[solink]  empty body response');
-										cb('empty response', {});
+										console.error('[solink] empty body response');
+										cb('empty response', {host: host});
 										return;
 									}
 									var server = JSON.parse(body);
 									if (!server) {
-										console.error('[solink]  server object');
-										cb('empty response', {});
-										cb('empty response', {});
+										console.error('[solink] empty server object');
+										cb('empty response', {host: host});
 										return;
 									}
 									server.host = host;
