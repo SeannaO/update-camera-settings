@@ -68,7 +68,18 @@ SolinkServer.prototype.getStatus = function(cb){
 									console.error("* * *");
 									cb(error, {host: host});
 								}else{
+									if (!body) {
+										console.error('[solink]  empty body response');
+										cb('empty response', {});
+										return;
+									}
 									var server = JSON.parse(body);
+									if (!server) {
+										console.error('[solink]  server object');
+										cb('empty response', {});
+										cb('empty response', {});
+										return;
+									}
 									server.host = host;
 									console.log(server);
 									cb(error, server);
