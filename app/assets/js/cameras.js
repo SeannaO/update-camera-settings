@@ -779,6 +779,64 @@ scanForCameras = function(subnet, cb) {
     
 };
 
+var compareScheduleTime = function(day) {
+
+	var beginString = $('#schedule-'+day+'-open').val() || '';
+	var begin = beginString.split(':');
+	var endString = $('#schedule-'+day+'-close').val() || '';
+	var end = endString.split(':');
+	
+	var beginHour   = begin[0] || 0;
+	var beginMinute = begin[1] || 0;
+
+	var endHour   = end[0] || 0;
+	var endMinute = end[1] || 0;
+	
+	var beginTime = new Date();
+	beginTime.setHours(beginHour);
+	beginTime.setMinutes(beginMinute);
+
+	var endTime = new Date();
+	endTime.setHours(endHour);
+	endTime.setMinutes(endMinute);
+
+	if (beginTime >= endTime) {
+		return 'off';
+	} else if (beginString == '0:00' && endString == '23:59'){
+		return 'all';
+	} else {
+		return 'partial';
+	}
+}
+
+var setupScheduleTableEvents = function() {
+	var days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+	
+	for (var d in days) {
+		$('#schedule-'+days[d]+'-open').change(function() {
+			var day = $(this).attr('data-day');
+			var recording = compareScheduleTime( day );
+			if ( recording == 'all' ) {
+				$('.schedule-'+day).css('background', 'none');
+			} else if (recording == 'off'){
+				$('.schedule-'+day).css('background', 'rgba(193,193,193,0.8)');
+			} else if (recording == 'partial') {
+				$('.schedule-'+day).css('background', 'rgba(230,238,196,0.8)');
+			}
+		});
+		$('#schedule-'+days[d]+'-close').change(function() {
+			var day = $(this).attr('data-day');
+			var recording = compareScheduleTime( day );
+			if ( recording == 'all' ) {
+				$('.schedule-'+day).css('background', 'none');
+			} else if (recording == 'off'){
+				$('.schedule-'+day).css('background', 'rgba(193,193,193,0.8)');
+			} else if (recording == 'partial') {
+				$('.schedule-'+day).css('background', 'rgba(230,238,196,0.8)');
+			}
+		});
+	}
+};
 
 var generateScheduleTable = function() {
 	var days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -787,7 +845,7 @@ var generateScheduleTable = function() {
 	header += '<th></th>';
 	for (var d in days) {
 		var day = days[d];
-		header += '<th>' + day + '</th>';
+		header += '<th class = "schedule-'+day+'">' + day + '</th>';
 	}
 	header += '</tr>';
 	
@@ -796,10 +854,10 @@ var generateScheduleTable = function() {
 	
 	for (var d in days) {
 		var day = days[d];
-		startTime += '<td>';
+		startTime += '<td class = "schedule-'+day+'">';
 		startTime += '<div class="form-group">';
 		startTime += '<div class="input-append bootstrap-timepicker">';
-		startTime += '<input type="text" class="form-control input-small" id="schedule-'+day+'-open" name="schedule['+day+'][open]">';
+		startTime += '<input type="text" class="form-control input-small" id="schedule-'+day+'-open" data-day="'+day+'" name="schedule['+day+'][open]">';
 		startTime += '</div>';
 		startTime += '</div>';
 		startTime += '</td>';
@@ -812,10 +870,10 @@ var generateScheduleTable = function() {
 	
 	for (var d in days) {
 		var day = days[d];
-		endTime += '<td>';
+		endTime += '<td class = "schedule-'+day+'">';
 		endTime += '<div class="form-group">';
 		endTime += '<div class="input-append bootstrap-timepicker">';
-		endTime += '<input type="text" class="form-control input-small" id="schedule-'+day+'-close" name="schedule['+day+'][close]">';
+		endTime += '<input type="text" class="form-control input-small" id="schedule-'+day+'-close" data-day="'+day+'" name="schedule['+day+'][close]">';
 		endTime += '</div>';
 		endTime += '</div>';
 		endTime += '</td>';
@@ -827,6 +885,12 @@ var generateScheduleTable = function() {
 	table += startTime;
 	table += endTime;
 	table += '</table>';
+	table += '<div style="color:rgba(0,0,0,0.7)">';
+	table += '<br><div style="border-style: solid; border-width: 1px; border-color: rgba(0,0,0,0.5); width:15px; height: 10px; float: left; margin: 5px"></div> recording all day (start time = 0:00, end time = 23:59)';
+	table += '<br><div style="background: rgba(230,238,196,1.0); width:15px; height: 10px; float: left; margin: 5px"></div> recording part of the day';
+	table += '<br><div style="background: rgba(193,193,193,0.9); width:15px; height: 10px; float: left; margin: 5px"></div> not recording (end time >= start time)';
+	table += '</div>';
+
 	return table;
 };
 
