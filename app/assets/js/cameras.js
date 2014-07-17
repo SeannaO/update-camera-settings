@@ -1283,11 +1283,18 @@ var cameraSchedule = function(camId) {
         contentType: 'application/json',
         success: function(data) {
             if (data.success) {
+				if (data.schedule_enabled == '1') {
+						$('#scheduler-notice').hide();
+				} else {
+						$('#scheduler-notice').show();
+				}
                 $('#camera-schedule-enable').prop('checked', data.schedule_enabled == "1").change( function() {
 
                     if ( $(this).is(':checked') ) {
+						$('#scheduler-notice').fadeOut();
                         $('#camera-schedule-dialog .form-control').prop('disabled', false);
                     } else {
+						$('#scheduler-notice').fadeIn();
                         $('#camera-schedule-dialog .form-control').prop('disabled', true);
                     }
                 });
