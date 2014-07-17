@@ -15,7 +15,8 @@ body {
 
 .logo{
 	display:block;
-	margin: 0 auto 20px auto;
+	/* margin: 0 auto 20px auto; */
+	margin-top: 10px;
 }
 
 #header{
