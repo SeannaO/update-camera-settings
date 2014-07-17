@@ -183,25 +183,37 @@ portChecker.check(8080, function(err, found) {
 
 	//
 	var lifelineAuthentication = function(username,password, done){
+		//
+		// there's a bug in lifeline authentication API
+		// it accepts empty username/password as valid credentials
+		// so I'm avoiding those here
+		// howver, notice that in case Lifeline has not a username/password, 
+		// this will prevent the user from logging in
+		if (typeof(username) == 'undefined' || typeof(password) == 'undefined') {
+			return done('invalid username/password', false);
+		}
+		username = username || '%20';
+		password = password || '%20';
+
+		var url = "https://" + username + ":" + password + "@localhost/cp/UserVerify?v=2&login=" + username + "&password=" + password;
 
 		if (process.env['NODE_ENV'] === 'development') {
+			// url = "https://192.168.215.148/cp/UserVerify?v=2&login=" + username + "&password=" + password;
 			return done(null, true);
-		}
+		} 
+		
 
 		if (!authCache.date || Date.now() - authCache.date > 15 * 60 * 1000) {	// auth cache expires every 15mini
-			var digest = new Buffer(username + ":" + password).toString('base64');
 			
-			var url = "https://" + username + ":" + password + "@localhost/cp/UserVerify?v=2&login=" + username + "&password=" + password;
 			request({ 
 				url:         url,
 				strictSSL:   false,
 				headers: {
 					'User-Agent':      'nodejs',
-					'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-					'Authorization':   'Basic ' + digest
+					'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
 				},
 			}, function( error, response, body) {
-				if (error){ return done(error); }
+				if (error){ return done(error, false); }
 				if (body) { 
 
 					if (body === 'true') {
@@ -224,7 +236,7 @@ portChecker.check(8080, function(err, found) {
 			if ( username === authCache.username && password === authCache.password ) {
 				return done( null, true );
 			} else {
-				return( 'unauthorized', false );
+				return done( 'unauthorized', false );
 			}
 		}
 	};
@@ -511,11 +523,43 @@ portChecker.check(8080, function(err, found) {
 		res.sendfile(__dirname + '/views/health.html');
 	});
 
-	app.get('/', passport.authenticate('basic', {session: false}), function (req, res) {								// main page
+	app.get('/', passport.authenticate('basic', {session: false, failureRedirect: '/login'}), function (req, res) {								// main page
 		res.sendfile(__dirname + '/views/cameras.html');			
 	});
-	app.get('/cameras', passport.authenticate('basic', {session: false}), function(req, res) {
+	app.get('/cameras', passport.authenticate('basic', {session: false, failureRedirect: '/login'}), function(req, res) {
 		res.sendfile(__dirname + '/views/cameras.html');			// main page - alternative route
+	});
+
+	app.get('/login', function(req, res) {
+
+		var auth = req.headers.authorization || ' ';
+		var tmp = auth.split(' ');   
+
+		var buf = new Buffer(tmp[1], 'base64'); 
+		var plain_auth = buf.toString();        
+		buf = null;
+
+		var creds = plain_auth.split(':');      
+		var username = creds[0];
+		var password = creds[1];
+
+
+		lifelineAuthentication( username, password, function(err, ok) {
+			if (!err && ok) {
+				res.status(200);
+				res.redirect('/');
+			} else {
+				res.status(401);
+				res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
+				res.sendfile(__dirname+'/views/unauthorized.html');
+			}
+		});
+	});
+
+	app.get('/logout', function (req, res) {								// main page
+		req.headers.authorization = "logged out";
+		res.status(401);
+		res.end('logged out');
 	});
 	// - - -
 
