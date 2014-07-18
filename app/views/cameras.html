@@ -200,6 +200,7 @@
 								<div class="form-group  col-xs-4">
 									<label for="camera-ip">camera ip</label>
 									<input type="text" class="form-control" id="camera-ip" placeholder="camera ip" name="camera[ip]">
+									<div id="ip-error" style="display:none; font-size: 10pt; color:rgba(255,90,0,0.7)">warning: invalid ip</div>
 								</div>
 								<!-- end of TEMPORARY, DEVELOPMENT ONLY -->
 
@@ -580,6 +581,9 @@
             })
 
             $("#camera-ip").change(function(){
+
+				validateIp();
+
                 var manufacturer = $("#camera-manufacturer").val();
                 if (manufacturer && manufacturer != 'unknown'){
                     getCameraOptions(function(data){

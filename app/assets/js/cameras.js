@@ -578,6 +578,15 @@ var setAuthStatus = function(data, cb){
     }
 };
 
+var validateIp = function() {
+	var ip = $("#camera-ip").val();
+	var re = /\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/;
+	if (!re.exec(ip)) {
+		$('#ip-error').fadeIn();
+	} else {
+		$('#ip-error').hide();
+	}
+}
 
 var editCamera = function(camId) {
     $("#update-camera").show();
@@ -598,6 +607,8 @@ var editCamera = function(camId) {
                 $("#add-new-camera-dialog #camera-manufacturer").val(data.camera.manufacturer).attr("selected", data.camera.manufacturer).prop('disabled', 'disabled');
                 $("#add-new-camera-dialog #camera-username").val(data.camera.username || '');
                 $("#add-new-camera-dialog #camera-password").val(data.camera.password || '');
+
+				validateIp();
 
 				current_number_of_streams = 0;
 				if (data.camera.streams.length > 0){
