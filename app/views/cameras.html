@@ -2,6 +2,11 @@
 <html>
     <head>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" /> 
+		<!--[if lt IE 9]>
+		<script type="text/javascript">
+			window.location = "/not-supported"
+		</script>
+		<![endif]-->
         <script src = "/js/jquery.min.js"></script>        
         <script src = "/js/jquery-ui.min.js"></script>
         <script src = "/js/jquery-serialize-object.js"></script>
@@ -355,7 +360,7 @@
 			
             //
 			//var timeline = new Timeline("body");
-			var timelines = [];
+			var timelines = {};
             
             $('#camera-schedule-dialog .form-control').timepicker({
                 showMeridian: false

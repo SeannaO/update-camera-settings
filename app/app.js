@@ -561,7 +561,12 @@ portChecker.check(8080, function(err, found) {
 		res.status(401);
 		res.end('logged out');
 	});
+
+	app.get('/not-supported', function(req, res) {
+		res.sendfile(__dirname+'/views/not_supported.html');
+	});
 	// - - -
+
 
 
 
