@@ -163,7 +163,7 @@ Camera.prototype.addStream = function( stream, cb ) {
 					self.emit( 'new_chunk', data);
 				});
 				recorder.on('camera_status', function(data) {
-					console.log('emit: ' + stream.id);
+					self.status = data.status;
 
 					// ---
 					// COMMENTED OUT FOR EXPERIMENTAL PURPOSES
@@ -642,6 +642,7 @@ Camera.prototype.restartStream = function( streamId ) {
 				self.emit( 'new_chunk', data);
 			});
 			recorder.on('camera_status', function(data) {
+				self.status = data.status;
 				self.emit('camera_status', { timestamp: new Date().getTime(), cam_id: self._id, cam_name: self.cameraName(), status: data.status, stream_id: data.stream_id } );
 			});
 
