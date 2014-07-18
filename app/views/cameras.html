@@ -456,6 +456,8 @@
             //
             $("#add-new-camera").click(function() {
 
+				$('#ip-error').hide();
+
                 var params = $('#camera-form').serializeObject();
 				var $dialog = $("#add-new-camera-dialog");
 				addOverlayToPage('adding new camera...');
@@ -612,6 +614,7 @@
 
             // - - -
             var openAddCameraDialog = function() {
+				$('#ip-error').hide();
                 $("#update-camera").hide();
                 $("#add-new-camera").show();
                 var $dialog = $("#add-new-camera-dialog");
