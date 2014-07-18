@@ -48,7 +48,11 @@
 							var player = new Player( playerDiv );
 							var camId = data[i]._id;
 							var streamId = data[i].streams[0].id;
-							player.playVideo( camId, streamId );
+							if (data[i].status == 'offline') {
+								playerDiv.append('<div style="width:100%;height:100%; background:rgb(200,200,200);padding: 10px;">camera offline</div>');
+							} else {
+								player.playVideo( camId, streamId );
+							}
                         }
                     }
                 });

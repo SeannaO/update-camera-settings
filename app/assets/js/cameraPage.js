@@ -265,6 +265,9 @@ CameraPage.prototype.getStreamsInfo = function(cb) {
 				if (!data.camera.name) {
 					$("#camera_name").html(data.camera.manufacturer);
 				}
+				if (data.camera.status == 'offline') {
+					self.buttons.livestream.attr('disabled','disabled');
+				}
 				if (cb) cb(data.camera);
 			}
 		},
