@@ -219,13 +219,21 @@ var list = function() {
 						} else {
 							text = data[i].streams[j].url;
 						}
-
-						timelineSetup(data[i]._id, data[i].streams[j].id, text, function(timeline_data) {
-							streamsCounter++;
-							if (streamsCounter >= totalStreams) {
-								addMotionData( timeline_data.cam_id, timeline_data.start, timeline_data.end );
-							}
-						});
+						
+						(function(i) {
+							timelineSetup(data[i]._id, data[i].streams[j].id, text, function(timeline_data) {
+								streamsCounter++;
+								if (streamsCounter >= totalStreams) {
+									addMotionData( timeline_data.cam_id, timeline_data.start, timeline_data.end );
+								}
+								if (data[i].status === 'offline' || data[i].status === 'disconnected') {
+									var $camitem = $("#camera-item-"+data[i]._id);
+										$camitem.animate({
+											backgroundColor: "rgb(243, 255, 102)"
+										}, 1000);
+								}
+							});
+						})(i);
 					}
 				}
 			}
