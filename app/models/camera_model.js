@@ -516,6 +516,9 @@ Camera.prototype.removeStream  = function( streamId ) {
 
 	self.streamsToBeDeleted[streamId] = self.streams[streamId];
 	self.streamsToBeDeleted[streamId].toBeDeleted = true;
+
+	self.streams[streamId].db.close();
+
 	delete self.streams[streamId];
 };
 // end of removeStream

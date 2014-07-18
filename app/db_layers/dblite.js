@@ -24,6 +24,10 @@ var Dblite = function( db_path, cb ) {
     });
 };
 
+Dblite.prototype.close = function() {
+	this.db.close();
+};
+
 Dblite.prototype.deleteVideo = function( id, cb ) {
 
 	var query = 'DELETE FROM videos WHERE id = ' + parseInt(id);
@@ -42,20 +46,15 @@ Dblite.prototype.createTableIfNotExists = function( cb ) {
 	var createStartIndex = 'CREATE INDEX idx_start ON videos(start)';
 	var createEndIndex = 'CREATE INDEX idx_end ON videos(end)';
 
-	fs.exists(self.db_path, function(exist) {        
-        if (typeof self.db === 'undefined' || !exist){
-            self.db = dblite( self.db_path );
-        }
-		self.db.query(createTable, function() {
-				self.db.query(createStartIndex, function() {
-					console.log('created start index');
-					self.db.query(createEndIndex, function() {
-						self.db.query('.show');
-						if (cb) cb();
-					});
-				});
-        });
-    });
+	self.db.query(createTable, function() {
+		self.db.query(createStartIndex, function() {
+			console.log('created start index');
+			self.db.query(createEndIndex, function() {
+				self.db.query('.show');
+				if (cb) cb();
+			});
+		});
+	});
 };
 
 /**
