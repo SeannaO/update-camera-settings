@@ -837,10 +837,13 @@ var setupScheduleTableEvents = function() {
 			var recording = compareScheduleTime( day );
 			if ( recording == 'all' ) {
 				$('.schedule-'+day).css('background', 'none');
+				$('#set-all-day-'+day).hide();
 			} else if (recording == 'off'){
 				$('.schedule-'+day).css('background', 'rgba(193,193,193,0.8)');
+				$('#set-all-day-'+day).fadeIn();
 			} else if (recording == 'partial') {
-				$('.schedule-'+day).css('background', 'rgba(230,238,196,0.8)');
+				$('.schedule-'+day).css('background', 'rgba(250,250,180,0.8)');
+				$('#set-all-day-'+day).fadeIn();
 			}
 		});
 		$('#schedule-'+days[d]+'-close').change(function() {
@@ -848,23 +851,33 @@ var setupScheduleTableEvents = function() {
 			var recording = compareScheduleTime( day );
 			if ( recording == 'all' ) {
 				$('.schedule-'+day).css('background', 'none');
+				$('#set-all-day-'+day).hide();
 			} else if (recording == 'off'){
 				$('.schedule-'+day).css('background', 'rgba(193,193,193,0.8)');
+				$('#set-all-day-'+day).fadeIn();
 			} else if (recording == 'partial') {
-				$('.schedule-'+day).css('background', 'rgba(230,238,196,0.8)');
+				$('.schedule-'+day).css('background', 'rgba(250,250,180,0.8)');
+				$('#set-all-day-'+day).fadeIn();
 			}
 		});
 	}
+};
+
+var setAllDay = function(day) {
+	$('#schedule-'+day+'-open').val('0:00').trigger('change');
+	$('#schedule-'+day+'-close').val('23:59').trigger('change');
 };
 
 var generateScheduleTable = function() {
 	var days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
 	var header = '<tr>';
-	header += '<th></th>';
+	header += '<th style="border-left-color: #fff; border-top-color: #fff"></th>';
 	for (var d in days) {
 		var day = days[d];
-		header += '<th class = "schedule-'+day+'">' + day + '</th>';
+		header += '<th class = "schedule-'+day+'">' + day 
+			+ '<div style="font-size:9pt; opacity: 0.8" id = "set-all-day-'+day+'"><a href="javascript:setAllDay(\''+day+'\')">[ set all day ]</a></div>'
+			+ '</th>';
 	}
 	header += '</tr>';
 	
@@ -899,14 +912,14 @@ var generateScheduleTable = function() {
 	}
 	endTime += '</tr>';
 
-	var table = '<table class="table table-bordered">';
+	var table = '<br><table class="table table-bordered">';
 	table += header;
 	table += startTime;
 	table += endTime;
 	table += '</table>';
 	table += '<div style="color:rgba(0,0,0,0.7)">';
 	table += '<br><div style="border-style: solid; border-width: 1px; border-color: rgba(0,0,0,0.5); width:15px; height: 10px; float: left; margin: 5px"></div> recording all day (start time = 0:00, end time = 23:59)';
-	table += '<br><div style="background: rgba(230,238,196,1.0); width:15px; height: 10px; float: left; margin: 5px"></div> recording part of the day';
+	table += '<br><div style="background: rgba(240,240,180,1.0); width:15px; height: 10px; float: left; margin: 5px"></div> recording part of the day';
 	table += '<br><div style="background: rgba(193,193,193,0.9); width:15px; height: 10px; float: left; margin: 5px"></div> not recording (end time >= start time)';
 	table += '</div>';
 
