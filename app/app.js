@@ -1,5 +1,5 @@
 //require('look').start(); // -- profiler ( NOT for production )
-// var agent           = require('webkit-devtools-agent');
+// var agent          = require('webkit-devtools-agent');
 var winston           = require('winston');
 var express           = require('express');                          // express
 var request           = require('request');                          // request
@@ -19,7 +19,8 @@ var Trash = require('./helpers/trash.js');
 
 // - - -
 // kills any ffmpeg, iostat and smartctl processes that might be already running
-var exec = require('child_process').exec;
+var exec  = require('child_process').exec;
+var spawn = require('child_process').spawn;
 
 var portChecker = require('./helpers/port_checker.js');
 
@@ -49,13 +50,11 @@ portChecker.check(8080, function(err, found) {
 		});
 	});
 
-
 	// monitor memory usage of rtsp_grabber
 	// kills rtsp_grabber if memory usage is greater than 20%
-	self.rtspMemMonitor = exec('./mem.sh rtsp_grabber 20');
+	self.rtspMemMonitor = spawn('./mem.sh', ['rtsp_grabber', '20']);
 	self.rtspMemMonitor.stderr.on('data', function(data) {
 		console.error('[app] rtsp_grabber is getting memory hungry');
-		console.error(data);
 	});
 
 	// monitor node memory usage
@@ -76,17 +75,18 @@ portChecker.check(8080, function(err, found) {
 				self.grabberProcess.removeAllListeners();
 			}
 
-			self.grabberProcess = exec('./rtsp_grabber', function( error, stdout, stderr ) {
-				setTimeout( function() {
+			self.grabberProcess = spawn('./rtsp_grabber');
+			self.grabberProcess.once('exit', function(code) {
+
+				console.error('[app] rtsp_grabber exited; relaunching...');
+				self.launchRtspGrabber();
+				console.log('[app] rtsp_grabber relaunched'); 
+
+				clearTimeout(self.restartRecordingTimeout);
+				self.restartRecordingTimeout = setTimeout( function() {
 					console.log('[app] restarting recorder');
 					camerasController.simplyRestartRecording();
 				}, 1000);
-			});
-			self.grabberProcess.once('exit', function(code) {
-				console.error('[app] rtsp_grabber exited; relaunching...');
-				self.launchRtspGrabber( function() {
-				});
-				console.log('[app] rtsp_grabber relaunched'); 
 			});
 		});
 	};
