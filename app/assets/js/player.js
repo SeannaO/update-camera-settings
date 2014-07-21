@@ -1,3 +1,5 @@
+var iOS = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
+
 function Player( el ) {
 
 	var self = this;
@@ -11,8 +13,10 @@ function Player( el ) {
 		class:   'player-layer'
 	}).appendTo(el);
 
+
+	var controls = iOS ? 'controls' : '';
 	
-	this.layers.nativePlayer = $("<video autoplay class='player-layer'>", {
+	this.layers.nativePlayer = $("<video autoplay " + controls + " class='player-layer'>", {
 		id:      'native-player'
 	}).appendTo(el);
 	
@@ -31,8 +35,14 @@ function Player( el ) {
 		"<p>( this player requires flash. check if it's enabled and make sure your browser supports flash )</p>"
 	);
 
-
 	window.onCurrentTimeChange = function (time, playerId) {
+		if (self.mode == 'live') {
+			clearTimeout( self.playerInactiveTimeout );
+			self.playerInactiveTimeout = setTimeout( function() {
+				console.log(el);
+				$(window).trigger('playerInactive', el);
+			}, 3000);
+		}
 		$(window).trigger( 'currentTimeChange', time );
 	}
 

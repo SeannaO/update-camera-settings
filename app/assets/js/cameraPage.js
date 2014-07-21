@@ -56,6 +56,10 @@ CameraPage.prototype.setupEvents = function() {
 		}
 	});
 
+	$(window).on('playerInactive', function(e, d) {
+		self.buttons.livestream.click();
+	});
+
 	$(window).on('motion_loaded', function(e, d) {
 		self.buttons.toggleMotion.prop('disabled', false);
 	});
@@ -265,7 +269,7 @@ CameraPage.prototype.getStreamsInfo = function(cb) {
 				if (!data.camera.name) {
 					$("#camera_name").html(data.camera.manufacturer);
 				}
-				if (data.camera.status == 'offline') {
+				if (data.camera.status == 'offline' || data.camera.status == 'disconnected') {
 					self.buttons.livestream.attr('disabled','disabled');
 				}
 				if (cb) cb(data.camera);
