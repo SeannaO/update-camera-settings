@@ -132,6 +132,7 @@ Player.prototype.showLiveStream = function( url ) {
 Player.prototype.launchStrobePlayer = function( options ) {
 
 	var self = this;
+	self.cbSet = false;
 
 	if (self.mode == 'live') {
 		self.playerInactiveTimeout = setTimeout( function() {
