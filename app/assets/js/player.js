@@ -1,6 +1,50 @@
 var iOS = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 
+Player.players = {};
+Player.setupPlayersCallback = function(playerId) {
+	var self = this;
+	
+	var player = Player.players[playerId];
+	if (player.cbSet) return;
+	player.cbSet = true;
+	
+	console.log('setup callbacks');
+	playerEl = document.getElementById(playerId);
+	// Add event listeners that will update the 
+	playerEl.addEventListener("currentTimeChange" , "Player.currentTimeChange" );
+	// player.addEventListener("durationChange"    , "window.onDurationChange");
+
+	// Pause/Resume the playback when we click the Play/Pause link
+	// document.getElementById("play-pause").onclick = function(){
+	// 	var state = player.getState();
+	// 	if (state == "ready" || state == "paused") {
+	// 		player.play2();
+	// 	}
+	// 	else if (state == "playing") {
+	// 		player.pause();
+	// 	}
+	// 	return false;
+	// };
+};
+Player.currentTimeChange = function(time, playerId) {
+	var player = Player.players[playerId];
+	player.currentTimeChange(time, playerId);
+};
+
+Player.prototype.currentTimeChange = function(time, playerId) {
+	var self = this;
+	if (self.mode == 'live') {
+		clearTimeout( self.playerInactiveTimeout );
+		self.playerInactiveTimeout = setTimeout( function() {
+			$(self.el).trigger('playerInactive');
+		}, 3000);
+	}
+	$(window).trigger( 'currentTimeChange', time );
+};
+
 function Player( el ) {
+
+	Player.players['strobeMediaPlayback-' + $(el).attr('id')] = this;
 
 	var self = this;
 
@@ -36,14 +80,6 @@ function Player( el ) {
 	);
 
 	window.onCurrentTimeChange = function (time, playerId) {
-		if (self.mode == 'live') {
-			clearTimeout( self.playerInactiveTimeout );
-			self.playerInactiveTimeout = setTimeout( function() {
-				console.log(el);
-				$(window).trigger('playerInactive', el);
-			}, 3000);
-		}
-		$(window).trigger( 'currentTimeChange', time );
 	}
 
 	$(window).on('currentTimeChange', function(e, t) {
@@ -97,6 +133,14 @@ Player.prototype.launchStrobePlayer = function( options ) {
 
 	var self = this;
 
+	if (self.mode == 'live') {
+		self.playerInactiveTimeout = setTimeout( function() {
+			$(self.el).trigger('playerInactive');
+		}, 15000);
+	} else {
+		clearTimeout( self.playerInactiveTimeout );
+	}
+
 	this.currentPlayer = 'strobe';
 	
 	for( var i in this.layers ) {
@@ -119,7 +163,7 @@ Player.prototype.launchStrobePlayer = function( options ) {
 		// controlBarPosition:           "bottom",
 		poster:                          "",
 		plugin_hls:                      "/swf/HLSDynamicPlugin.swf",
-		javascriptCallbackFunction:      "window.onJavaScriptBridgeCreated",
+		javascriptCallbackFunction:      "Player.setupPlayersCallback",
 		bufferTime:                      0.1,
 		dvrBufferTime:                   0.1,
 		initialBufferTime:               0.1,
@@ -156,43 +200,12 @@ Player.prototype.launchStrobePlayer = function( options ) {
 			}
 	);
 
-// 	window.onCurrentTimeChange = function (time, playerId) {
-// 		var timelineWidth = $("#timeline").width();	
-// 	    var totalTime = 24*60*60;
-// 		var absolute_time = indexer.getAbsoluteTime( time );
-// 		var dt = ( absolute_time - timeline.begin )/1000; 
-// 		var pos = dt * (1.0 * timelineWidth) / totalTime - 2;
-// 		$("#marker").css("left", pos);
-// 	}
-// 			
-// 	window.onDurationChange = function (time, playerId) {
-// 	}
-//
 	this.layers.strobePlayer = $("#strobeMediaPlayback-" + $(self.el).attr('id'));
 
-	var player;
-	window.onJavaScriptBridgeCreated = function(playerId) {
-		if (!player ) {
-			player = document.getElementById(playerId);
-			// Add event listeners that will update the 
-			player.addEventListener("currentTimeChange" , "window.onCurrentTimeChange");
-			player.addEventListener("durationChange"    , "window.onDurationChange");
-
-			// Pause/Resume the playback when we click the Play/Pause link
-			document.getElementById("play-pause").onclick = function(){
-				var state = player.getState();
-				if (state == "ready" || state == "paused") {
-					player.play2();
-				}
-				else if (state == "playing") {
-					player.pause();
-				}
-				return false;
-			};
-		}
-	}
 };
 
+Player.prototype.setupCallbacks = function() {
+};
 
 Player.prototype.seek = function( time ) {
 	

@@ -242,7 +242,10 @@ CameraPage.prototype.setupButtons = function() {
 		self.mode = 'live';
 		self.inputs.date.val('');
 		self.timeline.liveOverlay.fadeIn();
+		$('#video').html('');
+		self.player = new Player('#video');
 		self.player.playVideo( self.camId, stream );
+
 
 	});
 
