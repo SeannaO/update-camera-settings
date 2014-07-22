@@ -5,10 +5,9 @@ Player.setupPlayersCallback = function(playerId) {
 	var self = this;
 	
 	var player = Player.players[playerId];
-	if (player.cbSet) return;
+	if (!('#' + playerId) || player.cbSet) return;
 	player.cbSet = true;
 	
-	console.log('setup callbacks');
 	playerEl = document.getElementById(playerId);
 	// Add event listeners that will update the 
 	playerEl.addEventListener("currentTimeChange" , "Player.currentTimeChange" );
@@ -51,6 +50,11 @@ function Player( el ) {
 	this.layers = {};
 
 	this.el = el;
+
+	$(el).bind("DOMSubtreeModified", function() {
+		console.log('change');
+		self.cbSet = false;
+	});
 
 	this.layers.livePlayer = $("<div>", {
 		id:      'live-player',
