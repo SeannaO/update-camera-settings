@@ -198,7 +198,7 @@ portChecker.check(8080, function(err, found) {
 		var url = "https://" + username + ":" + password + "@localhost/cp/UserVerify?v=2&login=" + username + "&password=" + password;
 
 		if (process.env['NODE_ENV'] === 'development') {
-			// url = "https://192.168.215.148/cp/UserVerify?v=2&login=" + username + "&password=" + password;
+			// url = "https://192.168.215.133/cp/UserVerify?v=2&login=" + username + "&password=" + password;
 			return done(null, true);
 		} 
 		
@@ -523,15 +523,17 @@ portChecker.check(8080, function(err, found) {
 		res.sendfile(__dirname + '/views/health.html');
 	});
 
-	app.get('/', passport.authenticate('basic', {session: false, failureRedirect: '/login'}), function (req, res) {								// main page
-		res.sendfile(__dirname + '/views/cameras.html');			
+	app.get('/', function (req, res) {								// main page
+		loginAndSendFile( req, res, __dirname + '/views/cameras.html');
 	});
-	app.get('/cameras', passport.authenticate('basic', {session: false, failureRedirect: '/login'}), function(req, res) {
-		res.sendfile(__dirname + '/views/cameras.html');			// main page - alternative route
+	app.get('/cameras', function(req, res) {
+		loginAndSendFile(req, res, __dirname + '/views/cameras.html');			// main page - alternative route
 	});
 
-	app.get('/login', function(req, res) {
 
+	// - - - - -
+	// login
+	var loginAndSendFile = function(req, res, file) {
 		var auth = req.headers.authorization || ' ';
 		var tmp = auth.split(' ');   
 
@@ -543,29 +545,28 @@ portChecker.check(8080, function(err, found) {
 		var username = creds[0];
 		var password = creds[1];
 
-
 		lifelineAuthentication( username, password, function(err, ok) {
 			if (!err && ok) {
 				res.status(200);
-				res.redirect('/');
+				res.sendfile(file);
 			} else {
 				res.status(401);
 				res.setHeader('WWW-Authenticate', 'Basic realm="Secure Area"');
 				res.sendfile(__dirname+'/views/unauthorized.html');
 			}
 		});
-	});
-
+	};
 	app.get('/logout', function (req, res) {								// main page
 		req.headers.authorization = "logged out";
 		res.status(401);
 		res.end('logged out');
 	});
-
+	// login
+	// - - - - -
+	
 	app.get('/not-supported', function(req, res) {
 		res.sendfile(__dirname+'/views/not_supported.html');
 	});
-	// - - -
 
 
 
