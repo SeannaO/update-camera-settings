@@ -464,6 +464,12 @@ portChecker.check(8080, function(err, found) {
 		io.sockets.emit( 'motion', data );
 	});
 
+	camerasController.on('update', function(data) {
+		io.sockets.emit( 'cameraUpdated', data);
+	});
+	camerasController.on('delete', function(data) {
+		io.sockets.emit( 'cameraRemoved', data);
+	});
 
 	camerasController.on('camera_status', function( data ) {
 		if (data.status === "disconnected" || data.status === "offline"){
