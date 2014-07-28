@@ -251,6 +251,12 @@ $.ajax({
 						updateThumb(data[i]._id, thumb );	
 					}				
 				}	
+				for (var i = 0; i < data.length; i++) {
+					var d = data[i];
+					d.cam_id = d._id;
+					cameras[d._id].recording = true;
+					updateCameraStatus( d );
+				}
 			}
 
 		}
