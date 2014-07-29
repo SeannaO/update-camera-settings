@@ -36,7 +36,10 @@ var removeActionConfigurationMsg = '<?xml version="1.0" encoding="utf-8"?><soap:
 
 
 // SOAPAction: http://www.axis.com/vapix/ws/action1/AddActionConfiguration
-var addActionConfigurationMsg = '<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:aa="http://www.axis.com/vapix/ws/action1" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:tns1="http://www.onvif.org/ver10/topics" xmlns:tnsaxis="http://www.axis.com/2009/event/topics" xmlns:soap="http://www.w3.org/2003/05/soap-envelope"><soap:Body><aa:AddActionConfiguration xmlns="http://www.axis.com/vapix/ws/action1"><NewActionConfiguration><TemplateToken>com.axis.action.notification.tcp</TemplateToken><Name>Send Notification</Name><Parameters><Parameter Name="message" Value=""></Parameter><Parameter Name="period" Value="1"></Parameter><Parameter Name="qos" Value="0"></Parameter><Parameter Name="port" Value="{port}"></Parameter><Parameter Name="host" Value="{ip}"></Parameter></Parameters></NewActionConfiguration></aa:AddActionConfiguration></soap:Body></soap:Envelope>';
+var addActionConfigurationMsg_legacy = '<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:aa="http://www.axis.com/vapix/ws/action1" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:tns1="http://www.onvif.org/ver10/topics" xmlns:tnsaxis="http://www.axis.com/2009/event/topics" xmlns:soap="http://www.w3.org/2003/05/soap-envelope"><soap:Body><aa:AddActionConfiguration xmlns="http://www.axis.com/vapix/ws/action1"><NewActionConfiguration><TemplateToken>com.axis.action.notification.tcp</TemplateToken><Name>Send Notification</Name><Parameters><Parameter Name="message" Value=""></Parameter><Parameter Name="period" Value="1"></Parameter><Parameter Name="qos" Value="0"></Parameter><Parameter Name="port" Value="{port}"></Parameter><Parameter Name="host" Value="{ip}"></Parameter></Parameters></NewActionConfiguration></aa:AddActionConfiguration></soap:Body></soap:Envelope>';
+
+var addActionConfigurationMsg = '<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:aa="http://www.axis.com/vapix/ws/action1" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:tns1="http://www.onvif.org/ver10/topics" xmlns:tnsaxis="http://www.axis.com/2009/event/topics" xmlns:soap="http://www.w3.org/2003/05/soap-envelope"><soap:Body><aa:AddActionConfiguration xmlns="http://www.axis.com/vapix/ws/action1"><NewActionConfiguration><TemplateToken>com.axis.action.unlimited.notification.tcp</TemplateToken><Name>Send Notification</Name><Parameters><Parameter Name="message" Value=""></Parameter><Parameter Name="period" Value="1"></Parameter><Parameter Name="qos" Value="0"></Parameter><Parameter Name="port" Value="{port}"></Parameter><Parameter Name="host" Value="{ip}"></Parameter></Parameters></NewActionConfiguration></aa:AddActionConfiguration></soap:Body></soap:Envelope>';
+
 
 // SOAPAction: http://www.axis.com/vapix/ws/action1/GetRecipientConfigurations
 var getRecipientConfigurationsMsg = '<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:aa="http://www.axis.com/vapix/ws/action1" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:soap="http://www.w3.org/2003/05/soap-envelope"><soap:Body><aa:GetRecipientConfigurations xmlns="http://www.axis.com/vapix/ws/action1"></aa:GetRecipientConfigurations></soap:Body></soap:Envelope>';
@@ -299,6 +302,26 @@ var removeActionConfiguration = function( cam_ip, username, password, configurat
 };
 
 
+var addActionConfig_legacy = function( cam_ip, username, password, cb ) {
+
+	var msg = addActionConfigurationMsg_legacy
+		.replace('{port}', '8001')
+		.replace('{ip}', my_ip)
+		.replace('{recipient_name}', my_recipient_name);
+
+	sendSoapMessage(
+		cam_ip, 
+		username, 
+		password,
+		'http://www.axis.com/vapix/ws/action1/AddActionConfiguration', 
+		msg, 
+		function( err, response, body) {
+			cb( err, response, body );
+		}
+	);
+
+};
+
 var addActionConfig = function( cam_ip, username, password, cb ) {
 	
 	var msg = addActionConfigurationMsg
@@ -337,6 +360,25 @@ var addActionRule = function( cam_ip, username, password, primary_action_id, cb 
 	);
 };
 
+var addActionConfigAndRule_legacy = function( cam_ip, username, password, cb) {
+	
+	addActionConfig_legacy( cam_ip, username, password, function( err, res, body ) {
+		if (err) {
+			cb(err);
+			return;
+		}
+		var id_regex = /ConfigurationID>(\d+)</;
+		var match = id_regex.exec( body );
+		if (!match) {
+			cb ('could not setup motion; check the camera firmware version');
+		} else {
+			addActionRule( cam_ip, username, password, match[1], function( err, res, body ) {
+				cb( err );
+			});
+		}
+	});
+};
+
 var addActionConfigAndRule = function( cam_ip, username, password, cb) {
 	
 	addActionConfig( cam_ip, username, password, function( err, res, body ) {
@@ -347,7 +389,7 @@ var addActionConfigAndRule = function( cam_ip, username, password, cb) {
 		var id_regex = /ConfigurationID>(\d+)</;
 		var match = id_regex.exec( body );
 		if (!match) {
-			cb ('could not find a configuration id on the camera');
+			addActionConfigAndRule_legacy( cam_ip, username, password, cb );
 		} else {
 			addActionRule( cam_ip, username, password, match[1], function( err, res, body ) {
 				cb( err );
