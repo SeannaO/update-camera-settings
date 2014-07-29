@@ -316,6 +316,20 @@ Axis.prototype.setupMotionDetection = function(cam, cb){
 	if (cb) cb();
 };
 
+Axis.prototype.motionCallback = function(socket) {
+
+		var self = this;
+
+		try {
+			var timestamp = Date.now()
+				if ( socket.remoteAddress === self.cam.ip ) {
+					// console.log('[Axis.motionDetection] movement detected');
+					if(cb) cb(timestamp, {fd: socket.fd, highWaterMark: socket.highWaterMark}) ;
+				}
+		} catch(e) {
+			console.error("[Axis.motionDetection] Error:" + e);
+		}
+};
 
 Axis.prototype.startListeningForMotionDetection = function(cb){
 	
@@ -324,18 +338,12 @@ Axis.prototype.startListeningForMotionDetection = function(cb){
 	
 	self.motion_enabled = true;
 
-	Axis.server.on('connection', function( socket ) {
-		try {
-			var timestamp = Date.now()
-			// console.log("==== " + socket.remoteAddress + " | " + self.cam.ip );
-			if ( socket.remoteAddress === self.cam.ip ) {
-				console.log('[Axis.motionDetection] movement detected');
-				if(cb) cb(timestamp, {fd: socket.fd, highWaterMark: socket.highWaterMark}) ;
-			}
-		} catch(e) {
-			console.error("[Axis.motionDetection] Error:" + e);
-		}
-	});	
+	if (self.motionCallbackWrapper) {
+		Axis.server.removeListener('connection', self.motionCallbackWrapper);
+	}
+
+	self.motionCallbackWrapper = self.motionCallback.bind(self);
+	Axis.server.on('connection', self.motionCallbackWrapper);
 };
 
 
@@ -344,7 +352,11 @@ Axis.prototype.stopListeningForMotionDetection = function(){
 	//emit motion
 	// clear events
 	//
+	var self = this;
 	this.motion_enabled = false;
+	if (self.motionCallbackWrapper) {
+		Axis.server.removeListener('connection', self.motionCallbackWrapper);
+	}
 };
 
 
