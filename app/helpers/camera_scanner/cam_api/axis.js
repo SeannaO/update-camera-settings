@@ -324,8 +324,6 @@ Axis.prototype.startListeningForMotionDetection = function(cb){
 	self.motion_enabled = true;
 
 	self.motionCallback = function(socket) {
-		var socket = {};
-		socket.remoteAddress = this.cam.ip;
 
 		var self = this;
 
