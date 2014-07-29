@@ -19,6 +19,14 @@ module.exports.getSensorData = function(videosFolder, req, res){
 	var endDate = new Date(endTime);
 
 
+	var oneDay = 1000*60*60*24;
+
+	if (endDate - startDate > 2*oneDay) {
+		console.error('[SensorData]  ignoring request for more than 2 days of data');
+		res.json(400, {error: 'requesting too much data: more than 2 days'});
+		return;
+	}
+
 	var db_path = videosFolder + '/' + cameraId + '/sensor';
 
 	var sensor_data = new SensorData(db_path, 10);

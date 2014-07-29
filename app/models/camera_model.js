@@ -83,6 +83,8 @@ function Camera( cam, videosFolder, cb ) {
 		// nothing to be done
 		if (cb) cb(self);
 	}
+
+	self.pendingMotion = [];
 }
 // end of constructor
 //
@@ -161,6 +163,7 @@ Camera.prototype.addStream = function( stream, cb ) {
 
 				recorder.on('new_chunk', function(data) {
 					self.emit( 'new_chunk', data);
+					self.emitPendingMotion(data);
 				});
 				recorder.on('camera_status', function(data) {
 					self.status = data.status;
@@ -380,7 +383,11 @@ Camera.prototype.startMotionDetection = function() {
 		motion_data.name = self.cameraName();
 
 		if (Date.now() - self.lastMotion > 7000) {
-			self.emit("motion", motion_data);
+			// self.emit("motion", motion_data);
+			self.pendingMotion.push(motion_data);
+			while(self.pendingMotion.length > 10) {
+				self.pendingMotion.shift();
+			}
 			self.lastMotion = Date.now();
 		}
 		// check to see if the camera already has a motion event
@@ -424,7 +431,7 @@ Camera.prototype.startMotionDetection = function() {
 			result.duration = Date.now() - result.start;
 			// Broadcast that motion has ended with the duration, camera name, ID, and timestamp
 			self.emit( 'motionEvent', result);
-		}, 10000);
+		}, 30000);
 
 	});
 };
@@ -598,6 +605,23 @@ Camera.prototype.cameraName = function(){
 	return name;
 }
 
+Camera.prototype.emitPendingMotion = function(chunk) {
+
+	var data = chunk;
+
+	var self = this;
+
+	if (self.pendingMotion.length > 0) {
+		var d = self.pendingMotion[0];
+		while (d && d.timestamp < data.end) {
+			d = self.pendingMotion.shift();
+			if (d.timestamp < data.start) d.timestamp = data.start;
+			self.emit('motion', d);
+			d = self.pendingMotion[0];
+		}
+	}
+};
+
 /**
  * Restarts a stream
  *	by stopping and deleting the corresponding recordModel,
@@ -643,6 +667,7 @@ Camera.prototype.restartStream = function( streamId ) {
 					data.cause = 'motion';
 				}
 				self.emit( 'new_chunk', data);
+				self.emitPendingMotion(data);
 			});
 			recorder.on('camera_status', function(data) {
 				self.status = data.status;
@@ -963,6 +988,7 @@ Camera.prototype.setupEvents = function() {
         this.streams[i].recordModel.on( 'new_chunk', function(data) {
         	data.cam_name = self.cameraName();
             self.emit( 'new_chunk', data);
+			self.emitPendingMotion(data);
         });
         this.streams[i].recordModel.on('camera_status', function(data) {
             // self.emit('camera_status', { cam_id: self._id, status: data.status } );

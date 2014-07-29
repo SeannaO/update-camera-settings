@@ -316,27 +316,29 @@ Axis.prototype.setupMotionDetection = function(cam, cb){
 	if (cb) cb();
 };
 
-Axis.prototype.motionCallback = function(socket) {
+
+Axis.prototype.startListeningForMotionDetection = function(cb){
+
+	var self = this;
+	
+	self.motion_enabled = true;
+
+	self.motionCallback = function(socket) {
+		var socket = {};
+		socket.remoteAddress = this.cam.ip;
 
 		var self = this;
 
 		try {
 			var timestamp = Date.now()
 				if ( socket.remoteAddress === self.cam.ip ) {
-					// console.log('[Axis.motionDetection] movement detected');
+					console.log('[Axis.motionDetection] movement detected: ' + self.cam.ip);
 					if(cb) cb(timestamp, {fd: socket.fd, highWaterMark: socket.highWaterMark}) ;
 				}
 		} catch(e) {
 			console.error("[Axis.motionDetection] Error:" + e);
 		}
-};
-
-Axis.prototype.startListeningForMotionDetection = function(cb){
-	
-	
-	var self = this;
-	
-	self.motion_enabled = true;
+	};
 
 	if (self.motionCallbackWrapper) {
 		Axis.server.removeListener('connection', self.motionCallbackWrapper);
