@@ -18,6 +18,10 @@ var listParamsUrl = baseUrl + 'list&group={group_name}';
 var listAllParamsUrl = baseUrl + 'list';
 var listResolutionsUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&group=root.Properties.Image.Resolution";
 
+var listNumberOfSourcesUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&group=root.ImageSource.NbrOfSources";
+var listSourceNameUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&group=root.Image.I{source_number}.Name";
+var listSourceResolutionsUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&group=root.Image.I{source_number}.Appearance.Resolution";
+
 
 var Axis = function() {
 	this.cam = {};
@@ -360,6 +364,47 @@ Axis.prototype.stopListeningForMotionDetection = function(){
 };
 
 
+Axis.prototype.getNumberOfSources = function (cb) {
+
+	var self = this;
+	var url = listNumberOfSources
+		.replace('{user}', self.cam.user || '')
+		.replace('{pass}', self.cam.password || '')
+		.replace('{ip}', self.cam.ip);
+
+	var digest = new Buffer(self.cam.user + ":" + self.cam.password).toString('base64');
+
+	request({ 
+		url: url,
+		headers: {
+			'User-Agent': 'nodejs',
+			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+			'Authorization': 'Basic ' + digest			
+		},
+	}, function( error, response, body) {
+		if (!error && body && body.indexOf('nauthorized') > -1) {
+			cb('not authorized', []);
+		}
+		if (!error && body)	{
+
+			var srcDataBegin = body.indexOf('value');
+			srcDataBegin = body.indexOf('"', srcDataBegin);
+			var srcDataEnd = body.indexOf('"', srcDataBegin+1);
+
+			var nSources = body.substring(resDataBegin + 1, resDataEnd);
+			if ( isNaN(nSources) ) {
+				if (cb) cb('could not find number of sources', 0);
+				return;
+			} 
+			else {
+				cb(null, nSources);
+			}
+		} else{
+			cb(error, 0);
+		}
+	}
+	);
+};
 
 Axis.prototype.getResolutionOptions = function (cb) {
 
