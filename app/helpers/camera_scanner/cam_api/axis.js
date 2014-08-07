@@ -392,7 +392,7 @@ Axis.prototype.getNumberOfSources = function (cb) {
 			var srcDataEnd = body.indexOf('"', srcDataBegin+1);
 
 			var nSources = body.substring(resDataBegin + 1, resDataEnd);
-			if ( isNaN(nSources) )	
+			if ( isNaN(nSources) ) {
 				if (cb) cb('could not find number of sources', 0);
 				return;
 			} 
