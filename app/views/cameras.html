@@ -172,7 +172,7 @@
 
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title">add new camera</h4>
+						<h4 class="modal-title">add new <span class='device-type-name'>camera</span></h4>
                     </div>
 
                     <div class="modal-body">
@@ -181,8 +181,8 @@
 							<div style = "height: auto; overflow: auto"> 
 
 								<div class="form-group">
-									<label for="camera-name">camera name</label>
-									<input type="text" class="form-control" id="camera-name" placeholder="camera name" name="camera[name]">
+									<label for="camera-name">name</label>
+									<input type="text" class="form-control" id="camera-name" placeholder="name" name="camera[name]">
 								</div>
 
 								<!--input name="camera[ip_address]" type="hidden" id="camera-ip">
@@ -198,7 +198,7 @@
 								</div>
 
 								<div class="form-group  col-xs-4">
-									<label for="camera-ip">camera ip</label>
+									<label for="camera-ip">ip</label>
 									<input type="text" class="form-control" id="camera-ip" placeholder="camera ip" name="camera[ip]">
 									<div id="ip-error" style="display:none; font-size: 10pt; color:rgba(255,90,0,0.7)">warning: invalid ip</div>
 								</div>
@@ -618,7 +618,7 @@
                 $("#update-camera").hide();
                 $("#add-new-camera").show();
                 var $dialog = $("#add-new-camera-dialog");
-                $dialog.find('.modal-title').html("add new camera");
+				$dialog.find('.modal-title').html("add new <span class='device-type-name'>camera</span>");
                 $dialog.find("#camera-manufacturer").prop('disabled', false);
                 $dialog.find("#camera-ip").prop('disabled', false);
                 $("#stream-tabs").html("");

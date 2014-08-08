@@ -2,6 +2,7 @@ var request     = require('request');
 var xml2js      = require('xml2js').parseString;
 var net         = require('net');
 var axis_motion = require('./axis_motion.js');
+var async       = require('async');
 
 var baseUrl = 'http://{user}:{pass}@{ip}/axis-cgi/param.cgi?action=';
 var createProfileUrl = baseUrl + 'add&template=streamprofile&group=StreamProfile';
@@ -13,6 +14,8 @@ var parametersString = "videocodec=h264&framerate={framerate}&resolution={resolu
 //var rtspUrl = 'rtsp://{user}:{pass}@{ip}/axis-media/media.amp?{profile_name}&framerate={framerate}&resolution={resolution}';
 
 var rtspUrl = 'rtsp://{user}:{pass}@{ip}/axis-media/media.amp?streamprofile={profile_name}&fps={framerate}&resolution={resolution}&compression={compression}&videocodec=h264&videomaxbitrate={max_bitrate}';
+
+var rtspUrlEncoder = 'rtsp://{user}:{pass}@{ip}/axis-media/media.amp?streamprofile={profile_name}&fps={framerate}&resolution={resolution}&compression={compression}&videocodec=h264&videomaxbitrate={max_bitrate}&camera={camera_no}';
 
 var listParamsUrl = baseUrl + 'list&group={group_name}';
 var listAllParamsUrl = baseUrl + 'list';
@@ -259,15 +262,31 @@ Axis.prototype.getRtspUrl = function ( profile ) {
 
 	self.createProfile( profile );
 
-	return rtspUrl
-		.replace('{user}', self.cam.user || '')
-		.replace('{pass}', self.cam.password || '')
-		.replace('{profile_name}', profile.name)
-		.replace('{ip}', self.cam.ip)
-		.replace('{resolution}', profile.resolution || '800x600')
-		.replace('{framerate}', profile.framerate || '15')
-		.replace('{compression}', 40)
-		.replace('{max_bitrate}', 512);
+	var isEncoder = !isNaN(profile.camera_no);
+
+	if (!isEncoder) {
+		return rtspUrl
+			.replace('{user}', self.cam.user || '')
+			.replace('{pass}', self.cam.password || '')
+			.replace('{profile_name}', profile.name)
+			.replace('{ip}', self.cam.ip)
+			.replace('{resolution}', profile.resolution || '800x600')
+			.replace('{framerate}', profile.framerate || '15')
+			.replace('{compression}', 40)
+			.replace('{max_bitrate}', 512);
+	} else {
+		var cam_no = parseInt(profile.camera_no) + 1;
+		return rtspUrlEncoder
+			.replace('{user}', self.cam.user || '')
+			.replace('{pass}', self.cam.password || '')
+			.replace('{profile_name}', profile.name)
+			.replace('{ip}', self.cam.ip)
+			.replace('{resolution}', profile.resolution || '800x600')
+			.replace('{framerate}', profile.framerate || '15')
+			.replace('{compression}', 40)
+			.replace('{max_bitrate}', 512)
+			.replace('{camera_no}', cam_no);
+	}
 };
 
 
@@ -367,7 +386,7 @@ Axis.prototype.stopListeningForMotionDetection = function(){
 Axis.prototype.getNumberOfSources = function (cb) {
 
 	var self = this;
-	var url = listNumberOfSources
+	var url = listNumberOfSourcesUrl
 		.replace('{user}', self.cam.user || '')
 		.replace('{pass}', self.cam.password || '')
 		.replace('{ip}', self.cam.ip);
@@ -391,7 +410,7 @@ Axis.prototype.getNumberOfSources = function (cb) {
 			srcDataBegin = body.indexOf('"', srcDataBegin);
 			var srcDataEnd = body.indexOf('"', srcDataBegin+1);
 
-			var nSources = body.substring(resDataBegin + 1, resDataEnd);
+			var nSources = body.substring(srcDataBegin + 1, srcDataEnd);
 			if ( isNaN(nSources) ) {
 				if (cb) cb('could not find number of sources', 0);
 				return;
@@ -406,13 +425,89 @@ Axis.prototype.getNumberOfSources = function (cb) {
 	);
 };
 
-Axis.prototype.getResolutionOptions = function (cb) {
+
+Axis.prototype.getCameraSourceName = function(camera_no, cb) {
+	var self = this;
+	var url = listSourceNameUrl
+		.replace('{user}', self.cam.user || '')
+		.replace('{pass}', self.cam.password || '')
+		.replace('{ip}', self.cam.ip)
+		.replace('{source_number}', camera_no);
+
+	var digest = new Buffer(self.cam.user + ":" + self.cam.password).toString('base64');
+
+	request({ 
+		url: url,
+		headers: {
+			'User-Agent': 'nodejs',
+			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+			'Authorization': 'Basic ' + digest			
+		},
+	}, function( error, response, body) {
+		if (!error && body && body.indexOf('nauthorized') > -1) {
+			cb('not authorized', '');
+		}
+		if (!error && body)	{
+
+			var srcDataBegin = body.indexOf('value');
+			srcDataBegin = body.indexOf('"', srcDataBegin);
+			var srcDataEnd = body.indexOf('"', srcDataBegin+1);
+
+			var sourceName = body.substring(srcDataBegin + 1, srcDataEnd);
+			sourceName = sourceName || 'camera ' + camera_no;
+			cb(null, sourceName);
+		} else{
+			cb(error, '');
+		}
+	});
+};
+
+
+Axis.prototype.getResolutionOptions = function(cb) {
 
 	var self = this;
-	var url = listResolutionsUrl
+	self.getNumberOfSources(function(err, nSources) {
+		if (nSources > 1) {
+			var sourcesNumbers = [];
+			for (var i = 0; i < nSources; i++) {
+				sourcesNumbers.push(i);
+			}
+			async.map(sourcesNumbers, self.getCameraSourceName.bind(self), function(err, result) {
+				var sourceNames = result;
+				async.map(sourcesNumbers, self.getResolutionOptionsForEncoderCamera.bind(self), function(err, result) {
+					var cameraResolutions = [];
+					for (var i in sourcesNumbers) {
+						cameraResolutions.push({
+							name: sourceNames[i],
+							camera_no: i,
+							resolutions: result[i]
+						});
+					}
+
+					cb(err, cameraResolutions);
+				});
+			});
+		} else {
+			self.getResolutionOptionsForSingleCamera( cb );
+		}
+	});
+};
+
+
+Axis.prototype.getResolutionOptionsForEncoderCamera = function (camera_no, cb) {
+
+	var self = this;
+	var url;
+		url = listResolutionsUrl
 		.replace('{user}', self.cam.user || '')
 		.replace('{pass}', self.cam.password || '')
 		.replace('{ip}', self.cam.ip);
+
+		// url = listSourceResolutionsUrl 
+		// .replace('{user}', self.cam.user || '')
+		// .replace('{pass}', self.cam.password || '')
+		// .replace('{ip}', self.cam.ip)
+		// .replace('{source_number}', camera_no);
 
 	var digest = new Buffer(self.cam.user + ":" + self.cam.password).toString('base64');
 
@@ -450,9 +545,59 @@ Axis.prototype.getResolutionOptions = function (cb) {
 		} else{
 			cb(error, []);
 		}
-	}
-	);
+	});
 };
+
+
+Axis.prototype.getResolutionOptionsForSingleCamera = function ( cb ) {
+
+
+	var self = this;
+	var url;
+		url = listResolutionsUrl
+		.replace('{user}', self.cam.user || '')
+		.replace('{pass}', self.cam.password || '')
+		.replace('{ip}', self.cam.ip);
+
+	var digest = new Buffer(self.cam.user + ":" + self.cam.password).toString('base64');
+
+	request({ 
+		url: url,
+		headers: {
+			'User-Agent': 'nodejs',
+			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+			'Authorization': 'Basic ' + digest			
+		},
+	}, function( error, response, body) {
+		if (!error && body && body.indexOf('nauthorized') > -1) {
+			cb('not authorized', []);
+		}
+		if (!error && body)	{
+
+			var resDataBegin = body.indexOf('value');
+			resDataBegin = body.indexOf('"', resDataBegin);
+			resDataEnd = body.indexOf('"', resDataBegin+1);
+			
+			var resolutions = body.substring(resDataBegin + 1, resDataEnd);
+			resolutions = resolutions.split(',');
+
+			if (!resolutions) {
+				if (cb) cb('no resolutions found', []);
+				return;
+			} 
+			else {
+				var re = /(\d+)x(\d+)/
+				var output = resolutions.map( function(res) {
+					return { value: res, name: res }
+				});	
+				cb(null, output);
+			}
+		} else{
+			cb(error, []);
+		}
+	});
+};
+
 
 Axis.prototype.getFrameRateRange = function () {
 	return {min: 1, max: 30};
