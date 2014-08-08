@@ -6,31 +6,11 @@ var mp4Handler = require('../controllers/mp4_controller');
 var CamerasController = require('../controllers/cameras_controller.js');
 
 var db_file = __dirname + '/fixtures/files/cam_db';
-var videosFolder = __dirname + '/fixtures/cameras';
+var videosFolder = __dirname + '/cameras_controller_test';
 
 describe('CamerasController', function() {
 
 	var controller = new CamerasController( mp4Handler, db_file, videosFolder);
-
-
-// 	describe('#checkSnapshotQ', function(){
-// 	    it('should requestSnapshot a snapshot', function(done){
-// 	    	var controller = new CamerasController( mp4Handler, db_file, videosFolder)
-// 	    	var snapshot = {};
-// 			snapshot.camId = "camId";
-// 			snapshot.req = "req";
-// 			snapshot.res = "res";
-// 			snapshot.cancelled = false;
-
-// 			var spy = sinon.spy(controller, 'takeSnapshot');
-// 			spy.withArgs(snapshot.camId, snapshot.req, snapshot.res)
-// 	    	controller.checkSnapshotQ(function(){
-// 				assert(spy.withArgs(snapshot.camId, snapshot.req, snapshot.res).calledOnce);
-// 				done();
-// 	    	});
-
-// 	    })
-// 	});
 
 
 	describe('#insertNewCamera', function(){
@@ -61,7 +41,6 @@ describe('CamerasController', function() {
 			});
 		});
 	});
-
 
 
 	describe('#updateCamera', function(){
@@ -126,8 +105,6 @@ describe('CamerasController', function() {
 			});
 		});
 	});	
-
-
 
 
 	describe('#removeCamera', function(){
