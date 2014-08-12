@@ -51,13 +51,13 @@ var Timeline = function( el, options ) {
 	this.startTime = $("<div>", {
 		html: '',
 		class: 'timeline-start-time',
-		style: 'top: 32px'
+		style: 'top: 35px'
 	}).appendTo(el);
 
 	this.endTime = $("<div>", {
 		html: '',
 		class: 'timeline-end-time',
-		style: 'top: 32px'
+		style: 'top: 35px'
 	}).appendTo(el);
 
 	this.boxes = this.timeline.append("g");	
