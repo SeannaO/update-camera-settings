@@ -30,7 +30,10 @@ var Timeline = function( el, options ) {
 		.attr("width", "100%")
 		.attr("height", 30)
 		.attr("class", "chart")
-		.style("background", "none");
+		.style("background", "none")
+		.style("position", "relative")
+		.style("top", "-10px");
+		
 
 	this.timeline = chart.append("g")
 		.attr("width", "100%")
@@ -47,12 +50,14 @@ var Timeline = function( el, options ) {
 
 	this.startTime = $("<div>", {
 		html: '',
-		class: 'timeline-start-time'
+		class: 'timeline-start-time',
+		style: 'top: 32px'
 	}).appendTo(el);
 
 	this.endTime = $("<div>", {
 		html: '',
-		class: 'timeline-end-time'
+		class: 'timeline-end-time',
+		style: 'top: 32px'
 	}).appendTo(el);
 
 	this.boxes = this.timeline.append("g");	

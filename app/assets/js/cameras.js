@@ -74,9 +74,18 @@ var timelineSetup = function( cam_id, id, name, cb ) {
 			id: "timeline-name-"+id,
 			class: "timeline-name",
 			html: (name)
-		})
+		});
+
+		var cameraItemBps = $('<div>', {
+			class: 'bps-info-group',
+			id: 'bps-info-group ' + cam_id
+		});
+
+		var streamId = id;
+		cameraItemBps.append('<div> <span id="'+streamId+'-bps-info">0</span> kB/s</div>');
 
 		timelineContainer.append(timelineName);
+		timelineContainer.append(cameraItemBps);
 		timelineContainer.appendTo("#camera-item-"+cam_id).mouseleave( function() {
 			$("#thumb").hide();
 		});
@@ -306,6 +315,7 @@ var addCameraItem = function( camera ) {
         class: "camera-item-status",
         html:  camera.status
     });
+
 
 	var schedule_status_class = camera.schedule_enabled ? "green" : "red";
 

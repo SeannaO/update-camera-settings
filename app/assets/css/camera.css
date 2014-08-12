@@ -152,6 +152,14 @@ body {
 	color:     #8F8F8F;
 }
 
+.bps-info-group {
+	position: relative;
+	top: 29px;
+	left: -128px;
+	font-size: small;
+	color: rgba(0,0,0,0.5);
+}
+
 .camera-item {
 	position:   relative;
 	margin:     20px 0px 20px 180px;

@@ -479,6 +479,10 @@ portChecker.check(8080, function(err, found) {
 		}
 		io.sockets.emit( 'cameraStatus', data );
 	});
+
+	camerasController.on('bps', function( data ) {
+		io.sockets.emit('bps', data);
+	});
 	
 	setInterval( function() {
 		var unixTime = Date.now();

@@ -456,6 +456,10 @@ CamerasController.prototype.pushCamera = function( cam ) {
 	
     self.cameras.push( cam );
 
+	cam.on('bps', function(data) {
+		self.emit('bps', data);
+	});
+
     cam.on('new_chunk', function( data ) {
 		
         self.emit('new_chunk', data );

@@ -1,7 +1,7 @@
 var Stream = require('stream');
 var fs = require('fs');
 var net = require('net');
-// var events = require('events');
+var events = require('events');
 var util = require('util');
 
 var Streamer = function( pipeFile ) {
@@ -17,7 +17,7 @@ var Streamer = function( pipeFile ) {
 	this.bitrate = 0;
 };
 
-// util.inherits(Streamer, events.EventEmitter);
+util.inherits(Streamer, events.EventEmitter);
 
 Streamer.prototype.initServer = function() {
 
@@ -56,6 +56,11 @@ Streamer.prototype.initServer = function() {
 			self.pass.unpipe();
 			self.refreshStream();
 		});
+
+		self.socket.on('data', function(d) {
+			self.totalBytes += d.length;
+		});
+
 		// start the flow of data, discarding it.
 		// self.socket.resume();
 		// self.socket = socket;
@@ -66,10 +71,11 @@ Streamer.prototype.initServer = function() {
 	this.totalData = 0;
 	this.lastData = Date.now();
 
-	// this.bpsInterval = setInterval( function() {
-	// 	// console.log( self.totalData	+ " bytes/sec" );
-	// 	self.totalData = 0;
-	// }, 1000);
+	clearInterval(this.bpsInterval);
+	this.bpsInterval = setInterval( function() {
+		self.emit('bps', 8*self.totalBytes);
+		self.totalBytes = 0;
+	}, 1000);
 
 	this.initSocketFile();
 };
@@ -118,7 +124,7 @@ Streamer.prototype.stop = function() {
 	}
 	this.server.close();
 
-	// clearInterval( this.bpsInterval );
+	clearInterval( this.bpsInterval );
 }
 
 Streamer.prototype.pipe = function(res) {

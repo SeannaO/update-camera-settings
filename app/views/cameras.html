@@ -60,6 +60,14 @@
 				}
             });
 
+			socket.on('bps', function(data) {
+				var streamId = data.stream_id;
+				var avg = data.avg / 8000;
+				avg = Math.round(avg);
+
+				$('#'+streamId+'-bps-info').html(avg);
+			});
+
             /*
             socket.on('camera_connected', function(data) {
                 console.log('camera_connected');
@@ -76,7 +84,7 @@
 						backgroundColor: "rgb(243, 255, 102)"
 					}, 1000);
 				} else if (data.status === 'online' || data.status === 'connected') {
-				console.log('connected');
+				// console.log('connected');
 					$camitem.animate({
 						backgroundColor: "none"
 					}, 1000);

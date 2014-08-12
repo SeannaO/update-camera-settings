@@ -136,6 +136,31 @@ Camera.prototype.addStream = function( stream, cb ) {
 			stream.recordModel = new RecordModel( self, stream, function(recorder){
     			var folder = self.videosFolder + '/' + stream.id;
 				stream.streamer = new Streamer(folder + '/videos/pipe.ts');
+
+				stream.streamer.on('bps', function(d) {
+
+					if (!self.streams[stream.id].bpsHist) self.streams[stream.id].bpsHist = [];
+					if (!isNaN(d)) self.streams[stream.id].bpsHist.push(d);
+
+					while (self.streams[stream.id].bpsHist.length > 30) {
+						self.streams[stream.id].bpsHist.shift();
+					}
+
+					var avg = 0;
+					for (var i = 0; i < self.streams[stream.id].bpsHist.length; i++) {
+						avg += self.streams[stream.id].bpsHist[i];
+					}
+					avg /= self.streams[stream.id].bpsHist.length;
+					avg = Math.round(avg);
+					self.streams[stream.id].bpsAvg = avg;
+
+					self.emit('bps', {
+						cam_id:     self._id,
+						stream_id:  stream.id,
+						bps:        d,
+						avg:        avg
+					});
+				});
 				// stream.streamer.on('restart_socket', function() {
 				// 	recorder.restart();
 				// }); 
