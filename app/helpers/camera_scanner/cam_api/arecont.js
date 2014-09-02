@@ -87,93 +87,102 @@ Arecont.prototype.setCameraParams = function(params) {
 	this.password = params.password 				|| this.password || '';
 };
 
-Arecont.prototype.setMotionThreshold = function(threshold, cb){
-	var range = this.getThresholdRange();
-	if (threshold > range.max && threshold < range.min){
-		cb("Error: threshold is out of range.");
-	}else{
-		this.setParam("mdlevelthreshold", threshold, function(error, body){
-			cb(error,body);
-		});
-	}
-}
+//
+// USING NATIVE MOTION
+//
+// Arecont.prototype.setMotionThreshold = function(threshold, cb){
+// 	var range = this.getThresholdRange();
+// 	if (threshold > range.max && threshold < range.min){
+// 		cb("Error: threshold is out of range.");
+// 	}else{
+// 		this.setParam("mdlevelthreshold", threshold, function(error, body){
+// 			cb(error,body);
+// 		});
+// 	}
+// }
 
-Arecont.prototype.setMotionSensitivity = function(sensitivity, cb){
-	var range = this.getSensitivityRange();
-	if (sensitivity > range.max && sensitivity < range.min){
-		cb("Error: sensitivity is out of range.");
-	}else{
-		this.setParam("mdsensitivity", sensitivity, function(error, body){
-			cb(error,body);
-		});
-	}
-}
+//
+// NATIVE MOTION
+//
+// Arecont.prototype.setMotionSensitivity = function(sensitivity, cb){
+// 	var range = this.getSensitivityRange();
+// 	if (sensitivity > range.max && sensitivity < range.min){
+// 		cb("Error: sensitivity is out of range.");
+// 	}else{
+// 		this.setParam("mdsensitivity", sensitivity, function(error, body){
+// 			cb(error,body);
+// 		});
+// 	}
+// }
 
-Arecont.prototype.setMotionParams = function(params, cb){
-	var self = this;
-	if (typeof params.enabled == 'undefined'){
-		if (params.threshold){
-			self.setMotionThreshold(params.threshold,function(error, body){
-				if (error){
-					cb(error,body);
-				}else{
-					if (params.sensitivity){
-						self.setMotionSensitivity(params.sensitivity,function(error, body){
-							if (error){
-								cb(error, body);
-							}else{
-								cb(null, "OK");
-							}
-						});
-					}else{
-						cb(null, "OK");
-					}
-				}
-			})
-		}else{
-			if (params.sensitivity){
-				self.setMotionSensitivity(params.sensitivity,function(error, body){
-					if (error){
-						cb(error, body);
-					}else{
-						cb(null, "OK");
-					}
-				});
-			}else{
-				cb(null, "OK");
-			}
-		}
-	}else{
-		self.setParam("motiondetect", (params.enabled ? "on" : "off"), function(error, body){
-			if (error){
-				cb(error,body);
-			}else{
-				if (params.threshold){
-					self.setMotionThreshold(params.threshold,function(error, body){
-						if (error){
-							cb(error,body);
-						}else{
-							if (params.sensitivity){
-								self.setMotionSensitivity(params.sensitivity,function(error, body){
-									if (error){
-										cb(error, body);
-									}else{
-										cb(null, "OK");
-									}
-								});
-							}else{
-								cb(null, "OK");
-							}
-						}
-					})
-				}else{
-					cb(null, "OK");
-				}				
-			}
-
-		});
-	}
-};
+//
+// NATIVE MOTION
+//
+// Arecont.prototype.setMotionParams = function(params, cb){
+// 	var self = this;
+// 	if (typeof params.enabled == 'undefined'){
+// 		if (params.threshold){
+// 			self.setMotionThreshold(params.threshold,function(error, body){
+// 				if (error){
+// 					cb(error,body);
+// 				}else{
+// 					if (params.sensitivity){
+// 						self.setMotionSensitivity(params.sensitivity,function(error, body){
+// 							if (error){
+// 								cb(error, body);
+// 							}else{
+// 								cb(null, "OK");
+// 							}
+// 						});
+// 					}else{
+// 						cb(null, "OK");
+// 					}
+// 				}
+// 			})
+// 		}else{
+// 			if (params.sensitivity){
+// 				self.setMotionSensitivity(params.sensitivity,function(error, body){
+// 					if (error){
+// 						cb(error, body);
+// 					}else{
+// 						cb(null, "OK");
+// 					}
+// 				});
+// 			}else{
+// 				cb(null, "OK");
+// 			}
+// 		}
+// 	}else{
+// 		self.setParam("motiondetect", (params.enabled ? "on" : "off"), function(error, body){
+// 			if (error){
+// 				cb(error,body);
+// 			}else{
+// 				if (params.threshold){
+// 					self.setMotionThreshold(params.threshold,function(error, body){
+// 						if (error){
+// 							cb(error,body);
+// 						}else{
+// 							if (params.sensitivity){
+// 								self.setMotionSensitivity(params.sensitivity,function(error, body){
+// 									if (error){
+// 										cb(error, body);
+// 									}else{
+// 										cb(null, "OK");
+// 									}
+// 								});
+// 							}else{
+// 								cb(null, "OK");
+// 							}
+// 						}
+// 					})
+// 				}else{
+// 					cb(null, "OK");
+// 				}				
+// 			}
+//
+// 		});
+// 	}
+// };
 
 Arecont.prototype.getParam = function(name, cb){
 	var value = "";
@@ -219,87 +228,93 @@ Arecont.prototype.setParam = function(key, value, cb){
 	);
 };
 
-Arecont.prototype.getMotionParams = function(cb){
-	var self = this;
-	self.getParam("mdlevelthreshold",function(error, threshold){
-		if (error){
-			cb(error);
-		}else{
-			self.getParam("mdsensitivity",function(error, sensitivity){
-				if (error){
-					console.error(error);
-					cb(error);
-				}else{
-					self.isMotionEnabled(function(error, enabled){
-						cb({enabled: enabled, threshold: parseInt(threshold), sensitivity: parseInt(sensitivity)})
-					});				
-				}
-			});			
-		}
+//
+// NATIVE MOTION
+//
+// Arecont.prototype.getMotionParams = function(cb){
+// 	var self = this;
+// 	self.getParam("mdlevelthreshold",function(error, threshold){
+// 		if (error){
+// 			cb(error);
+// 		}else{
+// 			self.getParam("mdsensitivity",function(error, sensitivity){
+// 				if (error){
+// 					console.error(error);
+// 					cb(error);
+// 				}else{
+// 					self.isMotionEnabled(function(error, enabled){
+// 						cb({enabled: enabled, threshold: parseInt(threshold), sensitivity: parseInt(sensitivity)})
+// 					});				
+// 				}
+// 			});			
+// 		}
+//
+// 	});
+// };
 
-	});
-};
-
-Arecont.prototype.isMotionEnabled = function(cb) {
-	this.getParam("motiondetect",function(error, value){
-		if (error){
-			cb(error, false);
-		}else{
-			cb(null, value == "on" ? true : false);
-		}
-	});
-};
-
-Arecont.prototype.setupMotionDetection = function(){
-	setParam("mdzonesize", 2, function(error, body){
-		if (error){
-			console.error(error);
-		}
-	});
-
-	setParam("mddetail", 2, function(error, body){
-		if (error){
-			console.error(error);	
-		}
-	});
-	setMotionParams({enabled: true});
-};
-
-Arecont.prototype.startListeningForMotionDetection = function(cb){	
-	var self = this;
-	
-	clearInterval(self.process_id);
-
-	self.process_id = setInterval(function(){
-		self.getParam('mdresult',function(error, result){
-			if (error){
-				cb('no motion');
-			} else if (result && result !== 'no motion'){
-				var timestamp = Date.now()
-				var motion_arr = result.trim().split(" ");
-				var motion_mat = [], i, k;
-				var motion_sum = 0;
-				for (i = 0, k=-1; i < motion_arr.length; i++){
-					if (i % 8 === 0){
-						k++;
-						motion_mat[k] = [];
-					}
-					var motion_ele = parseInt(motion_arr[i], 16);
-					motion_mat[k].push(motion_ele);
-					motion_sum += motion_ele;
-				}
-
-				//cb(timestamp, {sum: motion_sum, data:motion_mat});
-				cb(timestamp, {value: motion_sum});
-			}else{
-				cb('no motion');// -- only callback when there's motion
-			}
-		});
-	}, 500);
-};
-
-Arecont.prototype.stopListeningForMotionDetection = function(){
-		clearInterval(this.process_id);
-};
+//
+// NATIVE MOTION
+//
+// Arecont.prototype.isMotionEnabled = function(cb) {
+// 	this.getParam("motiondetect",function(error, value){
+// 		if (error){
+// 			cb(error, false);
+// 		}else{
+// 			cb(null, value == "on" ? true : false);
+// 		}
+// 	});
+// };
+//
+// Arecont.prototype.setupMotionDetection = function(){
+// 	setParam("mdzonesize", 2, function(error, body){
+// 		if (error){
+// 			console.error(error);
+// 		}
+// 	});
+//
+// 	setParam("mddetail", 2, function(error, body){
+// 		if (error){
+// 			console.error(error);	
+// 		}
+// 	});
+// 	setMotionParams({enabled: true});
+// };
+//
+// Arecont.prototype.startListeningForMotionDetection = function(cb){	
+// 	var self = this;
+// 	
+// 	clearInterval(self.process_id);
+//
+// 	self.process_id = setInterval(function(){
+// 		self.getParam('mdresult',function(error, result){
+// 			if (error){
+// 				cb('no motion');
+// 			} else if (result && result !== 'no motion'){
+// 				var timestamp = Date.now()
+// 				var motion_arr = result.trim().split(" ");
+// 				var motion_mat = [], i, k;
+// 				var motion_sum = 0;
+// 				for (i = 0, k=-1; i < motion_arr.length; i++){
+// 					if (i % 8 === 0){
+// 						k++;
+// 						motion_mat[k] = [];
+// 					}
+// 					var motion_ele = parseInt(motion_arr[i], 16);
+// 					motion_mat[k].push(motion_ele);
+// 					motion_sum += motion_ele;
+// 				}
+//
+// 				//cb(timestamp, {sum: motion_sum, data:motion_mat});
+// 				cb(timestamp, {value: motion_sum});
+// 			}else{
+// 				cb('no motion');// -- only callback when there's motion
+// 			}
+// 		});
+// 	}, 500);
+// };
+//
+// Arecont.prototype.stopListeningForMotionDetection = function(){
+// 		clearInterval(this.process_id);
+// };
 
 module.exports = Arecont;

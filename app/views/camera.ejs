@@ -100,12 +100,23 @@
 			<img src = ""/>
         </div>
 
+		<div id = "grid" style="width:300px; height:300px;background:none">
+		</div>
+
+
         <script>
+
+			var ROI = "";
+
+			var frames = [];
+			var index = 0;
+
 			var camPage;
             $(function() {
 				camPage = new CameraPage( camId );
 				camPage.setup();			
             });
+
         </script>
 
     </body>

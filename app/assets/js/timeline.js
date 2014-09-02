@@ -418,6 +418,10 @@ Timeline.prototype.render = function(block_size, begin, end) {
 
 	this.clear();
 
+	if (end - begin < 60*60*1000) {
+		block_size = 1;
+	}
+
 	block_size = block_size || 2;
 	var elements;
 	if (block_size == 1) {

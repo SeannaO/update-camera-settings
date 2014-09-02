@@ -321,9 +321,9 @@ var addCameraItem = function( camera ) {
 
 	var menuHtml = "<a class=\"btn btn-xs btn-default edit\" href = \"javascript:editCamera('" + camera._id + "')\"><span class=\"glyphicon glyphicon-edit\"></span>edit</a>" +
                 "<a class=\"btn btn-xs btn-default schedule\" href = \"javascript:cameraSchedule('" + camera._id + "')\"><span class=\"status " + schedule_status_class + "\"></span><span class=\"glyphicon glyphicon-calendar\"></span>schedule</a>";
-	if (camera.manufacturer !== 'undefined' && camera.manufacturer !== 'unknown'){
-		menuHtml += "<a class=\"btn btn-xs btn-default motion\" href = \"javascript:cameraMotion('" + camera._id + "')\"><span class=\"status gray\"></span>motion</a>";	
-	}
+	// if (camera.manufacturer !== 'undefined' && camera.manufacturer !== 'unknown'){
+		menuHtml += "<a class=\"btn btn-xs btn-default motion\" href = \"javascript:cameraMotion('" + camera._id + "')\"><span id =\"motion-status-" + camera._id + "\" class=\"status gray\"></span>motion</a>";	
+	// }
 	menuHtml += "<a class=\"btn btn-xs btn-default remove\" href=\"javascript:deleteCamera('" + camera._id + "')\"><span class=\"glyphicon glyphicon-remove\"></span>remove</a>";
    
 	var cameraItemMenu = $("<div>", {
@@ -547,29 +547,6 @@ var updateSchedule = function(id, cb) {
     });
 };
 
-var updateMotion = function(id, cb) {
-
-    var params = $('#camera-motion').serializeObject();
-    $.ajax({
-        type: "PUT",
-        url: "/cameras/" + id + "/motion",
-        data: JSON.stringify( params ),
-		dataType: "json",
-        contentType: 'application/json',
-        success: function(data) {
-			if (data && data.responseText) {
-				data = $.parseJSON(data.responseText);
-			}
-            cb( data );
-        },
-		error: function(data) {
-			if (data && data.responseText) {
-				data = $.parseJSON(data.responseText);
-			}
-			cb( data );
-		}
-    });
-};
 
 var setAuthStatus = function(data, cb){
     var $auth_status = $("#camera-auth-status span");
@@ -1456,51 +1433,9 @@ var getCameraById = function(id) {
 }
 
 var cameraMotion = function(camId) {
+	
+	camMotion.launch( camId );
 
-    $.ajax({
-        type: "GET",
-        url: "/cameras/" + camId + "/motion.json",
-        contentType: 'application/json',
-        success: function(data) {
-            if (data.success && data.camera.motion) {
-                $('#camera-motion-enable').prop('checked', data.camera.motion.enabled == "1").change( function() {
-
-                    if ( $(this).is(':checked') ) {
-                        $('#camera-motion-dialog .form-control').prop('disabled', false);
-                    } else {
-                        $('#camera-motion-dialog .form-control').prop('disabled', true);
-                    }
-                });
-                $('#camera-motion-threshold').val(data.camera.motion.threshold);
-                $('#camera-motion-sensitivity').val(data.camera.motion.sensitivity);
-
-                $("#update-motion").unbind();
-                $("#update-motion").click( function() {
-					
-					addOverlayToPage('updating motion...');
-                    updateMotion( camId, function(data) {
-
-                        if (data.success) {
-							removeOverlayFromPage( function() {
-								location.reload();
-								toastr.success("Motion configuration successfully updated");
-							});
-                        } else {
-							removeOverlayFromPage( function() {
-								$('#camera-motion-enable').prop('checked', false);
-								toastr.error(data.error);
-							});
-                        }
-                    });
-                });
-                $("#camera-motion-dialog").modal('show');
-            } else {
-                
-            }
-        },
-		error: function( data ) {
-			console.log('motion error: ' + data);
-		}
-    });
 };
+
 

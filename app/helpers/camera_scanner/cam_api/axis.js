@@ -25,21 +25,25 @@ var listNumberOfSourcesUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&
 var listSourceNameUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&group=root.Image.I{source_number}.Name";
 var listSourceResolutionsUrl = baseUrl + "listdefinitions%20&listformat=xmlschema&group=root.Image.I{source_number}.Appearance.Resolution";
 
-
 var Axis = function() {
 	this.cam = {};
 };
 
-if (Axis.server) {
-	console.log('[Axis.js]  destroying Axis.server');
-	Axis.server.close();
-	Axis.server.destroy();
-}
-
-Axis.server = net.createServer(function(socket) { 
-});
-Axis.server.listen(8001, function() { 
-});
+// = = = = = = = = = = = = = = = =
+// = = USING NATIVE MOTION NOW = = 
+//
+//
+// if (Axis.server) {
+// 	console.log('[Axis.js]  destroying Axis.server');
+// 	Axis.server.close();
+// 	Axis.server.destroy();
+// }
+//
+// Axis.server = net.createServer(function(socket) { 
+// });
+// Axis.server.listen(8001, function() { 
+// });
+//
 
 
 Axis.prototype.apiName = function() {
@@ -340,48 +344,51 @@ Axis.prototype.setupMotionDetection = function(cam, cb){
 };
 
 
-Axis.prototype.startListeningForMotionDetection = function(cb){
-
-	var self = this;
-	
-	self.motion_enabled = true;
-
-	self.motionCallback = function(socket) {
-
-		var self = this;
-
-		try {
-			var timestamp = Date.now()
-				if ( socket.remoteAddress === self.cam.ip ) {
-					console.log('[Axis.motionDetection] movement detected: ' + self.cam.ip);
-					if(cb) cb(timestamp, {fd: socket.fd, highWaterMark: socket.highWaterMark}) ;
-				}
-		} catch(e) {
-			console.error("[Axis.motionDetection] Error:" + e);
-		}
-	};
-
-	if (self.motionCallbackWrapper) {
-		Axis.server.removeListener('connection', self.motionCallbackWrapper);
-	}
-
-	self.motionCallbackWrapper = self.motionCallback.bind(self);
-	Axis.server.on('connection', self.motionCallbackWrapper);
-};
-
-
-Axis.prototype.stopListeningForMotionDetection = function(){
-	//poll
-	//emit motion
-	// clear events
-	//
-	var self = this;
-	this.motion_enabled = false;
-	if (self.motionCallbackWrapper) {
-		Axis.server.removeListener('connection', self.motionCallbackWrapper);
-	}
-};
-
+// 
+// USING NATIVE MOTION
+//
+// Axis.prototype.startListeningForMotionDetection = function(cb){
+//
+// 	var self = this;
+// 	
+// 	self.motion_enabled = true;
+//
+// 	self.motionCallback = function(socket) {
+//
+// 		var self = this;
+//
+// 		try {
+// 			var timestamp = Date.now()
+// 				if ( socket.remoteAddress === self.cam.ip ) {
+// 					console.log('[Axis.motionDetection] movement detected: ' + self.cam.ip);
+// 					if(cb) cb(timestamp, {fd: socket.fd, highWaterMark: socket.highWaterMark}) ;
+// 				}
+// 		} catch(e) {
+// 			console.error("[Axis.motionDetection] Error:" + e);
+// 		}
+// 	};
+//
+// 	if (self.motionCallbackWrapper) {
+// 		Axis.server.removeListener('connection', self.motionCallbackWrapper);
+// 	}
+//
+// 	self.motionCallbackWrapper = self.motionCallback.bind(self);
+// 	Axis.server.on('connection', self.motionCallbackWrapper);
+// };
+//
+//
+// Axis.prototype.stopListeningForMotionDetection = function(){
+// 	//poll
+// 	//emit motion
+// 	// clear events
+// 	//
+// 	var self = this;
+// 	this.motion_enabled = false;
+// 	if (self.motionCallbackWrapper) {
+// 		Axis.server.removeListener('connection', self.motionCallbackWrapper);
+// 	}
+// };
+//
 
 Axis.prototype.getNumberOfSources = function (cb) {
 

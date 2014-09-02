@@ -7,6 +7,7 @@ var EventEmitter   = require('events').EventEmitter;    // events
 var find           = require('findit');
 var path           = require('path');
 var Streamer       = require('../helpers/live_streamer.js');
+var MotionStreamer = require('../helpers/live_motion.js');
 
 function Camera( cam, videosFolder, cb ) {
 
@@ -85,6 +86,21 @@ function Camera( cam, videosFolder, cb ) {
 	}
 
 	self.pendingMotion = [];
+
+	self.lowestBitrateStream = {};
+
+	var defaultMotionParams = {
+		enabled: false,
+		threshold: 40,
+		sensitivity: 50,
+		roi: "all"
+	};
+
+	self.motionParams = cam.motionParams || defaultMotionParams;
+
+	self.updateMotionParamsInterval = setInterval( function() {
+		self.setMotionParams( self.motionParams );
+	}, 5000);
 }
 // end of constructor
 //
@@ -103,6 +119,7 @@ Camera.prototype.addAllStreams = function( streams, cb ) {
 		});
     }
 };
+
 
 /**
  * Adds stream to camera, 
@@ -136,6 +153,19 @@ Camera.prototype.addStream = function( stream, cb ) {
 			stream.recordModel = new RecordModel( self, stream, function(recorder){
     			var folder = self.videosFolder + '/' + stream.id;
 				stream.streamer = new Streamer(folder + '/videos/pipe.ts');
+				stream.motionStreamer = new MotionStreamer(folder + '/videos/pipe.motion');
+				stream.motionStreamer.on('grid', function( gridData ) {
+
+					if (!self.motionParams.enabled) return;
+
+					self.motionHandler( gridData );
+
+					self.emit('grid', {
+						cam_id:     self._id,
+						stream_id:  stream.id,
+						grid:       gridData
+					});
+				});
 
 				stream.streamer.on('bps', function(d) {
 
@@ -154,11 +184,20 @@ Camera.prototype.addStream = function( stream, cb ) {
 					avg = Math.round(avg);
 					self.streams[stream.id].bpsAvg = avg;
 
+					if ( !self.lowestBitrateStream.bps ) {
+						self.lowestBitrateStream.id = stream.id;
+						self.lowestBitrateStream.bps = avg;
+					} else if ( avg > 0 && avg < self.lowestBitrateStream.bps || !self.streams[self.lowestBitrateStream.id] ) {
+						self.lowestBitrateStream.id = stream.id;
+						self.lowestBitrateStream.bps = avg;
+					}
+
 					self.emit('bps', {
 						cam_id:     self._id,
 						stream_id:  stream.id,
 						bps:        d,
-						avg:        avg
+						avg:        avg,
+						lowest:     self.lowestBitrateStream.id == stream.id
 					});
 				});
 				// stream.streamer.on('restart_socket', function() {
@@ -225,6 +264,7 @@ Camera.prototype.addStream = function( stream, cb ) {
 };
 // end of addStream
 //
+
 
 Camera.prototype.restoreBackupAndReindex = function( stream, cb ) {
 	// delete the old database file
@@ -339,6 +379,7 @@ Camera.prototype.reIndexDatabaseFromFileStructureAfterTimestamp = function(strea
 	});
 };
 
+
 Camera.prototype.parseFile = function(file, cb){
 	var re = /([\d]+)_([\d]+).ts/
 	var matches = re.exec(file);
@@ -371,6 +412,43 @@ Camera.prototype.addFilesInFoldersToIndexInDatabase = function( folders, recordM
 };
 
 
+Camera.prototype.getMotionParams = function() {
+
+	var self = this;
+	return self.motionParams;
+};
+
+
+Camera.prototype.setROI = function( roi ) {
+
+	var self = this;
+	self.motionParams.roi = roi;
+};
+
+
+Camera.prototype.setMotionParams = function( params ) {
+	
+	var self = this;
+	
+	self.motionParams.enabled     = params.enabled;
+	self.motionParams.threshold   = params.threshold 	|| self.motionParams.threshold;
+	self.motionParams.sensitivity = params.sensitivity 	|| self.motionParams.sensitivity;
+
+	var motionStream    = self.lowestBitrateStream.id;
+	var isMotionEnabled = self.motionParams.enabled;
+	var threshold       = self.motionParams.threshold;
+
+	for ( var streamId in self.streams ) {
+		if ( !motionStream || streamId && streamId == motionStream) {
+			self.streams[streamId].recordModel.setMotion( isMotionEnabled );
+			self.streams[streamId].recordModel.setThreshold( threshold );
+		} else {
+			self.streams[streamId].recordModel.setMotion( false );
+		}
+	}
+};
+
+
 Camera.prototype.setMotionDetection = function( cb ) {
 	
 	var motionParams = {
@@ -379,87 +457,171 @@ Camera.prototype.setMotionDetection = function( cb ) {
 		sensitivity:  80
 	};
 
-	this.api.setMotionParams( motionParams, function( err, body ) {
-		if (cb) cb();
-	});
+	// this.api.setMotionParams( motionParams, function( err, body ) {
+	// 	if (cb) cb();
+	// });
 };
 
 
 Camera.prototype.stopMotionDetection = function() {
-	
 	var self = this;
-	this.api.stopListeningForMotionDetection();
+	clearInterval( self.updateMotionParamsInterval );
 };
 
+
+Camera.prototype.motionHandler = function( motionGrid ) {
+
+	var self = this;
+
+	if (!self.motionParams.enabled) return;
+
+	if (!motionGrid || motionGrid.length < 100) {
+		return;
+	}
+
+	var isThereMotion = false;
+
+	if (self.motionParams.roi && self.motionParams.roi.length == 100) { 
+		for (var i in motionGrid) {
+			var val = motionGrid.charCodeAt(i);
+			if (val > 5 && self.motionParams.roi[i] == '1') {
+				isThereMotion = true;
+				break;
+			}
+		}
+		if(!isThereMotion) return;
+	}
+
+	data = {};
+
+	var timestamp = Date.now();
+
+	var motion_data = data;
+	motion_data.id = self._id;
+	motion_data.start = timestamp || Date.now();
+	motion_data.timestamp = timestamp;
+	motion_data.name = self.cameraName();
+
+	if (Date.now() - self.lastMotion > 7000) {
+		// self.emit("motion", motion_data);
+		self.pendingMotion.push(motion_data);
+		while(self.pendingMotion.length > 10) {
+			self.pendingMotion.shift();
+		}
+		self.lastMotion = Date.now();
+	}
+	// check to see if the camera already has a motion event
+	if (self.motion == null){
+
+		self.motion = {
+			id:        self._id,
+			start:     timestamp,
+			duration:  0,
+			ip:        self.ip,
+			status:    'start',
+			name:      self.cameraName(),
+			motion:    {}
+		};
+
+		self.motion.motion[timestamp] = motion_data;
+
+		if ( !self.recording ) {
+			self.startRecording();
+		}
+		self.emit("motionEvent", self.motion);
+
+	} else {
+
+		self.motion.status = 'open';
+		self.motion.duration = timestamp - self.motion.start;
+		self.motion.motion[timestamp] = data;
+		if (self.stopRecordingTimeout) {
+			clearTimeout( self.stopRecordingTimeout );
+		}
+	}
+
+
+	self.stopRecordingTimeout = setTimeout (function() {
+		var result = self.motion; 
+		self.motion = null;
+		if (!self.shouldBeRecording() ) {	
+			self.stopRecording();
+		}
+		result.status = 'end';
+		result.duration = Date.now() - result.start;
+		// Broadcast that motion has ended with the duration, camera name, ID, and timestamp
+		self.emit( 'motionEvent', result);
+	}, 20000); // was 30000
+};
 
 Camera.prototype.startMotionDetection = function() {
 		
 	var self = this;
 
-	this.api.startListeningForMotionDetection( function(timestamp, data) {
-		
-		if (!data) {
-			return;
-		}
-
-		var motion_data = data;
-		motion_data.id = self._id;
-		motion_data.start = timestamp || Date.now();
-		motion_data.timestamp = timestamp;
-		motion_data.name = self.cameraName();
-
-		if (Date.now() - self.lastMotion > 7000) {
-			// self.emit("motion", motion_data);
-			self.pendingMotion.push(motion_data);
-			while(self.pendingMotion.length > 10) {
-				self.pendingMotion.shift();
-			}
-			self.lastMotion = Date.now();
-		}
-		// check to see if the camera already has a motion event
-		if (self.motion == null){
-
-			self.motion = {
-				id:        self._id,
-				start:     timestamp,
-				duration:  0,
-				ip:        self.ip,
-				status:    'start',
-				name:      self.cameraName(),
-				motion:    {}
-			};
-
-			self.motion.motion[timestamp] = data;
-
-			if ( !self.recording ) {
-				self.startRecording();
-			}
-			self.emit("motionEvent", self.motion);
-
-		} else {
-
-			self.motion.status = 'open';
-			self.motion.duration = timestamp - self.motion.start;
-			self.motion.motion[timestamp] = data;
-			if (self.stopRecordingTimeout) {
-				clearTimeout( self.stopRecordingTimeout );
-			}
-		}
-
-
-		self.stopRecordingTimeout = setTimeout (function() {
-			var result = self.motion; 
-			self.motion = null;
-			if (!self.shouldBeRecording() ) {	
-				self.stopRecording();
-			}
-			result.status = 'end';
-			result.duration = Date.now() - result.start;
-			// Broadcast that motion has ended with the duration, camera name, ID, and timestamp
-			self.emit( 'motionEvent', result);
-		}, 30000);
-
-	});
+// 	this.api.startListeningForMotionDetection( function(timestamp, data) {
+// 		
+// 		if (!data) {
+// 			return;
+// 		}
+//
+// 		var motion_data = data;
+// 		motion_data.id = self._id;
+// 		motion_data.start = timestamp || Date.now();
+// 		motion_data.timestamp = timestamp;
+// 		motion_data.name = self.cameraName();
+//
+// 		if (Date.now() - self.lastMotion > 7000) {
+// 			// self.emit("motion", motion_data);
+// 			self.pendingMotion.push(motion_data);
+// 			while(self.pendingMotion.length > 10) {
+// 				self.pendingMotion.shift();
+// 			}
+// 			self.lastMotion = Date.now();
+// 		}
+// 		// check to see if the camera already has a motion event
+// 		if (self.motion == null){
+//
+// 			self.motion = {
+// 				id:        self._id,
+// 				start:     timestamp,
+// 				duration:  0,
+// 				ip:        self.ip,
+// 				status:    'start',
+// 				name:      self.cameraName(),
+// 				motion:    {}
+// 			};
+//
+// 			self.motion.motion[timestamp] = data;
+//
+// 			if ( !self.recording ) {
+// 				self.startRecording();
+// 			}
+// 			self.emit("motionEvent", self.motion);
+//
+// 		} else {
+//
+// 			self.motion.status = 'open';
+// 			self.motion.duration = timestamp - self.motion.start;
+// 			self.motion.motion[timestamp] = data;
+// 			if (self.stopRecordingTimeout) {
+// 				clearTimeout( self.stopRecordingTimeout );
+// 			}
+// 		}
+//
+//
+// 		self.stopRecordingTimeout = setTimeout (function() {
+// 			var result = self.motion; 
+// 			self.motion = null;
+// 			if (!self.shouldBeRecording() ) {	
+// 				self.stopRecording();
+// 			}
+// 			result.status = 'end';
+// 			result.duration = Date.now() - result.start;
+// 			// Broadcast that motion has ended with the duration, camera name, ID, and timestamp
+// 			self.emit( 'motionEvent', result);
+// 		}, 30000);
+//
+// 	});
 };
 
 
@@ -545,6 +707,11 @@ Camera.prototype.removeStream  = function( streamId ) {
 	if (self.streams[streamId].streamer) {
 		self.streams[streamId].streamer.stop();
 		delete self.streams[streamId].streamer;
+	}
+
+	if (self.streams[streamId].motionStreamer) {
+		self.streams[streamId].motionStreamer.stop();
+		delete self.streams[streamId].motionStreamer;
 	}
 
 	self.streamsToBeDeleted[streamId] = self.streams[streamId];
@@ -1166,6 +1333,7 @@ Camera.prototype.toJSON = function() {
 	info.manufacturer     = this.manufacturer;
 	info.username         = this.username || '';
 	info.password         = this.password || '';
+	info.motionParams     = this.motionParams;
 
 	info.streams = this.getStreamsJSON();
 	

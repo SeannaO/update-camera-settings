@@ -199,9 +199,7 @@ CamerasController.prototype.getMotion = function(camId, cb) {
 		if (err || !cam || cam.length === 0) {
 			cb( err, null );
 		} else {
-			cam.api.getMotionParams(function(motion_params){
-				cb( err, motion_params );
-			});
+			cb( err, cam.getMotionParams() );
 		}
 	});
 };
@@ -460,6 +458,10 @@ CamerasController.prototype.pushCamera = function( cam ) {
 		self.emit('bps', data);
 	});
 
+	cam.on('grid', function(data) {
+		self.emit('grid', data);
+	});
+
     cam.on('new_chunk', function( data ) {
 		
         self.emit('new_chunk', data );
@@ -485,19 +487,19 @@ CamerasController.prototype.pushCamera = function( cam ) {
 		self.emit('motionEvent', data);
 	});
 
-	if (cam.api != null && Object.keys(cam.api).length > 0){
-		
-		cam.api.getMotionParams(function(motion){
-			if (motion) {
-				if (motion.enabled) {
-					cam.startMotionDetection();
-				} else {
-					cam.stopMotionDetection();
-				}
-			}else{
-			}
-		});		
-	}
+	// if (cam.api != null && Object.keys(cam.api).length > 0){
+	// 	
+	// 	cam.api.getMotionParams(function(motion){
+	// 		if (motion) {
+	// 			if (motion.enabled) {
+	// 				cam.startMotionDetection();
+	// 			} else {
+	// 				cam.stopMotionDetection();
+	// 			}
+	// 		}else{
+	// 		}
+	// 	});		
+	// }
 
 };
 
@@ -744,6 +746,43 @@ CamerasController.prototype.updateCameraSchedule = function(params, cb) {
 };
 
 
+CamerasController.prototype.saveMotionParams = function( camera, cb ) {
+
+	var self = this;
+
+	self.db.update({ _id: camera._id }, { 
+	    $set: {
+			motionParams: camera.motionParams
+	    } 
+	}, { multi: true }, function (err, numReplaced) {
+	    if (err) {
+			console.log('[camerasController]  update camera db error: ');
+			console.log(err);
+	        cb(err);
+	    } else {
+	        self.db.loadDatabase();
+			cb(null, '');
+		}
+	});
+};
+
+CamerasController.prototype.setROI = function(params, cb) {
+
+
+    var self = this;
+    var camera = this.findCameraById( params._id ).cam;
+    
+	if (!camera) {
+        cb("{error: 'camera not found'}");
+        return;
+    }
+
+	camera.setROI( params.roi );
+
+	self.saveMotionParams( camera, cb );
+};
+
+
 CamerasController.prototype.updateCameraMotion = function(params, cb) {
 
     var self = this;
@@ -754,22 +793,43 @@ CamerasController.prototype.updateCameraMotion = function(params, cb) {
         return;
     }
 	
-	params.camera.motion.enabled = (params.camera.motion.enabled === '1');
+	var isEnabled = (params.camera.motion.enabled === '1');
+	var threshold =  params.camera.motion.threshold;
+	threshold = isNaN( threshold ) ? null : parseInt( threshold );
+	var roi = params.camera.motion.roi;
 
-	camera.api.setMotionParams(params.camera.motion, function(error, body){
-		if (!error) {
-			self.emit("motion_update", {camera: camera, motion: params.camera.motion});
-			// Maybe we should really just be starting motion detection when scheduling is disabled or it is out of schedule
-			// this might allow the response to returned faster
-			if (params.camera.motion.enabled) {
-				camera.startMotionDetection();
-			} else {
-				camera.stopMotionDetection();
-			}
-		}else{
-		}
-		cb(error, body);
-	}); 
+	var motionParams = {
+		enabled:    isEnabled,
+		threshold:  threshold,
+	};
+
+	camera.setMotionParams( motionParams );
+
+	if (roi) {
+		camera.setROI( params.camera.motion.roi );
+	}
+
+	self.emit("motion_update", {
+		camera:  camera,
+		motion:  params.camera.motion
+	});
+
+	self.saveMotionParams( camera, cb );
+
+	// camera.api.setMotionParams(params.camera.motion, function(error, body){
+	// 	if (!error) {
+	// 		self.emit("motion_update", {camera: camera, motion: params.camera.motion});
+	// 		// Maybe we should really just be starting motion detection when scheduling is disabled or it is out of schedule
+	// 		// this might allow the response to returned faster
+	// 		if (params.camera.motion.enabled) {
+	// 			camera.startMotionDetection();
+	// 		} else {
+	// 			camera.stopMotionDetection();
+	// 		}
+	// 	}else{
+	// 	}
+	// 	cb(error, body);
+	// }); 
 };
 
 

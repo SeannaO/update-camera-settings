@@ -51,8 +51,8 @@ portChecker.check(8080, function(err, found) {
 	});
 
 	// monitor memory usage of rtsp_grabber
-	// kills rtsp_grabber if memory usage is greater than 20%
-	self.rtspMemMonitor = spawn('./mem.sh', ['rtsp_grabber', '20']);
+	// kills rtsp_grabber if memory usage is greater than 50%
+	self.rtspMemMonitor = spawn('./mem.sh', ['rtsp_grabber', '50']);
 	self.rtspMemMonitor.stderr.on('data', function(data) {
 		console.error('[app] rtsp_grabber is getting memory hungry');
 	});
@@ -482,6 +482,11 @@ portChecker.check(8080, function(err, found) {
 
 	camerasController.on('bps', function( data ) {
 		io.sockets.emit('bps', data);
+	});
+
+	camerasController.on('grid', function( data ) {
+		// io.sockets.emit('grid', data);
+		io.of('/motion_grid').emit('grid', data);
 	});
 	
 	setInterval( function() {

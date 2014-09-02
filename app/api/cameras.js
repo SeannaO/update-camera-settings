@@ -109,6 +109,23 @@ module.exports = function( app, passport, camerasController ) {
 		});
 	});
 
+	app.put('/cameras/:id/motion_roi', passport.authenticate('basic', {session: false}), function(req, res) {
+
+		var params = req.body;
+		params._id = req.params.id;
+
+		camerasController.setROI(params, function(err) {
+			if (err) {
+				console.error("*** updateMotionROI error: ");
+				console.error( err ) ;
+				console.error("* * *");
+				res.status(422).json({success: false, error: err});
+			} else {
+				res.json({success: true});
+			}
+		});
+	});
+
 	// - - -
 	// delete camera
 	// TODO: delete camera on lifeline app

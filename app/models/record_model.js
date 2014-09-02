@@ -41,7 +41,6 @@ function RecordModel( camera, stream, cb) {
 
 		if (cb) cb(self);
 	});                     // creates folders if necessary
-
 }
 // end of constructor
 //
@@ -347,6 +346,26 @@ RecordModel.setupRtspGrabberMonitor = function() {
 	}
 
 };
+
+
+RecordModel.prototype.setThreshold = function(threshold) {
+	
+	var self = this;
+	var id = self.stream.id;
+	RecordModel.sendMessage( 'threshold', id, threshold );
+
+};
+
+RecordModel.prototype.setMotion = function( isMotionEnabled ) {
+	
+	var self = this;
+	var id = self.stream.id;
+	isMotionEnabled = isMotionEnabled ? 1 : 0;
+
+	RecordModel.sendMessage( 'motion', id, isMotionEnabled );
+
+};
+
 
 RecordModel.pingRtspGrabber = function(arg1, arg2, arg3) {
 	
