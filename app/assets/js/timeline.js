@@ -437,8 +437,13 @@ Timeline.prototype.render = function(block_size, begin, end) {
 
 		var start = elements[i].start;
 		var end   = elements[i].end;
-	
-		var thumb = "/cameras/" + this.camId + "/streams/" + this.streamId + "/thumb/" + elements[i].thumb;
+
+		thumb = "/cameras/" + this.camId + "/streams/" + this.streamId + "/thumb/" + elements[i].thumb;
+
+		if (block_size == 1) {
+			var thumb = "/cameras/" + this.camId + "/streams/" + this.streamId + "/thumb/" + thumb_name;
+			var thumb_name = elements[i].start + '_' + (elements[i].end -elements[i].start);
+		}
 
 		var img = new Image();
 
