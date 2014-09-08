@@ -492,16 +492,20 @@ portChecker.check(8080, function(err, found) {
 	});
 	
 	setInterval( function() {
+		var d = new Date();
+
 		var unixTime = Date.now();
 		var time = moment().format('HH:mm:ss');
+		var tz_offset = d.getTimezoneOffset()/60;
+
 		io.sockets.emit( 'time', {
-			unix: unixTime,
-			string: time
+			unix:       unixTime,
+			string:     time,
+			tz_offset:  tz_offset
 		});
 	}, 1000);
 	// end of socket.io broadcasts setup
 	// - - -
-
 
 	// - - - -
 	// scheduler setup

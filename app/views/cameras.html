@@ -45,12 +45,12 @@
         <script>
 		
 			// toastr.info("Scheduled successfully updated");
-					
 
             var socket = io.connect();
 			
 			socket.on('time', function(data) {
 				$("#device-time").html(data.string);
+				Date.tz_offset = data.tz_offset;
 			});
 
             socket.on('motion', function(data){
@@ -441,7 +441,10 @@
 				}
 
 				var updateTime = function( time ) {
-					var t = new Date(time);
+
+					var tz_offset = Date.tz_offset || 0;
+
+					var t = new Date(time + tz_offset*60*60*1000);
 					var hours = t.getHours();
 					var minutes = t.getMinutes();
 					var seconds = t.getSeconds();

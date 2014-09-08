@@ -87,8 +87,12 @@ Timeline.prototype.refresh = function() {
 		}
 	}
 
-	var start = formattedTimeFromTimestamp( Date.now() - this.timeSpan);
-	var end   = formattedTimeFromTimestamp( Date.now() - 15000 );
+	var d = new Date();
+
+	var tz_offset = Date.tz_offset || 0;
+
+	var start = formattedTimeFromTimestamp( Date.now() - this.timeSpan + tz_offset*60*60*1000 );
+	var end   = formattedTimeFromTimestamp( Date.now() - 15000  + tz_offset*60*60*1000 );
 	// var end   = formattedTimeFromTimestamp( Date.now() - 15000 );
 
 	$(this.startTime).html( start );
