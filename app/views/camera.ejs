@@ -117,6 +117,12 @@
 				camPage.setup();			
             });
 
+			var socket = io.connect();
+			socket.on('time', function(data) {
+				local_offset = (new Date()).getTimezoneOffset()/60;
+				Date.tz_offset = local_offset - data.tz_offset;
+			});
+
         </script>
 
     </body>

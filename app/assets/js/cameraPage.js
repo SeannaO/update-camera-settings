@@ -307,6 +307,10 @@ CameraPage.prototype.populateStreamSelector = function(streams) {
 
 CameraPage.prototype.play = function( begin, end ) {
 
+	var tz_offset = Date.tz_offset * 1000*60*60 || 0;
+	begin -= tz_offset;
+	end -= tz_offset;
+
 	var self = this;
 
 	self.mode = 'archive';
