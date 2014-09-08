@@ -50,7 +50,9 @@
 			
 			socket.on('time', function(data) {
 				$("#device-time").html(data.string);
-				Date.tz_offset = data.tz_offset;
+				local_offset = (new Date()).getTimezoneOffset()/60;
+
+				Date.tz_offset = local_offset - data.tz_offset;
 			});
 
             socket.on('motion', function(data){
