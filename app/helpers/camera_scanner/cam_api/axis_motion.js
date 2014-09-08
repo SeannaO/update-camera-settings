@@ -89,10 +89,10 @@ var sendSoapMessage = function( ip, username, password, soap_action, msg, cb ) {
 // - - - - - - - - - - - - - - - - - - - -
 //
 
-var deleteWindow = function( cam_ip, cb ) {
+var deleteWindow = function( cam_ip, username, password, cb ) {
 	var url = deleteWindowUrl
-		.replace('{username}', 'root')
-		.replace('{password}', 'admin')
+		.replace('{username}', usename)
+		.replace('{password}', password)
 		.replace('{cam_ip}', cam_ip);
 
     request({ 
@@ -149,7 +149,7 @@ var getWindowInfo = function( cam_ip, username, password, cb ) {
 
 var setMotion = function( cam_ip, username, password, params, cb ) {
 
-	deleteWindow( cam_ip, function( error, response, body ) {
+	deleteWindow( cam_ip, username, password, function( error, response, body ) {
 		
 		if (error ) {
 			cb( error, response, body );

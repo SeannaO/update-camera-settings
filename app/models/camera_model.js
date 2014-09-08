@@ -90,10 +90,10 @@ function Camera( cam, videosFolder, cb ) {
 	self.lowestBitrateStream = {};
 
 	var defaultMotionParams = {
-		enabled: false,
-		threshold: 40,
-		sensitivity: 50,
-		roi: "all"
+		enabled:      false,
+		threshold:    40,
+		sensitivity:  50,
+		roi:          "all"
 	};
 
 	self.motionParams = cam.motionParams || defaultMotionParams;
@@ -497,10 +497,11 @@ Camera.prototype.motionHandler = function( motionGrid ) {
 	var timestamp = Date.now();
 
 	var motion_data = data;
-	motion_data.id = self._id;
-	motion_data.start = timestamp || Date.now();
+
+	motion_data.id        = self._id;
+	motion_data.start     = timestamp || Date.now();
 	motion_data.timestamp = timestamp;
-	motion_data.name = self.cameraName();
+	motion_data.name      = self.cameraName();
 
 	if (Date.now() - self.lastMotion > 7000) {
 		// self.emit("motion", motion_data);
@@ -866,7 +867,13 @@ Camera.prototype.restartStream = function( streamId ) {
 			});
 			recorder.on('camera_status', function(data) {
 				self.status = data.status;
-				self.emit('camera_status', { timestamp: new Date().getTime(), cam_id: self._id, cam_name: self.cameraName(), status: data.status, stream_id: data.stream_id } );
+				self.emit('camera_status', {
+					timestamp:                new Date().getTime(),
+					cam_id:                   self._id,
+					cam_name:                 self.cameraName(),
+					status:                   data.status,
+					stream_id:                data.stream_id
+				});
 			});
 
 			// stream.recordModel mught be null here, 
