@@ -15,6 +15,7 @@ var Streamer = function( pipeFile ) {
 	this.refreshStream();
 	
 	this.bitrate = 0;
+	this.clients = [];
 };
 
 util.inherits(Streamer, events.EventEmitter);
@@ -59,6 +60,13 @@ Streamer.prototype.initServer = function() {
 
 		self.socket.on('data', function(d) {
 			self.totalBytes += d.length;
+			
+			for (var i in self.clients) {
+				var res = self.clients[i];
+				if (res) {
+					res.write(d);
+				}
+			}
 		});
 
 		// start the flow of data, discarding it.
@@ -125,16 +133,28 @@ Streamer.prototype.stop = function() {
 	this.server.close();
 
 	clearInterval( this.bpsInterval );
-}
+};
+
 
 Streamer.prototype.pipe = function(res) {
 	var self = this;
-	this.stream.pipe(res);
-	res.on('close', function() {	
-		console.log('[live_streamer.js : pipe] closed connection');
-		self.stream.unpipe(res);
+
+	this.clients.push(res);
+
+	res.on('close', function() {
+		var idx = self.clients.lastIndexOf( res );
+		if (idx >= 0) {
+			self.clients.splice( idx, 1 );
+		}
 	});
-}
+
+	// var self = this;
+	// this.stream.pipe(res);
+	// res.on('close', function() {	
+	// 	console.log('[live_streamer.js : pipe] closed connection');
+	// 	self.stream.unpipe(res);
+	// });
+};
 
 
 Streamer.prototype.refreshStream = function() {
@@ -171,7 +191,7 @@ Streamer.prototype.createSink = function() {
 Streamer.prototype.createPass = function() {
 
 	if (this.pass) {
-		console.error('[deleting existint passthrough]');
+		console.error('[deleting existing passthrough]');
 		this.pass.unpipe();
 		this.pass.removeAllListeners();
 		this.pass.end();

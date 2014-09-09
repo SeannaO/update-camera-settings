@@ -209,7 +209,9 @@ Timeline.prototype.setupEvents = function() {
 
 Timeline.prototype.updateTime = function( time ) {
 
-	var t       = new Date(time);
+	var tz_offset = Date.tz_offset * 1000*60*60 || 0;
+
+	var t       = new Date(time + tz_offset);
 	var hours   = t.getHours();
 	var minutes = t.getMinutes();
 	var seconds = t.getSeconds();
@@ -396,6 +398,8 @@ Timeline.prototype.render = function(block_size, begin, end) {
 	$('.tick').remove();
 	$('.timeline-time').remove();
 
+	var tz_offset = Date.tz_offset * 1000*60*60 || 0;
+
 	var prevTime;
 
 	for (var i = 0; i <= 10; i++) {
@@ -404,7 +408,7 @@ Timeline.prototype.render = function(block_size, begin, end) {
 		}).appendTo(self.el);
 		tick.css('left', i*dx + 'px');
 		
-		var t = begin + i*dt; 
+		var t = begin + i*dt + tz_offset; 
 		var showSeconds = dt < 60000;
 
 		var time = Timeline.formattedTimeFromTimestamp( t, showSeconds );
