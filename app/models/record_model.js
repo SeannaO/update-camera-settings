@@ -824,7 +824,10 @@ RecordModel.prototype.moveFile = function( video, cb ) {
 					video.file        = to;							// updates file path after moving it
 					video.thumbFolder = self.folder + '/thumbs';
 
+					// if recording
 					self.camera.addChunk( self.stream.id, video );	// the chunk will be indexed by the camera
+					// else 
+					// 	delete file
 
 					if (cb) cb(null, video);
 				}                        

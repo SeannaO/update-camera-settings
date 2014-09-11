@@ -1160,8 +1160,8 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 						if (!err) {
 							// attempts to delete the corresponding thumb
 							// notice that the thumb file has the same name as the chunk file
-							var thumb = chunk.file.replace('/videos', '/thumbs');
-							thumb = thumb.replace('.ts','.jpg');
+							var thumb = path.basename( chunk.file, '.ts' );	
+							var thumb = process.env['BASE_FOLDER'] + '/' + self._id + '/' + streamId + '/thumbs/' + thumb + '.jpg';
 							fs.unlink(thumb, function() {});
 						} else {
 							console.log( err );
