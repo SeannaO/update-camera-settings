@@ -44,8 +44,6 @@
 
         <script>
 		
-			// toastr.info("Scheduled successfully updated");
-
             var socket = io.connect();
 			
 			socket.on('time', function(data) {
@@ -79,6 +77,41 @@
 					
 				}
 				$('#'+streamId+'-bps-info').html(avg);
+			});
+
+			socket.on('cameraCreated', function(data) {
+				setTimeout( function() {
+					console.log(data);
+					var id = data._id;
+					if ( !cameras[id] ) {
+						cameras[id] = data;
+						var cameraName = data.name || data.ip;
+						toastr.success('Camera ' + cameraName + ' was just added by another user');
+						addCameraToUI( data );
+					}
+				}, 1000 );
+			});
+
+			socket.on('cameraRemoved', function(data) {
+				var id = data._id;
+				if ( !cameras[id].deletedOn || Date.now() - cameras[id].deletedOn > 5000 ) {
+					delete cameras[id];
+					var cameraName = data.name || data.ip;
+					toastr.success('Camera ' + cameraName + ' was just deleted by another user');
+					$("#camera-item-"+data._id).fadeOut();
+				}
+			});
+
+			socket.on('cameraUpdated', function(data) {
+				var id = data._id;
+				if ( !cameras[id].updatedOn || Date.now() - cameras[id].updatedOn > 5000 ) {
+					cameras[id].updatedOn = null;
+					cameras[id] = data;
+					var cameraName = cameras[id].name || data.ip;
+					updateCameraItem( data );
+					toastr.success('Camera ' + cameraName + ' was just updated by another user');
+				}
+
 			});
 
             /*
@@ -353,7 +386,7 @@
 
         <script>
 
-			var camMotion = new CameraMotion(); 
+			var camMotion = new CameraMotion( cameras ); 
 
             var default_subnet = "";
             $.ajax({
@@ -501,29 +534,10 @@
 							//location.reload();
                             //add the the camera to the page
 
+							toastr.success("Successfully added a new camera");
                             cameras[data._id] = data;
-                            addCameraItem(data);
-                            
-                            var streamsCounter = 0;
-                            var totalStreams = data.streams.length;
 
-                            for (var j in data.streams) {
-                                var text = '';
-                                if ( data.streams[j].name ) {
-                                    text = data.streams[j].name;
-                                }else if ( data.streams[j].resolution ) {
-                                    text = data.streams[j].resolution;
-                                } else {
-                                    text = data.streams[j].url;
-                                }
-
-                                timelineSetup(data._id, data.streams[j].id, text, function(timeline_data) {
-                                    streamsCounter++;
-                                    if (streamsCounter >= totalStreams) {
-                                        addMotionData( timeline_data.cam_id, timeline_data.start, timeline_data.end );
-                                    }
-                                });
-                            }
+							addCameraToUI( data );
 
                             // send the request to enable motion by default
                             $dialog.modal('hide');

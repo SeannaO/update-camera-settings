@@ -1,10 +1,12 @@
-var CameraMotion = function() {
+var CameraMotion = function( cameras ) {
 
 	var self = this;
 
 	this.camera = {};
 	this.player = new Player('#video');
 	this.setupGrid();
+
+	self.cameras = cameras;
 
 	$('#camera-motion-dialog').on('hidden.bs.modal', function() {
 		self.close();
@@ -330,9 +332,12 @@ CameraMotion.prototype.openWindow = function() {
 
 		addOverlayToPage('updating motion...');
 
+		self.cameras[ self.camera._id ].updatedOn = Date.now();
+
 		self.updateMotion( function(data) {
 
 			if (data.success) {
+
 				self.unflagChanges();
 				removeOverlayFromPage( function() {
 					// location.reload();

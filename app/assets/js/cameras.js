@@ -269,6 +269,30 @@ var addMotionData = function( cam_id, start, end ) {
 };
 
 
+var updateCameraItem = function( camera, cb, reload ) {
+
+	if (reload) {
+		$.ajax({
+			type: "GET",
+			url: "/cameras/" + camera._id + "/json",
+			contentType: 'application/json',
+			success: function(data) {
+				$('#camera-item-' + camera._id).remove();
+				addCameraToUI( data.camera );
+				if (cb) cb();
+			}, 
+			error: function() {
+				if (cb) cb('error when loading camera');
+			}
+		});
+	} else {
+		$('#camera-item-' + camera._id).remove();
+		addCameraToUI( camera );
+		if (cb) cb();
+	}
+};
+
+
 var addCameraItem = function( camera ) {
 
 	// start loading the image as soon as we can
@@ -302,27 +326,29 @@ var addCameraItem = function( camera ) {
 	}
 
 	var cameraItem = $("<div>", {
-		id: "camera-item-" + camera._id,
-		class: "camera-item"
+		id:     "camera-item-" + camera._id,
+		class:  "camera-item"
 	});
 
 	var cameraItemName = $("<h3>", {
-		class: "camera-item-name",
-		html: '<a class="camera-item-link" href = "/cameras/'+camera._id+'/">' + (camera.name || (camera.ip + " | " + camera.manufacturer)) + '</a>'
-	})
+		class:  "camera-item-name",
+		html:   '<a id="camera-item-link-'+camera._id+'" class="camera-item-link" href = "/cameras/'+camera._id+'/">' + (camera.name || (camera.ip + " | " + camera.manufacturer)) + '</a>'
+	});
 
 	var cameraItemStatus = $("<span>", {
-        class: "camera-item-status",
-        html:  camera.status
+        class:  "camera-item-status",
+		id:     'camera-item-status-' + camera._id,
+        html:   camera.status
     });
 
+	motionStatus = camera.motionParams.enabled ? 'green' : 'red';
 
 	var schedule_status_class = camera.schedule_enabled ? "green" : "red";
 
 	var menuHtml = "<a class=\"btn btn-xs btn-default edit\" href = \"javascript:editCamera('" + camera._id + "')\"><span class=\"glyphicon glyphicon-edit\"></span>edit</a>" +
                 "<a class=\"btn btn-xs btn-default schedule\" href = \"javascript:cameraSchedule('" + camera._id + "')\"><span class=\"status " + schedule_status_class + "\"></span><span class=\"glyphicon glyphicon-calendar\"></span>schedule</a>";
 	// if (camera.manufacturer !== 'undefined' && camera.manufacturer !== 'unknown'){
-		menuHtml += "<a class=\"btn btn-xs btn-default motion\" href = \"javascript:cameraMotion('" + camera._id + "')\"><span id =\"motion-status-" + camera._id + "\" class=\"status gray\"></span>motion</a>";	
+		menuHtml += "<a class=\"btn btn-xs btn-default motion\" href = \"javascript:cameraMotion('" + camera._id + "')\"><span id =\"motion-status-" + camera._id + "\" class=\"status " + motionStatus + "\"></span>motion</a>";	
 	// }
 	menuHtml += "<a class=\"btn btn-xs btn-default remove\" href=\"javascript:deleteCamera('" + camera._id + "')\"><span class=\"glyphicon glyphicon-remove\"></span>remove</a>";
    
@@ -363,8 +389,35 @@ var addCameraItem = function( camera ) {
 		});
 	}
 	$('#no-cameras').remove();
-
 };
+
+
+var addCameraToUI = function( data ) {
+
+	addCameraItem(data);
+
+	var streamsCounter = 0;
+	var totalStreams = data.streams.length;
+
+	for (var j in data.streams) {
+		var text = '';
+		if ( data.streams[j].name ) {
+			text = data.streams[j].name;
+		}else if ( data.streams[j].resolution ) {
+			text = data.streams[j].resolution;
+		} else {
+			text = data.streams[j].url;
+		}
+
+		timelineSetup(data._id, data.streams[j].id, text, function(timeline_data) {
+			streamsCounter++;
+			if (streamsCounter >= totalStreams) {
+				addMotionData( timeline_data.cam_id, timeline_data.start, timeline_data.end );
+			}
+		});
+	}
+};
+
 
 var addCamera = function(camera, cb) {
         
@@ -393,7 +446,7 @@ var deleteCamera = function(id) {
 	bootbox.confirm("are you sure you want to remove this camera?", function(ok) {
 		if (ok) {
 			addOverlayToPage('removing camera...');
-
+			cameras[id].deletedOn = Date.now();
 			$.ajax({
 				type: "DELETE",
 				url: "/cameras/" + id,
@@ -493,6 +546,8 @@ var updateCamera = function(id, cb) {
 		enable_motion = true;
 	}
 
+	cameras[id].updatedOn = Date.now();
+
 	// if it had zero streams and it is adding new streams then we should send a request afterwards to enable motion
 
     $.ajax({
@@ -502,7 +557,8 @@ var updateCamera = function(id, cb) {
         contentType: 'application/json',
         success: function(data) {
 
-            cb( data );
+			params.camera._id = id;
+            cb( data, params.camera );
 
             if (enable_motion){
             	enableMotion(id,function(){
@@ -638,12 +694,16 @@ var editCamera = function(camId) {
 
 					addOverlayToPage('updating camera configurations...');
 
-                    updateCamera( camId, function(data) {
+                    updateCamera( camId, function(data, camera) {
                         if (data && data.success) {
-							removeOverlayFromPage( function() {
-								location.reload();
-								toastr.success('Camera configurations sucesfully updated.')
-							});
+							updateCameraItem( camera, function(err) {
+								if (!err) {
+									removeOverlayFromPage();
+									toastr.success('Camera configurations successfully updated.')
+								} else {
+									location.reload();
+								}
+							}, true);
                         } else {
 							removeOverlayFromPage( function() {
 								console.log( data.err );
@@ -1253,6 +1313,11 @@ var addStream = function( stream, cb ) {
 };
 
 
+var removeStreamFromUI = function( stream ) {
+	$('timeline-'+stream.id).remove();
+};
+
+
 var removeStream = function( stream ) {
 
 	bootbox.confirm("are you sure you want to remove this stream?", function(ok) {
@@ -1266,7 +1331,8 @@ var removeStream = function( stream ) {
 				success: function(data) {
 					if (data.error) {
 						removeOverlayFromPage( function() {
-							location.reload();		
+							// location.reload();		
+							removeStreamFromUI();
 							toastr.success("Camera was successfully removed");
 						});
 					} else {
@@ -1351,6 +1417,7 @@ var cameraSchedule = function(camId) {
         contentType: 'application/json',
         success: function(data) {
             if (data.success) {
+				cameras[camId].updatedOn = Date.now();
 				if (data.schedule_enabled == '1') {
 						$('#scheduler-notice').hide();
 				} else {

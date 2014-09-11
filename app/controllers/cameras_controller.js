@@ -554,6 +554,7 @@ CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
 				} else {
 					camera.removeStream( streamId );
 					self.db.loadDatabase();
+					self.emit('update', camera);
 					cb();
 				}
 			});

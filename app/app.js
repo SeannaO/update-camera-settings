@@ -466,6 +466,15 @@ portChecker.check(8080, function(err, found) {
 		io.sockets.emit( 'motion', data );
 	});
 
+	camerasController.on('motion_update', function(data) {
+		io.sockets.emit( 'cameraUpdated', data.camera );
+	});
+	camerasController.on('schedule_update', function(data) {
+		io.sockets.emit( 'cameraUpdated', data );
+	});
+	camerasController.on('create', function(data) {
+		io.sockets.emit( 'cameraCreated', data);
+	});
 	camerasController.on('update', function(data) {
 		io.sockets.emit( 'cameraUpdated', data);
 	});
@@ -534,11 +543,9 @@ portChecker.check(8080, function(err, found) {
 	// - - -
 	// API
 	require('./api/cameras.js')( app, passport, camerasController );			// cameras
-	require('./api/device.js')( app, passport);			// device
+	require('./api/device.js')( app, passport );								// device
 
-	// usage: append subnet prefix in the form xxx.xxx.xxx
-	// TODO: we need to configure the subnet that camera should scan
-	require('./api/scanner.js')( app, passport);				// scanner
+	require('./api/scanner.js')( app, io, passport );								// scanner
 
 	app.get('/health', passport.authenticate('basic', {session: false}), function(req, res) {							// health
 		res.sendfile(__dirname + '/views/health.html');
