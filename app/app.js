@@ -24,6 +24,8 @@ var spawn = require('child_process').spawn;
 
 var portChecker = require('./helpers/port_checker.js');
 
+var scannerNotifier = require('./helpers/camera_scanner/scanner.js').emitter;
+
 portChecker.check(8080, function(err, found) {
 
 	// exits app if port 8080 is already being used
@@ -498,6 +500,16 @@ portChecker.check(8080, function(err, found) {
 	camerasController.on('grid', function( data ) {
 		// io.sockets.emit('grid', data);
 		io.of('/motion_grid').emit('grid', data);
+	});
+
+	scannerNotifier.on('status', function(data) {
+		io.sockets.emit('scanner_status', data);
+	});
+	scannerNotifier.on('camera', function(data) {
+		io.sockets.emit('scanner_cam', data);
+	});
+	scannerNotifier.on('progress', function(data) {
+		io.sockets.emit('scanner_progress', data);
 	});
 	
 	setInterval( function() {

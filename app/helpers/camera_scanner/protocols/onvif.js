@@ -74,7 +74,7 @@ var getRtspUrl = function(ip, profile_token, cb) {
  * findOnvifCamera
  *
  */
-var findOnvifCamera = function( ipPrefix, cb ) {
+var findOnvifCamera = function( ipPrefix, emitter, progress, cb ) {
     
     var total = 0;
     
@@ -87,10 +87,19 @@ var findOnvifCamera = function( ipPrefix, cb ) {
             total++;
             if (total == 254) cb(ipList);
             
+			emitter.emit('progress', {
+				progress: 0.5 * progress++ / 254,
+				protocol: 'onvif'
+			});
+
             if (err) {
                 // console.log("sorry, there was an error: " + err);
             } 
             else if (found) {
+				emitter.emit('camera',{
+					ip: ip,
+					protocol: 'onvif'
+				});
                 ipList.push(ip);
             }
             else {

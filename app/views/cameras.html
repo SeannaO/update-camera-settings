@@ -45,6 +45,7 @@
         <script>
 		
             var socket = io.connect();
+			// var scannerSocket = io.connect('/scanner');
 			
 			socket.on('time', function(data) {
 				$("#device-time").html(data.string);
@@ -67,6 +68,26 @@
 				}
             });
 
+			socket.on('scanner_status', function(data) {
+				$('#camera-scanner-btn').attr('disabled', data.busy)	
+				if (data.busy) {
+					$('#scan-btn-text').html('scanning... ');
+				} else {
+					$('#scan-btn-text').html('Scan for Cameras');
+				}
+			});
+			
+			socket.on('scanner_progress', function(data) {
+				$('#camera-scanner-btn').attr('disabled', true);
+				var progress = Math.round(data.progress * 100);
+				$('#scan-btn-text').html('scanning... ' + progress + '% complete' );
+			});
+
+			socket.on('scanner_cam', function(data) {
+				// console.log('scanner cam');
+				// console.log(data);
+			});
+
 			socket.on('bps', function(data) {
 				var streamId = data.stream_id;
 				var avg = data.avg / 8000;
@@ -81,7 +102,6 @@
 
 			socket.on('cameraCreated', function(data) {
 				setTimeout( function() {
-					console.log(data);
 					var id = data._id;
 					if ( !cameras[id] ) {
 						cameras[id] = data;
@@ -193,7 +213,7 @@
         </div>
         <div class="btn-group">
             <a id="add-camera-btn" href="javascript:openAddCameraDialog()" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-plus"></span> Add Camera</a>
-            <a id="camera-scanner-btn" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-refresh"></span> Scan For Cameras</a>
+			<a id="camera-scanner-btn" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-refresh"></span> <span id = 'scan-btn-text'>Scan For Cameras</span></a>
             <div id="camera-scanner-container">
                 <form id="camera-scanner" class="form-inline" role="form">
                     <div class="form-group">

@@ -40,7 +40,7 @@ var testIpForPsiaCamera = function( ip, cb ) {
  * findPsiaCamera
  *
  */
-var findPsiaCamera = function( ipPrefix, cb ) {
+var findPsiaCamera = function( ipPrefix, emitter, progress, cb ) {
     
     var total = 0;
     
@@ -51,9 +51,18 @@ var findPsiaCamera = function( ipPrefix, cb ) {
         var ip = ipPrefix + "." + i;
         testIpForPsiaCamera(ip, function( err, status, ip ) {
 
+			emitter.emit('progress', {
+				progress: 0.5 * progress++ / 254,
+				protocol: 'psia'
+			});
+
             if (err) {
             } 
             else if (status !== '') {
+				emitter.emit('camera',{
+					ip: ip,
+					protocol: 'psia'
+				});
                 ipList.push({ip: ip, status: status});
             }
             

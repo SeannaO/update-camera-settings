@@ -6,6 +6,11 @@ module.exports = function( app, socket, passport) {
 		var prefix = req.query.subnet;
 		if(!prefix) res.json([]);
 		scan(prefix, function( camlist ) {
+			if (camlist == 'busy') {
+				console.error('[scanner api] scanner is busy');
+				res.end('busy');
+				return;
+			}
 			res.json( camlist );
 		});
 	});

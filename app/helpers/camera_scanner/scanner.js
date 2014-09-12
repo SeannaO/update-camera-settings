@@ -7,6 +7,10 @@ var zlib    = require('zlib');
 
 var camList = Object.keys( api );
 
+var busy = false;
+
+var emitter = new (require('events').EventEmitter)();
+
 var detectCamByHttpResponse = function( ip, response, cb ) {
 
 	if ( typeof response === 'function' ) {
@@ -82,9 +86,20 @@ var detectCamByHttpResponse = function( ip, response, cb ) {
 
 var scan = function(prefix, cb ) {
 	
+	if (busy) {
+		console.error('[scanner] scanner is busy');
+		cb('busy');
+		return;
+	}
+
+	busy = true;
+	emitter.emit('status', {
+		busy: true
+	});
+
 	foundCams = [];
 	psiaScan( prefix, function(psia) {
-		console.log("ok, scanning onvif cameras now");
+		// console.log("ok, scanning onvif cameras now");
 		onvifScan( prefix, function(onvif) {
 			for(var i in psia){
 			   var shared = false;
@@ -96,8 +111,12 @@ var scan = function(prefix, cb ) {
 			   if(!shared) foundCams.push(psia[i])
 			}
 			foundCams = foundCams.concat(onvif);
+			console.log("[scanner.scan] done scanning cameras");
 			if (cb) {
-				console.log("done scanning cameras");
+				busy = false;
+				emitter.emit('status', {
+					busy: false
+				});
 				cb(foundCams);
 			}
 		});
@@ -123,7 +142,7 @@ var onvifScan = function( prefix, cb ) {
 	console.log("scanning for onvif cameras...");
 	var lock = false;
 
-	onvif.scan(prefix, function(list) {
+	onvif.scan(prefix, emitter, 254, function(list) {
 	
 		if (lock) return;
 		lock = true;
@@ -171,7 +190,7 @@ var psiaScan = function( prefix, cb ) {
 
 	console.log("scanning for psia cameras...");
 	var lock = false;
-	psia.scan(prefix, function(list) {
+	psia.scan(prefix, emitter, 0, function(list) {
 		if (lock) {
 			return;
 		}
@@ -200,3 +219,4 @@ var psiaScan = function( prefix, cb ) {
 
 
 module.exports.scan = scan;
+module.exports.emitter = emitter;

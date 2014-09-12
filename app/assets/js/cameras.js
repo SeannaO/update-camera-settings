@@ -341,7 +341,11 @@ var addCameraItem = function( camera ) {
         html:   camera.status
     });
 
-	motionStatus = camera.motionParams.enabled ? 'green' : 'red';
+	if (camera.motionParams) {
+		motionStatus = camera.motionParams.enabled ? 'green' : 'red';
+	} else {
+		motionStatus = 'gray';
+	}
 
 	var schedule_status_class = camera.schedule_enabled ? "green" : "red";
 
@@ -834,6 +838,12 @@ scanForCameras = function(subnet, cb) {
         url: "/scan.json?subnet=" + subnet,
         contentType: 'application/json',
         success: function(data) {
+			if (data == 'busy') {
+				toastr.warning('scanner is busy now');
+				$('#camera-scanner-btn').attr('disabled', true);
+				$("#scan-spinner").hide();
+				return;
+			}
         	var ip_addresses = [];
         	for (var i in cameras){
         		ip_addresses.push(cameras[i].ip)
