@@ -1,7 +1,6 @@
 var ffmpeg       = require('./../helpers/ffmpeg.js');  // ffmpeg helper
 var fs           = require('fs');                      // file system utils
 var path         = require('path');                    // path manipulation utils
-var Watcher      = require('./../helpers/watcher.js'); // watches folder for new chunks
 var exec         = require('child_process').exec;      // for executing system commands
 var EventEmitter = require('events').EventEmitter;     // for events
 var util         = require('util');                    // for inheritin events class
@@ -38,6 +37,10 @@ function RecordModel( camera, stream, cb) {
 		self.filesToIndex = [];
 		
 		self.setupDbusListener();
+
+		// launch recording thread, enabling live stream and motion detection
+		self.sendSignal( 'launch', self.rtsp, self.folder + "/videos/tmp" );
+		self.sendSignal( 'start', self.rtsp, self.folder + "/videos/tmp" );
 
 		if (cb) cb(self);
 	});                     // creates folders if necessary
@@ -144,12 +147,9 @@ RecordModel.prototype.updateCameraInfo = function( camera, stream ) {
 RecordModel.prototype.stopRecording = function() {
 
 	var self = this;
-	console.log("[RecordModel.stopRecording]  sending signal to pause rtsp_grabber thread");
-
-	this.cleanTmpFolder();		// resets temp folder
+	console.log("[RecordModel.stopRecording]  clearing isRecordingIntervalId and updating recording status");
 
 	this.status = STOPPING;							// didn't stop yet
-	this.sendSignal( 'stop', self.rtsp, self.folder + "/videos/tmp" );
 	clearInterval( this.isRecordingIntervalId );	// clears listener that checks if recording is going ok
 	this.status = STOPPED;						// now we stopped
 };
@@ -390,11 +390,16 @@ RecordModel.prototype.receiveSignal = function( msg_info, args ) {
 	var self = this;
 
 
+	if (self.status == STOPPING || self.status == STOPPED) {
+		this.lastChunkTime = Date.now();	// resets timer 
+		return;
+	}
+	// -- 
+	
 	// var new_chunk = JSON.parse( arguments[1] );
 	var new_chunk = JSON.parse( args );
 	new_chunk.id = new_chunk.id.trim();
 	
-
 	if ( new_chunk.id === self.stream.id ) { // && self.lastIdReceived != parseInt( new_chunk.file_id) ) {
 
 		self.lastIdReceived = parseInt( new_chunk.file_id );
@@ -574,7 +579,7 @@ RecordModel.prototype.launchMonitor = function() {
 		var dt = Date.now() - self.lastChunkTime;	// interval since last chunk arrived
 
 		// thresholds: 
-		// 20s if recording
+		// 30s if recording
 		// 40s if there was an error - to avoid false alarms
 		if ( (dt > 30*1000 && self.status === RECORDING) || (dt > 40*1000 && self.status === ERROR) ) 
 		{	
@@ -588,18 +593,12 @@ RecordModel.prototype.launchMonitor = function() {
 
 			self.lastChunkTime = Date.now();	// refreshes timer
 
+			// send dbus signal to restart recording
 			self.sendSignal( 'restart', self.rtsp, self.folder + "/videos/tmp" );
+
 		    // this.status = RECORDING;
 	
-			// restarts ffmpeg
 			console.log('[RecordModel] monitor: no new chunks in a while, will attempt to stop/start recording');
-			//self.stopRecording();
-			//setTimeout( function() {	// wait a few millis before starting ffmpeg again
-										// to avoid the cost of respawning a process
-										// too frequently in case of a persistent error
-			//	self.startRecording();
-			//}, 100);
-			
 		}
 	}, 5000);	// the monitor will check back after 5s
 };
@@ -751,31 +750,6 @@ RecordModel.prototype.calcDurationWithFileInfo = function( file, fileInfo, cb ) 
 	});
 };
 // end of calcDurationWithFileInfo
-//
-
-
-/**
- * TODO: check if this method is really necessary
- *			it was being used before the implementation of the monitor
- *  
- */
-RecordModel.prototype.checkForConnectionErrors = function() {
-	
-	var self = this;
-
-	if (this.status === STOPPING) {
-		this.status = STOPPED;
-	} else if ( Date.now() - this.lastErrorTime > 20000 ) {
-	//	self.lastErrorTime = Date.now();
-	//	if (self.status === ERROR) {
-	//		self.emit('camera_status', {status: 'offline'});
-	//	} else if (self.status === RECORDING) {
-	//		self.emit('camera_status', {status: 'disconnected'});
-	//	}
-	//	this.status = ERROR;
-	}	
-};
-// end of checkForConnectionErrors
 //
 
 

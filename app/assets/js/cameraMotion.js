@@ -202,6 +202,7 @@ CameraMotion.prototype.setupSocket = function() {
 	var self = this;
 
 	self.socketListenerId = self.socket.on('grid', function(data) {
+		console.log(data);
 		if (data.cam_id !== self.camera._id) {
 			return;
 		}

@@ -449,20 +449,6 @@ Camera.prototype.setMotionParams = function( params ) {
 };
 
 
-Camera.prototype.setMotionDetection = function( cb ) {
-	
-	var motionParams = {
-		enabled:      true,
-		threshold:    10,
-		sensitivity:  80
-	};
-
-	// this.api.setMotionParams( motionParams, function( err, body ) {
-	// 	if (cb) cb();
-	// });
-};
-
-
 Camera.prototype.stopMotionDetection = function() {
 	var self = this;
 	clearInterval( self.updateMotionParamsInterval );
@@ -553,76 +539,6 @@ Camera.prototype.motionHandler = function( motionGrid ) {
 		// Broadcast that motion has ended with the duration, camera name, ID, and timestamp
 		self.emit( 'motionEvent', result);
 	}, 20000); // was 30000
-};
-
-Camera.prototype.startMotionDetection = function() {
-		
-	var self = this;
-
-// 	this.api.startListeningForMotionDetection( function(timestamp, data) {
-// 		
-// 		if (!data) {
-// 			return;
-// 		}
-//
-// 		var motion_data = data;
-// 		motion_data.id = self._id;
-// 		motion_data.start = timestamp || Date.now();
-// 		motion_data.timestamp = timestamp;
-// 		motion_data.name = self.cameraName();
-//
-// 		if (Date.now() - self.lastMotion > 7000) {
-// 			// self.emit("motion", motion_data);
-// 			self.pendingMotion.push(motion_data);
-// 			while(self.pendingMotion.length > 10) {
-// 				self.pendingMotion.shift();
-// 			}
-// 			self.lastMotion = Date.now();
-// 		}
-// 		// check to see if the camera already has a motion event
-// 		if (self.motion == null){
-//
-// 			self.motion = {
-// 				id:        self._id,
-// 				start:     timestamp,
-// 				duration:  0,
-// 				ip:        self.ip,
-// 				status:    'start',
-// 				name:      self.cameraName(),
-// 				motion:    {}
-// 			};
-//
-// 			self.motion.motion[timestamp] = data;
-//
-// 			if ( !self.recording ) {
-// 				self.startRecording();
-// 			}
-// 			self.emit("motionEvent", self.motion);
-//
-// 		} else {
-//
-// 			self.motion.status = 'open';
-// 			self.motion.duration = timestamp - self.motion.start;
-// 			self.motion.motion[timestamp] = data;
-// 			if (self.stopRecordingTimeout) {
-// 				clearTimeout( self.stopRecordingTimeout );
-// 			}
-// 		}
-//
-//
-// 		self.stopRecordingTimeout = setTimeout (function() {
-// 			var result = self.motion; 
-// 			self.motion = null;
-// 			if (!self.shouldBeRecording() ) {	
-// 				self.stopRecording();
-// 			}
-// 			result.status = 'end';
-// 			result.duration = Date.now() - result.start;
-// 			// Broadcast that motion has ended with the duration, camera name, ID, and timestamp
-// 			self.emit( 'motionEvent', result);
-// 		}, 30000);
-//
-// 	});
 };
 
 
@@ -772,7 +688,6 @@ Camera.prototype.updateStream = function( stream, cb ) {
 //
 
 
-
 /**
  * Restarts all camera streams
  *
@@ -816,6 +731,7 @@ Camera.prototype.emitPendingMotion = function(chunk) {
 		}
 	}
 };
+
 
 /**
  * Restarts a stream
@@ -876,7 +792,7 @@ Camera.prototype.restartStream = function( streamId ) {
 				});
 			});
 
-			// stream.recordModel mught be null here, 
+			// stream.recordModel can be null here, 
 			// so we assign it again with the object
 			// returned by the RecordModel callback
 			self.streams[streamId].recordModel = recorder;
@@ -888,6 +804,11 @@ Camera.prototype.restartStream = function( streamId ) {
 //
 
 
+/**
+ * 'Simply' restarts all streams
+ * 		just tell recordModel to send a dbus message to rtsp_grabber to restart the streams
+ * 		it doesn't reinstantiates another instance of recordModel
+ */
 Camera.prototype.simplyRestartAllStreams = function() {
 
 	var self = this;
@@ -898,6 +819,7 @@ Camera.prototype.simplyRestartAllStreams = function() {
 		}
 	}
 };
+
 
 /**
  * Checks if camera should be recording
@@ -974,6 +896,7 @@ Camera.prototype.getExpiredChunksFromStream = function( streamId, nChunks, cb ) 
 };
 // end of getExpiredChunksFromStream
 //
+
 
 /**
  * Gets expired chunks from all streams, one stream at a time,
@@ -1208,7 +1131,15 @@ Camera.prototype.setupEvents = function() {
  * @return { boolean }
  */
 Camera.prototype.isRecording = function() {
-    return this.recording;
+
+	for (var i in this.streams) {
+		if( this.streams[i].recordModel.status == 2) {
+			return true;
+		}
+	}
+
+	return false;
+    // return this.recording;
 };
 // end of isRecording
 //
@@ -1222,10 +1153,10 @@ Camera.prototype.startRecording = function() {
     
     var self = this;
 
-    if (this.recording) {	// avoids calling startRecording twice
+    if (this.isRecording()) {	// avoids calling startRecording twice
         console.error( (this.name || this.ip) + " is already recording.");
     } else {
-        console.log("* * * " + (this.name || this.ip) + " will start recording...");
+        console.log("[cameraModel]  " + (this.name || this.ip) + " will start recording...");
 		for (var i in self.streams) {
 			self.streams[i].recordModel.startRecording();
 		}
@@ -1244,15 +1175,11 @@ Camera.prototype.stopRecording = function() {
 
 	var self = this;
 
-    if (this.recording) { // avoids calling stopRecording twice
-        console.log((this.name || this.ip) + " will stop recording...");
+    	console.log("[cameraModel]  " + (this.name || this.ip) + " will stop recording...");
         this.recording = false;
 		for (var i in self.streams) {
 			this.streams[i].recordModel.stopRecording();
 		}
-    } else { 
-        console.error( (this.name || this.ip) + " has already stopped.");
-    }
 };
 // stopRecording
 //
@@ -1283,6 +1210,7 @@ Camera.prototype.updateRecorder = function() {
 }; 
 // end of updateRecorder
 //
+
 
 /**
  * Renders streams info as a json array
@@ -1354,24 +1282,6 @@ Camera.prototype.toJSON = function() {
 };
 // end of toJSON
 //
-
-
-var deleteFolderRecursive = function( path ) {
-	// TODO: mark stream for deletion and enqueues files for progressive deletion
-	/*
-    if( fs.existsSync(path) ) {
-        fs.readdirSync(path).forEach(function(file,index){
-            var curPath = path + "/" + file;
-            if(fs.statSync(curPath).isDirectory()) { 
-                deleteFolderRecursive(curPath);
-            } else { 
-                fs.unlinkSync(curPath);
-            }
-        });
-        fs.rmdirSync(path);
-    }
-	*/
-};
 
 
 module.exports = Camera;

@@ -486,21 +486,6 @@ CamerasController.prototype.pushCamera = function( cam ) {
 	cam.on('motionEvent', function(data) {
 		self.emit('motionEvent', data);
 	});
-
-	// if (cam.api != null && Object.keys(cam.api).length > 0){
-	// 	
-	// 	cam.api.getMotionParams(function(motion){
-	// 		if (motion) {
-	// 			if (motion.enabled) {
-	// 				cam.startMotionDetection();
-	// 			} else {
-	// 				cam.stopMotionDetection();
-	// 			}
-	// 		}else{
-	// 		}
-	// 	});		
-	// }
-
 };
 
 
@@ -816,21 +801,6 @@ CamerasController.prototype.updateCameraMotion = function(params, cb) {
 	});
 
 	self.saveMotionParams( camera, cb );
-
-	// camera.api.setMotionParams(params.camera.motion, function(error, body){
-	// 	if (!error) {
-	// 		self.emit("motion_update", {camera: camera, motion: params.camera.motion});
-	// 		// Maybe we should really just be starting motion detection when scheduling is disabled or it is out of schedule
-	// 		// this might allow the response to returned faster
-	// 		if (params.camera.motion.enabled) {
-	// 			camera.startMotionDetection();
-	// 		} else {
-	// 			camera.stopMotionDetection();
-	// 		}
-	// 	}else{
-	// 	}
-	// 	cb(error, body);
-	// }); 
 };
 
 
@@ -882,6 +852,12 @@ CamerasController.prototype.findCameraById = function( id ) {
 };
 
 
+/**
+ * 'Simply' restart recording
+ * 		just send a dbus message to d-bus to restart recording.
+ * 		this is being called by app.js when rtsp_grabber is relaunched, 
+ * 		in order to speed up resuming the streams recording
+ */
 CamerasController.prototype.simplyRestartRecording = function() {
 	console.log('[CamerasController] simply restart recording');
 	for (var i in this.cameras) {
@@ -896,6 +872,7 @@ CamerasController.prototype.restartRecording = function() {
 		this.cameras[i].restartAllStreams();
 	}
 };
+
 
 module.exports = CamerasController;
 

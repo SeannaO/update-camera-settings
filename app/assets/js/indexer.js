@@ -1,6 +1,8 @@
 function Indexer() {
 
 	this.elements = [];
+	this.agglutinated = null;
+	this.agglutinatedBy;
 };
 
 Indexer.prototype.includesInterval = function( begin, end ) {
@@ -31,8 +33,14 @@ Indexer.prototype.push = function( data ) {
 Indexer.prototype.agglutinate = function( size ) {
 	
 	var self = this;
-	var agglutinated = [];		
 	
+	if (self.agglutinated && self.agglutinatedBy == size) {
+		console.log('returning cached agglutination');
+		return self.agglutinated;
+	}
+
+	self.agglutinated = [];
+
 	for( var i = 0; i < self.elements.length; ) { //in self.elements ) {
 		var el = self.elements[i];
 		var agg_el = {};
@@ -53,10 +61,11 @@ Indexer.prototype.agglutinate = function( size ) {
 			i++;
 
 		}
-		agglutinated.push( agg_el );
+		self.agglutinated.push( agg_el );
 	}
 
-	return agglutinated;
+	self.agglutinatedBy = size;
+	return self.agglutinated;
 };
 
 
@@ -84,4 +93,5 @@ Indexer.prototype.getAbsoluteTime = function( relative_time, begin, end ) {
 
 Indexer.prototype.clear = function() {
 	this.elements = [];
+	this.agglutinated = null;
 }

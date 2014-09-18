@@ -107,6 +107,8 @@ Timeline.prototype.setupEvents = function() {
 
 	var self = this;
 	
+	self.currTime = 0;
+
 	$(window).on('currentTimeChange', function(e, time) {
 
 		var timelineWidth      = self.el.width();
@@ -114,6 +116,11 @@ Timeline.prototype.setupEvents = function() {
 		var absolute_time      = self.indexer.getAbsoluteTime( time );
 		var dt                 = ( absolute_time - self.begin )/1000.0;
 		var pos                = dt * (1.0 * timelineWidth) / totalTime;
+
+		if ( self.currTime && absolute_time - self.currTime > 1000 ) {
+			$(window).trigger('fringe', time);
+		}
+		self.currTime = absolute_time;
 
 		var formattedCurrTime = new Date(absolute_time);
 		$("#curr-time").html(formattedCurrTime);
@@ -251,6 +258,8 @@ Timeline.prototype.loadIndexer = function(begin, end, cb) {
 				"&end=" + end, 
 		function( data ) {
 
+			if (!data) return;
+
 			for (var i = 0; i < data.videos.length; i++) {
 				
 				var start = data.videos[i].start;
@@ -280,6 +289,8 @@ Timeline.prototype.zoomBack = function() {
 Timeline.prototype.zoom = function( begin, end ) {
 
 	var self = this;
+
+	if (end - begin <= 10) return;
 
 	this.zoomHistory.push({
 		begin:  this.currBegin,
@@ -356,6 +367,9 @@ Timeline.prototype.overlayMotionData = function() {
 		var prevTime = 0;
 		for (var i in self.motionData.data) {
 			var start = parseInt( self.motionData.data[i].t );
+			if (start + 5000 < self.begin || start > self.end) {
+				continue;
+			}
 			var duration = 1000;
 			if (self.timeline && start - prevTime > duration) {
 				prevTime = start;
@@ -441,6 +455,9 @@ Timeline.prototype.render = function(block_size, begin, end) {
 
 		var start = elements[i].start;
 		var end   = elements[i].end;
+
+		if (end < this.start) continue;
+		if (start > this.end) continue;
 
 		thumb = "/cameras/" + this.camId + "/streams/" + this.streamId + "/thumb/" + elements[i].thumb;
 
@@ -674,7 +691,6 @@ Timeline.prototype.paintRectByTime = function( time, duration, color ) {
 				}
 			}
 			else {
-				// console.log('no rect');
 			}
 		}
 	}
@@ -778,7 +794,6 @@ Timeline.prototype.append = function( data ) {
 Timeline.prototype.clear = function() {
 		
 	this.boxes.selectAll('rect').data([]).exit().remove()
-	console.log("clearing timeline");
 }
 
 

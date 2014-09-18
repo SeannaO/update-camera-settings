@@ -52,7 +52,6 @@ function Player( el ) {
 	this.el = el;
 
 	$(el).bind("DOMSubtreeModified", function() {
-		console.log('change');
 		self.cbSet = false;
 	});
 
@@ -77,7 +76,6 @@ function Player( el ) {
 		id:      'strobeMediaPlayback-' + $(self.el).attr('id'),
 		class:   'player-layer'
 	}).appendTo(el);
-	console.log( this.layers.strobePlayer[0] );
 
 	this.layers.strobePlayer.html(
 		"<p>( this player requires flash. check if it's enabled and make sure your browser supports flash )</p>"
@@ -87,6 +85,10 @@ function Player( el ) {
 	}
 
 	$(window).on('currentTimeChange', function(e, t) {
+		if (self.currentPlayer == 'strobe' && t == 0) {
+			self.jumpTo(self.currentTime);
+			return;
+		}
 		self.currentTime = t;
 	});
 
@@ -236,7 +238,6 @@ Player.prototype.play = function() {
 	if( this.currentPlayer == 'strobe' ) {
 		this.layers.strobePlayer[0].play2();
 	} else if( this.currentPlayer == 'native' ) {
-		console.log('native');
 		this.layers.nativePlayer[0].play();
 	}
 };
@@ -248,13 +249,9 @@ Player.prototype.play = function() {
  */
 Player.prototype.jumpTo = function( time ) {
 	
-	// console.log(time);
-	// console.log(this.currentPlayer + ' jumpTo: ' + time ); 
 	if (this.currentPlayer  == 'strobe') {	
-		// var player = document.getElementById("strobeMediaPlayback");
 		var player = this.layers.strobePlayer[0];
 		if ( player.canSeekTo(time) ) {
-			console.log("seek to " + time);
 			player.seek(time);
 			player.play2();
 		}
@@ -311,7 +308,6 @@ Player.prototype.playVideo = function( camId, streamId, begin, end ) {
 			"&end=" + end +
 			"&stream=" + streamId;
 	}
-	console.log( url );
 
 	if (!this.canPlayHLS()) {
 		this.launchStrobePlayer({
@@ -330,7 +326,6 @@ Player.prototype.resume = function() {
 	if( this.currentPlayer == 'strobe' ) {
 		this.layers.strobePlayer[0].play2();
 	} else if( this.currentPlayer == 'native' ) {
-		console.log('native');
 		this.layers.nativePlayer[0].play();
 	}
 }

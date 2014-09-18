@@ -56,6 +56,15 @@ CameraPage.prototype.setupEvents = function() {
 		}
 	});
 
+	$(window).on('fringe', function(e, t) {
+		if (self.player.currentPlayer == 'strobe') {
+			t = parseFloat( t + 0.1 );
+			self.jumpTo( {
+				time: t
+			});
+		}
+	});
+
 	$(window).on('playerInactive', function(e, d) {
 		self.buttons.livestream.click();
 	});
