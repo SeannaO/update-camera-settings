@@ -39,8 +39,8 @@ portChecker.check(8080, function(err, found) {
 	}
 	//
 	console.log('launching app...');
-	// exec('killall -9 sh', function(error, stdout, stderr) {});
-	// exec('killall -9 bash', function( error, stdout, stderr) {});
+	exec('pkill -f mem.sh', function( error, stdout, stderr) {});
+	exec('pkill -f mem_pid.sh', function( error, stdout, stderr) {});
 	exec('killall -9 iostat', function( error, stdout, stderr) {});
 	exec('killall -9 smartctl', function( error, stdout, stderr) {});
 	// - - 
