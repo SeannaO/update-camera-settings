@@ -712,11 +712,11 @@ Timeline.prototype.resetColors = function() {
 };
 
 
-Timeline.prototype.findRectByTime = function( time, begin, end ) {
+Timeline.prototype.findRectByTime = function( time, begin, end, rects ) {
 
 	var self = this;
 
-	var rects = self.boxes.selectAll('rect')[0];
+	rects = rects || self.boxes.selectAll('rect')[0];
 	
 	if ( isNaN(begin) || isNaN(end) ) {
 		begin = 0; 
@@ -734,9 +734,9 @@ Timeline.prototype.findRectByTime = function( time, begin, end ) {
 	if ( time >= middle_time & time <= middle_time + middle_duration) {
 		return rects[middle];
 	} else if (time < middle_time) {
-		return self.findRectByTime( time, begin, middle-1 );
+		return self.findRectByTime( time, begin, middle-1, rects );
 	} else {
-		return self.findRectByTime( time, middle+1, end);
+		return self.findRectByTime( time, middle+1, end, rects);
 	}
 
 };
