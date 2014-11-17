@@ -1,0 +1,119 @@
+.pos-list {
+	position:            fixed;
+	right:               0px;
+	top:                 80px;
+	height:              500px;
+	width:               180px;
+	background:          rgba(255,255,255,0.5);
+	-webkit-box-shadow:  2px 17px 42px 8px rgba(100,100,100,0.2);
+	-moz-box-shadow:     2px 17px 42px 8px rgba(100,100,100,0.2);
+	box-shadow:          2px 17px 42px 8px rgba(100,100,100,0.2);
+	display:             none;
+}
+
+#toggle-pos-list {
+	position:    absolute;
+	top:         30px;
+	right:       1px;
+	width:       50px;
+	height:      50px;
+	/* background:  rgb(255,255,0); */
+	font-size:   1.5em;
+}
+
+#toggle-pos-list:hover {
+	color: rgb(100,100,200);
+	cursor: pointer;
+}
+
+.pos {
+	margin:                 10px;
+	padding:                5px;
+	border-radius:          20px 0px 0px 0px;
+	-moz-border-radius:     20px 0px 0px 0px;
+	-webkit-border-radius:  20px 0px 0px 0px;
+	border:                 0px solid #000000;
+	-webkit-box-shadow:     2px 2px 4px 1px rgba(100,100,100,0.2);
+	-moz-box-shadow:        2px 2px 4px 1px rgba(100,100,100,0.2);
+	box-shadow:             2px 2px 4px 1px rgba(100,100,100,0.2);
+}
+
+.pos:hover {
+	background: rgba(255,255,100,0.8);
+	cursor: move
+}
+
+.dettach-button:hover {
+	cursor: pointer;
+	color: rgb(255,100,0);
+}
+.dettach-button {
+	color: #555;
+}
+
+.attached-pos {
+	position:    absolute;
+	top:         0px;
+	right:       0px;
+	margin:      0px;
+	padding:     2px;
+	padding-right: 5px;
+	color:       #000;
+	background:  rgba(255,255,100, 0.8);
+}
+
+.toggle-overlay:hover {
+	color: rgb(0,0,200);
+	cursor: pointer;
+}
+
+.toggle-overlay {
+	position: absolute;
+	top: 5px;
+	left: 5px;
+	/* width: 10px; */
+	/* height: 10px; */
+	/* background: rgba(255,255,255,0.5); */
+	z-index: 5000;
+	font-size: 1.2em;
+	color: rgba(200,200,200,0.6);
+	display: none
+}
+
+.pos-drop {
+	width:       100%;
+	height:      100%;
+	position:    absolute;
+	top:         0px;
+	left:        0px;
+	z-index:     2000;
+	background:  rgba(200,0,0,0.5);
+	display:     none;
+}
+
+.camera-overlay {
+	position:    absolute;
+	top:         0px;
+	width:       80%;
+	z-index:     1000;
+	height:      100%;
+	overflow:    auto;
+	background:  rgba(0,0,255,0.4);
+	padding:     2px;
+	color:       rgb(200,200,0);
+	display:     none;
+}
+
+
+.camera-name {
+	position:        absolute;
+	top:             -20px;
+	width:           100%;
+	overflow:        hidden;
+	top:             -20px;
+	background:      rgba(0,0,0,0.7);
+	padding-bottom:  2px;
+	padding-left:    5px;
+	padding-right:   5px;
+	color:           rgba(255,255,255,0.7)
+}

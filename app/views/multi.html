@@ -7,6 +7,7 @@
         <link rel="stylesheet" href="/css/jquery-ui.css">
 
         <link rel="stylesheet" href="/css/cam.css">
+        <link rel="stylesheet" href="/css/multi.css">
 
         <script src = "/js/jquery.min.js"></script>        
         <script src = "/js/jquery-ui.min.js"></script>
@@ -15,7 +16,10 @@
         <script src="/js/timepicker.js"></script>
         <script src="/js/moment.min.js"></script>
 
+		<script src = "/js/live.js"></script>
+
 		<script type="text/javascript" src="/js/swfobject.js"></script>
+        <script src="/js/socket.io-1.1.0.js"></script>
 
         <script src="/js/bootstrap.min.js"></script>
         <script src="/js/d3.v3.min.js"></script>
@@ -35,18 +39,54 @@
                 $.getJSON( "/cameras.json", function( data ) {
                     for (var i = 0; i < data.length; i++) {
                         if (data[i] && data[i].streams && data[i].streams.length > 0) {
+							console.log('adding camera');
+			
+							cameras[data[i]._id] = data[i];
+							console.log( cameras );
 							var playerDiv = $('<div>', {
 								id: 'video-container-' + i,
 								class: 'video-container',
 								style: 'position: relative; float: left;width:480px; height:320px; margin: 5px; margin-bottom: 25px;'
 							}).appendTo($list);
+
+							playerDiv.attr('data-camId', data[i]._id);
+
 							var camName = $('<div>', {
-								class: 'camera-name',
-								style: 'position: absolute; top:-20px; width:100%; overflow: hidden; top: -20px; background: rgba(0,0,0,0.7); padding-bottom: 2px; padding-left: 5px; padding-right: 5px; color: rgba(255,255,255,0.7)',
-								html: data[i].name || data[i].ip
+								id:     'camera-menu-'+data[i]._id,
+								class:  'camera-name',
+								html:   data[i].name || data[i].ip
 							}).appendTo(playerDiv);
 
+							$('<div>', {
+								id: 'toggle-overlay-'+ data[i]._id,
+								class: 'toggle-overlay glyphicon glyphicon-align-justify'
+							}).appendTo(playerDiv)
+							.attr('data-camera-id', data[i]._id)
+							.click( function() {
+								toggleOverlay( $(this).attr('data-camera-id') );
+							});
+
+							var textOverlay = $('<div>', {
+								class: 'camera-overlay',
+								id: 'overlay-' + data[i]._id,
+							}).appendTo(playerDiv);
 							
+							var posDrop = $('<div>', {
+								class: 'pos-drop',
+								id: 'pos-drop-'+data[i]._id
+							}).appendTo(playerDiv);
+
+							posDrop.attr('data-camId', data[i]._id);
+							posDrop.droppable({
+								activeClass: "ui-state-highlight",
+								drop: function(e, ui) {
+									var camId =  $(this).attr('data-camId');
+									var posId =  ui.draggable.attr('data-pos-id');
+									connectPOSToCamera( instances[posId], camId );
+									saveState();
+								}
+							});
+
 							var player = new Player( playerDiv );
 							var camId = data[i]._id;
 							var streamId = data[i].streams[0].id;
@@ -84,8 +124,56 @@
         <h2 class = 'text-muted'> <a href ="/cameras">cameras</a> | multiview </h2> 
         <hr>
         <div id="cameras-list" class = "video-items" style = "">
-            
         </div>
+
+		<div id = 'toggle-pos-list' style = 'display: none'> <span class ='glyphicon glyphicon-align-justify'></span></div>
+		<div id = "pos-list" class = "pos-list"></div>
     </body>
+
+	<script>
+		var posMonitor = new POSMonitor( function(err, instancesArray) {
+			if (err || !instancesArray) {
+				console.log('could not connect to posmonitor');
+				return;
+			}
+
+			$('#toggle-pos-list').fadeIn();
+
+			for (var i in instancesArray) {
+				var instance = instancesArray[i];
+				instance.cameras = [];
+				instances[ instance.id ] = instance;
+				addPOSToList( instance );
+			}
+
+			// DEVELOPMENT ONLY
+			// var socket = io.connect('https://solink:_tcpdump_wrapper_@192.168.0.13:3000');
+			//
+
+			// PRODUCTION
+			var socket = io.connect('https://solink:_tcpdump_wrapper_@' + location.hostname + ':3000');
+			//
+
+			setTimeout( function() {
+				loadState();
+			}, 1000);
+
+			socket.on('data', function(d) {
+				if ( !instances[d.id] ) return;
+				for (var i in instances[d.id].cameras) {
+					var camera = instances[d.id].cameras[i];
+					addTextToCamera( d.data, camera );
+				}
+			});
+		});
+
+
+		$('#toggle-pos-list').click(function() {
+			togglePOSList();
+		});
+
+		
+
+	</script>
 </html>
 

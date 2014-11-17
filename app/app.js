@@ -26,6 +26,8 @@ var portChecker = require('./helpers/port_checker.js');
 
 var scannerNotifier = require('./helpers/camera_scanner/scanner.js').emitter;
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 portChecker.check(8080, function(err, found) {
 
 	// exits app if port 8080 is already being used
@@ -610,6 +612,21 @@ portChecker.check(8080, function(err, found) {
 
 
 
+	app.get('/pos_monitor', passport.authenticate('basic', {session: false}), function(req, res) {
+		var monitor_url = 'https://solink:_tcpdump_wrapper_@localhost:3000/instances';
+		// if (process.env.NODE_ENV === 'development') {
+		// 	monitor_url = 'https://solink:_tcpdump_wrapper_@192.168.0.13:3000/instances';
+		// }
+		request({
+			url: monitor_url,
+			method: "GET",
+			headers: {
+				'User-Agent': 'nodejs'
+			},
+		}, function(error, response, body){
+			res.end(body);
+		});
+	});
 
 
 	app.get('/config', passport.authenticate('basic', {session: false}), function (req, res) {								// main page

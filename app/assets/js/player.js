@@ -35,7 +35,7 @@ Player.prototype.currentTimeChange = function(time, playerId) {
 	if (self.mode == 'live') {
 		clearTimeout( self.playerInactiveTimeout );
 		self.playerInactiveTimeout = setTimeout( function() {
-			$(self.el).trigger('playerInactive');
+			// $(self.el).trigger('playerInactive');
 		}, 3000);
 	}
 	$(window).trigger( 'currentTimeChange', time );
@@ -142,7 +142,7 @@ Player.prototype.launchStrobePlayer = function( options ) {
 
 	if (self.mode == 'live') {
 		self.playerInactiveTimeout = setTimeout( function() {
-			$(self.el).trigger('playerInactive');
+			// $(self.el).trigger('playerInactive');
 		}, 15000);
 	} else {
 		clearTimeout( self.playerInactiveTimeout );
