@@ -27,20 +27,27 @@
 
         <script>
 
+			var lowBand = false;
+
+			if (location && location.href) {
+				lowBand = location.href.indexOf('#low') >= 0;
+			}
+
 			var sources = {};
 
             var playerHTML = function(id, rtsp, width, height) {
             }
 			
 			var rootUrl = location.protocol + '//' + location.host
-
+			
 			$(function(){
                 var $list = $("#cameras-list");
                 $.getJSON( "/cameras.json", function( data ) {
                     for (var i = 0; i < data.length; i++) {
                         if (data[i] && data[i].streams && data[i].streams.length > 0) {
-							console.log('adding camera');
-			
+							if (!lowBand && data[i].name && data[i].name.indexOf('live') >=0 ) continue;
+							else if (lowBand && ( !data[i].name || data[i].name.indexOf('live') < 0 ) ) continue;
+
 							cameras[data[i]._id] = data[i];
 							console.log( cameras );
 							var playerDiv = $('<div>', {

@@ -28,11 +28,11 @@ Scheduler.prototype.launchForCamera = function( camera ) {
         this.processes[camera._id] = setInterval( function(){
             // self.emit("recording", { cameraId: camera._id, scheduled: schedule.isOpen() }))
             if (!camera.isRecording() && camera.shouldBeRecording()){
-				console.log("[scheduler]  Starting camera: " + camera.name);
+				// console.log("[scheduler]  Starting camera: " + camera.name);
                 camera.startRecording();
 
             } else if (camera.isRecording() && !camera.shouldBeRecording() && !camera.motion){
-                console.log("[scheduler]  Stopping camera: " + camera.name);
+                // console.log("[scheduler]  Stopping camera: " + camera.name);
                 camera.stopRecording();
             }
         }, 5000);        
