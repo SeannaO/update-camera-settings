@@ -61,7 +61,8 @@ int killServer()
 	system(buf);
 	system(buf);
 	syslog(LOG_DEBUG, "killing node application");
-	return system("sh kill -9 $(pidof node)&");
+	//return system("sh kill -9 $(pidof node)&");
+	return 1;
 }
 
 
