@@ -41,11 +41,13 @@ Player.prototype.currentTimeChange = function(time, playerId) {
 	$(window).trigger( 'currentTimeChange', time );
 };
 
-function Player( el ) {
+function Player( el, port ) {
 
 	Player.players['strobeMediaPlayback-' + $(el).attr('id')] = this;
 
 	var self = this;
+
+	self.port = port;
 
 	this.layers = {};
 
@@ -307,6 +309,11 @@ Player.prototype.playVideo = function( camId, streamId, begin, end ) {
 			"/video.m3u8?begin=" + begin +
 			"&end=" + end +
 			"&stream=" + streamId;
+	}
+
+	if(this.port) {
+		var re = /:\w+/;
+		url = url.replace( re, ':' + this.port );
 	}
 
 	if (!this.canPlayHLS()) {

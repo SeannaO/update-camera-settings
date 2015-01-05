@@ -490,7 +490,7 @@ portChecker.check(8080, function(err, found) {
 		if (data.status === "disconnected" || data.status === "offline"){
 			console.error("[camera_status] " + data.cam_id + " : " + data.stream_id + " is " + data.status);
 		}else{
-			console.log("[camera_status] " + data.cam_id + " : " + data.stream_id + " is "+ data.status);	
+			// console.log("[camera_status] " + data.cam_id + " : " + data.stream_id + " is "+ data.status);	
 		}
 		io.sockets.emit( 'cameraStatus', data );
 	});
@@ -746,4 +746,9 @@ portChecker.check(8080, function(err, found) {
 
 	// server.listen(process.env.PORT || 8080);
 	server.listen( 8080 );
+	var server2 = require('http').createServer(app).listen(4001);
+	var server3 = require('http').createServer(app).listen(4002);
+	var server4 = require('http').createServer(app).listen(4003);
+	var server5 = require('http').createServer(app).listen(4004);
+	
 });
