@@ -31,7 +31,7 @@ Thumbnailer.prototype.checkForChunks = function() {
 	if (!chunk) {
 		setTimeout( function() {
 			self.checkForChunks();
-		}, 1000);
+		}, 500);
 	} else {
 		
 		self.sendSignal(chunk.file, chunk.thumbFolder + '/' + chunk.start + '_' +(chunk.end - chunk.start) + '.jpg' );
@@ -42,14 +42,14 @@ Thumbnailer.prototype.checkForChunks = function() {
 		       	chunk_file:  chunk.file,
 		       	folder:      chunk.thumbFolder,
 		       	cam:         chunk.cam,
-            cam_name:    chunk.cam_name,
+				cam_name:    chunk.cam_name,
 		       	stream:      chunk.stream
 		};
 
 		setTimeout( function() {
 			self.emit( 'new_thumb', thumb );
 			self.checkForChunks();
-		}, 500);
+		}, 100);
 	}
 };
 
