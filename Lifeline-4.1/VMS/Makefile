@@ -3,7 +3,7 @@
 ##
 SET_ID = VMS
 SET_VENDOR = solink
-SET_VERSION = 1.4.3
+SET_VERSION = 1.4.4
 
 ##
 ## Applications
