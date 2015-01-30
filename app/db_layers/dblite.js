@@ -254,11 +254,13 @@ Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
                      cb( "", 0 );
                 } else {
 					var k = 0;
-                    offset = Math.round( (startTime - data[k].start)/1000.0 );
+                    // offset = Math.round( (startTime - data[k].start)/1000.0 );
+                    offset = (startTime - data[k].start)/1000.0;
 					var minOffset = 100*1000;
 
 					for (var i = 0; i < data.length; i++) {
-                    	var off = Math.round( (startTime - data[i].start)/1000.0 );
+                    	// var off = Math.round( (startTime - data[i].start)/1000.0 );
+                    	var off = (startTime - data[i].start)/1000.0;
 						if(off < minOffset && off >= 0) {
 							minOffset = off;
 							offset = minOffset;

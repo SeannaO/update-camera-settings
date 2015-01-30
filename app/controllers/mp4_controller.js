@@ -217,7 +217,7 @@ function takeSnapshot( db, cam, req, res, cb ) {
 
     db.searchVideoByTime( time, function( file, offset ) {
         
-        offset = Math.round( offset );
+        // offset = Math.round( offset );
        
 		// console.log("===== take snaspshot =====");
 		// console.log("====== file: " + file );
