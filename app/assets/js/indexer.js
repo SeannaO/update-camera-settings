@@ -72,6 +72,9 @@ Indexer.prototype.agglutinate = function( size ) {
 Indexer.prototype.getAbsoluteTime = function( relative_time, begin, end ) {
 	
 	var self = this;
+
+	if (self.elements.length == 0) return;
+
 	if ( isNaN(begin) || isNaN(end) ) {
 		begin = 0;
 		end = self.elements.length-1;
