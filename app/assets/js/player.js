@@ -235,13 +235,38 @@ Player.prototype.canSeekTo = function( time ) {
 	}
 }
 
+Player.prototype.pause = function() {
+	
+	this.state = 'pause';
+	$(window).trigger('playerState', 'pause');
+
+	if( this.currentPlayer == 'strobe' ) {
+		this.layers.strobePlayer[0].pause();
+	} else if( this.currentPlayer == 'native' ) {
+		this.layers.nativePlayer[0].pause();
+	}
+};
+
 Player.prototype.play = function() {
 	
+	this.state = 'play';
+	$(window).trigger('playerState', 'play');
+
 	if( this.currentPlayer == 'strobe' ) {
 		this.layers.strobePlayer[0].play2();
 	} else if( this.currentPlayer == 'native' ) {
 		this.layers.nativePlayer[0].play();
 	}
+};
+
+Player.prototype.togglePlay = function() {
+
+	if (this.state == 'play') {
+		this.pause();
+	} else {
+		this.play();
+	}
+
 };
 
 /**
@@ -293,6 +318,8 @@ Player.prototype.playVideo = function( camId, streamId, begin, end ) {
 	// loadIndexer( begin, end, function() {
 	// 	launchTimeline( 50, begin, end);
 	// });
+	
+	this.state = 'play';
 
 	var url = "";
 

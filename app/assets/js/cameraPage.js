@@ -16,6 +16,7 @@ function CameraPage( camId ) {
 	this.buttons.snapshot     = $('#snapshot');
 	this.buttons.livestream   = $('#get-livestream');
 	this.buttons.toggleMotion = $('#toggle-motion');
+	this.buttons.togglePlay   = $('#toggle-play');
 
 	this.timelineTag = $('#timeline');
 	
@@ -62,6 +63,14 @@ CameraPage.prototype.setupEvents = function() {
 			self.jumpTo( {
 				time: t
 			});
+		}
+	});
+
+	$(window).on('playerState', function(e, d) {
+		if (d == 'play') {
+			$('#play-icon').attr('class', 'glyphicon glyphicon-play')
+		} else {
+			$('#play-icon').attr('class', 'glyphicon glyphicon-pause')
 		}
 	});
 
@@ -262,6 +271,10 @@ CameraPage.prototype.setupButtons = function() {
 	this.buttons.toggleMotion.click(function() {
 		self.toggleMotion();
 	});
+
+	this.buttons.togglePlay.click(function() {
+		self.player.togglePlay();
+	});
 };
 
 
@@ -332,6 +345,7 @@ CameraPage.prototype.play = function( begin, end ) {
 			// $('.loadingOverlay').remove();
 		});
 
+		self.buttons.togglePlay.fadeIn();
 		self.buttons.toggleMotion.fadeIn();
 		self.buttons.toggleMotion.prop('disabled', true);
 		self.buttons.toggleMotion.html('loading motion data...');

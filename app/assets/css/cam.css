@@ -35,9 +35,17 @@ object {
 }
 
 
-#toggle-motion {
+#toggle-play {
 	position: absolute;
 	left: 102%;
+	top: 9px;
+	background: white;
+	display: none;
+}
+
+#toggle-motion {
+	position: absolute;
+	left: 107%;
 	top: 9px;
 	background: white;
 	display: none;
