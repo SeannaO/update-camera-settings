@@ -82,5 +82,30 @@ module.exports = function( app, passport) {
 		);
 	});	
 
+	// get timezone
+	app.get('/device/tz.json', passport.authenticate('basic', {session: false}), function(req, res) {
+	
+		var gmt_re = /GMT[+-]\w+/;
+		var tz_re = /\((\w+)\)/;
+		var d = new Date();
+
+		var gmt = gmt_re.exec(d);
+		if (gmt && gmt.length > 0) gmt = gmt[0];
+		else gmt = '';
+
+		var tz = tz_re.exec(d);
+		if (tz && tz.length > 1) tz = tz[1];
+		else tz = '';
+
+		var offset = d.getTimezoneOffset();
+
+		var data = {
+			gmt:         gmt,
+			tz_name:     tz,
+			utc_offset:  offset
+		};
+
+		res.json( data );
+	});
 };
 
