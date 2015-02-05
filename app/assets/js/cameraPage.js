@@ -59,7 +59,7 @@ CameraPage.prototype.setupEvents = function() {
 
 	$(window).on('fringe', function(e, t) {
 		if (self.player.currentPlayer == 'strobe') {
-			t = parseFloat( t + 0.1 );
+			t = parseFloat( t + 0.2 );
 			self.jumpTo( {
 				time: t
 			});
