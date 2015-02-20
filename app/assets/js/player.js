@@ -43,6 +43,7 @@ Player.prototype.setInactiveTimer = function() {
 
 Player.prototype.currentTimeChange = function(time, playerId) {
 	var self = this;
+	if (self.state == 'pause') return;
 	self.state = 'playing';
 	if (self.mode == 'live') {
 		clearTimeout( self.playerInactiveTimeout );
@@ -260,8 +261,8 @@ Player.prototype.pause = function() {
 
 Player.prototype.play = function() {
 	
-	this.state = 'play';
-	$(window).trigger('playerState', 'play');
+	this.state = 'playing';
+	$(window).trigger('playerState', 'playing');
 
 	if( this.currentPlayer == 'strobe' ) {
 		this.layers.strobePlayer[0].play2();
@@ -272,7 +273,7 @@ Player.prototype.play = function() {
 
 Player.prototype.togglePlay = function() {
 
-	if (this.state == 'play') {
+	if (this.state == 'playing') {
 		this.pause();
 	} else {
 		this.play();
@@ -336,7 +337,7 @@ Player.prototype.playVideo = function( camId, streamId, begin, end ) {
 	camId = camId || this.camId;
 	streamId = streamId || this.streamId;
 
-	this.state = 'play';
+	this.state = 'playing';
 
 	var url = "";
 

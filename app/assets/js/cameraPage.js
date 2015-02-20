@@ -67,7 +67,7 @@ CameraPage.prototype.setupEvents = function() {
 	});
 
 	$(window).on('playerState', function(e, d) {
-		if (d == 'play') {
+		if (d == 'playing') {
 			$('#play-icon').attr('class', 'glyphicon glyphicon-play')
 		} else {
 			$('#play-icon').attr('class', 'glyphicon glyphicon-pause')
