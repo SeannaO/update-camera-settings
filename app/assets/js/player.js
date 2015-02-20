@@ -1,7 +1,7 @@
 var iOS = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 
 Player.players = {};
-Player.setupPlayersCallback = function(playerId) {
+Player.setupPlayersCallback = function(playerId, evtName, evtObj) {
 	var self = this;
 	
 	var player = Player.players[playerId];
@@ -30,13 +30,23 @@ Player.currentTimeChange = function(time, playerId) {
 	player.currentTimeChange(time, playerId);
 };
 
+Player.prototype.setInactiveTimer = function() {
+
+	var self = this;
+	clearTimeout( self.playerInactiveTimeout );
+	self.playerInactiveTimeout = setTimeout( function() {
+		if (self.state != 'loading') self.refresh();
+		self.setInactiveTimer();
+		// console.log('player inactive');
+	}, 30000);
+};
+
 Player.prototype.currentTimeChange = function(time, playerId) {
 	var self = this;
+	self.state = 'playing';
 	if (self.mode == 'live') {
 		clearTimeout( self.playerInactiveTimeout );
-		self.playerInactiveTimeout = setTimeout( function() {
-			// $(self.el).trigger('playerInactive');
-		}, 3000);
+		self.setInactiveTimer();
 	}
 	$(window).trigger( 'currentTimeChange', time );
 };
@@ -120,6 +130,10 @@ Player.prototype.launchNativePlayer = function( url ) {
 		var t = self.layers.nativePlayer[0].currentTime;
 		$(window).trigger('currentTimeChange', t );
 	});
+	this.state = 'instantiated';
+	this.layers.nativePlayer[0].addEventListener('waiting',function( e ){
+		this.state = 'loading';
+	});
 };
 
 
@@ -143,9 +157,6 @@ Player.prototype.launchStrobePlayer = function( options ) {
 	self.cbSet = false;
 
 	if (self.mode == 'live') {
-		self.playerInactiveTimeout = setTimeout( function() {
-			// $(self.el).trigger('playerInactive');
-		}, 15000);
 	} else {
 		clearTimeout( self.playerInactiveTimeout );
 	}
@@ -319,6 +330,12 @@ Player.prototype.playVideo = function( camId, streamId, begin, end ) {
 	// 	launchTimeline( 50, begin, end);
 	// });
 	
+	this.camId = this.camId || camId;
+	this.streamId = this.streamId || streamId;
+
+	camId = camId || this.camId;
+	streamId = streamId || this.streamId;
+
 	this.state = 'play';
 
 	var url = "";
@@ -353,6 +370,12 @@ Player.prototype.playVideo = function( camId, streamId, begin, end ) {
 	}
 };
 
+Player.prototype.refresh = function() {
+
+	if (!this.canPlayHLS()) {
+		this.layers.strobePlayer[0].load();
+	}
+};
 
 Player.prototype.resume = function() {
 	
