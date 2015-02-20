@@ -237,7 +237,11 @@ CameraPage.prototype.setupButtons = function() {
 				w.onload = function() {
 					if (w.document.body.innerHTML.length > 0) {
 						w.close();
-						toastr.error('couldn\'t find the requested video');
+						if (w.document.body.innerHTML.indexOf('long') >= 0) {
+							toastr.error('requested video is too long, please select a shorter interval');
+						} else {
+							toastr.error('couldn\'t find the requested video');
+						}
 					}
 				};
 			}
