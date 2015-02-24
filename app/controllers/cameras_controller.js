@@ -296,7 +296,7 @@ CamerasController.prototype.periodicallyDeleteChunksOnQueue = function() {
 			setTimeout( 
 				function() {
 					self.periodicallyDeleteChunksOnQueue();
-				}, 50 
+				}, 10 
 			);
 		});
 	}

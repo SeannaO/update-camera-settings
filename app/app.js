@@ -435,7 +435,7 @@ portChecker.check(8080, function(err, found) {
 			
 			console.log( "hdd usage: " + usage + "%");
 			console.log('[diskSpaceAgent]  freeing disk space... ');
-			camerasController.deleteOldestChunks( 20 * nStreams, function(data) {
+			camerasController.deleteOldestChunks( 50 * nStreams, function(data) {
 				// console.log(data);
 			});
 		}
