@@ -5,6 +5,7 @@ Player.setupPlayersCallback = function(playerId, evtName, evtObj) {
 	var self = this;
 	
 	var player = Player.players[playerId];
+
 	if (!('#' + playerId) || player.cbSet) return;
 	player.cbSet = true;
 	
@@ -221,6 +222,8 @@ Player.prototype.launchStrobePlayer = function( options ) {
 			}
 	);
 
+	this.playerId = "strobeMediaPlayback-" + $(self.el).attr('id');
+
 	this.layers.strobePlayer = $("#strobeMediaPlayback-" + $(self.el).attr('id'));
 
 };
@@ -405,3 +408,9 @@ Player.prototype.hideAll = function() {
 	}
 };
 
+
+Player.prototype.destroy = function() {
+	playerEl = document.getElementById(this.playerId);
+	playerEl.removeEventListener("currentTimeChange" , "Player.currentTimeChange");
+	swfobject.removeSWF('strobeMediaPlayback-' + $(this.el).attr('id') );
+};
