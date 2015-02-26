@@ -703,6 +703,8 @@ portChecker.check(8080, function(err, found) {
 
 	var sensors = require('./api/sensors.js');
 
+	require('./api/multiview.js')( app, passport, baseFolder+'/multiview.db' );
+
 	app.get('/cameras/:camera_id/sensors', function(req, res){
 		sensors.getSensorData(baseFolder, req, res);
 	});
