@@ -11,7 +11,7 @@ var OrphanFilesChecker = function( camerasController ) {
 OrphanFilesChecker.prototype.checkForOrphanCameras = function( cb ) {
 
 	var baseFolder = process.env['BASE_FOLDER'];
-	var reservedFiles = ['cam_db', 'trash', 'solink_server.db'];
+	var reservedFiles = ['cam_db', 'trash', 'solink_server.db', 'multiview.db'];
 
 	var self = this;
 
