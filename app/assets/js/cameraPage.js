@@ -343,6 +343,7 @@ CameraPage.prototype.play = function( begin, end ) {
 
 	$('.liveOverlay').fadeOut();
 
+	this.timeline.streamId = this.streamId; 
 	this.timeline.load( begin, end, function() {
 		self.player.playVideo( self.camId, self.streamId, begin, end );
 		$('.loadingOverlay').fadeOut(function() {
