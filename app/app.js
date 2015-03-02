@@ -710,6 +710,9 @@ portChecker.check(8080, function(err, found) {
 	});
 
 
+	app.post('/reload', passport.authenticate('basic', {session: false}), function(req, res) {
+		io.sockets.emit('reload');
+	});
 
 	/////////////
 	///// dev only ////////
