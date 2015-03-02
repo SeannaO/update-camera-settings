@@ -10,7 +10,7 @@ var POSMonitor = function(cb) {
 
 	console.log('init pos monitor');
 
-	POSMonitor.isMonitorPresent( function( data) {
+	POSMonitor.isMonitorPresent( function( data ) {
 		self.init( data, cb );
 	});
 };
@@ -81,8 +81,10 @@ var addTextToCamera = function( text, camera ) {
 
 
 var togglePOSList = function() {
-	$('#pos-list').fadeToggle();
+	$('#pos-list').toggle();
+	$('#cameras-list').hide();
 };
+
 
 var addPOSToList = function( pos ) {
 
@@ -99,10 +101,9 @@ var addPOSToList = function( pos ) {
 	});
 };
 
+
 var highlightVideos = function() {
 	
-	console.log('highlightVideos');
-
 	$('.pos-drop').css('background', 'rgba(255,255,0,0.5)');
 
 	var camerasWithPos = Object.keys(camerasPOS);
@@ -189,7 +190,6 @@ var isConnectedToPOS = function( camera_id ) {
 var saveState = function() {
 	for (var i in cameras) {
 		var cam_id = cameras[i]._id;
-		console.log(cam_id);
 		if ( isConnectedToPOS( cam_id ) ) {
 			console.log('is connected');
 			sessionStorage.setItem( cam_id, camerasPOS[cam_id]);
@@ -201,13 +201,10 @@ var saveState = function() {
 };
 
 var loadState = function() {
-	console.log( 'load state');
 	for( var i in cameras ) {
-		console.log('??');
 		var cam_id = cameras[i]._id;
 		var pos_id =  sessionStorage.getItem( cam_id );
 		var pos = instances[pos_id];
-		console.log( pos );
 		if (pos) {
 			connectPOSToCamera( pos, cam_id );
 		} else {
