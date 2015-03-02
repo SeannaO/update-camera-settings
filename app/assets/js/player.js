@@ -36,9 +36,9 @@ Player.prototype.setInactiveTimer = function() {
 	var self = this;
 	clearTimeout( self.playerInactiveTimeout );
 	self.playerInactiveTimeout = setTimeout( function() {
-		if (self.state != 'loading') self.refresh();
-		self.setInactiveTimer();
-		// console.log('player inactive');
+		var retrigger = true;
+		if (self.state != 'loading') retrigger = self.refresh();
+		if (retrigger) self.setInactiveTimer();
 	}, 30000);
 };
 
@@ -377,8 +377,14 @@ Player.prototype.playVideo = function( camId, streamId, begin, end ) {
 Player.prototype.refresh = function() {
 
 	if (!this.canPlayHLS()) {
-		this.layers.strobePlayer[0].load();
+		try {
+			this.layers.strobePlayer[0].load();
+			return true;
+		} catch( err ) {
+			return false;
+		}
 	}
+	return true;
 };
 
 Player.prototype.resume = function() {
@@ -410,6 +416,7 @@ Player.prototype.hideAll = function() {
 
 
 Player.prototype.destroy = function() {
+	clearTimeout( this.playerInactiveTimeout );
 	playerEl = document.getElementById(this.playerId);
 	playerEl.removeEventListener("currentTimeChange" , "Player.currentTimeChange");
 	swfobject.removeSWF('strobeMediaPlayback-' + $(this.el).attr('id') );
