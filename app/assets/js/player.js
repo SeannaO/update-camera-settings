@@ -418,6 +418,7 @@ Player.prototype.hideAll = function() {
 Player.prototype.destroy = function() {
 	clearTimeout( this.playerInactiveTimeout );
 	playerEl = document.getElementById(this.playerId);
+	if (!playerEl) return;
 	playerEl.removeEventListener("currentTimeChange" , "Player.currentTimeChange");
 	swfobject.removeSWF('strobeMediaPlayback-' + $(this.el).attr('id') );
 };
