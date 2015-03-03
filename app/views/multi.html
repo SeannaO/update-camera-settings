@@ -2,6 +2,7 @@
 <html>
     <head>
     	<meta http-equiv="X-UA-Compatible" content="IE=edge" /> 
+
         <link rel="stylesheet" href="/css/bootstrap.min.css">
         <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
         <link rel="stylesheet" href="/css/jquery-ui.css">
@@ -11,36 +12,31 @@
 
         <script src = "/js/jquery.min.js"></script>        
         <script src = "/js/jquery-ui.min.js"></script>
+
 		<script src = "/js/player.js"></script>
-
-        <script src="/js/timepicker.js"></script>
-        <script src="/js/moment.min.js"></script>
-
-		<script src = "/js/live.js"></script>
+		<script src = "/js/multiview/pos.js"></script>
 
 		<script type="text/javascript" src="/js/swfobject.js"></script>
-        <script src="/js/socket.io-1.1.0.js"></script>
+
+        <script src="/js/socket.io-1.2/socket.io-1.2.js"></script>
+		<script>
+			var io_1_2 = io;
+		</script>
+        <script src="/js/socket.io.js"></script>
 
         <script src="/js/bootstrap.min.js"></script>
-        <script src="/js/d3.v3.min.js"></script>
-        <script src="/js/d3-timeline.js"></script>        
+
+		<script src="/js/multiview/camera.js"></script>
+		<script src="/js/multiview/camera_group.js"></script>
+		<script src="/js/multiview/groups_manager.js"></script>
+
+		<script src = "/js/multiview/multiview.js"></script>
 
         <script>
 
-			var lowBand = false;
-
-			if (location && location.href) {
-				lowBand = location.href.indexOf('#low') >= 0;
-			}
-
+			var cameras = {};
 			var sources = {};
-			var nCameras = 0;
 
-            var playerHTML = function(id, rtsp, width, height) {
-            }
-			
-			var rootUrl = location.protocol + '//' + location.host
-			
 			var ports = [
 				8080,
 				4001,
@@ -49,168 +45,56 @@
 				4004
 			];
 
+			var socket = io.connect();
+
+			socket.on('reload', function(data) {
+				window.location.reload();
+			});
+
+			//
+			var groupsManager = new GroupsManager();
+			createGroups(5);
+
+
 			$(function(){
-                var $list = $("#cameras-list");
-                $.getJSON( "/cameras.json", function( data ) {
-                    for (var i = 0; i < data.length; i++) {
-                        if (data[i] && data[i].streams && data[i].streams.length > 0) {
-							if (!lowBand && data[i].name && data[i].name.indexOf('live') >=0 ) continue;
-							else if (lowBand && ( !data[i].name || data[i].name.indexOf('live') < 0 ) ) continue;
+				var grid = $("#grid-slot");
 
-							cameras[data[i]._id] = data[i];
-							console.log( cameras );
-							var playerDiv = $('<div>', {
-								id: 'video-container-' + i,
-								class: 'video-container',
-								style: 'position: relative; float: left;width:480px; height:320px; margin: 5px; margin-bottom: 25px;'
-							}).appendTo($list);
+				groupsManager.appendTo( grid );
+				groupsManager.rotate();
+				
+				createGroupsMenu();
+				populateCamerasList();
 
-							playerDiv.attr('data-camId', data[i]._id);
-
-							var camName = $('<div>', {
-								id:     'camera-menu-'+data[i]._id,
-								class:  'camera-name',
-								html:   data[i].name || data[i].ip
-							}).appendTo(playerDiv);
-
-							$('<div>', {
-								id: 'toggle-overlay-'+ data[i]._id,
-								class: 'toggle-overlay glyphicon glyphicon-align-justify'
-							}).appendTo(playerDiv)
-							.attr('data-camera-id', data[i]._id)
-							.click( function() {
-								toggleOverlay( $(this).attr('data-camera-id') );
-							});
-
-							var textOverlay = $('<div>', {
-								class: 'camera-overlay',
-								id: 'overlay-' + data[i]._id,
-							}).appendTo(playerDiv);
-							
-							var posDrop = $('<div>', {
-								class: 'pos-drop',
-								id: 'pos-drop-'+data[i]._id
-							}).appendTo(playerDiv);
-
-							posDrop.attr('data-camId', data[i]._id);
-							posDrop.droppable({
-								activeClass: "ui-state-highlight",
-								drop: function(e, ui) {
-									var camId =  $(this).attr('data-camId');
-									var posId =  ui.draggable.attr('data-pos-id');
-									connectPOSToCamera( instances[posId], camId );
-									saveState();
-								}
-							});
-
-							var port = (i%5 == 0 ? 0 : ports[i%5]);
-							var player = new Player( playerDiv, port );
-							var camId = data[i]._id;
-							var streamId = data[i].streams[0].id;
-							var id = $(playerDiv).attr('id');
-
-							sources[id] = {};
-							sources[id].camId = camId;
-							sources[id].streamId = streamId;
-
-							$(playerDiv).on('playerInactive', function() {
-								var id = $(this).attr('id');
-								var camName = $(this).find('.camera-name');
-								$(this).html(camName);
-								var player = new Player( '#'+id );
-								player.playVideo( 
-									sources[id].camId, 
-									sources[id].streamId
-								);
-							});
-							
-							if (data[i].status == 'offline') {
-								playerDiv.append('<div style="width:100%;height:100%; background:rgb(200,200,200);padding: 10px;">camera offline</div>');
-							} else {
-								player.playVideo( camId, streamId );
-							}
-                        }
-                    }
-					resizeVideos();
-                });
-            });
+				setupEvents();
+			});
         </script>
+
     </head>
 
 
     <body style = "margin: 10px; height: 100%; width:100%; margin:0">
         <h2 class = 'text-muted' style="margin:10px"> <a href ="/cameras">cameras</a> | multiview </h2> 
         <hr>
-        <div id="cameras-list" class = "video-items" style = "width:100%; height:100%; margin:0; padding:0; position: absolute">
-        </div>
+
+		<div id = 'grid-slot' style="width:100%; height:100%"></div>
+
+
+		<div id = 'groups-menu'>
+			<span id = '' style = 'color: rgba(150,150,150,0.8);float: left; margin-right: 8px; font-size: 0.9em'> camera groups </span>
+			<span id = 'groups-play-pause' style='margin-left: 2px; float:right' class='glyphicon glyphicon-play'></span>
+		</div>
+
+		<div id = 'toggle-cameras-list' style = ''> <span class ='glyphicon glyphicon-facetime-video'></span></div>
+
+		<div id = "cameras-list" class = "cameras-list">
+			<div class='list-title'>available cameras</div>
+		</div>
 
 		<div id = 'toggle-pos-list' style = 'display: none'> <span class ='glyphicon glyphicon-align-justify'></span></div>
-		<div id = "pos-list" class = "pos-list"></div>
+		<div id = "pos-list" class = "pos-list">
+			<div class='list-title'>POS devices</div>
+		</div>
     </body>
 
-	<script>
-		var posMonitor = new POSMonitor( function(err, instancesArray) {
-			if (err || !instancesArray) {
-				console.log('could not connect to posmonitor');
-				return;
-			}
-
-			$('#toggle-pos-list').fadeIn();
-
-			for (var i in instancesArray) {
-				var instance = instancesArray[i];
-				instance.cameras = [];
-				instances[ instance.id ] = instance;
-				addPOSToList( instance );
-			}
-
-			// DEVELOPMENT ONLY
-			// var socket = io.connect('https://solink:_tcpdump_wrapper_@192.168.0.13:3000');
-			//
-
-			// PRODUCTION
-			var socket = io.connect('https://solink:_tcpdump_wrapper_@' + location.hostname + ':3000');
-			//
-
-			setTimeout( function() {
-				loadState();
-			}, 1000);
-
-			socket.on('data', function(d) {
-				if ( !instances[d.id] ) return;
-				for (var i in instances[d.id].cameras) {
-					var camera = instances[d.id].cameras[i];
-					addTextToCamera( d.data, camera );
-				}
-			});
-		});
-
-
-		$('#toggle-pos-list').click(function() {
-			togglePOSList();
-		});
-
-		var resizeVideos = function() {
-			if (!cameras) return;
-			var nCameras = Object.keys( cameras ).length;
-			
-			var w = $('#cameras-list').width();
-			var h = $('#cameras-list').height() - 150;
-
-			var total_area = w*h / nCameras;
-			var scale =  Math.sqrt( total_area / 12 );
-
-			var player_w = 0.80 * scale * 4;
-			var player_h = 0.80 * scale * 3;
-
-			$('.video-container').css('width', player_w + 'px');
-			$('.video-container').css('height', player_h + 'px');
-		};
-
-		$(window).on('resize', function() {
-
-			resizeVideos();
-		});
-	</script>
 </html>
 

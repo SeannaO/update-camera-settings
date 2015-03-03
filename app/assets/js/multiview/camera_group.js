@@ -1,232 +1,12 @@
-var groups = [];
-
-var Camera = function( d ) {
+var CameraGroup = function( id ) {
 
 	var self = this;
 
-	this.el;
-	this.player;
-	this.cam_data = d;
-	this.posId = '';
-	this.textLines = [];
-	
-	this.el = $('<li>', {
-		id: 'video-container-' + d._id + '-' + Math.random(),
-		class: 'video-container',
-		data_id: d._id,
-		style: 'position: relative; float: left; width:480px; height:320px; margin: 5px; margin-bottom: 25px;'
-	});
-
-	this.el.attr('data-camId', d._id);
-
-	var xButton = $('<span>', {
-		html: '[ x ]  ',
-		style: 'cursor: pointer; color: rgb(180,180,250);'
-	});
-
-	xButton.click(function() {
-		self.remove();
-	});
-
-	this.cameraMenu = $('<div>', {
-		id:     'camera-menu-'+ this.cam_data._id,
-		class:  'camera-name',
-		html:   d.name || d.ip
-	}).appendTo(this.el);
-
-	this.cameraMenu.prepend( xButton );
-	// this.el.draggable({
-	// 	handle: '.camera-name'
-	// });
-
-	this.addPlayer();
-
-	this.attachOverlay();
-	
-	if ( !isNaN( d.posId ) && d.posId !== "" ) {
-		this.connectToPOS( d.posId );
-	}
-};
-
-
-Camera.prototype.attachOverlay = function() {
-
-	var self = this;
-
-	this.toggleOverlayButton = $('<div>', {
-		id: 'toggle-overlay-'+ this.cam_data._id,
-		class: 'toggle-overlay glyphicon glyphicon-align-justify'
-	}).appendTo(this.el)
-	.attr('data-camera-id', this.cam_data._id)
-		.click( function() {
-			// toggleOverlay( $(this).attr('data-camera-id') );
-			self.toggleOverlay();
-		});
-
-
-	this.textOverlay = $('<div>', {
-		class: 'camera-overlay',
-		// id: 'overlay-' + this.cam_data._id,
-	}).appendTo(this.el);
-
-	var posDrop = $('<div>', {
-		class: 'pos-drop',
-		id: 'pos-drop-'+this.cam_data._id
-	}).appendTo(this.el);
-
-	posDrop.attr('data-camId', this.cam_data._id);
-	posDrop.droppable({
-		activeClass: "ui-state-highlight",
-		drop: function(e, ui) {
-			var camId =  $(this).attr('data-camId');
-			var posId =  ui.draggable.attr('data-pos-id');
-			self.connectToPOS( posId );
-			updateGroup( self.group );
-			// connectPOSToCamera( instances[posId], camId );
-			// saveState();
-		}
-	});
-};
-
-
-
-Camera.prototype.connectToPOS = function( pos_id ) {
-
-	var self = this;
-
-	if ( this.posId  != '') {
-		return;
-	}
-
-	// instances[ pos.id ].cameras.push( camera_id );
-	this.posId = pos_id;	
-	
-	this.attachedPOS = $('<div>', {
-		// id: 'attached-pos-' + this.el,
-		class: 'attached-pos',
-		html: 'pos ' + pos_id
-	//	html: pos.name
-	});
-
-	var dettachButton = $('<span>', {	
-		class: 'glyphicon glyphicon-remove dettach-button',
-		style: 'margin-right: 8px'
-	}).prependTo( this.attachedPOS )
-	.click( function() {
-		self.disconnectFromPOS();
-	});
-
-	this.attachedPOS.appendTo( this.cameraMenu );
-
-	this.toggleOverlayButton.show();
-	this.textOverlay.fadeIn();
-};
-
-
-Camera.prototype.disconnectFromPOS = function() {
-
-	this.posId = '';
-
-	this.attachedPOS.remove();
-	this.toggleOverlayButton.hide();
-	this.textOverlay.fadeOut();
-	this.textOverlay.html('');
-
-	updateGroup( this.group );
-};
-
-
-Camera.prototype.toggleOverlay = function() {
-	this.textOverlay.fadeToggle();
-};
-
-
-Camera.prototype.remove = function() {
-
-	this.el.remove();
-
-	if( this.group ) {
-		this.group.removeCamera( this.cam_data._id );
-		this.group = null;
-	}
-
-};
-
-
-Camera.prototype.appendTo = function( parentEl ) {
-
-	this.el.appendTo( parentEl ); 
-	this.player.playVideo( this.cam_data._id, this.cam_data.streams[0].id );
-	this.parentEl = parentEl;
-
-};
-
-
-Camera.prototype.addPlayer = function() {
-
-	var p = Math.random()*100 % 5;
-	this.player = new Player( this.el, ports[p] );
-	var camId = this.cam_data._id;
-	var streamId = this.cam_data.streams[0].id;
-	var id = $(this.el).attr('id');
-
-
-	if (this.cam_data.status == 'offline') {
-		this.el.append('<div style="width:100%;height:100%; background:rgb(200,200,200);padding: 10px;">camera offline</div>');
-	} else {
-		this.player.playVideo( camId, streamId );
-	}
-};
-
-
-Camera.prototype.removePlayer = function() {
-	this.player.destroy();
-};
-
-
-Camera.prototype.appendText = function( text ) {
-
-		var overlay = this.textOverlay;
-		
-		if (text.indexOf('showtext') >= 0) {
-			text = text.replace('showtext', '');
-			if (text[0] == ':') text[0]=' ';
-			//text = '<br>' + text;
-		}
-
-		var line = $('<div>', {
-			html:   text,
-			class:  'text-line'
-		});
-
-		this.textLines.push( line );
-		overlay.append(line);
-
-		var height = overlay.scrollTop() 
-			+ overlay.height() 
-			+ overlay.filter('.text-line:last').scrollTop();
-
-		overlay.stop().animate({'scrollTop' : height}, 300);
-
-		while (this.textLines.length > 80) {
-			var line = this.textLines.shift();
-			line.remove();
-		}
-};
-
-
-//////
-//////
-//////
-
-
-var CameraGroup = function() {
-
-	var self = this;
+	this.group_id = id || 0;
 
 	this.cameras = {};
 	this.el = $('<ul>', {
-		id: 'cameras-grid',
+		id: 'cameras-grid-'+id,
 		class: 'video-items',
 		style: 'width: 100%; height: 100%; margin:0; padding: 0; position: absolute; list-style-type: none'
 	});
@@ -238,13 +18,21 @@ var CameraGroup = function() {
 			self.resize();
 			ui.draggable.addClass('mini-cam-deactivated');
 			ui.draggable.removeClass('mini-cam-active');
-			updateGroup( self );
+			self.update();
 		},
 		accept: '.mini-cam'
 	});
 	
 };
 
+CameraGroup.prototype.update = function() {
+	this.manager.updateGroup( this );
+};
+
+CameraGroup.prototype.refresh = function() {
+	this.hide();
+	this.show();
+};
 
 CameraGroup.prototype.addCamera = function( camera, id ) {
 
@@ -281,7 +69,7 @@ CameraGroup.prototype.removeCamera = function( id ) {
 	$('#mini-cam-'+id).addClass('mini-cam-active');
 
 	this.resize();
-	updateGroup(this);
+	this.update();
 };
 
 
@@ -321,10 +109,20 @@ CameraGroup.prototype.resize = function() {
 		};
 
 		var margin_left = ( w - nx * ( player_w + 10 ) ) / 2.0;
+
+		if ( nx == 3 && nCameras == 4) {
+			margin_left = ( w - 2 * ( player_w + 10 ) ) / 2.0;
+		}
+
 		this.el.css('padding-left', margin_left );
 
 		$('.video-container').css('width', player_w + 'px');
 		$('.video-container').css('height', player_h + 'px');
+
+
+		for (var i in this.cameras) {
+			this.cameras[i].scroll();
+		}
 };
 
 
@@ -375,10 +173,11 @@ CameraGroup.prototype.getNumCameras = function() {
 };
 
 
-CameraGroup.prototype.show = function( delay ) {
+CameraGroup.prototype.show = function() {
 
 	var self = this;
 
+	if (this.el.is(':visible')) return;
 
 	$('.mini-cam').removeClass('mini-cam-deactivated');
 	$('.mini-cam').addClass('mini-cam-active');
@@ -389,10 +188,10 @@ CameraGroup.prototype.show = function( delay ) {
 		$('#mini-cam-'+id).removeClass('mini-cam-active');
 	}
 
+	this.el.show();
 	this.resize();
-	this.el.fadeIn();
-
 };
+
 
 CameraGroup.prototype.hide = function( el ) {
 		for( var i in this.cameras ) {
