@@ -1,5 +1,18 @@
-node_vms
+Connect
 ========
+Contains node scripts such as node.js for Connect
+
+Requirements
+--------
+1. Node
+2. 64-bit Linux (Recommended Dabian distribution)
+
+## How to Launch
+
+1. Go to 'app' folder
+2. node app <videos folder> -development (optional mode, will not need authentication, so it can be run without lifeline on private computer)
+
+## How to run tests
 
 To Run Rspec/Capybara acceptance tests
 
