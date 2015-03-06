@@ -395,6 +395,12 @@ Timeline.prototype.hideMotionData = function() {
 
 Timeline.prototype.render = function(block_size, begin, end) {
 	
+	$(window).trigger('timeline-rendered', {
+		el:     this.el,
+		begin:  begin,
+		end:    end
+	});
+
 	var self = this;
 
 	var beginTime = Timeline.formattedTimeFromTimestamp( begin );
