@@ -17,9 +17,7 @@ Requirements
 To Run Rspec/Capybara acceptance tests
 
 1. install ruby if not already installed
-2. Install selenium
-	gem install selenium
-	selenium install
+2. Install selenium using gem
 3. Install chrome web driver
 	MacOS: brew install chromedriver
 4. Install bundle
