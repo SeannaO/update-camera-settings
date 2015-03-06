@@ -49,6 +49,8 @@
 		<script src="/js/lib/picker.date.js"></script>
 
         <script src="/js/player.js"></script>
+
+        <script src="/js/previewer.js"></script>
     </head>
 
 
@@ -83,9 +85,14 @@
 			<div id = "zoom-back"> zoom out </div>
 			<div id = "timeline">
 				<div id = "timeline-selector"></div>
+				<div id = "ghost-cursor"></div>
 			</div>				
 			<!-- include those lines to add a timeline to your page -->
 
+			<div id = "preview" style = "width:100%; height: 15px; position: absolute; opacity: 0.9;"></div> 
+			<div id = "ghost-button" style=''>
+				<img src='/img/ghost.png'>
+			</div>
 
 			<button id = "toggle-play" class = 'btn btn-default btn-xs'>
 				<span id='play-icon' class="glyphicon glyphicon-pause"></span> 
@@ -96,6 +103,9 @@
 		<div id = "curr-time"></div>
 
 		<div id = "video" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px;position:relative; overflow:hidden" class = "shadow">
+			<div id = "preview-frame" style="width:100%; height:100%; position:absolute; top:0px;left:0px; z-index: 100;">
+				<img style = "width:100%; height: 100%"></img>
+			</div>
 		</div>
 
 		<div id = "thumb">
@@ -124,6 +134,39 @@
 			socket.on('time', function(data) {
 				local_offset = (new Date()).getTimezoneOffset()/60;
 				Date.tz_offset = local_offset - data.tz_offset;
+			});
+
+			var preview;
+
+			$(window).on('timeline-rendered', function(e, d) {
+
+				if( preview ) preview.cancel();
+
+				preview = new Preview( '#preview' );
+
+				var segments = camPage.timeline.indexer.elements;
+				preview.load( segments, d.begin, d.end );
+
+				$('#ghost-button').stop().fadeIn();
+			});
+
+			$('#preview').on('mouseover', function() {
+				$('#preview-frame').show();
+				// $('#ghost-cursor').stop().fadeIn();
+			});
+			$('#preview').on('mouseenter', function() {
+				$('#preview-frame').show();
+				$('#ghost-cursor').show();
+			});
+			$('#preview').on('mouseleave', function() {
+				$('#preview-frame').hide();
+				$('#ghost-cursor').hide();
+			});
+
+			$('#ghost-button').on('click', function() {
+				if (preview) {
+					preview.toggleGhost();
+				}
 			});
 
         </script>
