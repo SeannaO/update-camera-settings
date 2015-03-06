@@ -370,6 +370,7 @@ module.exports = function( app, passport, camerasController ) {
 				fs.exists( file, function(exists) {
 					if (exists) { 
 						res.setHeader("Content-Type", "image/jpeg"); 
+						res.setHeader("Cache-Control", "public, max-age=999999"); 
 						res.sendfile(file);
 					} else {
 						res.end("no thumb " + self.thumb);
@@ -518,9 +519,10 @@ module.exports = function( app, passport, camerasController ) {
 				}
 
 				hlsHandler.generateLivePlaylist( streamId, function( playlist ) {
-					res.writeHead(200, { 
-						"Content-Type":"application/x-mpegURL",
-						'Content-Length': Buffer.byteLength(playlist) 
+					res.writeHead(200, {
+						'Content-Type':    'application/x-mpegURL',
+						'Content-Length':  Buffer.byteLength(playlist),
+						'Cache-Control':   'public, max-age=3600'
 					});
 					res.end(playlist);    
 				});
@@ -577,7 +579,7 @@ module.exports = function( app, passport, camerasController ) {
 						res.writeHead(200, {
 							"Content-Type":      "application/x-mpegURL",
 							'Content-Encoding':  'gzip',
-							"Cache-Control":     "max-age=60"
+							"Cache-Control":     "public, max-age=60"
 						});
 						res.end(result);
 					});
