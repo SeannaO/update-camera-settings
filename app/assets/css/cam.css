@@ -7,6 +7,45 @@
 	color:           #646464;
 }
 
+.prev-segment {
+	background: rgb(66, 139, 202); /* background: red; */
+	border-left: 1px solid gray;
+	height: 10px;
+	position: absolute;
+}
+
+
+.mini-prev {
+	width: 2.95%;
+	/* position: absolute; */
+	z-index: 1000;
+	background: red;
+}
+
+.mini-prev:hover {
+}
+
+#ghost-cursor {
+	height: 30px;
+	width: 2px;
+	background: red;
+	position:absolute;
+	display: none;
+}
+
+#ghost-button {
+	position: absolute;
+	right: -33px;
+	cursor: pointer;
+	opacity: 0.8;
+	display:none;
+}
+
+#ghost-button:hover {
+	background: rgba(66, 139, 202, 0.5);
+}
+
+
 .shadow {
 	-moz-box-shadow:     inset 0 0 10px rgba(0,0,0,0.5);
 	-webkit-box-shadow:  inset 0 0 10px rgba(0,0,0,0.5);

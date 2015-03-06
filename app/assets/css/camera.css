@@ -3,6 +3,10 @@ body {
 	min-width:  460px;
 }
 
+.mini-prev {
+	width: 2%;
+}
+
 #camerasHeader .summary{
 	position:absolute;
 	bottom:25px;
