@@ -546,9 +546,9 @@ portChecker.check(8080, function(err, found) {
 	// static files
 	app.use('/css'   , express.static(__dirname + '/assets/css'));
 	app.use('/js'    , express.static(__dirname + '/assets/js'));
-	app.use('/img'   , express.static(__dirname + '/assets/img'));
-	app.use('/swf'   , express.static(__dirname + '/assets/swf'));
-	app.use('/fonts' , express.static(__dirname + '/assets/fonts'));
+	app.use('/img'   , express.static(__dirname + '/assets/img',   { maxAge: 3600 * 1000 } ));
+	app.use('/swf'   , express.static(__dirname + '/assets/swf',   { maxAge: 3600 * 1000 } ));
+	app.use('/fonts' , express.static(__dirname + '/assets/fonts', { maxAge: 3600 * 1000 } ));
 	app.use(express.static(__dirname + '/assets/public'));
 	// end of static files
 	// - - -
@@ -679,17 +679,7 @@ portChecker.check(8080, function(err, found) {
 
 
 	// - - -
-	// - - -
-	//	gets hls live stream
-	//	TODO: not yet implemented
-	//app.get('/live', passport.authenticate('basic', {session: false}), function(req, res) {
-	//    hlsHandler.generateLivePlaylist( db, req, res );       
-	//});
-	// - - -
-
-	// - - -
 	// multicam mockup 
-	// TODO: create a real multicam page
 	app.get('/multiview', passport.authenticate('basic', {session: false}), function(req, res) {    
 		res.sendfile(__dirname + '/views/multi.html');
 	});
