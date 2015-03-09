@@ -54,8 +54,8 @@ var inMemoryStitch = function( files, offset, req, res ) {
 			// '-bsf', 'h264_mp4toannexb',
 			// '-flags' ,'+global_header',
 			// '-bsv', 'dump_extra',
-			'-f', 'mpegts',
-			// '-frag_duration', '3600', 
+			'-f', 'mp4',
+			'-movflags', 'frag_keyframe', 
 			'-']);
 
 	var begin = parseInt( req.query.begin, 10 );
@@ -63,11 +63,10 @@ var inMemoryStitch = function( files, offset, req, res ) {
 	var camId = req.params.id;
 	var streamId = req.query.stream;
 
-	var filename = 'solinkVms_' + camId + '_' + begin + '_' + end + '.ts';
+	var filename = 'solinkVms_' + camId + '_' + begin + '_' + end + '.mp4';
 
 	res.writeHead(200, {
-		// 'Content-Type': 'video/mp4',
-		'Content-Type': 'video/MP2T',
+		'Content-Type': 'video/mp4',
 		'Content-disposition': 'attachment; filename=' + filename
 	});
 	
@@ -77,9 +76,7 @@ var inMemoryStitch = function( files, offset, req, res ) {
 	child.stdout.pipe( res );
 
 	child.stderr.on('data', function(data) {
-		
 	});
-
 	
 	child.stdout.on('data', function(data) {
 	});
