@@ -100,6 +100,11 @@ CameraPage.prototype.setupEvents = function() {
 			self.switchToArchive();
 		}
 	});
+
+	$(window).on('currentTimeChange', function(t) {
+		$('#video-controls *').prop('disabled', false);
+	});
+	
 };
 
 
@@ -386,14 +391,12 @@ CameraPage.prototype.skip = function( dt ) {
 
 	var time = this.player.currentTime + dt;
 
-	if ( this.player && this.player.canSeekTo( time ) ) {
-		this.player.seek( time );
-		this.player.play();
-	}
+	this.jumpTo({ time: time });
 };
 
 CameraPage.prototype.jumpTo = function( d ) {
 	if ( this.player && this.player.canSeekTo( d.time ) ) {
+		$('#video-controls *').prop('disabled', true);
 		this.player.seek( d.time );
 		this.player.play();
 	}
