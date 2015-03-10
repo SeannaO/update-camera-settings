@@ -294,7 +294,7 @@ CameraPage.prototype.setupButtons = function() {
 	});
 
 	this.buttons.jumpBackward5.click(function() {
-		self.skip( -5 );
+		self.skip( -6 );
 	});
 };
 
