@@ -89,17 +89,33 @@ object {
 }
 
 
-#toggle-play {
+#video-controls {
 	position: absolute;
-	left: 102%;
-	top: 9px;
-	background: white;
+	left: 574.5px;
+	margin-bottom: 2px;
+
 	display: none;
+}
+
+.video-control-button {
+	background: white;
+
+	height:19px;
+	width: 30px;
+	font-size: 9pt;
+	padding-top: 0px;
+	
+	margin-left: 2px; 
+	position: relative;
+	float: left;
+}
+
+#toggle-play {
 }
 
 #toggle-motion {
 	position: absolute;
-	left: 107%;
+	left: 103%;
 	top: 9px;
 	background: white;
 	display: none;
