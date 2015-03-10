@@ -93,6 +93,20 @@
 			</div> 
 			<div id = "preview-marker"></div>
 
+			<div id = "video-controls">
+				<button id = "jump-backward-5" class = 'video-control-button btn btn-default btn-xs'>
+					<span class="">-5s</span> 
+				</button>
+
+				<button id = "toggle-play" class = 'video-control-button btn btn-default btn-xs'>
+					<span id='play-icon' class="glyphicon glyphicon-pause"></span> 
+				</button>
+
+				<button id = "jump-forward-5" class = 'video-control-button btn btn-default btn-xs'>
+					<span class="">+5s</span> 
+				</button>
+			</div>
+
 			<div id = "ghost-button" style=''>
 				<img src='/img/ghost.png'>
 			</div>
@@ -102,19 +116,6 @@
 		 
 		<div id = "curr-time"></div>
 
-		<div id = "video-controls">
-			<button id = "jump-backward-5" class = 'video-control-button btn btn-default btn-xs'>
-				<span class="">-5s</span> 
-			</button>
-
-			<button id = "toggle-play" class = 'video-control-button btn btn-default btn-xs'>
-				<span id='play-icon' class="glyphicon glyphicon-pause"></span> 
-			</button>
-
-			<button id = "jump-forward-5" class = 'video-control-button btn btn-default btn-xs'>
-				<span class="">+5s</span> 
-			</button>
-		</div>
 
 		<div id = "video-container" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px;position:relative; overflow:hidden" class = "shadow">
 			<div id = "video" style = "width: 100%; height: 100%; position: absolute; left: 0px; top: 0px;" class = "shadow">
@@ -227,8 +228,6 @@
 					var px = el.attr('data-px');
 					if (isNaN(px)) return;
 					$('#ghost-cursor').css('left', px + '%');
-
-					
 				},
 				start: function() {
 					dragging = true;

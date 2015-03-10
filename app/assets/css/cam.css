@@ -31,7 +31,7 @@
 
 
 .mini-prev {
-	width: 2.95%;
+	width: 2.7%;
 	/* position: absolute; */
 	z-index: 1000;
 	background: red;
@@ -91,23 +91,26 @@ object {
 
 #video-controls {
 	position: absolute;
-	left: 574.5px;
+	left: 540.5px;
 	margin-bottom: 2px;
 
 	display: none;
 }
 
 .video-control-button {
-	background: white;
+	background:   white;
 
-	height:19px;
-	width: 30px;
-	font-size: 9pt;
-	padding-top: 0px;
-	
-	margin-left: 2px; 
-	position: relative;
-	float: left;
+	height:       18px;
+	width:        30px;
+	font-size:    9pt;
+	padding-top:  0px;
+
+	margin-left:  2px;
+	margin-top:   2px;
+	position:     relative;
+	float:        left;
+
+	font-size:    8pt;
 }
 
 #toggle-play {
@@ -119,6 +122,7 @@ object {
 	top: 9px;
 	background: white;
 	display: none;
+	font-size: 8pt;
 }
 
 #time-map {
