@@ -1,24 +1,28 @@
 #zoom-back {
-	position:    absolute;
-	width:       20%;
-	height:      20px;
-	left:        40%;
-	top:         -11px;
-	background:  rgb(200,200,250);
-	color:       rgb(80, 80, 160);
-	text-align:  center;
-	display:     none;
-	cursor:		pointer;
-	-moz-border-radius-topleft: 20px;
-	-moz-border-radius-topright: 20px;
-	-webkit-border-top-left-radius: 20px;
-	-webkit-border-top-right-radius: 20px;
-	opacity: 0.7;
+	position:                         absolute;
+	width:                            8%;
+	height:                           20px;
+	left:                             46%;
+	top:                              -11px;
+	background:                       rgb(200,200,250);
+	color:                            rgba(80, 80, 160, 0.9);
+	text-align:                       center;
+	display:                          none;
+	cursor:                           pointer;
+	-moz-border-radius-topleft:       20px;
+	-moz-border-radius-topright:      20px;
+	-webkit-border-top-left-radius:   10px;
+	-webkit-border-top-right-radius:  10px;
+	opacity:                          0.9;
+	padding-top:                      2.5px;
+	font-size:                        9pt;
 }
 
 #zoom-back:hover {
-	opacity: 0.9;
+
+	opacity: 1.0;
 }
+
 
 .tick {
 	position: absolute;
@@ -130,12 +134,12 @@
 
 .timeline-time {
 	position:        absolute;
-	color:           #8f8f8f;
+	color:           #AEAEAE;
 	/* color:        rgb(80, 80, 160); */
 	/* margin:       7px; */
 	pointer-events:  none;
-	z-index:         500;
-	top: 45px;
+	z-index:         -1;
+	top: -9px;
 	font-size: 9pt;
 }
 
