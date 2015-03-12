@@ -12,11 +12,13 @@ function CameraPage( camId ) {
 	this.inputs.date    = $('#begin_date');
 	this.inputs.streams = $('#stream-selector');
 	
-	this.buttons.download      = $('#download');
-	this.buttons.snapshot      = $('#snapshot');
-	this.buttons.livestream    = $('#get-livestream');
-	this.buttons.toggleMotion  = $('#toggle-motion');
-	this.buttons.togglePlay    = $('#toggle-play');
+	this.buttons.download     = $('#download');
+	this.buttons.snapshot     = $('#snapshot');
+	this.buttons.livestream   = $('#get-livestream');
+	this.buttons.toggleMotion = $('#toggle-motion');
+	this.buttons.togglePlay   = $('#toggle-play');
+	this.buttons.getLink      = $('#link-to-timeline');
+	this.buttons.openCamera   = $('#open-camera');
 
 	this.buttons.videoControls = $('#video-controls');
 	this.buttons.jumpForward5  = $('#jump-forward-5');
@@ -43,6 +45,37 @@ CameraPage.prototype.setup = function() {
 		self.setupTimeline();
 		self.setupEvents();
 	});
+};
+
+
+CameraPage.prototype.loadStateFromURL = function() {
+
+	var params = queryize( window.location.href );
+	if (!params) return;
+	var day = params['day'];
+	if (!day) return;
+
+	day = parseInt(day);
+	if ( isNaN(day) ) return;
+
+	var d = camPage.inputs.date;
+	d.val( new Date(day) );
+	setTimeout(function() {
+		d.trigger('change');
+	}, 10);
+
+	var offset = params['offset'];
+	if ( isNaN(camPage.offset) ) return;
+
+	var begin = params['begin'];
+	var end   = params['end'];
+	if (isNaN(begin) || isNaN(end)) return;
+
+	this.state = {};
+
+	this.state.offset = parseInt( offset );
+	this.state.begin  = parseInt( begin );
+	this.state.end    = parseInt( end );
 };
 
 
@@ -103,9 +136,26 @@ CameraPage.prototype.setupEvents = function() {
 
 	$(window).on('currentTimeChange', function(t) {
 		$('#video-controls *').prop('disabled', false);
+
+		if (self.offset) {
+			self.jumpTo({ 
+				time: self.offset 
+			});
+			self.offset = null;
+		}
+	});
+
+	$.ajax({
+		method: 'get',
+		url: '/cameras.json'
+	}).success( function(data) {
+		console.log('loaded cameras list');
+		console.log( data );
+		self.buttons.openCamera.prop('disabled', false);
 	});
 	
 };
+
 
 
 CameraPage.prototype.switchToArchive = function() {
@@ -296,6 +346,28 @@ CameraPage.prototype.setupButtons = function() {
 	this.buttons.jumpBackward5.click(function() {
 		self.skip( -6 );
 	});
+
+	this.buttons.getLink.click( function() {
+		console.log( self.getURL() );
+	});
+
+	this.buttons.openCamera.click( function() {
+		console.log(' open new camera ');
+
+	});
+
+	var client = new ZeroClipboard( document.getElementById("link-to-timeline") );
+
+	client.on( "ready", function( readyEvent ) {
+		client.on( "copy", function (event) {
+			var clipboard = event.clipboardData;
+			clipboard.setData( "text/plain", self.getURL() );
+		});
+		client.on( "aftercopy", function( event ) {
+			toastr.info("Copied timeline link to clipboard");
+
+		} );
+	} );
 };
 
 
@@ -394,6 +466,7 @@ CameraPage.prototype.skip = function( dt ) {
 	this.jumpTo({ time: time });
 };
 
+
 CameraPage.prototype.jumpTo = function( d ) {
 	if ( this.player && this.player.canSeekTo( d.time ) ) {
 		$('#video-controls *').prop('disabled', true);
@@ -403,4 +476,47 @@ CameraPage.prototype.jumpTo = function( d ) {
 };
 
 
+CameraPage.prototype.getURL = function() {
 
+	if (!this.inputs.date) return;
+	if (!this.player) return;
+	if (!this.timeline) return;
+	
+	var day = this.inputs.date.val();
+	if (!day) return;
+
+	day = Date.parse( day );
+
+	var offset = this.player.currentTime;
+	if (isNaN(offset)) return;
+
+	var begin = this.timeline.begin;
+	var end = this.timeline.end;
+
+	if (!begin || !end) return;
+
+	var url = window.location.origin + 
+		'/cameras/' + camId + 
+		'?day=' + day + 
+		'&offset=' + offset +
+		'&begin=' + begin +
+		'&end=' + end;
+
+	return url;
+};
+
+
+// 
+var queryize = function( url ){
+	var tokens = url.split('?');
+	if (!tokens || !tokens[1] ) return;
+	tokens = tokens[1].split('&');
+
+	var result = {};
+
+	for(var i=0; i<tokens.length; i++){
+		result[tokens[i].split('=')[0]] = tokens[i].split('=')[1];
+	}
+
+	return result;
+}

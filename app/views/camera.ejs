@@ -51,6 +51,7 @@
         <script src="/js/player.js"></script>
 
         <script src="/js/previewer.js"></script>
+		<script src="/js/lib/zero_clipboard/ZeroClipboard.js"></script>
     </head>
 
 
@@ -72,8 +73,24 @@
             <input id="begin_date" type="text" placeholder="select a day" ></input>
 
             <!-- <button id = "get&#45;snapshot" class = 'btn btn&#45;xs btn&#45;default'>get a snapshot</button> -->
-            <button id = "get-livestream" class = 'btn btn-xs btn-default'>livestream</button>
-			<button id = "download" class = 'btn btn-xs btn-default'>download video</button>
+			<button id = "get-livestream" class = 'btn btn-xs btn-default'
+				style='background:white'
+				>livestream</button>
+			<button id = "download" class = 'btn btn-xs btn-default'
+				style='background:white'
+				>download video</button>
+			<button id = "link-to-timeline" class = 'btn btn-xs btn-default'
+				style='background: white';
+				>
+				<span class='glyphicon glyphicon-link'></span>
+			</button>
+			<button id = "open-camera" class = 'btn btn-xs btn-default'
+				style='background: white'
+				disabled='disabled'
+				alt='open timeline in another camera'
+				>
+				<span class='glyphicon glyphicon-share'></span>
+			</button>
         </div>
 
 		<div id = "time-map">
@@ -137,15 +154,21 @@
 
         <script>
 
+
+
 			var ROI = "";
 
 			var frames = [];
 			var index = 0;
 
 			var camPage;
+
+			var timeWindow = {};
+
             $(function() {
 				camPage = new CameraPage( camId );
 				camPage.setup();			
+				camPage.loadStateFromURL();
             });
 
 			var socket = io.connect();
@@ -169,6 +192,16 @@
 				preview.load( segments, d.begin, d.end );
 
 				$('#ghost-button').show();
+
+				if (camPage.state && camPage.state.begin && camPage.state.end) {
+					var begin = camPage.state.begin;
+					var end = camPage.state.end;
+					camPage.state= null;
+					setTimeout( function() {
+						camPage.timeline.zoom(begin, end);
+					}, 10);
+				}
+
 			});
 
 			$('#preview').on('mouseover', function() {
@@ -218,8 +251,6 @@
 
 					var thumb_url = el.attr('data-url');
 					if (!thumb_url) {
-						// console.log(el[0]);
-						// console.log(x + ' ' + y);
 						return;
 					}
 
