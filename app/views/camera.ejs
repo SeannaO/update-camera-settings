@@ -196,7 +196,7 @@
 				if (camPage.state && camPage.state.begin && camPage.state.end) {
 					var begin = camPage.state.begin;
 					var end = camPage.state.end;
-					camPage.state= null;
+					camPage.state.begin = camPage.state.end = null;
 					setTimeout( function() {
 						camPage.timeline.zoom(begin, end);
 					}, 10);

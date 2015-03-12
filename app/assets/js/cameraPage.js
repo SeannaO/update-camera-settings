@@ -65,7 +65,7 @@ CameraPage.prototype.loadStateFromURL = function() {
 	}, 10);
 
 	var offset = params['offset'];
-	if ( isNaN(camPage.offset) ) return;
+	if ( isNaN(offset) ) return;
 
 	var begin = params['begin'];
 	var end   = params['end'];
@@ -137,11 +137,11 @@ CameraPage.prototype.setupEvents = function() {
 	$(window).on('currentTimeChange', function(t) {
 		$('#video-controls *').prop('disabled', false);
 
-		if (self.offset) {
+		if (self.state && self.state.offset) {
 			self.jumpTo({ 
-				time: self.offset 
+				time: self.state.offset 
 			});
-			self.offset = null;
+			self.state.offset = null;
 		}
 	});
 
@@ -163,7 +163,8 @@ CameraPage.prototype.switchToArchive = function() {
 	self.mode = 'archive';
 	var dateInput = this.inputs.date.pickadate('picker');
 	dateInput.set( 'select', Date.now() );
-}
+};
+
 
 CameraPage.prototype.setupTimeline = function() {
 
@@ -186,6 +187,7 @@ CameraPage.prototype.setupTimeline = function() {
 	});
 
 };
+
 
 CameraPage.prototype.getRtsp = function( options ) {
 
@@ -519,4 +521,4 @@ var queryize = function( url ){
 	}
 
 	return result;
-}
+};
