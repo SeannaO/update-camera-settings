@@ -13,13 +13,13 @@ function deliverTsFile( camId, streamId, file, res ) {
     fs.exists(fileUriWithDate, function( exists ) {
 
         if (exists) {
-			//res.sendfile(fileUriWithDate);
 
 			fs.stat(fileUriWithDate, function(err, stat) {
 							
-				res.writeHead(200, { 
-					'Content-Type': 'video/MP2T',
-					'Content-Length': stat.size
+				res.writeHead(200, {
+					'Content-Type':    'video/MP2T',
+					'Cache-Control':   'private, max-age=3600',
+					'Content-Length':  stat.size
 				});
 
 				var fileStream = fs.createReadStream( fileUriWithDate );
@@ -35,8 +35,8 @@ function deliverTsFile( camId, streamId, file, res ) {
 					//fileStream.pipe(res);
 				}
 				else {
-					console.error("!!!!!!can't find file!!!!!!");
-					res.writeHead(200, { "Content-Type": "text" });
+					console.error("[ts helper]  can't find mpegts file " + fileUriWithDate);
+					res.writeHead(404, { "Content-Type": "text" });
 					res.end("file not found: " + fileUriWithDate);
 				}
 			});	
