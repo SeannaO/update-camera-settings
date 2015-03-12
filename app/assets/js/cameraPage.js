@@ -59,7 +59,7 @@ CameraPage.prototype.loadStateFromURL = function() {
 	if ( isNaN(time) ) return;
 
 	var d = camPage.inputs.date;
-	var date = moment(time).format('DD MMMM, YY');
+	var date = moment(time).format('DD MMMM, YYYY');
 	d.val( date );
 	setTimeout(function() {
 		d.trigger('change');
@@ -75,7 +75,7 @@ CameraPage.prototype.loadStateFromURL = function() {
 	this.state.begin  = parseInt( begin );
 	this.state.end    = parseInt( end );
 	
-	addOverlayToPage( 'loading bookmark...' );
+	addOverlayToPage( 'loading timeline context...' );
 };
 
 
@@ -144,8 +144,11 @@ CameraPage.prototype.setupEvents = function() {
 				time: offset
 			});
 			self.state.time = null;
-
+			self.state.loading = true;
+			setOverlayMessage('loading video...');
+		} else if ( self.state && self.state.loading ) {
 			removeOverlayFromPage();
+			self.state.loading = false;
 		}
 	});
 
@@ -153,10 +156,7 @@ CameraPage.prototype.setupEvents = function() {
 		method: 'get',
 		url: '/cameras.json'
 	}).success( function(data) {
-		console.log('loaded cameras list');
-		console.log( data );
 		self.buttons.openCamera.prop('disabled', false);
-
 		self.setupCamerasPopover(data);
 	});
 	
