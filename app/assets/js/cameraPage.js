@@ -74,6 +74,8 @@ CameraPage.prototype.loadStateFromURL = function() {
 	this.state.time = parseInt( time );
 	this.state.begin  = parseInt( begin );
 	this.state.end    = parseInt( end );
+	
+	addOverlayToPage( 'loading bookmark...' );
 };
 
 
@@ -142,6 +144,8 @@ CameraPage.prototype.setupEvents = function() {
 				time: offset
 			});
 			self.state.time = null;
+
+			removeOverlayFromPage();
 		}
 	});
 
