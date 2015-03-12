@@ -1,3 +1,7 @@
+.popover-camera-item {
+	margin-bottom: 5px;
+}
+
 #preview-marker {
 	position:    absolute;
 	z-index:     1000;

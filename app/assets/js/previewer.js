@@ -9,6 +9,12 @@ var Preview = function( el ) {
 };
 
 
+Preview.prototype.showMarker = function() {
+	$('#preview-marker').show();
+	$('#preview-marker').css('left', 0);
+};
+
+
 Preview.prototype.cancel = function() {
 	this.cancelled = true;
 };

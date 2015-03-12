@@ -18,7 +18,7 @@ function CameraPage( camId ) {
 	this.buttons.toggleMotion = $('#toggle-motion');
 	this.buttons.togglePlay   = $('#toggle-play');
 	this.buttons.getLink      = $('#link-to-timeline');
-	this.buttons.openCamera   = $('#open-camera');
+	this.buttons.openCamera   = $('#cameras-popover');
 
 	this.buttons.videoControls = $('#video-controls');
 	this.buttons.jumpForward5  = $('#jump-forward-5');
@@ -52,20 +52,18 @@ CameraPage.prototype.loadStateFromURL = function() {
 
 	var params = queryize( window.location.href );
 	if (!params) return;
-	var day = params['day'];
-	if (!day) return;
+	var time= params['time'];
+	if (!time) return;
 
-	day = parseInt(day);
-	if ( isNaN(day) ) return;
+	time= parseInt(time);
+	if ( isNaN(time) ) return;
 
 	var d = camPage.inputs.date;
-	d.val( new Date(day) );
+	var date = moment(time).format('DD MMMM, YY');
+	d.val( date );
 	setTimeout(function() {
 		d.trigger('change');
 	}, 10);
-
-	var offset = params['offset'];
-	if ( isNaN(offset) ) return;
 
 	var begin = params['begin'];
 	var end   = params['end'];
@@ -73,7 +71,7 @@ CameraPage.prototype.loadStateFromURL = function() {
 
 	this.state = {};
 
-	this.state.offset = parseInt( offset );
+	this.state.time = parseInt( time );
 	this.state.begin  = parseInt( begin );
 	this.state.end    = parseInt( end );
 };
@@ -137,11 +135,13 @@ CameraPage.prototype.setupEvents = function() {
 	$(window).on('currentTimeChange', function(t) {
 		$('#video-controls *').prop('disabled', false);
 
-		if (self.state && self.state.offset) {
+		if (self.state && self.state.time) {
+			
+			var offset = self.timeline.indexer.getRelativeTime(self.state.time);
 			self.jumpTo({ 
-				time: self.state.offset 
+				time: offset
 			});
-			self.state.offset = null;
+			self.state.time = null;
 		}
 	});
 
@@ -152,10 +152,39 @@ CameraPage.prototype.setupEvents = function() {
 		console.log('loaded cameras list');
 		console.log( data );
 		self.buttons.openCamera.prop('disabled', false);
+
+		self.setupCamerasPopover(data);
 	});
 	
 };
 
+
+CameraPage.prototype.setupCamerasPopover = function(data) {
+	var self = this;
+
+	for (var i in data) {
+		var name = data[i].name || data[i].ip;
+		var link = $('<div>', {
+			class:  'popover-camera-item',
+			html:   '<a href="javascript:camPage.goToCam(\''+data[i]._id+'\')">' + name + '</a>'
+		}).appendTo('#cameras-popover-content');
+	}
+};
+
+
+CameraPage.prototype.goToCam = function(camId) {
+	var url = this.getURL( camId );
+	if (!url) {
+		url = window.location.origin + '/cameras/' + camId;
+	}
+
+	var a = document.createElement('a');
+	a.setAttribute('href', url);
+	a.setAttribute('target', '_blank');
+	document.body.appendChild(a);
+	a.click();
+
+};
 
 
 CameraPage.prototype.switchToArchive = function() {
@@ -478,7 +507,7 @@ CameraPage.prototype.jumpTo = function( d ) {
 };
 
 
-CameraPage.prototype.getURL = function() {
+CameraPage.prototype.getURL = function( camId ) {
 
 	if (!this.inputs.date) return;
 	if (!this.player) return;
@@ -497,10 +526,11 @@ CameraPage.prototype.getURL = function() {
 
 	if (!begin || !end) return;
 
+
+	camId = camId || this.camId;
 	var url = window.location.origin + 
 		'/cameras/' + camId + 
-		'?day=' + day + 
-		'&offset=' + offset +
+		'?time=' + self.timeline.currTime + 
 		'&begin=' + begin +
 		'&end=' + end;
 

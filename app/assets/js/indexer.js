@@ -94,6 +94,33 @@ Indexer.prototype.getAbsoluteTime = function( relative_time, begin, end ) {
 	}
 }
 
+
+Indexer.prototype.getRelativeTime = function( absoluteTime ) {
+
+	var a = 0,
+		b = this.elements.length-1;
+
+	var el,
+		i;
+
+	while( a < b ) {
+		i = Math.round( (a + b)/2 )
+		el = this.elements[ i ];
+		if (!el) return;
+		if (el.end > absoluteTime && el.start < absoluteTime) {
+			return (absoluteTime - el.start)/1000.0 + el.totalTime;
+		}
+		else if (el.end < absoluteTime) {
+			a = i+1;
+		} else {
+			b = i-1;
+		}
+	}
+
+	if (el) return( (absoluteTime - el.start)/1000.0 + el.totalTime)
+};
+
+
 Indexer.prototype.clear = function() {
 	this.elements = [];
 	this.agglutinated = null;
