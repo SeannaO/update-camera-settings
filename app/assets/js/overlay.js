@@ -18,6 +18,15 @@ var addOverlayToPage = function( msg ) {
 	overlay.appendTo('body').fadeIn();
 };
 
+
+var setOverlayMessage = function(msg) {
+	
+	if (! $('#overlay-message') ) return;
+
+	$('#overlay-message').html( msg + '<br><br><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div>' );
+};
+
+
 var removeOverlayFromPage = function( cb ) {
 	var overlay = $('#camera-window-overlay');
 	if (!overlay) return;
