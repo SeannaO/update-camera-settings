@@ -173,6 +173,8 @@ CameraPage.prototype.setupCamerasPopover = function(data) {
 
 
 CameraPage.prototype.goToCam = function(camId) {
+	var self = this;
+
 	var url = this.getURL( camId );
 	if (!url) {
 		url = window.location.origin + '/cameras/' + camId;
@@ -182,6 +184,8 @@ CameraPage.prototype.goToCam = function(camId) {
 	a.setAttribute('href', url);
 	a.setAttribute('target', '_blank');
 	document.body.appendChild(a);
+	self.player.pause();		
+	self.buttons.openCamera.popover('hide');
 	a.click();
 
 };
