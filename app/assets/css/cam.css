@@ -12,9 +12,7 @@
 }
 
 #preview-marker:hover {
-	/* height:      15px; */
 	background:  rgba(4, 152, 242, 0.8);
-	/* top:         32px; */
 }
 
 #curr-time {
@@ -27,37 +25,37 @@
 }
 
 .prev-segment {
-	background: rgb(66, 139, 202); /* background: red; */
-	border-left: 1px solid gray;
-	height: 10px;
-	position: absolute;
+	background:   rgb(66, 139, 202); /* background:  red; */
+	border-left:  1px solid gray;
+	height:       10px;
+	position:     absolute;
 }
 
 
 .mini-prev {
-	width: 2.7%;
-	/* position: absolute; */
-	z-index: 1000;
-	background: red;
+	width:        2.7%;
+	/* position:  absolute; */
+	z-index:      1000;
+	background:   red;
 }
 
 .mini-prev:hover {
 }
 
 #ghost-cursor {
-	height: 30px;
-	width: 2px;
-	background: red;
-	position:absolute;
-	display: none;
+	height:      30px;
+	width:       2px;
+	background:  red;
+	position:    absolute;
+	display:     none;
 }
 
 #ghost-button {
-	position: absolute;
-	right: -33px;
-	cursor: pointer;
-	opacity: 0.8;
-	display:none;
+	position:  absolute;
+	right:     -33px;
+	cursor:    pointer;
+	opacity:   0.8;
+	display:   none;
 }
 
 #ghost-button:hover {
@@ -101,6 +99,19 @@ object {
 	display: none;
 }
 
+
+#begin_date {
+	height: 23px;
+}
+
+
+#stream-selector {
+	height: 25px;
+}
+
+
+
+
 .video-control-button {
 	background:   white;
 
@@ -120,13 +131,22 @@ object {
 #toggle-play {
 }
 
-#toggle-motion {
+#get-livestream {
 	position: absolute;
 	left: 103%;
 	top: 9px;
 	background: white;
-	display: none;
 	font-size: 8pt;
+}
+
+#toggle-motion {
+	background: #fff;
+	/* position: absolute; */
+	/* left: 103%; */
+	/* top: 9px; */
+	/* background: white; */
+	/* display: none; */
+	/* font-size: 8pt; */
 }
 
 #time-map {

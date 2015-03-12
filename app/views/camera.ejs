@@ -67,7 +67,7 @@
 		
 		<div id = 'stream-selector-container' style = 'width: 300px; height: 70px;'>
 			<label for="stream-selector">streams</label>
-			<select id = 'stream-selector' class="form-control col-xs-4 input-sm"></select>
+			<select id = 'stream-selector' class="form-control col-xs-4 input-sm" id = 'select-day'></select>
 		</div>
 
         <div id = "search-bar" class="form-inline">
@@ -75,12 +75,12 @@
             <input id="begin_date" type="text" placeholder="select a day" ></input>
 
             <!-- <button id = "get&#45;snapshot" class = 'btn btn&#45;xs btn&#45;default'>get a snapshot</button> -->
-			<button id = "get-livestream" class = 'btn btn-xs btn-default'
-				style='background:white'
-				>livestream</button>
+			<button id = "toggle-motion" class = 'toggle-motion btn btn-default btn-xs'></button>
 			<button id = "download" class = 'btn btn-xs btn-default'
 				style='background:white'
-				>download video</button>
+				>
+				<span class='glyphicon glyphicon-download-alt'></span>
+			</button>
 			<button id = "link-to-timeline" class = 'btn btn-xs btn-default'
 				style='background: white';
 				>
@@ -132,7 +132,9 @@
 				<img src='/img/ghost.png'>
 			</div>
 
-			<button id = "toggle-motion" class = 'toggle-motion btn btn-default btn-xs'></button>
+			<button id = "get-livestream" class = 'btn btn-xs btn-default'>
+				go live
+			</button>
 		</div>
 		 
 		<div id = "curr-time"></div>
