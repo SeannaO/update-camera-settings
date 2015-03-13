@@ -83,6 +83,10 @@
 				$('#camera-scanner-btn').attr('disabled', true);
 				var progress = Math.round(data.progress * 100);
 				$('#scan-btn-text').html('scanning... ' + progress + '% complete' );
+				if (progress >= 100) {
+					$('#camera-scanner-btn').attr('disabled', false)	
+					$('#scan-btn-text').html('Scan for Cameras');
+				}
 			});
 
 			socket.on('scanner_cam', function(data) {
