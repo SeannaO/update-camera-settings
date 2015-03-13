@@ -189,8 +189,9 @@ CameraPage.prototype.goToCam = function(camId) {
 	a.setAttribute('target', '_blank');
 	document.body.appendChild(a);
 	self.player.pause();		
-	self.buttons.openCamera.popover('hide');
+	self.buttons.openCamera.click();
 	a.click();
+	a.remove();
 
 };
 
