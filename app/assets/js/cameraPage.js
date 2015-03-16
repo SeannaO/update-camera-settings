@@ -8,6 +8,7 @@ function CameraPage( camId ) {
 
 	this.inputs  = {};
 	this.buttons = {};
+	this.camData = {};
 
 	this.inputs.date    = $('#begin_date');
 	this.inputs.streams = $('#stream-selector');
@@ -19,6 +20,7 @@ function CameraPage( camId ) {
 	this.buttons.togglePlay   = $('#toggle-play');
 	this.buttons.getLink      = $('#link-to-timeline');
 	this.buttons.openCamera   = $('#cameras-popover');
+	this.buttons.datepicker   = $('#date-picker');
 
 	this.buttons.videoControls = $('#video-controls');
 	this.buttons.jumpForward5  = $('#jump-forward-5');
@@ -34,28 +36,39 @@ function CameraPage( camId ) {
 };
 
 
-CameraPage.prototype.setup = function() {
+CameraPage.prototype.setup = function( cb ) {
 
 	var self = this;
 
-	this.getStreamsInfo( function() {
+	this.getStreamsInfo( function(camData) {
+
+		self.camData = camData;
+
 		self.setupDatepicker();
 		self.setupStreamSelector();
 		self.setupButtons();
 		self.setupTimeline();
 		self.setupEvents();
+
+		if (cb) cb();
 	});
 };
 
 
 CameraPage.prototype.loadStateFromURL = function() {
 
+	var self = this;
+
+	if ( !this.camData.streams || !this.camData.streams.length) {
+		toastr.warning('This camera has no streams yet');
+		return;
+	}
 	var params = queryize( window.location.href );
 	if (!params) return;
-	var time= params['time'];
-	if (!time) return;
 
-	time= parseInt(time);
+	var time = params['time'];
+	if (!time) return;
+	time = parseInt(time);
 	if ( isNaN(time) ) return;
 
 	var d = camPage.inputs.date;
@@ -71,12 +84,28 @@ CameraPage.prototype.loadStateFromURL = function() {
 
 	this.state = {};
 
-	this.state.time = parseInt( time );
-	this.state.begin  = parseInt( begin );
-	this.state.end    = parseInt( end );
-	
+	this.state.time  = parseInt( time );
+	this.state.begin = parseInt( begin );
+	this.state.end   = parseInt( end );
+
 	addOverlayToPage( 'loading timeline context...' );
+
+	this.isTimelineEmptyInterval = setInterval( function() {
+		if (!self.timeline ||
+			!self.timeline.indexer ||
+			!self.timeline.indexer.elements) {
+				return;
+			}
+
+		var el = self.timeline.indexer.elements.length;
+		if (el == 0) {
+			removeOverlayFromPage();
+			clearInterval( self.isTimelineEmptyInterval );
+			toastr.warning('No recorded videos were found in the given interval');
+		}
+	}, 1000);
 };
+
 
 
 CameraPage.prototype.setupEvents = function() {
@@ -167,6 +196,9 @@ CameraPage.prototype.setupCamerasPopover = function(data) {
 	var self = this;
 
 	for (var i in data) {
+		if ( !data[i].streams || !data[i].streams.length ) {
+			continue;
+		}
 		var name = data[i].name || data[i].ip;
 		var link = $('<div>', {
 			class:  'popover-camera-item',
@@ -246,7 +278,7 @@ CameraPage.prototype.setupDatepicker = function() {
 	var self = this;
 	var dateInput = this.inputs.date;
 
-	dateInput.pickadate();
+	this.pickadate = dateInput.pickadate();
 
 	dateInput.change( function() {
 					
@@ -260,8 +292,11 @@ CameraPage.prototype.setupDatepicker = function() {
 		end_date.setMinutes(59);
 		end_date.setSeconds(59);
 
+		$('#curr-time').html( begin_date );	
+
 		begin_date = Date.parse( begin_date );
 		end_date   = Date.parse( end_date );
+
 
 		self.play(begin_date, end_date);	
 	});
@@ -395,6 +430,13 @@ CameraPage.prototype.setupButtons = function() {
 		console.log(' open new camera ');
 
 	});
+
+	this.buttons.datepicker.click( function() {
+		setTimeout(function() {
+			self.inputs.date.click();
+		},30);
+	});
+
 
 	var client = new ZeroClipboard( document.getElementById("link-to-timeline") );
 

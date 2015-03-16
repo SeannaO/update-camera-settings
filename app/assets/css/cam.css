@@ -2,6 +2,13 @@
 	margin-bottom: 5px;
 }
 
+
+#time-box {
+	margin-left:  20px;
+	width:        640px;
+}
+
+
 #preview-marker {
 	position:    absolute;
 	z-index:     1000;
@@ -10,6 +17,11 @@
 	background:  rgba(4, 152, 242, 0.6);
 	top:         36px;
 }
+
+.white-bg {
+	background:  white;
+}
+
 
 #preview-marker:hover {
 	background:  rgba(4, 152, 242, 0.8);
@@ -148,6 +160,11 @@ object {
 	display: none;
 	/* font-size: 8pt; */
 }
+
+.popover {
+	min-width:  260px;
+}
+
 
 #time-map {
 	margin:      20px;

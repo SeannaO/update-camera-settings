@@ -48,7 +48,7 @@
 		<script src="/js/lib/bootbox.min.js"></script>
 
 		<script src="/js/lib/picker.js"></script>
-		<script src="/js/lib/picker.date.js"></script>
+		<script src="/js/lib/pickadate/picker.date.js"></script>
 
         <script src="/js/player.js"></script>
 
@@ -65,41 +65,61 @@
 	<h2 class = 'text-muted'> <a href ="/cameras">cameras</a> | <span id='camera_name'><%= name %></span> </h2> 
         <hr>
 		
-		<div id = 'stream-selector-container' style = 'width: 300px; height: 70px;'>
+		<div id = 'stream-selector-container' style = 'width: 300px; height: 70px; margin-left:20px'>
 			<label for="stream-selector">streams</label>
 			<select id = 'stream-selector' class="form-control col-xs-4 input-sm" id = 'select-day'></select>
 		</div>
 
-        <div id = "search-bar" class="form-inline">
+            <input id="begin_date" type="text" placeholder="select a day" style='display:none'></input>
+		<div id = "time-box" class = 'btn-toolbar'>
+			<div id = 'playback-controls' class='btn-group'>
+				<button id = 'date-picker' class = "btn btn-default timestamp btn-xs white-bg" type="text" value="" >
+					<span class = "glyphicon glyphicon-calendar"></span>
+					<span id = 'curr-time' class="date"> select a day </span>
+				</button>
+			</div>
+			<div id = '' class = 'btn-group'>
+				<button id = "jump-backward-5" class = 'white-bg btn btn-default btn-xs'>
+					<span class="">-5s</span> 
+				</button>
+				<button id = "jump-forward-5" class = 'white-bg btn btn-default btn-xs'>
+					<span class="">+5s</span> 
+				</button>
+			</div>
+			<div id = '' class = 'btn-group'>
+				<button id = "toggle-play" class = "btn btn-default pause btn-xs white-bg">
+					<span id = 'play-icon' class = "glyphicon glyphicon-pause"></span>
+				</button>
+			</div>
 
-            <input id="begin_date" type="text" placeholder="select a day" ></input>
+			<div id = "" class="btn-toolbar" style="float:right; margin-left:20px; margin-top: 5px;">
 
-            <!-- <button id = "get&#45;snapshot" class = 'btn btn&#45;xs btn&#45;default'>get a snapshot</button> -->
-			<button id = "toggle-motion" class = 'toggle-motion btn btn-default btn-xs'></button>
-			<button id = "download" class = 'btn btn-xs btn-default'
-				style='background:white'
-				>
-				<span class='glyphicon glyphicon-download-alt'></span>
-			</button>
-			<button id = "link-to-timeline" class = 'btn btn-xs btn-default'
-				style='background: white';
-				>
-				<span class='glyphicon glyphicon-link'></span>
-			</button>
-			<button id = "cameras-popover" class = 'btn btn-xs btn-default'
-				style='background: white'
-				disabled='disabled'
-				alt='open timeline in another camera'
-				data-toggle='popover'
-				title='Select a camera to open in new tab'
-				>
-				<span class='glyphicon glyphicon-share'></span>
-			</button>
-        </div>
+				<div class = 'btn-group'>
+					<button id = "toggle-motion" class = 'white-bg btn btn-default btn-xs'></button>
+				</div>
+				<div class = 'btn-group'>
+					<button id = "download" class = 'btn btn-xs btn-default white-bg'>
+						<span class='glyphicon glyphicon-download-alt'></span>
+					</button>
+				</div>
+				<div class='btn-group'>
+					<button id = "link-to-timeline" class = 'btn btn-xs btn-default white-bg'>
+						<span class='glyphicon glyphicon-link'></span>
+					</button>
+					<button id = "cameras-popover" class = 'btn btn-xs btn-default white-bg'
+						disabled='disabled'
+						alt='open timeline in another camera'
+						data-toggle='popover'
+						title='Select a camera to open in new tab'
+						>
+						<span class='glyphicon glyphicon-share'></span>
+					</button>
+				</div>
+			</div>
+		</div>
 
 		<div id = "time-map">
 			<div id = "date-selector"></div>	
-
 
 			<!-- include those lines to add a timeline to your page -->
 			<div id = "marker"></div>
@@ -114,19 +134,6 @@
 			</div> 
 			<div id = "preview-marker"></div>
 
-			<div id = "video-controls">
-				<button id = "jump-backward-5" class = 'video-control-button btn btn-default btn-xs'>
-					<span class="">-5s</span> 
-				</button>
-
-				<button id = "toggle-play" class = 'video-control-button btn btn-default btn-xs'>
-					<span id='play-icon' class="glyphicon glyphicon-pause"></span> 
-				</button>
-
-				<button id = "jump-forward-5" class = 'video-control-button btn btn-default btn-xs'>
-					<span class="">+5s</span> 
-				</button>
-			</div>
 
 			<div id = "ghost-button" style=''>
 				<img src='/img/ghost.png'>
@@ -137,8 +144,7 @@
 			</button>
 		</div>
 		 
-		<div id = "curr-time"></div>
-
+		<!-- <div id = "curr&#45;time"></div> -->
 
 		<div id = "video-container" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px;position:relative; overflow:hidden" class = "shadow">
 			<div id = "video" style = "width: 100%; height: 100%; position: absolute; left: 0px; top: 0px;" class = "shadow">
@@ -176,8 +182,9 @@
 
             $(function() {
 				camPage = new CameraPage( camId );
-				camPage.setup();			
-				camPage.loadStateFromURL();
+				camPage.setup( function() {
+					camPage.loadStateFromURL();
+				});			
             });
 
 			var socket = io.connect();
