@@ -102,6 +102,8 @@ CameraPage.prototype.loadStateFromURL = function() {
 			removeOverlayFromPage();
 			clearInterval( self.isTimelineEmptyInterval );
 			toastr.warning('No recorded videos were found in the given interval');
+		} else {
+			clearInterval( self.isTimelineEmptyInterval );
 		}
 	}, 1000);
 };

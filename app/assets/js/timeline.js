@@ -125,7 +125,10 @@ Timeline.prototype.setupEvents = function() {
 		self.live = !!self.liveOverlay && self.liveOverlay.is(':visible'); 
 		var formattedCurrTime = self.live ? new Date() : new Date(absolute_time);
 
-		$("#curr-time").html(formattedCurrTime);
+		if (!!absolute_time) {
+			$("#curr-time").html(formattedCurrTime);
+		} else {
+		}
 
 		self.marker.css("left", pos);
 
