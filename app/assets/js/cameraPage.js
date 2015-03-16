@@ -101,11 +101,11 @@ CameraPage.prototype.loadStateFromURL = function() {
 		if (el == 0) {
 			removeOverlayFromPage();
 			clearInterval( self.isTimelineEmptyInterval );
-			toastr.warning('No recorded videos were found in the given interval');
+			// toastr.warning();
 		} else {
 			clearInterval( self.isTimelineEmptyInterval );
 		}
-	}, 1000);
+	}, 5000);
 };
 
 
