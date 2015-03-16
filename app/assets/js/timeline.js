@@ -127,6 +127,7 @@ Timeline.prototype.setupEvents = function() {
 
 		if (!!absolute_time) {
 			$("#curr-time").html(formattedCurrTime);
+			$("#video-time").html(formattedCurrTime);
 		} else {
 		}
 
