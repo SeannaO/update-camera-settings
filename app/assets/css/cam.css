@@ -167,11 +167,11 @@ object {
 }
 
 #get-livestream {
-	position: absolute;
-	left: 103%;
-	top: 9px;
-	background: white;
-	font-size: 8pt;
+	position:    absolute;
+	left:        103%;
+	top:         9px;
+	background:  white;
+	font-size:   8pt;
 }
 
 #toggle-motion:hover {
@@ -181,18 +181,22 @@ object {
 	height: 100%;
 }
 
+#jump-backward-5, #jump-forward-5 {
+	width:  32px;
+}
+
 #toggle-motion {
-	width: 22px;
-	height: 21px;
-	margin: 0;
-	padding: 0;
-	background: #fff;
-	/* position: absolute; */
-	/* left: 103%; */
-	/* top: 9px; */
-	/* background: white; */
-	display: none;
-	/* font-size: 8pt; */
+	width:          24px;
+	height:         22px;
+	margin:         0;
+	padding:        0;
+	background:     #fff;
+	/* position:    absolute; */
+	/* left:        103%; */
+	/* top:         9px; */
+	/* background:  white; */
+	display:        none;
+	/* font-size:   8pt; */
 }
 
 .popover {
