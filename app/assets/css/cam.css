@@ -12,10 +12,10 @@
 #preview-marker {
 	position:    absolute;
 	z-index:     1000;
-	width:       20px;
-	height:      10px;
-	background:  rgba(4, 152, 242, 0.6);
-	top:         36px;
+	width:       16px;
+	height:      20px;
+	background:  rgba(4, 152, 242, 0.8);
+	top:         31px;
 }
 
 .white-bg {
@@ -52,6 +52,22 @@
 }
 
 .mini-prev:hover {
+}
+
+
+#ghost-cursor-time {
+	color: black;
+	position: absolute;
+	background: rgba(255,255,255,0.6);
+	width: auto;
+	height: auto;
+	padding: 0px;
+
+	top: 0px;
+	font-size: 8pt;
+	left: 5px;
+	margin-top: -8px;
+	opacity: 0.8;
 }
 
 #ghost-cursor {

@@ -126,7 +126,9 @@
 			<div id = "zoom-back"> <span class='glyphicon glyphicon-zoom-out'></span> </div>
 			<div id = "timeline">
 				<div id = "timeline-selector"></div>
-				<div id = "ghost-cursor"></div>
+				<div id = "ghost-cursor">
+					<div id = 'ghost-cursor-time'> time </div>
+				</div>
 			</div>				
 			<!-- include those lines to add a timeline to your page -->
 
@@ -146,13 +148,15 @@
 		 
 		<!-- <div id = "curr&#45;time"></div> -->
 
-		<div id = "video-container" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px;position:relative; overflow:hidden" class = "shadow">
+		<div id = "video-container" style = "width:640px; height:480px; background:rgb(240,240,240); margin: 20px; margin-top: 25px; position:relative; overflow:hidden" class = "shadow">
 			<div id = "video" style = "width: 100%; height: 100%; position: absolute; left: 0px; top: 0px;" class = "shadow">
 			</div>
 			<div id = "preview-frame" style="width:100%; height:100%; position:absolute; top:0px;left:0px; z-index: 100;">
 				<img style = "width:100%; height: 100%"></img>
 			</div>
 		</div>
+
+		<!-- <div id = 'debug' style='position: absolute; width: 5px; height: 5px; background: red'></div> -->
 
 		<div id = "thumb">
 			<div id = 'thumb-time'></div>
@@ -246,7 +250,7 @@
 				axis: 'x',
 				drag: function(ev, ui) {
 					if(!preview) return;
-					var y = $('#preview').offset().top+10;
+					var y = $('#preview').offset().top + 10;
 					var x = ui.offset.left+2;
 					$(this).hide();
 					// $('#debug').css('left', x);
@@ -273,6 +277,13 @@
 					var px = el.attr('data-px');
 					if (isNaN(px)) return;
 					$('#ghost-cursor').css('left', px + '%');
+
+					var time = el.attr('data-start');
+					if (!!time) {
+						time = parseInt( time );
+						time = moment( time ).format( 'HH:mm:ss' );
+						$('#ghost-cursor-time').html(time);
+					}
 				},
 				start: function() {
 					dragging = true;
@@ -284,7 +295,7 @@
 					$('#preview-frame').hide();
 					$('#ghost-cursor').hide();
 
-					var y = $(this).offset().top+2;
+					var y = $(this).offset().top+10;
 					var x = ui.offset.left+2;
 					// $('#debug').hide();
 					$(this).hide();

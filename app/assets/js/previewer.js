@@ -79,6 +79,8 @@ Preview.prototype.loadImage = function( d, cb ) {
 		$(img).attr('data-url', d.url);
 		$(img).attr('data-relative-time', d.relative_time);
 
+		$(img).attr('data-start', d.start);
+
 		$(img).addClass('mini-prev');
 		$('#preview').append(img);
 		// $(img).css('left', px + '%');
@@ -100,6 +102,12 @@ Preview.prototype.loadImage = function( d, cb ) {
 	$(img).on('mouseover', function(ev, el) {
 		self.displayFrame( d.url );
 		$('#ghost-cursor').css('left', px + '%');
+		var time = d.start;
+		if (!!time) {
+			time = parseInt( time );
+			time = moment( time ).format( 'HH:MM:ss' );
+			$('#ghost-cursor-time').html(time);
+		}
 	});
 
 	$(img).on('mouseleave', function(ev, el) {
@@ -152,13 +160,16 @@ Preview.prototype.listImages = function( data, camId, streamId, k0, k1 ) {
 	for( var i = k0; i <= k1; i+=step ) {
 
 		if (!data[i]) continue;
+
 		var thumb_name = data[i].start + '_' + (data[i].end -data[i].start);
 		var thumb = "/cameras/" + camId + "/streams/" + streamId + "/thumb/" + thumb_name;
 		images.push({
 			url:            thumb,
 			offset:         data[i].start - this.begin,
 			relative_time:  data[i].totalTime,
-			order:          order++
+			order:          order++,
+			start: 			data[i].start,
+			end: 			data[i].end
 		});
 	}
 
