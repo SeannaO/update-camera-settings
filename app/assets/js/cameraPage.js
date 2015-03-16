@@ -153,9 +153,15 @@ CameraPage.prototype.setupEvents = function() {
 	$(window).on('toggle_motion', function(e, d) {
 		self.buttons.toggleMotion.prop('disabled', false);
 		if (d.show) {
-			self.buttons.toggleMotion.html('hide motion');
+			self.buttons.toggleMotion.html(
+				'<img src = "/img/motion-icon.png" >'
+			);
+			self.buttons.toggleMotion.addClass('active');
 		} else {
-			self.buttons.toggleMotion.html('show motion');
+			self.buttons.toggleMotion.html(
+				'<img src = "/img/motion-icon.png">'
+			);
+			self.buttons.toggleMotion.removeClass('active');
 		}
 	});
 

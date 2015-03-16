@@ -167,7 +167,18 @@ object {
 	font-size: 8pt;
 }
 
+#toggle-motion:hover {
+}
+
+#toggle-motion img {
+	height: 100%;
+}
+
 #toggle-motion {
+	width: 22px;
+	height: 21px;
+	margin: 0;
+	padding: 0;
 	background: #fff;
 	/* position: absolute; */
 	/* left: 103%; */
