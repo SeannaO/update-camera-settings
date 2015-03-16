@@ -256,7 +256,10 @@ Player.prototype.pause = function() {
 	$(window).trigger('playerState', 'pause');
 
 	if( this.currentPlayer == 'strobe' ) {
-		this.layers.strobePlayer[0].pause();
+		try {
+			this.layers.strobePlayer[0].pause();
+		} catch (err) {
+		}
 	} else if( this.currentPlayer == 'native' ) {
 		this.layers.nativePlayer[0].pause();
 	}
