@@ -293,12 +293,13 @@ CamerasController.prototype.periodicallyDeleteChunksOnQueue = function() {
 			if (chunk.cb) {
 				chunk.cb();
 			}
-			setTimeout( 
-				function() {
-					self.periodicallyDeleteChunksOnQueue();
-				}, 10 
-			);
 		});
+
+		setTimeout( 
+			function() {
+				self.periodicallyDeleteChunksOnQueue();
+			}, 30
+		);
 	}
 };
 
