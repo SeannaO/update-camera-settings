@@ -12,7 +12,6 @@ describe('CamerasController', function() {
 
 	var controller = new CamerasController( mp4Handler, db_file, videosFolder);
 
-
 	describe('#insertNewCamera', function(){
 		it('should create the camera', function(done){
 			cam = {ip: "192.168.215.102",type: "onvif",status: "missing camera stream(s)",manufacturer: "unknown",id: "id_0.770617583533749"};

@@ -1,3 +1,4 @@
+
 var assert = require("assert");
 var sinon = require("sinon");
 
@@ -22,7 +23,7 @@ describe('Dblite', function() {
 			})
 		});
 		
-		it( 'should preserver table if already exists', function( done ) {
+		it( 'should preserve table if already exists', function( done ) {
 
 			var dbfile = 'tests/videosFolder/dblite_create_video_table_test.sqlite';
 			
@@ -38,11 +39,10 @@ describe('Dblite', function() {
 
 					getData( dbfile, function(data) {
 						assert(data);
-						assert(data.length === 1);
+						assert(data.length > 0);
 						assert.equal( data[0].end, chunk.end );
 						assert.equal( data[0].start, chunk.start );
 						assert.equal( data[0].file, chunk.file );
-
 						done();
 					});
 

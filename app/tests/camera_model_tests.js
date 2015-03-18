@@ -40,7 +40,6 @@ var cam_without_streams = {
 
 var videosFolder = "tests/videosFolder"; 
 
-
 describe('Camera', function(){
 
 	describe('constructor', function() {
@@ -65,11 +64,9 @@ describe('Camera', function(){
 			new Camera( cam_with_streams, videosFolder, function(new_cam){
 				for (var stream_id in cam_with_streams.streams) {
 
-					console.log("###############");
-					console.log("> " + stream_id);
-					console.log( new_cam.streams[stream_id] );
-					console.log("################");
+					var recordModel = new_cam.streams[stream_id].recordModel;
 
+					assert.ok(!!recordModel);
 				}
 				done();
 			});
@@ -80,7 +77,6 @@ describe('Camera', function(){
 			var cameras = [cam_with_streams, cam_without_streams];
 
 			for (var cam in cameras) {
-				console.log(cam);
 				var new_cam = new Camera( cam, videosFolder);
 				assert.equal( new_cam._id          , cam._id );
 				assert.equal( new_cam.name         , cam.name );
@@ -94,14 +90,12 @@ describe('Camera', function(){
 		});
 	});
 
-
 	describe('start recording', function() {
 
 		it('should call recordModel.startRecording on all streams if not already recording', function(done) {
 
 			cam_with_streams._id = 'startRecording_test_1_' + Math.random();			
 			new Camera( cam_with_streams, videosFolder, function(new_cam){
-			console.log(new_cam.streams);
 				var recordingSpies = [];
 				for (var stream_id in new_cam.streams){
 					recordingSpies.push(sinon.spy(new_cam.streams[stream_id].recordModel, "startRecording"));
@@ -136,7 +130,6 @@ describe('Camera', function(){
 		});
 	});
 
-
 	describe('stop recording', function() {
 
 		it('should call recordModel.stopRecording on all streams if still recording', function(done) {
@@ -158,32 +151,7 @@ describe('Camera', function(){
 				done();
 			});
 		});
-
-		it('should NOT call recordModel.stopRecording again on a stream that is already stopped', function(done) {
-
-			cam_with_streams._id = 'stopRecording_test_2_' + Math.random();			
-			new Camera( cam_with_streams, videosFolder, function(new_cam){
-
-				new_cam.startRecording();
-
-				var recordingSpies = [];
-				for (var stream_id in new_cam.streams){
-					recordingSpies.push(sinon.spy(new_cam.streams[stream_id].recordModel, "stopRecording"));
-				}
-
-				new_cam.stopRecording();
-				new_cam.stopRecording();
-
-				for (var spy_id in recordingSpies){
-					assert(recordingSpies[spy_id].calledOnce);
-					recordingSpies[spy_id].restore();
-				}
-				done();
-			});
-
-		});
 	});
-
 
 	describe('addChunk', function() {
 
@@ -219,9 +187,7 @@ describe('Camera', function(){
 		it('should call db.insertVideo with correct param on corresponding stream', function() {
 
 		});
-
 	});
-
 
 	describe('deleteChunk', function() {
 
@@ -243,7 +209,6 @@ describe('Camera', function(){
 		});
 
 	});
-
 
 	describe('getOldestChunks', function() {
 
@@ -288,10 +253,7 @@ describe('Camera', function(){
 				return a.start - b.start;
 			});
 
-			console.log(oldestChunks);
-
 			another_cam.getOldestChunks( numChunks, function(data) {
-				console.log(data);
 				for (var i in data) {
 					assert(data[i].start == oldestChunks[i].start);
 				}
@@ -300,11 +262,6 @@ describe('Camera', function(){
 
 		});
 	});
-
-
-	describe('listeners', function() {
-	});
-
 
 	describe('#restoreBackupAndReindex', function(){
 		it ("indexes from scratch when an empty error is returned", function(done){
@@ -344,49 +301,7 @@ describe('Camera', function(){
 
 			});
 		});
-
 	});
-//
-// 	describe('#reIndexDatabaseFromFileStructureAfterTimestamp', function(){
-// 		it("reindexes the database after the timestamp", function(done){
-// 			var cameraFolder = __dirname + "/fixtures/reIndexDatabaseFromFileStructureAfterTimestamp";
-// 			new Camera( cam_with_streams, cameraFolder, function(new_cam){
-// 				var stream = new_cam.streams['stream_1'];
-// 				var spy1 = sinon.spy(stream.recordModel, "addFileToIndexInDatabase");
-// 				var spy2 = sinon.spy(stream.recordModel, "indexPendingFilesAfterCorruptDatabase");
-//
-// 				var storedVideosFolder = cameraFolder + "/abc/" + stream.id + "/videos";
-// 				var first_file = storedVideosFolder + "/2012-5-17/1337241600235_1000.ts"
-// 				var indexItem = {file: first_file, start: 1337241600235 ,end: 1337241601235};
-// 				new_cam.reIndexDatabaseFromFileStructureAfterTimestamp(stream, storedVideosFolder, indexItem, function(){
-// 					assert.equal(spy1.callCount, 5);
-// 					assert.equal(spy2.callCount, 6);
-// 					done();
-// 				});
-// 			});
-// 		});
-// 	});
-//
-// 	describe('#reIndexDatabaseFromFileStructure', function(){
-// 		it("reindexes the database", function(done){
-// 			var cameraFolder = __dirname + "/fixtures/reIndexDatabaseFromFileStructureAfterTimestamp";
-// 			new Camera( cam_with_streams, cameraFolder, function(new_cam){
-// 				var stream = new_cam.streams['stream_1'];
-// 				var spy1 = sinon.spy(stream.recordModel, "addFileToIndexInDatabase");
-// 				var spy2 = sinon.spy(stream.recordModel, "indexPendingFilesAfterCorruptDatabase");
-//
-// 				var storedVideosFolder = cameraFolder + "/abc/" + stream.id + "/videos";
-// 				new_cam.reIndexDatabaseFromFileStructure(stream, storedVideosFolder, function(){
-// 					assert.equal(spy1.callCount, 6);
-// 					assert.equal(spy2.callCount, 7);
-// 					done();
-// 				});
-// 			});
-// 		});
-//
-// 	});	
-
-
 
 });
 
