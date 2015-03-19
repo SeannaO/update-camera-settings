@@ -3,7 +3,7 @@ var sinon = require("sinon");
 
 var fs = require('fs');
 
-var Camera = require('../models/camera_model.js');
+var Camera = require('../../models/camera_model.js');
 
 var cam_with_streams = {
 	_id          : "abc",
