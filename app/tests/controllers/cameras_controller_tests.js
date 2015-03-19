@@ -2,12 +2,20 @@ var assert = require("assert");
 var sinon = require("sinon");
 
 var fs = require('fs');
+var fse = require('fs-extra');
+
 var mp4Handler = require('../../controllers/mp4_controller');
 var CamerasController = require('../../controllers/cameras_controller.js');
 
 var db_file = __dirname + '/../fixtures/files/cam_db';
 var videosFolder = __dirname + '/../fixtures/cameras_controller_test';
 
+fse.removeSync( __dirname + '/../fixtures/cameras_controller_test/*' );
+
+after(function(done) {
+	fse.removeSync( __dirname + '/../fixtures/cameras_controller_test/*' );
+	done();
+});
 
 describe('CamerasController', function() {
 
@@ -119,4 +127,5 @@ describe('CamerasController', function() {
 	});
 
 });
+
 
