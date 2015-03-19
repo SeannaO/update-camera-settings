@@ -1,5 +1,8 @@
 module.exports = {
 	test: {
-		src: ['tests/**/*.js']
+		options: {
+			clearRequireCache: true
+		},
+		src: ['tests/**/*.js'],
 	},
 };
