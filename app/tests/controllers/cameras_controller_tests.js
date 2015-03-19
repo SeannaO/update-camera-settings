@@ -14,6 +14,7 @@ fse.removeSync( __dirname + '/../fixtures/cameras_controller_test/*' );
 
 after(function(done) {
 	fse.removeSync( __dirname + '/../fixtures/cameras_controller_test/*' );
+	fse.removeSync( __dirname + '/../fixtures/videosFolder/*' );
 	done();
 });
 

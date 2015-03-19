@@ -2,6 +2,7 @@ var assert = require("assert");
 var sinon = require("sinon");
 
 var fs = require('fs');
+var fse = require('fs-extra');
 
 var Camera = require('../../models/camera_model.js');
 
@@ -39,6 +40,12 @@ var cam_without_streams = {
 
 
 var videosFolder = "tests/fixtures/videosFolder"; 
+
+after(function(done) {
+	fse.removeSync( __dirname + '/../fixtures/cameras_controller_test/*' );
+	fse.removeSync( __dirname + '/../fixtures/videosFolder/*' );
+	done();
+});
 
 describe('Camera', function(){
 
