@@ -1,26 +1,32 @@
-var assert = require("assert");
-var sinon = require("sinon");
-
 var fs = require('fs');
 var fse = require('fs-extra');
 
-var mp4Handler = require('../../controllers/mp4_controller');
-var CamerasController = require('../../controllers/cameras_controller.js');
-
-var db_file = __dirname + '/../fixtures/files/cam_db';
-var videosFolder = __dirname + '/../fixtures/cameras_controller_test';
-
-fse.removeSync( __dirname + '/../fixtures/cameras_controller_test/*' );
-
-after(function(done) {
-	fse.removeSync( __dirname + '/../fixtures/cameras_controller_test/*' );
-	fse.removeSync( __dirname + '/../fixtures/videosFolder/*' );
-	done();
-});
-
 describe('CamerasController', function() {
+	var assert = require("assert");
+	var sinon = require("sinon");
 
-	var controller = new CamerasController( mp4Handler, db_file, videosFolder);
+	var mp4Handler = require('../../controllers/mp4_controller');
+	var CamerasController = require('../../controllers/cameras_controller.js');
+
+	var db_file = __dirname + '/../fixtures/files/cam_db';
+	var videosFolder = __dirname + '/../fixtures/cameras_controller_test';
+
+	fse.removeSync( __dirname + '/../fixtures/cameras_controller_test/*' );
+
+	var controller;
+	before( function(done) {
+		controller = new CamerasController( mp4Handler, db_file, videosFolder, function() {
+			done();
+		});
+	});
+
+	after(function(done) {
+		clearInterval( controller.orphanFilesChecker.checkOrphanFilesInterval );
+		fse.removeSync( __dirname + '/../fixtures/cameras_controller_test/*' );
+		fse.removeSync( __dirname + '/../fixtures/videosFolder/*' );
+		done();
+	});
+
 
 	describe('#insertNewCamera', function(){
 		it('should create the camera', function(done){
