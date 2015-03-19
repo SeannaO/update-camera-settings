@@ -76,8 +76,8 @@ describe('RecordModel', function() {
 		}
 	};	
 
-	var cam = new CameraModel( cam_with_streams, 'tests/videosFolder');
-	var cam_2 = new CameraModel( cam_with_streams_2, 'tests/videosFolder');
+	var cam = new CameraModel( cam_with_streams, 'tests/fixtures/videosFolder');
+	var cam_2 = new CameraModel( cam_with_streams_2, 'tests/fixtures/videosFolder');
 	
 	describe('constructor', function() {		
 		it('should initialize all attributes correctly', function() {
@@ -184,7 +184,7 @@ describe('RecordModel', function() {
 		it ('should create a folder with chunk date', function( done ) {
 			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
 
-			fs.createReadStream(__dirname+'/fixtures/files/empty_file').pipe(fs.createWriteStream(__dirname+'/videosFolder/'+cam._id+'/stream_1/videos/tmp/empty_file'));			
+			fs.createReadStream(__dirname+'/fixtures/files/empty_file').pipe(fs.createWriteStream(__dirname+'/fixtures/videosFolder/'+cam._id+'/stream_1/videos/tmp/empty_file'));			
 
 			var time = Math.round( Math.random() * Date.now() );
 
@@ -210,7 +210,7 @@ describe('RecordModel', function() {
 		it ('should move file from tmp folder to appropriate folder and rename it accordingly', function( done ) {
 			var recordModel = new RecordModel( cam, cam.streams['stream_1'] );
 
-			fs.createReadStream(__dirname+'/fixtures/files/empty_file').pipe(fs.createWriteStream(__dirname+'/videosFolder/'+cam._id+'/stream_1/videos/tmp/empty.file'));
+			fs.createReadStream(__dirname+'/fixtures/files/empty_file').pipe(fs.createWriteStream(__dirname+'/fixtures/videosFolder/'+cam._id+'/stream_1/videos/tmp/empty.file'));
 
 			var time = Math.round( Math.random() * Date.now() );
 
@@ -237,7 +237,7 @@ describe('RecordModel', function() {
 
 		it ('should update video.file value to the name of the new chunk that was stored', function( done ) {
 			var recordModel = new RecordModel( cam, cam.streams['stream_1'], function(recordModel) {
-				fs.createReadStream(__dirname+'/fixtures/files/chunk_1.ts').pipe(fs.createWriteStream(__dirname+'/videosFolder/'+cam._id+'/stream_1/videos/tmp/chunk_1.ts'));
+				fs.createReadStream(__dirname+'/fixtures/files/chunk_1.ts').pipe(fs.createWriteStream(__dirname+'/fixtures/videosFolder/'+cam._id+'/stream_1/videos/tmp/chunk_1.ts'));
 
 				var time = Math.round( Math.random() * Date.now() );
 

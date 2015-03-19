@@ -13,7 +13,7 @@ describe('Dblite', function() {
 		
 		it( 'should create video table if not exists', function( done ) {
 				
-			var dbfile = 'tests/videosFolder/dblite_create_video_table_test.sqlite';
+			var dbfile = 'tests/fixtures/videosFolder/dblite_create_video_table_test.sqlite';
 			var db = new Dblite(dbfile, function() {
 				
 				checkIfTableExists( dbfile, 'videos', function( exists ) {
@@ -25,7 +25,7 @@ describe('Dblite', function() {
 		
 		it( 'should preserve table if already exists', function( done ) {
 
-			var dbfile = 'tests/videosFolder/dblite_create_video_table_test.sqlite';
+			var dbfile = 'tests/fixtures/videosFolder/dblite_create_video_table_test.sqlite';
 			
 			var chunk = {
 				start: '0',
@@ -67,7 +67,7 @@ describe('Dblite', function() {
 
 		it( 'should not query db if start or end times are invalid', function( done ) {
 
-			var dbfile = 'tests/videosFolder/dblite_create_video_table_test.sqlite';
+			var dbfile = 'tests/fixtures/videosFolder/dblite_create_video_table_test.sqlite';
 			var db = new Dblite(dbfile, function() {
 				
 				sinon.spy(db.db, 'query');
@@ -98,7 +98,7 @@ describe('Dblite', function() {
 			});
 			
 			it( 'should correctly return videos by interval', function() {
-				var dbfile = 'tests/videosFolder/dblite_create_video_table_test.sqlite';
+				var dbfile = 'tests/fixtures/videosFolder/dblite_create_video_table_test.sqlite';
 				var db = new Dblite(dbfile, function() {
 					
 				});
@@ -110,7 +110,7 @@ describe('Dblite', function() {
 
 		it('should correctly return videos', function( done ) {
 			
-			var dbfile = 'tests/videosFolder/dblite_create_video_table_test_2.sqlite';
+			var dbfile = 'tests/fixtures/videosFolder/dblite_create_video_table_test_2.sqlite';
 			var db = new Dblite(dbfile, function() {
 
 				var data = [

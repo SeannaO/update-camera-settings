@@ -38,7 +38,7 @@ var cam_without_streams = {
 };
 
 
-var videosFolder = "tests/videosFolder"; 
+var videosFolder = "tests/fixtures/videosFolder"; 
 
 describe('Camera', function(){
 
