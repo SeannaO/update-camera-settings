@@ -1,7 +1,8 @@
 var assert = require("assert");
 var sinon = require("sinon");
 
-var fs = require('fs');
+var fs  = require('fs');
+var fse = require('fs-extra');
 
 var FileBackup = require('../../helpers/file_backup.js');
 
@@ -33,4 +34,5 @@ describe('FileBackup', function(){
 				done();
 		});
 	});	
+
 });
