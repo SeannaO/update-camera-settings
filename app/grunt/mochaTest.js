@@ -3,6 +3,6 @@ module.exports = {
 		options: {
 			clearRequireCache: true
 		},
-		src: ['tests/**/*.js'],
+		src: ['tests/**/*.js', '!tests/fixtures/*', '!tests/lib/*'],
 	},
 };

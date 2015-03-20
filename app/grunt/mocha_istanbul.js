@@ -1,6 +1,6 @@
 module.exports = {
 	coverage: {
-		src: 'tests/**/*.js', // a folder works nicely
+		src: ['tests/**/*.js', '!tests/fixtures/*', '!tests/lib/*'], 
 		options: {
 		}
 	},
