@@ -173,7 +173,9 @@ RecordModel.prototype.quitRecording = function() {
 	
 	self.removeAllListeners();
 	RecordModel.dbusMonitorSignal.removeListener( 'signalReceipt', self.receiveSignalCallback );
-	self.dbusSignal.removeAllListeners();
+	if (self.dbusSignal) {
+		self.dbusSignal.removeAllListeners();
+	}
 
 	this.status = STOPPING;							// didn't stop yet
 	clearInterval( this.isRecordingIntervalId );	// clears listener that checks if recording is going ok
