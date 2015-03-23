@@ -61,6 +61,7 @@ SensorData.prototype._aggregateShardedSensorData = function( options, currentDat
 	if (options.end - options.start > 2*oneDay) {
 		console.error('[SensorData]  ignoring request for more than 2 days of data');
 		cb('requesting too much data: more than 2 days');
+		return;
 	}
 
 	var self = this;
