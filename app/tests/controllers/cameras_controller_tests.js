@@ -1,5 +1,7 @@
-var fs = require('fs');
-var fse = require('fs-extra');
+var fs           = require('fs');
+var fse          = require('fs-extra');
+var EventEmitter = require('events').EventEmitter;            //
+var util         = require('util');                           // for inheritance
 
 describe('CamerasController', function() {
 	var assert = require("assert");
@@ -130,6 +132,88 @@ describe('CamerasController', function() {
 				assert.equal(numRemoved, 1);
 				done();
 			});
+		});
+	});
+
+
+	describe('listCameras', function() {
+		
+		it( 'should callback with all cameras', function( done ) {
+
+			var cameras = controller.cameras;
+			controller.listCameras( function(err, list ) {
+				for (var i in list) {
+					assert.equal( list[i]._id, cameras[i]._id );
+				}
+				done();
+			});
+		});
+	});
+
+	
+	describe('listVideosByCamera', function() {
+		it('should  return if camera or stream is not found', function() {
+			
+			var camId = controller.cameras[0]._id;
+			controller.listVideosByCamera('no_camera', 'no_stream', 0, 100, function() {
+			});
+			controller.listVideosByCamera(camId, 'no_stream', 0, 100, function() {
+			});
+
+		});
+	});
+
+	describe('requestSnapshot', function() {
+		it('should push request to queue', function( done ) {
+			var camId = 'a_camera_id';
+			var req = {type: 'request'};
+			var res = {type: 'response'};
+
+			res.on = function() {};
+			res.end = function() { done() };
+			res.writeHead = function() {};
+			res.json = function() {};
+
+			req.query = {};
+
+			var qSpy = sinon.spy( controller.snapshotQ, 'push' );
+			controller.requestSnapshot( camId, req, res );
+			var snap = controller.snapshotQ[0];
+			assert.equal( snap.camId, camId );
+			assert.ok( qSpy.calledOnce );
+			done();
+		});
+
+
+		it('should set cancelled to true if request is cancelled', function(done) {
+			var camId = 'another_camera_id';
+			var req = {type: 'request'};
+			var res = {type: 'response'};
+
+			var Res = function() {
+			};
+
+			util.inherits( Res, EventEmitter );
+
+			res = new Res();
+
+			res.end = function() { done() };
+			res.writeHead = function() {};
+			res.json = function() {};
+
+
+			req.query = {};
+
+			controller.requestSnapshot( camId, req, res );
+			var snap = controller.snapshotQ[ controller.snapshotQ.length - 1];
+
+			assert.ok( !snap.cancelled );
+			res.emit('close');
+
+			setTimeout( function() {
+				assert.ok( snap.cancelled );
+				done();
+			},100);
 		});
 	});
 

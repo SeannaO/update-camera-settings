@@ -310,6 +310,151 @@ describe('Camera', function(){
 		});
 	});
 
+	describe('motionHandler', function() {
+		var cam;
+		before( function(done) {
+			new Camera( cam_with_streams, videosFolder, function(new_cam){
+				cam = new_cam;
+				done();
+			});
+		});
+
+		it('should do nothing if motion is disabled', function(done) {
+			cam.setMotionParams({
+				enabled: false
+			});
+			cam.motionHandler();
+			done();
+		});
+
+		it('should do nothing if motionGrid is invalid', function(done) {
+			cam.setMotionParams({
+				enabled: true
+			});
+			cam.motionHandler();
+			cam.motionHandler('acasjdhajkhsa');
+			done();
+		});
+
+		it('should emit motionEvent with correct params if there is new motion in ROI', function(done) {
+			
+			cam.setMotionParams({
+				enabled: true,
+			});
+			var roi = '';
+			var motion = '';
+			for (var i = 0; i < 100; i++) {
+				roi += '1';
+				motion += 'a';
+			}
+			cam.motion = null;
+			cam.setROI( roi );
+			cam.on('motionEvent', function( d ) {
+				assert.ok(!!cam.motion);
+				assert.equal(d.id, cam._id);
+				done();
+			});
+			cam.motionHandler( motion );
+
+		});
+	});
+
+
+	describe('removeStream', function() {
+		var cam;
+		before( function(done) {
+			new Camera( cam_with_streams, videosFolder, function(new_cam){
+				cam = new_cam;
+				done();
+			});
+		});
+
+		it('should close recordModel of the stream to be deleted', function() {
+			var streamId = Object.keys(cam.streams)[0];
+			var recordSpy = sinon.spy(cam.streams[ streamId ].recordModel, 'quitRecording');
+			cam.removeStream(streamId);
+			assert.ok( recordSpy.calledOnce );
+		});
+
+		it('should do nothing if the stream does not exist', function() {
+			var streamId = 'this_id_does_not_exist';
+			cam.removeStream( streamId );
+		});
+	});
+
+
+	describe('deleteChunk', function() {
+
+		var cam;
+		var streamId;
+		var file_1, file_2;
+		var thumb_1;
+
+		process.env['BASE_FOLDER'] = videosFolder;
+
+		before( function(done) {
+
+
+
+			new Camera( cam_with_streams, videosFolder, function(new_cam) {
+				cam = new_cam;
+				streamId = Object.keys(cam.streams)[0];
+
+				file_1 = videosFolder+"/"+cam._id+"/"+ streamId + '/a_file.ts';
+				file_2 = videosFolder+"/"+cam._id+"/"+ streamId + '/a_file_2.ts';
+
+				thumb_1 = process.env['BASE_FOLDER'] + '/' + cam._id + '/' + streamId + '/thumbs/a_file.jpg';
+				cam.addChunk( streamId, {
+					start:  '0',
+					end:    '100',
+					file:   file_1
+				});
+				cam.addChunk( streamId, {
+					start:  '0',
+					end:    '100',
+					file:   file_2
+				});
+				setTimeout( function() {
+					done();
+				}, 100);
+			});
+		});
+
+		it('should just callback with there is not such stream', function(done) {
+			cam.deleteChunk('no_such_stream', {}, function() {
+				done();
+			});
+		});
+
+		it('should delete video file and its corresponding thumbnail', function(done) {
+			fse.ensureFileSync( file_1 );
+			fse.ensureFileSync( file_2 );
+			fse.ensureFileSync( thumb_1 );
+			
+			var chunk = {
+				id: 0,
+				file: file_1
+			};
+			cam.deleteChunk( streamId, chunk, function() {
+				var videoExists = fs.existsSync( file_1 );
+				var thumbExists = fs.existsSync( thumb_1 );
+				assert.ok(!videoExists);
+				assert.ok(!thumbExists);
+				done();
+			});
+		});
+
+		it('should callback when the chunk is not indexed', function(done) {
+			var chunk = {
+				id: 1000,
+				file: file_2
+			}
+			fse.ensureFileSync( file_2 );
+			cam.deleteChunk( streamId, chunk, function() {
+				done();
+			});
+		});
+	});
 });
 
 

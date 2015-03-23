@@ -5,6 +5,8 @@ var sinon = require("sinon");
 var Dblite = require('../db_layers/dblite.js');
 var dblite_driver = require('dblite');
 
+var dbUtil = require('./lib/db_util.js');
+
 var fs = require('fs');
 
 describe('Dblite', function() {
@@ -16,7 +18,7 @@ describe('Dblite', function() {
 			var dbfile = 'tests/fixtures/videosFolder/dblite_create_video_table_test.sqlite';
 			var db = new Dblite(dbfile, function() {
 				
-				checkIfTableExists( dbfile, 'videos', function( exists ) {
+				dbUtil.checkIfTableExists( dbfile, 'videos', function( exists ) {
 					assert( exists );
 					done();
 				});
@@ -33,11 +35,11 @@ describe('Dblite', function() {
 				file: 'a_file'
 			};
 
-			insertData( dbfile, chunk, function(err) {
+			dbUtil.insertData( dbfile, chunk, function(err) {
 
 				var db = new Dblite(dbfile, function() {
 
-					getData( dbfile, function(data) {
+					dbUtil.getData( dbfile, function(data) {
 						assert(data);
 						assert(data.length > 0);
 						assert.equal( data[0].end, chunk.end );
@@ -120,10 +122,10 @@ describe('Dblite', function() {
 					{start: '30', end: '40', file: 'd' }
 				]
 
-				insertData(dbfile, data[0], function() {
-					insertData(dbfile, data[1], function() {
-						insertData(dbfile, data[2], function() {
-							insertData(dbfile, data[3], function() {
+				dbUtil.insertData(dbfile, data[0], function() {
+					dbUtil.insertData(dbfile, data[1], function() {
+						dbUtil.insertData(dbfile, data[2], function() {
+							dbUtil.insertData(dbfile, data[3], function() {
 								db.db.emit('ready');
 							});
 						});
@@ -145,71 +147,6 @@ describe('Dblite', function() {
 
 });
 
-
-
-var checkIfTableExists = function( db_file, table, cb ) {
-
-	var query = "SELECT name FROM sqlite_master WHERE name='" + table + "'";
-	
-	dblite_driver(db_file).query(query, 
-            ['name'], 
-            function(err, data) {
-				if (!err && data.length > 0) cb( true );
-				else cb( false );
-			}
-	);
-};
-
-
-var insertData = function( db, data, cb ) {
-
-	var dblite;
-
-	if (typeof db === 'string') {
-		dblite = dblite_driver(db);
-	} else {
-		dblite = db;
-	}
-
-	var query = "INSERT INTO videos(start, end, file) VALUES(?, ?, ?)";
-
-	dblite.query(query, 
-			[data.start, data.end, data.file],
-			function(err, data) {
-				if ( !err ) cb();
-				else cb( err );
-			}
-	);
-};
-
-
-var getData = function(db, cb) {
-
-	var dblite;
-
-	if (typeof db === 'string') {
-		dblite = dblite_driver(db);
-	} else {
-		dblite = db;
-	}
-
-	
-	var query = 'SELECT file, start, end FROM videos';
-
-    dblite.query(
-        query, 
-        ['file', 'start', 'end'], 
-        function(err, data) {
-            if (err){
-            }
-            if (!data || data.length === 0) {
-                 cb( [] );
-            } else {
-                cb( data );
-            }
-        }
-    );
-};
 
 
 function isEqObjects(obj1, obj2) {
