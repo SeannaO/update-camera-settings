@@ -61,6 +61,7 @@ describe('Camera', function(){
 					var exists = fs.existsSync( videosFolder+"/"+cam_with_streams._id+"/"+ stream_id );
 					assert.ok(exists);
 				}
+				new_cam.stopMotionDetection();
 				done();
 			});
 		});
@@ -75,6 +76,7 @@ describe('Camera', function(){
 
 					assert.ok(!!recordModel);
 				}
+				new_cam.stopMotionDetection();
 				done();
 			});
 		});
@@ -92,8 +94,64 @@ describe('Camera', function(){
 				assert.equal( new_cam.username     , cam.user || '' );
 				assert.equal( new_cam.password     , cam.password || '' );
 				assert.equal( new_cam.manufacturer , cam.manufacturer );
+				new_cam.stopMotionDetection();	
 			}
 			done();
+		});
+	});
+
+	describe('recorder new_chunk listener', function() {
+		cam_with_streams._id = 'startRecording_test_1_' + Math.random();			
+		var cam;
+
+		before( function(done) {
+			new Camera( cam_with_streams, videosFolder, function(new_cam){
+				cam = new_cam;	
+				done();
+			});
+		});
+
+		after( function() {
+			cam.stopRecording();
+		});
+
+		it('should emit new_chunk event', function(done) {
+			var stream;
+			for( var i in cam.streams ) {
+				stream = cam.streams[i];
+			}
+
+			var listener = function( data ) {
+				cam.removeListener('new_chunk', listener);
+				done();
+			};
+
+			cam.on('new_chunk', listener);
+
+			stream.recordModel.emit('new_chunk', {
+			});
+		});
+
+		it('should still emit new_chunk event after stream is restarted', function(done) {
+			var stream;
+			for( var i in cam.streams ) {
+				stream = cam.streams[i];
+			}
+
+			var listener = function(data) {
+				cam.removeListener('new_chunk', listener);
+				done();
+			};
+
+			cam.on('new_chunk', listener);
+
+			cam.restartStream( i );
+			
+			setTimeout( function() {
+				stream.recordModel.emit('new_chunk', {
+				});
+			}, 10);
+			
 		});
 	});
 
@@ -113,6 +171,7 @@ describe('Camera', function(){
 				for (var spy_id in recordingSpies){
 					assert(recordingSpies[spy_id].calledOnce);	
 				}
+				new_cam.stopMotionDetection();
 				done();
 			});
 		});
@@ -132,6 +191,7 @@ describe('Camera', function(){
 				for (var spy_id in recordingSpies){
 					assert(recordingSpies[spy_id].calledOnce);	
 				}
+				new_cam.stopMotionDetection();
 				done();
 			});
 		});
@@ -155,6 +215,8 @@ describe('Camera', function(){
 					assert(recordingSpies[spy_id].calledOnce);
 					recordingSpies[spy_id].restore();
 				}
+
+				new_cam.stopMotionDetection();
 				done();
 			});
 		});
@@ -164,6 +226,14 @@ describe('Camera', function(){
 
 		cam_with_streams._id = 'addChunk_test';
 		var new_cam = new Camera( cam_with_streams, videosFolder );
+		
+		var consoleSpy = sinon.spy(console, 'error');
+
+		it ('should log error and not call db if stream does not exist', function() {
+			new_cam.addChunk('this_stream_does_not_exist', {});
+			assert.ok( consoleSpy.called );
+		});
+
 
 		it('should call db.insertVideo with correct param on corresponding stream', function() {
 
@@ -191,9 +261,6 @@ describe('Camera', function(){
 			}
 		});
 
-		it('should call db.insertVideo with correct param on corresponding stream', function() {
-
-		});
 	});
 
 	describe('deleteChunk', function() {
@@ -280,6 +347,7 @@ describe('Camera', function(){
 				var callback = sinon.stub(stream.db.backup, "restore").yields("empty", null);
 				var reIndexStub = sinon.stub(new_cam, "reIndexDatabaseFromFileStructure", function(stream, storedVideosFolder, cb){if (cb) cb();})
 				// var spy = sinon.spy(new_cam, "reIndexDatabaseFromFileStructure");
+				new_cam.stopMotionDetection();
 				new_cam.restoreBackupAndReindex(stream, function(){
 					assert(reIndexStub.calledOnce);
 					// spy.restore();
@@ -300,6 +368,7 @@ describe('Camera', function(){
 				var getNewestChunksStub = sinon.stub(stream.db, "getNewestChunks").yields([indexItem]);
 				var reIndexStub = sinon.stub(new_cam, "reIndexDatabaseFromFileStructureAfterTimestamp", function(stream, storedVideosFolder, indexItem, cb){if (cb) cb();});
 
+				new_cam.stopMotionDetection();
 				new_cam.restoreBackupAndReindex(stream, function(){
 					assert(reIndexStub.calledOnce);
 					reIndexStub.restore();
@@ -317,6 +386,9 @@ describe('Camera', function(){
 				cam = new_cam;
 				done();
 			});
+		});
+		after(function() {
+			cam.stopMotionDetection();
 		});
 
 		it('should do nothing if motion is disabled', function(done) {
@@ -365,6 +437,7 @@ describe('Camera', function(){
 		before( function(done) {
 			new Camera( cam_with_streams, videosFolder, function(new_cam){
 				cam = new_cam;
+				cam.stopMotionDetection();
 				done();
 			});
 		});
@@ -394,8 +467,6 @@ describe('Camera', function(){
 
 		before( function(done) {
 
-
-
 			new Camera( cam_with_streams, videosFolder, function(new_cam) {
 				cam = new_cam;
 				streamId = Object.keys(cam.streams)[0];
@@ -416,8 +487,11 @@ describe('Camera', function(){
 				});
 				setTimeout( function() {
 					done();
-				}, 100);
+				}, 10);
 			});
+		});
+		after( function() {
+			cam.stopMotionDetection();
 		});
 
 		it('should just callback with there is not such stream', function(done) {

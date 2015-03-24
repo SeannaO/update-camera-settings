@@ -95,4 +95,61 @@ describe('SensorModel', function() {
 	});
 
 
+	describe('_getDbFile', function() {
+
+		it('should add a new SensorDbLite object to the cache and return it in a callback', function(done) {
+			var fileName = __dirname + '/../fixtures/videosFolder/random_sensor_db_file'+Math.random()+'.sqlite';
+			Sensor._getDbFile( fileName, function(db) {
+				assert.ok( fs.existsSync(fileName) );
+				assert.ok( !!db );	
+				done();
+			});
+		});
+
+		it('should remove and close oldest database if cache length exceeds maxSize', function(done) {
+			
+			var filename = __dirname + '/../fixtures/videosFolder/random_sensor_db_file_'+Math.random()+'.sqlite';
+			var closeCounter = 0;
+
+			Sensor.maxSize = 5;
+			Sensor.cache = {};
+			for( var i = 0; i < Sensor.maxSize+1; i++) {
+				Sensor.cache['db_' + i] = {
+					time: i,
+					db: {
+						close: function( cb ) {
+							closeCounter++;
+							if (cb) cb();
+						}
+					}
+				}
+			}
+
+			Sensor._getDbFile( filename, function(db) {
+				assert.ok(!Sensor.cache['db_0']);
+				assert.ok(!!Sensor.cache['db_1']);
+				assert.equal(closeCounter, 1);
+				done();
+			});
+		});
+
+		it('should set current time if object is already in cache', function(done) {
+			var fakeDb = {
+				name: 'test',
+				close: function( cb ) {
+					if (cb) cb();
+				}
+			};
+			Sensor.cache['db'] = {
+				db: fakeDb
+			};
+
+			Sensor._getDbFile( 'db', function( db ) {
+				assert.equal(db.name, 'test');
+				assert.ok( Date.now() - Sensor.cache['db'].time < 100 );
+				done();
+			});
+		});
+	});
+	
 });

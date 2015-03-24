@@ -16,6 +16,7 @@ describe('CamerasController', function() {
 	fse.removeSync( __dirname + '/../fixtures/cameras_controller_test/*' );
 
 	var controller;
+
 	before( function(done) {
 		controller = new CamerasController( mp4Handler, db_file, videosFolder, function() {
 			done();
@@ -217,6 +218,24 @@ describe('CamerasController', function() {
 		});
 	});
 
+	describe('getOldestChunks', function() {
+		
+// 		controller.cameras = [];
+//
+// 		for(var i = 0; i < 5; i++) {
+// 			var cam = {
+// 				ip:            "192.168.215.102",
+// 				type:          "onvif",
+// 				status:        "missing camera stream(s)",
+// 				manufacturer:  "unknown",
+// 				id:            'id_' + Math.random()
+// 			};
+//
+// 		}
+			// controller.insertNewCamera(cam,function(err,camera){
+			// var spy = sinon.spy(controller, 'pushCamera');
+
+	});
 });
 
 
