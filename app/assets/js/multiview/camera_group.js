@@ -144,7 +144,7 @@ CameraGroup.prototype.load = function( cb ) {
 	}
 
 	self.el.show();
-	$('.video-container', this.el).css('width', '1px');
+	$('.video-container', this.el).css('width', '2px');
 	$('.video-container', this.el).css('height', '10px');
 	$('.video-container', this.el).css('opacity', '0.1');
 
@@ -163,7 +163,7 @@ CameraGroup.prototype.load = function( cb ) {
 			$('#mini-cam-'+id).removeClass('mini-cam-active');
 		}
 		if (cb) cb();
-	}, 5000);
+	}, 10000);
 };
 
 

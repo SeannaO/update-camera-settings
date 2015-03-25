@@ -170,6 +170,7 @@ Camera.prototype.appendTo = function( parentEl ) {
 Camera.prototype.addPlayer = function() {
 
 	var p = Math.random()*100 % 5;
+	p = Math.round(p);
 	this.player = new Player( this.el, ports[p] );
 	var camId = this.cam_data._id;
 	var streamId = this.cam_data.streams[0].id;

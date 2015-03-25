@@ -121,7 +121,7 @@ GroupsManager.prototype.rotate = function() {
 			next_g = ( next_g + 1 ) % 5;
 		}
 		self.rotateGroupWithDelay( next_g );
-	}, 20000);
+	}, 50000);
 };
 
 
