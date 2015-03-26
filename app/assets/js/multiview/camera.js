@@ -178,7 +178,8 @@ Camera.prototype.addPlayer = function() {
 
 
 	if (this.cam_data.status == 'offline') {
-		this.el.append('<div style="width:100%;height:100%; background:rgb(200,200,200);padding: 10px;">camera offline</div>');
+		$(this.el).find('.offline-overlay').remove();
+		this.el.append('<div class="offline-overlay" style="width:100%;height:100%; background:rgb(200,200,200);padding: 10px;">camera offline</div>');
 	} else {
 		this.player.playVideo( camId, streamId );
 	}
