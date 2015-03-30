@@ -112,8 +112,8 @@ var scan = function(prefix, cb ) {
 			}
 			foundCams = foundCams.concat(onvif);
 			console.log("[scanner.scan] done scanning cameras");
+			busy = false;
 			if (cb) {
-				busy = false;
 				emitter.emit('status', {
 					busy: false
 				});
