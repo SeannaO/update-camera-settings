@@ -826,6 +826,10 @@ CamerasController.prototype.setup = function( cb ) {
 				cb( err );
 			} else {
 				var total = docs.length;
+				if (total == 0) {
+					if (cb) cb();
+					return;
+				}
 				for ( var k = 0; k < docs.length; k++ ) {
 					var cam = docs[k];
 					var newCam = new Camera(cam, self.videosFolder, function(cam) { 
@@ -834,7 +838,6 @@ CamerasController.prototype.setup = function( cb ) {
 						if( total<=0 && cb ) cb();
 					});
 				}
-				// cb();
 			}
 		});    
 	});
