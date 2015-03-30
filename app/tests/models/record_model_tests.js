@@ -79,6 +79,18 @@ describe('RecordModel', function() {
 	var cam = new CameraModel( cam_with_streams, 'tests/fixtures/videosFolder');
 	var cam_2 = new CameraModel( cam_with_streams_2, 'tests/fixtures/videosFolder');
 	
+	after( function(done) {
+		for(var i in cam) {
+			if( cam.streams[i] ) cam.streams[i].removeStream();
+		}
+
+		for(var i in cam_2) {
+			if( cam_2.streams[i] ) cam_2.streams[i].removeStream();
+		}
+
+		done();
+	});
+
 	describe('constructor', function() {		
 		it('should initialize all attributes correctly', function() {
 			
