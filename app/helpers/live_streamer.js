@@ -26,7 +26,11 @@ Streamer.prototype.initServer = function() {
 
 	try {
 		console.log('[live_stream initServer] closing server if already running');
-		if (this.server) this.server.close();
+		try {
+			if (this.server) this.server.close();
+		} catch( err ) {
+			console.error('[Streamer.initServer]  ' + err);
+		}
 	} catch(err) {
 		console.log('[live_stream initServer] server not running');
 	}	
@@ -130,7 +134,11 @@ Streamer.prototype.stop = function() {
 		this.socket.unpipe();
 		this.socket.destroy();
 	}
-	this.server.close();
+	try {
+		this.server.close();
+	} catch(err) {
+		console.error('[Streamer.stop]  ' + err);
+	}
 
 	clearInterval( this.bpsInterval );
 };
