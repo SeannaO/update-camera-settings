@@ -78,6 +78,11 @@ MotionStreamer.prototype.initServer = function() {
 			} 			
 		});
 	});
+
+	this.server.on('error', function(err) {
+		console.error('[MotionStreamer]  ' + err);
+	});
+
 	
 	this.initSocketFile();
 };
@@ -107,7 +112,12 @@ MotionStreamer.prototype.stop = function() {
 		this.socket.unpipe();
 		this.socket.destroy();
 	}
-	this.server.close();
+
+	try {
+		this.server.close();
+	} catch(err) {
+		console.error('[MotionStreamer.stop]  ' + err);
+	}
 };
 
 
