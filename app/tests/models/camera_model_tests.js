@@ -41,8 +41,18 @@ var cam_without_streams = {
 
 var videosFolder = "tests/fixtures/videosFolder"; 
 
+var deleteCamera = function( cam ) {
+	cam.stopRecording();
+	cam.stopMotionDetection();
+	cam.removeAllListeners();
+
+	// for (var i in cam.streams){
+	// 	cam.removeStream( i );	
+	// }
+};
+
+
 after(function(done) {
-	fse.removeSync( __dirname + '/../fixtures/cameras_controller_test/*' );
 	fse.removeSync( __dirname + '/../fixtures/videosFolder/*' );
 	done();
 });
@@ -61,7 +71,9 @@ describe('Camera', function(){
 					var exists = fs.existsSync( videosFolder+"/"+cam_with_streams._id+"/"+ stream_id );
 					assert.ok(exists);
 				}
-				new_cam.stopMotionDetection();
+				
+				deleteCamera( new_cam );
+
 				done();
 			});
 		});
@@ -76,7 +88,8 @@ describe('Camera', function(){
 
 					assert.ok(!!recordModel);
 				}
-				new_cam.stopMotionDetection();
+
+				deleteCamera( new_cam );
 				done();
 			});
 		});
@@ -94,7 +107,8 @@ describe('Camera', function(){
 				assert.equal( new_cam.username     , cam.user || '' );
 				assert.equal( new_cam.password     , cam.password || '' );
 				assert.equal( new_cam.manufacturer , cam.manufacturer );
-				new_cam.stopMotionDetection();	
+
+				deleteCamera(new_cam);
 			}
 			done();
 		});
@@ -107,6 +121,7 @@ describe('Camera', function(){
 		before( function(done) {
 			new Camera( cam_with_streams, videosFolder, function(new_cam){
 				cam = new_cam;	
+				deleteCamera(new_cam);
 				done();
 			});
 		});
@@ -171,7 +186,7 @@ describe('Camera', function(){
 				for (var spy_id in recordingSpies){
 					assert(recordingSpies[spy_id].calledOnce);	
 				}
-				new_cam.stopMotionDetection();
+				deleteCamera( new_cam );
 				done();
 			});
 		});
@@ -191,7 +206,8 @@ describe('Camera', function(){
 				for (var spy_id in recordingSpies){
 					assert(recordingSpies[spy_id].calledOnce);	
 				}
-				new_cam.stopMotionDetection();
+
+				deleteCamera(new_cam);
 				done();
 			});
 		});
@@ -216,7 +232,7 @@ describe('Camera', function(){
 					recordingSpies[spy_id].restore();
 				}
 
-				new_cam.stopMotionDetection();
+				deleteCamera( new_cam );
 				done();
 			});
 		});
@@ -228,6 +244,10 @@ describe('Camera', function(){
 		var new_cam = new Camera( cam_with_streams, videosFolder );
 		
 		var consoleSpy = sinon.spy(console, 'error');
+
+		after( function() {
+			deleteCamera( new_cam );
+		});
 
 		it ('should log error and not call db if stream does not exist', function() {
 			new_cam.addChunk('this_stream_does_not_exist', {});
@@ -491,7 +511,7 @@ describe('Camera', function(){
 			});
 		});
 		after( function() {
-			cam.stopMotionDetection();
+			deleteCamera( cam );
 		});
 
 		it('should just callback with there is not such stream', function(done) {

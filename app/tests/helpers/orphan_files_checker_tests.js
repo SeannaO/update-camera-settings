@@ -29,7 +29,15 @@ describe('OrphanFilesChecker', function() {
 
 	after(function(done) {
 		fse.removeSync( videosFolder );
-		done();
+		
+		for(var i in camerasController.cameras) {
+			var cam_id = camerasController.cameras[i]._id;
+			camerasController.removeCamera( cam_id, function(){});
+		}
+
+		setTimeout( function() {
+			done();
+		}, 10);	
 	});
 
 	describe('constructor', function() {

@@ -13,13 +13,24 @@ describe('CamerasController', function() {
 	var db_file = __dirname + '/../fixtures/files/cam_db';
 	var videosFolder = __dirname + '/../fixtures/cameras_controller_test';
 
-	fse.removeSync( __dirname + '/../fixtures/cameras_controller_test/*' );
-
 	var controller;
+	var camera_1;
 
 	before( function(done) {
+		fse.removeSync( __dirname + '/../fixtures/cameras_controller_test/*' );
 		controller = new CamerasController( mp4Handler, db_file, videosFolder, function() {
-			done();
+			var cam = {
+				ip:            "192.168.215.102",
+				type:          "onvif",
+				status:        "missing camera stream(s)",
+				manufacturer:  "unknown",
+				id:            Math.random()
+			};
+
+			controller.insertNewCamera(cam, function(err,camera){
+				camera_1 = camera;
+				done();
+			});
 		});
 	});
 
@@ -27,7 +38,14 @@ describe('CamerasController', function() {
 		clearInterval( controller.orphanFilesChecker.checkOrphanFilesInterval );
 		fse.removeSync( __dirname + '/../fixtures/cameras_controller_test/*' );
 		fse.removeSync( __dirname + '/../fixtures/videosFolder/*' );
-		done();
+		for(var i in controller.cameras) {
+			var cam_id = controller.cameras[i]._id;
+			controller.removeCamera( cam_id, function(){});
+		}
+
+		setTimeout( function() {
+			done();
+		}, 10);	
 	});
 
 
@@ -137,8 +155,65 @@ describe('CamerasController', function() {
 	});
 
 
+	describe('removeStream', function() {
+
+		var cam;
+		var cam_id = 'controller.removeStream.' + Math.random();
+
+		var stream_id = '_' + Date.now();
+
+		before( function(done) {
+			var cam_data = {
+				ip:            "192.168.215.102",
+				type:          "onvif",
+				status:        "missing camera stream(s)",
+				manufacturer:  "unknown",
+				id:            cam_id
+			};
+
+			controller.insertNewCamera(cam_data, function(err,camera){
+				cam = camera;
+				cam.addStream({
+					id: stream_id,
+					motionParams: {
+						enabled: false
+					}
+				}, function() {
+					cam_id = cam._id;
+					stream_id = Object.keys( cam.streams )[0];
+
+					var streamsHash = {};
+					streamsHash[stream_id] = {
+						'id': stream_id
+					};
+
+					controller.db.update({ _id: cam_id }, { 
+						$set: {
+							streams: streamsHash
+						} 
+					}, {
+						multi: true
+					}, function(err) {
+						controller.db.loadDatabase( function() {
+							done();
+						});
+					});
+
+				});
+			});
+		});
+
+		it('should call camera.removeStream', function(done) {
+			var removeStreamSpy = sinon.spy(cam, 'removeStream');
+			controller.removeStream( cam._id, stream_id, function(err) {
+				assert.ok( removeStreamSpy.calledOnce );
+				done();
+			});
+		});
+	});
+
 	describe('listCameras', function() {
-		
+
 		it( 'should callback with all cameras', function( done ) {
 
 			var cameras = controller.cameras;
@@ -154,7 +229,7 @@ describe('CamerasController', function() {
 	
 	describe('listVideosByCamera', function() {
 		it('should  return if camera or stream is not found', function() {
-			
+
 			var camId = controller.cameras[0]._id;
 			controller.listVideosByCamera('no_camera', 'no_stream', 0, 100, function() {
 			});
@@ -218,23 +293,153 @@ describe('CamerasController', function() {
 		});
 	});
 
-	describe('getOldestChunks', function() {
-		
-// 		controller.cameras = [];
-//
-// 		for(var i = 0; i < 5; i++) {
-// 			var cam = {
-// 				ip:            "192.168.215.102",
-// 				type:          "onvif",
-// 				status:        "missing camera stream(s)",
-// 				manufacturer:  "unknown",
-// 				id:            'id_' + Math.random()
-// 			};
-//
-// 		}
-			// controller.insertNewCamera(cam,function(err,camera){
-			// var spy = sinon.spy(controller, 'pushCamera');
+	describe('deleteOldestChunks', function() {
 
+		var cam;
+		var cam_id = 'controller.deleteOldestChunks.' + Math.random();
+		var stream_id = Math.random() + '_' + Date.now();
+
+		var chunks = [];
+
+		for (var i = 0; i < 10; i++) {
+			chunks.push({
+				id:         i+1,
+				cam_id:     cam_id,
+				stream_id:  stream_id,
+				start:      1 + 1*i,
+				end:        2 + 10*i,
+				file:       __dirname + '/../fixtures/videosFolder/another_file_' + Math.random(),
+			});
+		}
+
+		before( function(done) {
+
+			var cam_data = {
+				ip:            "192.168.215.102",
+				type:          "onvif",
+				status:        "missing camera stream(s)",
+				manufacturer:  "unknown",
+				id:            cam_id
+			};
+
+			controller.insertNewCamera(cam_data, function(err,camera){
+				cam = camera;
+				cam.addStream({
+					id: stream_id,
+					motionParams: {
+						enabled: false
+					}
+				}, function() {
+
+					for(var i in chunks){
+						fse.ensureFileSync(chunks[i].file);
+						cam.addChunk( stream_id, chunks[i] );
+					}
+
+					done();
+				});
+			});
+		});
+
+		it('should add n oldest chunks to deletion queue', function(done) {
+
+			var deletionSpy = sinon.spy( controller, 'addChunksToDeletionQueue' );
+			controller.deleteOldestChunks( 3, function( oldChunks ) {
+				for (var i = 0; i < 3; i++) {
+					assert.equal(chunks[i].file, oldChunks[i].file);
+				}
+				assert.ok( deletionSpy.calledOnce );
+				done();
+			});
+		});
+
+	});
+
+
+	describe('deleteChunk', function() {
+
+		var cam;
+		var cam_id = 'controller.deleteChunk.' + Math.random();
+
+		var stream_id = Math.random() + '_' + Date.now();
+
+		before( function(done) {
+			var cam_data = {
+				ip:            "192.168.215.102",
+				type:          "onvif",
+				status:        "missing camera stream(s)",
+				manufacturer:  "unknown",
+				id:            cam_id
+			};
+
+			controller.insertNewCamera(cam_data, function(err,camera){
+				cam = camera;
+				cam.addStream({
+					id: stream_id,
+					motionParams: {
+						enabled: false
+					}
+				}, function() {
+					done();
+				});
+			});
+		});
+
+
+		it('should delete a chunk if it exists', function(done) {
+
+			var stream_id;
+			stream_id = 'delete_chunk_' + Math.random() + '_' + Date.now();
+
+			cam.addStream({
+				id: stream_id,
+				motionParams: {
+					enabled: false
+				}
+			}, function() {
+
+				var chunk = {
+					id: 1,
+					cam_id: 	cam._id,
+					stream_id:  stream_id,
+					start:      1,
+					end:        10,
+					file:       __dirname + '/../fixtures/videosFolder/another_file_' + Math.random(),
+				};
+
+				fse.ensureFileSync( chunk.file );
+				cam.addChunk( stream_id, chunk );
+				var exists = fs.existsSync(chunk.file);
+				setTimeout( function() {
+					controller.deleteChunk( chunk, function(data) {
+						var exists = fs.existsSync( chunk.file );
+						assert.ok( !exists );
+						done();
+					});
+				},10);
+			});
+		});
+
+		it('should callback error if camera does not exist', function( done ) {
+
+			var chunk = {
+				id: 1,
+				cam_id: 	'does_not_exist',
+				stream_id:  'does_not_exist',
+				start:      1,
+				end:        10,
+				file:       __dirname + '/../fixtures/videosFolder/another_file_' + Math.random(),
+			};
+
+			controller.deleteChunk( chunk, function(err) {
+				console.log(err);
+				done();
+			});
+		});
+	});
+
+
+	describe('getOldestChunks', function() {
 	});
 });
 

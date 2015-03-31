@@ -128,7 +128,7 @@ describe('Dblite', function() {
 
 		it('should correctly return videos', function( done ) {
 			
-			var dbfile = 'tests/fixtures/videosFolder/dblite_create_video_table_test_2.sqlite';
+			var dbfile = 'tests/fixtures/videosFolder/dblite_create_video_table_test_'+Math.random()+'.sqlite';
 			var db = new Dblite(dbfile, function() {
 
 				var data = [
