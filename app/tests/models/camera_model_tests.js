@@ -475,6 +475,76 @@ describe('Camera', function(){
 		});
 	});
 
+	describe('toJSON', function() {
+
+		var cam;
+		var stream_id = '_' + Date.now();
+
+		before( function(done) {
+			new Camera( cam_with_streams, videosFolder, function(new_cam) {
+				cam = new_cam;
+
+				cam.addStream({
+					id: stream_id,
+					motionParams: {
+						enabled: false
+					}
+				}, function() {
+					done();
+				});
+			});
+		});
+
+		it('should return a json with camera data', function() {
+			var json = cam.toJSON();
+			for(var i in json) {
+				if (i !== 'streams') assert.equal( cam[i], json[i] );
+			}
+		});
+
+		after( function() {
+			deleteCamera( cam );
+		});
+	});
+
+	describe('updateStream', function() {
+		var cam;
+		var stream_id = '_' + Date.now();
+
+		before( function(done) {
+			new Camera( cam_with_streams, videosFolder, function(new_cam) {
+				cam = new_cam;
+
+				cam.addStream({
+					id: stream_id,
+					motionParams: {
+						enabled: false
+					}
+				}, function() {
+					done();
+				});
+			});
+		});
+
+		after( function() {
+			deleteCamera( cam );
+		});
+
+		it('should call restartStream if any of the restatParams have changed', function(done) {
+
+			var updateStreamSpy = sinon.spy(cam, 'updateStream');
+
+			cam.updateStream({
+				id: stream_id,
+				resolution: 'new_resolution'
+			}, function() {
+			});
+			
+			assert.ok( updateStreamSpy.calledOnce );
+			done();
+		});
+	});
+
 
 	describe('deleteChunk', function() {
 

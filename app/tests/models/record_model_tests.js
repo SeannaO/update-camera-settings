@@ -141,6 +141,51 @@ describe('RecordModel', function() {
 	// end of startRecording tests
 	//
 
+	describe('calcDuration', function() {
+//
+		var recordModel;
+
+		before( function(done) {
+			recordModel = new RecordModel( cam, cam.streams['stream_1'], function() {
+				done();
+			});
+		});
+
+		after( function() {
+			// recordModel.stopRecording();	
+		});
+//
+// 			
+		it('should callback json object with correct file info', function(done) {
+			var fileName = '09.58s_chunk';
+			var file = __dirname + '/../fixtures/files/' + fileName + '.ts';
+			recordModel.calcDuration( file, function(err, d) {
+				assert.equal(d.file, file);	
+				var duration = d.end - d.start;
+				assert.equal(duration, 9580);
+				done();
+			});
+		});
+	});
+
+
+	describe('receiveSignal', function() {
+		var recordModel;
+
+		before( function(done) {
+			recordModel = new RecordModel( cam, cam.streams['stream_1'], function() {
+				done();
+			});
+		});
+
+		it('should call moveFile if new_chunk belongs to record model stream', function(done) {
+			var moveFileSpy = sinon.spy(recordModel, 'moveFile');
+			var args = '{"id":"'+recordModel.stream.id+'"}'
+			recordModel.receiveSignal( '', args );	
+			assert(moveFileSpy.calledOnce);
+			done();
+		});
+	});
 
 	describe('stopRecording', function() {
 
