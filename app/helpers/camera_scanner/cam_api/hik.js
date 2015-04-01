@@ -3,46 +3,14 @@ var xml2js      = require('xml2js').parseString;
 
 var rtsp_url = 'http://{username}:{password}@{ip}/Channels/{channel}';
 
-var Hik = function() {
-	this.password;
-	this.username;
-	this.ip;
-};
+var getResolutions = function( ip, username, password, channel, cb ) {
 
-Hik.prototype.apiName = function() {
-	return 'hik';
-};
+	console.error('IP: ' + ip);
+	var url = 'http://' + username + ':' + password + '@' + ip + '/streaming/channels/'+channel+'/capabilities';
 
-Hik.prototype.checkForExistingProfile = function( profileName, cb ) {
-};
-
-
-Hik.prototype.isProfileH264 = function( profileId, cb ){
-
-};
-
-
-Hik.prototype.updateProfile = function(profileId, profile, cb) {
-
-};
-
-
-Hik.prototype.getRtspUrl = function ( profile ) {
-
-	return profile.suggested_url;
-};
-
-
-Hik.prototype.getResolutionOptions = function(cb) {
-
-	if (!this.ip) {
-		if(cb) cb('no ip');
-		return;
-	}
-
-
+	console.error(url);
 	request({
-		url: 'http://' + this.username + ':' + this.password + '@' + this.ip + '/streaming/channels/1/capabilities',
+		url: url,
 		headers: {
 			'User-Agent': 'nodejs'
 		}
@@ -99,6 +67,76 @@ Hik.prototype.getResolutionOptions = function(cb) {
 			});
 		}
 	);
+};
+
+var Hik = function() {
+	this.password;
+	this.username;
+	this.ip;
+};
+
+Hik.prototype.apiName = function() {
+	return 'hik';
+};
+
+Hik.prototype.checkForExistingProfile = function( profileName, cb ) {
+};
+
+
+Hik.prototype.isProfileH264 = function( profileId, cb ){
+
+};
+
+
+Hik.prototype.updateProfile = function(profileId, profile, cb) {
+
+};
+
+
+Hik.prototype.getRtspUrl = function ( profile ) {
+
+	return profile.suggested_url;
+};
+
+
+Hik.prototype.getResolutionOptions = function(cb) {
+
+	var self = this;
+
+	if (!this.ip) {
+		if(cb) cb('no ip');
+		return;
+	}
+	
+	var currentResolutions = {};
+
+	var resolutions = [];
+	var error; 
+
+	getResolutions(this.ip, this.username, this.password, 1, function(err, res) {
+		for (var i in res) {
+			if (!currentResolutions[res[i].name]) {
+				currentResolutions[res[i].name] = true;
+				resolutions.push( res[i] );
+			}
+		}
+		error = error || err;
+		getResolutions(self.ip, self.username, self.password, 2, function(err, res) {
+			for (var i in res) {
+				if (!currentResolutions[res[i].name]) {
+					currentResolutions[res[i].name] = true;
+					resolutions.push( res[i] );
+				}
+			}
+			error = error || err;
+			if( res.length == 0 && error ) {
+				cb(error, []);
+			} else {
+				cb( null, resolutions );
+			}
+		});
+	});
+
 };
 
 Hik.prototype.setCameraParams = function(params) {
