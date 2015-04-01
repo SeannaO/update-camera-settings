@@ -1,6 +1,7 @@
 var api_list = {
-	'arecont':	'arecont.js',
-	'axis':		'axis.js'
+	'arecont':  'arecont.js',
+	'axis':     'axis.js',
+	'hik':      'hik.js'
 };
 
 // The bosch api is not ready yet once it works it can be added to the list
