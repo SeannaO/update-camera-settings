@@ -578,7 +578,7 @@ Camera.prototype.updateAllStreams = function( new_streams, cb ) {
 			});		// adds new stream if 'id' is blank or doesn't match
 		} else {
 			self.updateStream( stream );	// ...or updates exiting stream otherwise
-			total --;
+			total--;
 			if (total <= 0 && cb) cb();
 		}
 	}
