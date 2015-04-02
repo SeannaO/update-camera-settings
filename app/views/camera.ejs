@@ -213,7 +213,7 @@
 
 				$('#video-time').fadeIn();
 
-				if( preview.cancel ) preview.cancel();
+				if( preview && preview.cancel ) preview.cancel();
 
 				preview = new Preview( '#preview' );
 				preview.showMarker();
