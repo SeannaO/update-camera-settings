@@ -19,9 +19,10 @@ Generic.prototype.updateProfile = function(profileId, profile, cb) {
 };
 
 
-Generic.prototype.getRtspUrl = function ( profile ) {
+Generic.prototype.getRtspUrl = function ( profile, cb ) {
 
-	return profile.suggested_url;
+
+	if(cb) cb(profile.suggested_url);
 };
 
 

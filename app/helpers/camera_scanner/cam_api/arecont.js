@@ -16,12 +16,13 @@ Arecont.prototype.apiName = function() {
 	return 'Arecont';
 };
 
-Arecont.prototype.getRtspUrl = function (profile ) {
+Arecont.prototype.getRtspUrl = function (profile, cb ) {
 
 	var self = this;
 
 	if (!profile) {
 		console.error("[Arecont] ERROR - empty profile");
+		cb();
 		return;
 	}
 	
@@ -36,12 +37,13 @@ Arecont.prototype.getRtspUrl = function (profile ) {
 	// 	res = 'half';
 	// }
 
-	return rtspUrl
+	var url = rtspUrl
 		.replace('{user}', this.username || '')
 		.replace('{pass}', this.password || '')
 		.replace('{ip}', this.ip)
 		.replace('{resolution}', res)
 		.replace('{framerate}', profile.framerate);
+	if(cb) cb(url);
 };
 
 Arecont.prototype.cameraUrl = function () {

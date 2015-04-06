@@ -253,12 +253,13 @@ Axis.prototype.createProfile = function( profile ) {
 };
 
 
-Axis.prototype.getRtspUrl = function ( profile ) {
+Axis.prototype.getRtspUrl = function ( profile, cb ) {
 
 	var self = this;
 
 	if ( !profile ) {
 		console.error('[Axis.getRtspUrl] ERROR - empty profile');
+		if(cb) cb();
 		return;
 	}
 
@@ -269,7 +270,7 @@ Axis.prototype.getRtspUrl = function ( profile ) {
 	var isEncoder = !isNaN(profile.camera_no);
 
 	if (!isEncoder) {
-		return rtspUrl
+		var url = rtspUrl
 			.replace('{user}', self.cam.user || '')
 			.replace('{pass}', self.cam.password || '')
 			.replace('{profile_name}', profile.name)
@@ -278,9 +279,10 @@ Axis.prototype.getRtspUrl = function ( profile ) {
 			.replace('{framerate}', profile.framerate || '15')
 			.replace('{compression}', 40)
 			.replace('{max_bitrate}', 512);
+		if(cb) cb(url);
 	} else {
 		var cam_no = parseInt(profile.camera_no) + 1;
-		return rtspUrlEncoder
+		var url = rtspUrlEncoder
 			.replace('{user}', self.cam.user || '')
 			.replace('{pass}', self.cam.password || '')
 			.replace('{profile_name}', profile.name)
@@ -290,6 +292,7 @@ Axis.prototype.getRtspUrl = function ( profile ) {
 			.replace('{compression}', 40)
 			.replace('{max_bitrate}', 512)
 			.replace('{camera_no}', cam_no);
+		if(cb) cb(url);
 	}
 };
 
