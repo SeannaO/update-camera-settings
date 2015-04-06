@@ -139,17 +139,24 @@ Camera.prototype.addStream = function( stream, cb ) {
 
 	var self = this;
 	stream.db = new Dblite( this.videosFolder + '/db_' + stream.id + '.sqlite', function(db){
-		if (!stream.toBeDeleted) {
 
-			stream.url = self.api.getRtspUrl({
-				resolution:     stream.resolution,
-				framerate:      stream.framerate,
-				quality:        stream.quality,
-				suggested_url:  stream.url,
-				camera_no: 		stream.camera_no
-			});
+		if (stream.toBeDeleted) {
+			self.streamsToBeDeleted[stream.id] = stream;
+			if (cb) cb();
+			return;
+		}
 
+		self.api.getRtspUrl({
+			resolution:     stream.resolution,
+			framerate:      stream.framerate,
+			quality:        stream.quality,
+			suggested_url:  stream.url,
+			camera_no: 		stream.camera_no
+		}, function(url) {
+
+			stream.url = url;
 			self.streams[stream.id] = stream;
+
 			stream.recordModel = new RecordModel( self, stream, function(recorder){
     			var folder = self.videosFolder + '/' + stream.id;
 				stream.streamer = new Streamer(folder + '/videos/pipe.ts');
@@ -247,11 +254,7 @@ Camera.prototype.addStream = function( stream, cb ) {
 				
 				if (cb) cb();
 			});
-
-		} else {
-			self.streamsToBeDeleted[stream.id] = stream;
-			if (cb) cb();
-		}
+		});
 
 		db.db.on('error', function (err) {
 		    console.error(err.toString());
@@ -577,9 +580,10 @@ Camera.prototype.updateAllStreams = function( new_streams, cb ) {
 				if (total <= 0 && cb) cb(); 
 			});		// adds new stream if 'id' is blank or doesn't match
 		} else {
-			self.updateStream( stream );	// ...or updates exiting stream otherwise
-			total--;
-			if (total <= 0 && cb) cb();
+			self.updateStream( stream, function() {
+				total--;
+				if (total == 0 && cb) cb();
+			});	// ...or updates exiting stream otherwise
 		}
 	}
 
@@ -596,7 +600,7 @@ Camera.prototype.updateAllStreams = function( new_streams, cb ) {
 		// removes streams that are not in the array
 		if (streamId && ids.indexOf( streamId ) === -1) {
 			self.removeStream( streamId );
-			total --;
+			total--;
 			if (total <= 0 && cb) cb();
 		}
 	}
@@ -681,7 +685,9 @@ Camera.prototype.updateStream = function( stream, cb ) {
 	
 	if (need_restart) {
 		console.log('*** updateStream: restarting stream after update...');
-		self.restartStream( id );
+		self.restartStream( id, cb );
+	} else {
+		if(cb) cb();
 	}
 };
 // end of updateStream
@@ -741,7 +747,7 @@ Camera.prototype.emitPendingMotion = function(chunk) {
  *
  * @param { streamId } int
  */
-Camera.prototype.restartStream = function( streamId ) {
+Camera.prototype.restartStream = function( streamId, cb ) {
 
 	var self = this;
 
@@ -750,55 +756,61 @@ Camera.prototype.restartStream = function( streamId ) {
 
 	var stream = self.streams[ streamId ];
 
-	// self.streams[streamId].recordModel.stopRecording();
-	self.streams[streamId].recordModel.quitRecording();
+	var oldRecordModel = self.streams[streamId].recordModel;
 
-	delete self.streams[streamId].recordModel;
-	
 	// refreshes rtsp url
-	self.streams[streamId].rtsp = self.streams[streamId].url = self.api.getRtspUrl({
+	self.api.getRtspUrl({
 		resolution:     stream.resolution,
 		framerate:      stream.framerate,
 		quality:        stream.quality,
 		suggested_url:  self.streams[streamId].url,
 		camera_no: 		stream.camera_no
+	}, function(url) {
+
+		// self.streams[streamId].recordModel.stopRecording();
+
+		self.streams[streamId].url = url;
+		self.streams[streamId].rtsp = url;
+		self.streams[streamId].recordModel = new RecordModel( self, self.streams[streamId], function(recorder) {
+			oldRecordModel.quitRecording();
+			delete oldRecordModel;
+
+				// var folder = self.videosFolder + '/' + stream.id;
+				// stream.streamer = new Streamer(folder + '/videos/pipe.ts');
+
+				if ( self.shouldBeRecording() ) {
+					recorder.startRecording();
+				}
+
+				recorder.on('new_chunk', function(data) {
+					data.cause = 'schedule';
+					if (self.motion != null){
+						data.cause = 'motion';
+					}
+					self.emit( 'new_chunk', data);
+					self.emitPendingMotion(data);
+				});
+				recorder.on('camera_status', function(data) {
+					self.status = data.status;
+					self.emit('camera_status', {
+						timestamp:                new Date().getTime(),
+						cam_id:                   self._id,
+						cam_name:                 self.cameraName(),
+						status:                   data.status,
+						stream_id:                data.stream_id
+					});
+				});
+
+				// stream.recordModel can be null here, 
+				// so we assign it again with the object
+				// returned by the RecordModel callback
+				self.streams[streamId].recordModel = recorder;
+				//
+				if (cb) cb();
+		});
+
 	});
 	
-	self.streams[streamId].recordModel = new RecordModel( self, self.streams[streamId], function(recorder) {
-
-			// var folder = self.videosFolder + '/' + stream.id;
-			// stream.streamer = new Streamer(folder + '/videos/pipe.ts');
-
-			if ( self.shouldBeRecording() ) {
-				recorder.startRecording();
-			}
-
-			recorder.on('new_chunk', function(data) {
-				data.cause = 'schedule';
-				if (self.motion != null){
-					data.cause = 'motion';
-				}
-				self.emit( 'new_chunk', data);
-				self.emitPendingMotion(data);
-			});
-			recorder.on('camera_status', function(data) {
-				self.status = data.status;
-				self.emit('camera_status', {
-					timestamp:                new Date().getTime(),
-					cam_id:                   self._id,
-					cam_name:                 self.cameraName(),
-					status:                   data.status,
-					stream_id:                data.stream_id
-				});
-			});
-
-			// stream.recordModel can be null here, 
-			// so we assign it again with the object
-			// returned by the RecordModel callback
-			self.streams[streamId].recordModel = recorder;
-			//
-	});
-
 };
 // end of restartStream
 //
