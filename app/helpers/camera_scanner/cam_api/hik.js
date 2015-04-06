@@ -1,14 +1,35 @@
 var request     = require('request');
 var xml2js      = require('xml2js').parseString;
 
-var rtsp_url = 'http://{username}:{password}@{ip}/Channels/{channel}';
+
+var requestXML = 
+	'<?xml version:"1.0" encoding="UTF-8"?><StreamingChannel xmlns="urn:psialliance-org" version="1.0">'
+	+ '<id>{channel}</id>'
+	+ '<channelName>Solink 01</channelName>'
+	+ '<enabled>true</enabled>'
+	+ ' <Video>'
+	+	'<enabled>true</enabled>'
+	+	'<videoInputChannelID>1</videoInputChannelID>'
+	+	'<videoCodecType>H.264</videoCodecType>'
+	+ 	'<videoResolutionWidth>{width}</videoResolutionWidth>'
+	+ 	'<videoResolutionHeight>{height}</videoResolutionHeight>'
+	+ 	'<videoQualityControlType>vbr</videoQualityControlType>'
+	+ 	'<constantBitRate>512</constantBitRate>'
+	+ 	'<vbrUpperCap>512</vbrUpperCap>'
+	+ 	'<vbrLowerCap>32</vbrLowerCap>'
+	+ 	'<fixedQuality>60</fixedQuality>'
+	+ 	'<maxFrameRate>{fps}</maxFrameRate>'
+	+ 	'</Video>'
+	+ 	'</StreamingChannel>';
+
+var configURL = 'http://{username}:{password}@{ip}/PSIA/Streaming/Channels/{channel}';
+
+var rtsp_url = 'rtsp://{username}:{password}@{ip}/Streaming/Channels/{channel}';
 
 var getResolutions = function( ip, username, password, channel, cb ) {
 
-	console.error('IP: ' + ip);
 	var url = 'http://' + username + ':' + password + '@' + ip + '/streaming/channels/'+channel+'/capabilities';
 
-	console.error(url);
 	request({
 		url: url,
 		headers: {
@@ -30,6 +51,7 @@ var getResolutions = function( ip, username, password, channel, cb ) {
 					return;
 				}
 				var resolutions = [];
+				var fpsData = [];
 				
 				if (!data.StreamingChannel) {
 					if(cb) cb('invalid response: no StreamingChannel tag', []);
@@ -48,6 +70,24 @@ var getResolutions = function( ip, username, password, channel, cb ) {
 					return;
 				}
 
+				// fps options
+				if (!data.maxFrameRate || !data.maxFrameRate[0]) {
+					data.fpsData.push( '1500' );
+				}
+				else {
+					var fpsOpts = data.maxFrameRate[0]['$'];
+					if(!fpsOpts || !fpsOpts.opt) {
+						data.fpsData.push('1500');
+					} else {
+						fpsOpts = fpsOpts.opt;
+						fpsOpts = fpsOpts.split(',');
+						for(var i in fpsOpts) {
+							fpsData.push( parseInt( fpsOpts[i] ) );
+						}
+					}
+				}
+				// --
+
 				data = data.videoResolutionWidth[0]['$'];
 				if (!data || !data.opt) {
 					if(cb) cb('invalid response: no opt tag', []);
@@ -57,13 +97,14 @@ var getResolutions = function( ip, username, password, channel, cb ) {
 				var values = data.opt;
 				values = values.split(',');
 				for(var i in values) {
+					if (!values[i]) continue;
+					values[i] = values[i].replace('*', 'x');
 					resolutions.push({
-						name:   values[i],
+						name:   values[i] + ' - ch ' + channel,
 						value:  values[i]
 					});
 				}
-				console.error(data.opt);
-				if (cb) cb(null, resolutions);
+				if (cb) cb(null, resolutions, fpsData);
 			});
 		}
 	);
@@ -73,6 +114,9 @@ var Hik = function() {
 	this.password;
 	this.username;
 	this.ip;
+
+	this.resolution2channel   = {};
+	this.fpsOptionsPerChannel = {};
 };
 
 Hik.prototype.apiName = function() {
@@ -93,11 +137,81 @@ Hik.prototype.updateProfile = function(profileId, profile, cb) {
 };
 
 
-Hik.prototype.getRtspUrl = function ( profile ) {
+Hik.prototype.getRtspUrl = function ( profile, cb ) {
+	
+	var self = this;
 
-	return profile.suggested_url;
+	var resolution = profile.resolution.split('x');
+
+	self.getResolutionOptions( function() {
+		var channel = self.resolution2channel[ profile.resolution ];
+		var width = resolution[0];
+		var height = resolution[1];
+		var fps = profile.framerate || 15;
+
+		fps *= 100;
+
+		var minDiff,
+			minFps;
+
+		var fpsOpts = self.fpsOptionsPerChannel[channel];
+
+		for (var i in fpsOpts) {
+			var diff = Math.abs( fps - fpsOpts[i] );
+
+			if (isNaN(minDiff) || diff < minDiff) {
+				minFps  = fpsOpts[i];
+				minDiff = diff;
+			}
+		}
+
+		fps = minFps;
+
+		var url = rtsp_url
+			.replace('{ip}', self.ip)
+			.replace('{channel}', channel)
+			.replace('{username}', self.username)
+			.replace('{password}', self.password);
+
+		self.configCamera({
+			channel:  channel,
+			width:    width,
+			height:   height,
+			fps:      fps
+		}, function(err, body) {
+			if(cb) cb(url);
+		});
+	});
 };
 
+
+Hik.prototype.configCamera = function(params, cb) {
+
+	var xml = requestXML
+		.replace('{channel}', 	params.channel)
+		.replace('{width}', 	params.width)
+		.replace('{height}', 	params.height)
+		.replace('{fps}', 		params.fps);
+
+	var url = configURL
+		.replace('{username}', 	this.username)
+		.replace('{password}', 	this.password)
+		.replace('{ip}', 		this.ip)
+		.replace('{channel}', 	params.channel);
+		
+    request({ 
+            method: 'PUT', 
+			body: xml,
+			headers: {
+				'Content-Type': "text/soap+xml; charset=utf-8",
+				'SOAPAction': 	'http://www.axis.com/vapix/ws/action1/AddRecipientConfiguration'	
+			},
+			uri: url,
+            timeout: 5000
+        }, function (error, response, body) {
+			if(cb) cb( error, body );
+		});
+};
 
 Hik.prototype.getResolutionOptions = function(cb) {
 
@@ -113,21 +227,29 @@ Hik.prototype.getResolutionOptions = function(cb) {
 	var resolutions = [];
 	var error; 
 
-	getResolutions(this.ip, this.username, this.password, 1, function(err, res) {
+	getResolutions(this.ip, this.username, this.password, 1, function(err, res, fpsData) {
 		for (var i in res) {
 			if (!currentResolutions[res[i].name]) {
 				currentResolutions[res[i].name] = true;
+				self.resolution2channel[ res[i].value ] = 1;
 				resolutions.push( res[i] );
 			}
+
+			self.addFpsOptions( 1, fpsData );
 		}
 		error = error || err;
-		getResolutions(self.ip, self.username, self.password, 2, function(err, res) {
+		getResolutions(self.ip, self.username, self.password, 2, function(err, res, fpsData) {
 			for (var i in res) {
 				if (!currentResolutions[res[i].name]) {
 					currentResolutions[res[i].name] = true;
+					self.resolution2channel[ res[i].value ] = 2;
 					resolutions.push( res[i] );
 				}
+
 			}
+
+			self.addFpsOptions( 2, fpsData );
+
 			error = error || err;
 			if( res.length == 0 && error ) {
 				cb(error, []);
@@ -139,11 +261,20 @@ Hik.prototype.getResolutionOptions = function(cb) {
 
 };
 
+Hik.prototype.addFpsOptions = function( channel, fpsData ) {
+	var self = this;
+
+	self.fpsOptionsPerChannel[channel] = [];
+	for(var i in fpsData) {
+		self.fpsOptionsPerChannel[channel].push( fpsData[i] );
+	}
+};
+
 Hik.prototype.setCameraParams = function(params) {
 
 	this.password = params.password || this.password;
 	this.username = params.username || this.username;
-	this.ip       = params.ip || this.ip
+	this.ip       = params.ip || this.ip;
 };
 
 
