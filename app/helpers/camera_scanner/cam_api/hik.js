@@ -203,8 +203,7 @@ Hik.prototype.configCamera = function(params, cb) {
             method: 'PUT', 
 			body: xml,
 			headers: {
-				'Content-Type': "text/soap+xml; charset=utf-8",
-				'SOAPAction': 	'http://www.axis.com/vapix/ws/action1/AddRecipientConfiguration'	
+				'Content-Type': "text/xml; charset=utf-8",
 			},
 			uri: url,
             timeout: 5000
