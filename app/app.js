@@ -239,7 +239,7 @@ portChecker.check(8080, function(err, found) {
 				}
 			});
 		} else {
-			if ( username === authCache.username && password === authCache.password ) {
+			if ( username.toLowerCase() === authCache.username.toLowerCase() && password === authCache.password ) {
 				return done( null, true );
 			} else {
 				return done( 'unauthorized', false );
