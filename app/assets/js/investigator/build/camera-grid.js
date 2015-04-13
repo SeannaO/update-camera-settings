@@ -12,7 +12,15 @@ var itemDropTarget = {
 			streams:  item.streams,
 			enable:   item.enable
 		});
-		component.setState({cameras: newCameras});
+
+		var sizes = component.recalculateSizes(newCameras.length);
+		component.setState({
+			cameras:       newCameras,
+			height:        sizes.height,
+			playerWidth:   sizes.playerWidth,
+			playerHeight:  sizes.playerHeight,
+			paddingLeft:   sizes.paddingLeft
+		});
 	}
 };
 
@@ -21,6 +29,7 @@ var CameraGrid = React.createClass({displayName: "CameraGrid",
 
 	mixins: [ReactDND.DragDropMixin],
 
+		
 	statics: {
 		configureDragDrop: function(register) {
 			register('cameraItem', {
@@ -29,20 +38,106 @@ var CameraGrid = React.createClass({displayName: "CameraGrid",
 		}
 	},
 
-	handleResize: function(e) {
-		var el = this.refs.grid.getDOMNode();
-		var width = el.offsetWidth;
+	moveCamera: function(id, afterId) {
+		var cameras = this.state.cameras;
+
+		var camIndex, 
+			afterIndex;
+
+		for(var i in cameras) {
+			if (cameras[i].id == id) camIndex = i;
+			if (cameras[i].id == afterId) afterIndex = i;
+		}
+	
+		var cam = cameras[camIndex];
+
+		this.setState(React.addons.update(this.state, {
+			cameras: {
+				$splice: [
+					[camIndex, 1],
+					[afterIndex, 0, cam]
+				]
+			}
+		}));
+	},
+
+	recalculateSizes: function( n_cameras ) {
+
+		var el     = this.refs.grid.getDOMNode();
+		var width  = el.offsetWidth;
 		var height = el.offsetHeight;
 
-		if (this.state.cameras.length) {
-			var cam = this.state.cameras[0];
+		var yPos = $(el).offset().top;
 
-			debugger;
+		var h = $(window).height() - yPos;
+		var w = width;
+
+		var nCameras = n_cameras || this.state.cameras.length;
+
+		if (!nCameras) return {};
+
+		var total_area = 1.0*w*h / nCameras;
+		var scale      = Math.sqrt( total_area / 12.0 );
+
+		var player_w = scale * 4;
+		var player_h = scale * 3;
+
+		var fit = false;
+		var nx, ny;
+
+		while (!fit && scale > 0) {
+			scale-=2;
+			player_w = scale * 4;
+			player_h = scale * 3;
+			nx = Math.floor( w / ( player_w + 15 ) );
+			nx = nx > nCameras ? nCameras : nx;
+			if (nx == 0) continue;
+
+			ny = Math.ceil( nCameras / nx );
+			fit = ( nx*(player_w + 5) <= w-50 && ny*player_h <= h-40 );
+		};
+
+		var margin_left = ( w - nx * ( player_w + 10 ) ) / 2.0;
+
+		if ( nx == 3 && nCameras == 4) {
+			margin_left = ( w - 2 * ( player_w + 10 ) ) / 2.0;
+		}
+
+		return {
+			height:        h + 'px',
+			playerWidth:   player_w,
+			playerHeight:  player_h,
+			paddingLeft:   margin_left
 		}
 	},
 
+	handleResize: function(e) {
+
+		// TODO
+		// add debouncing (only re-render when done resizing)
+		//
+		var sizes = this.recalculateSizes();
+
+		this.setState({
+			height:        sizes.height,
+			playerWidth:   sizes.playerWidth,
+			playerHeight:  sizes.playerHeight,
+			paddingLeft:   sizes.paddingLeft
+		});
+	},
+
+
 	componentDidMount: function() {
 		window.addEventListener('resize', this.handleResize);
+
+		var self = this;
+
+		// setInterval( function() {
+		// 	self.setState({
+		// 		begin:  Date.now() - 86400000,
+		// 		end:    Date.now()
+		// 	})
+		// }, 10000);
 	},
 
 	removeCamera: function(cameraItem) {
@@ -53,35 +148,64 @@ var CameraGrid = React.createClass({displayName: "CameraGrid",
 				if (cameras[i].id == cameraItem.id) break;
 			}
 			cameras.splice(i, 1);
-			this.setState({cameras: cameras});
+
+			var sizes = this.recalculateSizes(cameras.length);
+			this.setState({
+				cameras:       cameras,
+				height:        sizes.height,
+				playerWidth:   sizes.playerWidth,
+				playerHeight:  sizes.playerHeight,
+				paddingLeft:   sizes.paddingLeft
+			});
+
 		}.bind(this)
 	},
 
 	getInitialState: function() {
-		return{ 
-			cameras: []
+		return{
+			cameras:       [],
+			width:         '100%',
+			height:        '100%',
+			playerWidth:   480,
+			playerHeight:  360,
+			paddingLeft:   0
 		}
 	},
 
 	render: function() {
 		
 		var self = this;
+
+		var width  = this.state.playerWidth,
+			height = this.state.playerHeight;
+
+		var style = {
+			width:        this.state.width,
+			height:       this.state.height,
+			paddingLeft:  this.state.paddingLeft
+		};
+			
 		var list = this.state.cameras.map( function(cameraItem) {
 			return (
 				React.createElement(CameraContainer, {
-					ref: cameraItem.cam_id, 
-					key: cameraItem.cam_id, 
+					ref: cameraItem.id, 
+					width: width, 
+					height: height, 
+					key: cameraItem.id, 
 					cam_id: cameraItem.id, 
 					name: cameraItem.name, 
 					ip: cameraItem.ip, 
 					close: self.removeCamera(cameraItem), 
-					streams: cameraItem.streams}
+					streams: cameraItem.streams, 
+					moveCamera: self.moveCamera, 
+					begin: self.state.begin, 
+					end: self.state.end}
 				)
 			);
 		});
 
 		return (
-			React.createElement("div", React.__spread({ref: "grid"},  this.dropTargetFor('cameraItem'), {className: "cameraGrid"}), 
+			React.createElement("div", React.__spread({ref: "grid"},  this.dropTargetFor('cameraItem'), {className: "cameraGrid", style: style}), 
 				 list 	
 			)
 		);

@@ -1,67 +1,59 @@
 //
 //
 
+// var dragSource = {
+// 	beginDrag: function(component) {
+// 		return {
+// 			item: {
+// 				id: component.props.cam_id
+// 			}
+// 		};
+// 	}
+// };
+
+// var dropTarget = {
+// 	over: function(component, item) {
+// 		component.props.moveCamera(item.id, component.props.cam_id);
+// 	}
+// };
+
+
 var CameraContainer = React.createClass({
 
-	getParameters: function() {
 
-	},
-
-	click: function() {
-		console.log('click');
-	},
+// 	mixins: [ReactDND.DragDropMixin],	
+//
+// 	statics: {
+// 		configureDragDrop: function(register) {
+// 			register('cameraContainer', {
+// 				dropTarget:  dropTarget,
+// 				dragSource:  dragSource
+// 			});
+// 		}
+// 	},
 
 	componentDidMount: function() {
-		var width  = this.props.width || '100%';
-		var height = this.props.height || '100%';
+	},
 
-		var autoplay = this.props.autoplay || true;
-
-		var url = window.location.protocol + "//" + window.location.host +
-			"/cameras/" + this.props.cam_id + 
-			"/live.m3u8" +
-			"?stream=" + this.props.streams[0].id;
-
-		var parameters = {
-			src: 							 url,
-			autoPlay:                        autoplay,
-			verbose:                         true,
-			controlBarMode:                  "none",
-			// controlBarAutoHide:           "true",
-			// controlBarPosition:           "bottom",
-			poster:                          "",
-			plugin_hls:                      "/swf/HLSDynamicPlugin.swf",
-			javascriptCallbackFunction:      "Player.setupPlayersCallback",
-			bufferTime:                      0.1,
-			dvrBufferTime:                   0.1,
-			initialBufferTime:               0.1,
-			dvrDynamicStreamingBufferTime:   0.1,
-			liveBufferTime:                  0.1,
-			liveDynamicStreamingBufferTime:  0.1
-		};
-
-
-		swfobject.embedSWF(
-				"/swf/StrobeMediaPlayback.swf"
-				, "player-" + this.props.cam_id
-				, width
-				, height
-				, "10.0.0"
-				, "/swf/expressInstall.swf"
-				, parameters
-				, {
-					allowFullScreen: "true",
-					wmode: 'direct'
-				}
-				, {
-					name: "player-" + this.props.cam_id
-				}
-		);
+	getInitialState: function() {
+		return {
+			width:   '480px',
+			height:  '360px'
+		}
 	},
 
 	render: function() {
+
+		var style = {
+			width:   this.props.width,
+			height:  this.props.height
+		}
+
 		return (
-			<div className='camera-container'>
+			<div ref = 'container' className='camera-container' style={style}
+				// {...this.dragSourceFor('cameraContainer')}
+				// {...this.dropTargetFor('cameraContainer')}
+			>
 				<div className='camera-container-menu'>
 					<div className='close-window' onClick = {this.props.close}> [ x ] </div>
 					<div className='window-title'>
@@ -69,8 +61,14 @@ var CameraContainer = React.createClass({
 					</div>
 				</div>
 
-				<div id = {"player-" + this.props.cam_id}>
-				</div>
+				<PlayerContainer 
+					cam_id  = {this.props.cam_id}
+					ip      = {this.props.ip}
+					streams = {this.props.streams}
+					key     = {this.props.cam_id}
+					begin   = {this.props.begin}
+					end     = {this.props.end}
+				/>
 			</div>
 		);
 	}
