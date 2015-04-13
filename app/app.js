@@ -683,6 +683,9 @@ portChecker.check(8080, function(err, found) {
 	app.get('/multiview', passport.authenticate('basic', {session: false}), function(req, res) {    
 		res.sendfile(__dirname + '/views/multi.html');
 	});
+	app.get('/investigator', passport.authenticate('basic', {session: false}), function(req, res) {    
+		res.sendfile(__dirname + '/views/investigator.html');
+	});
 	// - - -
 
 
