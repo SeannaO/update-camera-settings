@@ -112,6 +112,8 @@ GroupsManager.prototype.rotate = function() {
 
 	var self = this;
 
+	self.stopRefresh();
+
 	$('#groups-play-pause').addClass('glyphicon-pause');
 	$('#groups-play-pause').removeClass('glyphicon-play');
 	this.rotating = true;
@@ -130,7 +132,28 @@ GroupsManager.prototype.stopRotate = function() {
 	$('#groups-play-pause').addClass('glyphicon-play');
 	this.rotating = false;
 	clearInterval( this.rotateInterval );
+
+	this.startRefresh();
 };
+
+GroupsManager.prototype.isRotating = function() {
+	return this.rotating;
+};
+
+GroupsManager.prototype.startRefresh = function() {
+
+	var self = this;
+
+	this.refreshInterval = setInterval( function() {
+		if( !self.isRotating() ) self.refresh();
+	}, 120*1000);
+};
+
+GroupsManager.prototype.stopRefresh = function() {
+	clearInterval( this.refreshInterval );
+};
+
+
 
 GroupsManager.prototype.rotateGroupWithDelay = function( g ) {
 	if (g == this.curr_g) return;
