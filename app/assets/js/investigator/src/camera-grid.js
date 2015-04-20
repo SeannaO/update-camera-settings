@@ -1,6 +1,11 @@
 ////
 // CameraGrid
 //
+var React           = require('react/addons');
+var CameraContainer = require('./camera-container.js');
+var ReactDND        = require('react-dnd');
+
+var Animation = React.addons.CSSTransitionGroup;
 
 var itemDropTarget = {
 	acceptDrop: function(component, item) {
@@ -39,26 +44,26 @@ var CameraGrid = React.createClass({
 	},
 
 	moveCamera: function(id, afterId) {
-		var cameras = this.state.cameras;
-
-		var camIndex, 
-			afterIndex;
-
-		for(var i in cameras) {
-			if (cameras[i].id == id) camIndex = i;
-			if (cameras[i].id == afterId) afterIndex = i;
-		}
-	
-		var cam = cameras[camIndex];
-
-		this.setState(React.addons.update(this.state, {
-			cameras: {
-				$splice: [
-					[camIndex, 1],
-					[afterIndex, 0, cam]
-				]
-			}
-		}));
+// 		var cameras = this.state.cameras;
+//
+// 		var camIndex, 
+// 			afterIndex;
+//
+// 		for(var i in cameras) {
+// 			if (cameras[i].id == id) camIndex = i;
+// 			if (cameras[i].id == afterId) afterIndex = i;
+// 		}
+// 	
+// 		var cam = cameras[camIndex];
+//
+// 		this.setState(React.addons.update(this.state, {
+// 			cameras: {
+// 				$splice: [
+// 					[camIndex, 1],
+// 					[afterIndex, 0, cam]
+// 				]
+// 			}
+// 		}));
 	},
 
 	recalculateSizes: function( n_cameras ) {
@@ -126,18 +131,20 @@ var CameraGrid = React.createClass({
 		});
 	},
 
+	changeDate: function(e, d) {
+		var begin = d.timestamp;
+		var end  = d.timestamp + 24*60*60*1000;
+		this.setState({
+			begin:  begin,
+			end:    end
+		});
+	},
 
 	componentDidMount: function() {
 		window.addEventListener('resize', this.handleResize);
+		$(window).on('day-selected', this.changeDate);
 
 		var self = this;
-
-		// setInterval( function() {
-		// 	self.setState({
-		// 		begin:  Date.now() - 86400000,
-		// 		end:    Date.now()
-		// 	})
-		// }, 10000);
 	},
 
 	removeCamera: function(cameraItem) {
@@ -212,3 +219,4 @@ var CameraGrid = React.createClass({
 	}
 });
 
+module.exports = CameraGrid;
