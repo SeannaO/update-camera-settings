@@ -1,19 +1,20 @@
+var React    = require('react/addons');
+var swfUtils = require('./swf-utils.js');
+
+				// <div className = 'status-overlay'>
+				// 	loading...
+				// </div>
 //
 //
 var PlayerContainer = React.createClass({
 
 	statics: {
 		playerListener: function(id, evName, obj) {
-			// console.log(id + ' : ' + evName);
 			$(window).trigger('player', {
-				id: id,
-				evName: evName
+				id:      id,
+				evName:  evName
 			});
 		}
-	},
-
-	playerListener: function() {
-		console.log('listener2');
 	},
 
 	getParameters: function() {
@@ -36,8 +37,8 @@ var PlayerContainer = React.createClass({
 				+ window.location.host 
 				+ '/cameras/' + this.props.cam_id
 				+ '/video.m3u8'
-				+ '?begin=' + this.props.begin
-				+ '&end=' + this.props.end
+				+ '?begin=' + time.begin
+				+ '&end=' + time.end
 				+ '&stream=' + this.props.streams[0].id;
 		} else {
 			url = window.location.protocol + "//" + 
@@ -70,8 +71,6 @@ var PlayerContainer = React.createClass({
 		var url = this.generateUrl( time );
 		if(!url) return;
 
-		console.log(url);
-
 		try {
 			this.player.setSrc(url);
 			this.player.load();
@@ -80,18 +79,26 @@ var PlayerContainer = React.createClass({
 		}
 	},
 
-	componentDidMount: function() {
+	getInitialState: function() {
+		return {
+		}
+	},
 
+	embedFlashPlayer: function() {
 		var width  = this.props.width || '100%';
 		var height = this.props.height || '100%';
 
 		var autoplay = this.props.autoplay || true;
 
-		var url = this.generateUrl();
+		var url = this.generateUrl({
+			begin:  this.props.begin,
+			end:    this.props.end
+		});
 
+		var playerID = 'strobe-' + this.props.cam_id;
 
 		var parameters = {
-			src: 							 url,
+			src: 							 encodeURIComponent( url ),
 			autoPlay:                        autoplay,
 			verbose:                         true,
 			controlBarMode:                  "none",
@@ -106,10 +113,9 @@ var PlayerContainer = React.createClass({
 			liveDynamicStreamingBufferTime:  0.1
 		};
 
-
 		swfobject.embedSWF(
 				"/swf/StrobeMediaPlayback.swf"
-				, "strobe-" + this.props.cam_id
+				, playerID
 				, width
 				, height
 				, "10.0.0"
@@ -120,11 +126,49 @@ var PlayerContainer = React.createClass({
 					wmode: 'direct'
 				}
 				, {
-					name: "strobe-" + this.props.cam_id
+					name: playerID
 				}
 		);
 
 		this.player = $('#strobe-' + this.props.cam_id)[0];
+	},
+
+
+	loadIndexer: function( done ) {
+
+		this.indexer.clear();
+
+		if (!this.props.begin || !this.props.end) return;
+
+		var url = '/cameras/'
+				+ this.props.cam_id
+				+ '/streams/'
+				+ this.props.streams[0].id
+				+ '/list_videos?'
+				+ '&start=' + this.props.begin
+				+ '&end=' + this.props.end;
+				
+		$.ajax({
+			url: url,
+			dataType: 'json',
+			success: function(data) {
+				for(var d of data.videos) {
+					this.indexer.push( d );
+				}
+				if (done) done();
+			}.bind(this),
+			error: function(err) {
+				if(done) done(err);
+			}
+		});
+	},
+
+
+	componentDidMount: function() {
+
+		this.indexer = new Indexer();
+		this.embedFlashPlayer();
+		this.loadIndexer();
 	},
 
 	componentDidUpdate: function( prevProps, prevState) {
@@ -141,10 +185,14 @@ var PlayerContainer = React.createClass({
 
 		var stream = this.props.activeStream;
 
-		this.loadVideo({
-			time:    time,
-			stream:  stream
-		});
+		this.loadIndexer( function(err) {
+			this.loadVideo({
+				time:    time,
+				stream:  stream
+			});
+		}.bind(this));
+
+
 	},
 
 	componentWillUnmount: function() {
@@ -153,10 +201,19 @@ var PlayerContainer = React.createClass({
 	},
 
 	render: function() {
+		console.log('render');
 		return (
-			<div ref = 'container' id = {'strobe-' + this.props.cam_id} className='player-container'>
+			<div 
+				ref       = 'container'
+				className = 'player-container' 
+			>
+				<div id = {'strobe-' + this.props.cam_id}
+					className = 'player-container'
+				/>
 			</div>
 		);
 	}
 });
+
+module.exports = PlayerContainer;
 

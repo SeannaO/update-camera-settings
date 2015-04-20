@@ -16,6 +16,8 @@
 // 		component.props.moveCamera(item.id, component.props.cam_id);
 // 	}
 // };
+var React           = require('react/addons');
+var PlayerContainer = require('./player-container.js');
 
 
 var CameraContainer = React.createClass({
@@ -38,7 +40,7 @@ var CameraContainer = React.createClass({
 	getInitialState: function() {
 		return {
 			width:   '480px',
-			height:  '360px'
+			height:  '360px',
 		}
 	},
 
@@ -74,3 +76,4 @@ var CameraContainer = React.createClass({
 	}
 });
 
+module.exports = CameraContainer;
