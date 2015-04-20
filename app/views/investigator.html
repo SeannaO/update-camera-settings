@@ -5,13 +5,14 @@
 
         <link rel="stylesheet" href="/css/bootstrap.min.css">
         <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
-        <link rel="stylesheet" href="/css/jquery-ui.css">
 
+        <link rel="stylesheet" href="/css/datepicker.css">
+
+		<link rel="stylesheet" href="/css/lib/default.css">
+		<link rel="stylesheet" href="/css/lib/default.date.css">
+
+        <!-- <link rel="stylesheet" href="/css/material.css"> -->
         <link rel="stylesheet" href="/css/investigator.css">
-
-		<script src="/js/lib/react/react-with-addons.js"></script>
-
-        <script src = "/js/lib/ReactDND.min.js"></script>        
 
         <script src = "/js/jquery.min.js"></script>        
         <script src = "/js/jquery-ui.min.js"></script>
@@ -24,8 +25,11 @@
 		</script>
         <script src="/js/socket.io.js"></script>
 
+		<script src='/js/indexer.js'></script>
         <script src="/js/bootstrap.min.js"></script>
 
+		<script src="/js/lib/picker.js"></script>
+		<script src="/js/lib/picker.date.js"></script>
 
         <script></script>
 
@@ -35,17 +39,11 @@
     <body style = "margin: 10px; height: 100%; width:100%; margin:0">
 		<div id = 'header'>
 			<h2 class = 'text-muted' style="margin:10px"> <a href ="/cameras">cameras</a> | investigator</h2> 
+			<div id='toolbar'></div>
 		</div>
         <hr>
 
 		<div id="main"></div>
-
-		<script type="text/javascript" src="/js/investigator/build/camera-item.js"></script>
-		<script type="text/javascript" src="/js/investigator/build/cameras-list.js"></script>
-
-		<script type="text/javascript" src="/js/investigator/build/player-container.js"></script>
-		<script type="text/javascript" src="/js/investigator/build/camera-container.js"></script>
-		<script type="text/javascript" src="/js/investigator/build/camera-grid.js"></script>
 
 		<script type="text/javascript" src="/js/investigator/build/investigator.js"></script>
 
