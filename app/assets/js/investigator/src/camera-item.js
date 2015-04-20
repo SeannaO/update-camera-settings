@@ -1,3 +1,6 @@
+var React    = require('react/addons');
+var ReactDND = require('react-dnd');
+
 var itemDragSource = {
 	beginDrag: function(component) {
 		return {
@@ -73,4 +76,4 @@ var CameraItem = React.createClass({
 	}
 });
 
-
+module.exports = CameraItem;

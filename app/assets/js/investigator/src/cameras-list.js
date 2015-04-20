@@ -1,3 +1,8 @@
+var React      = require('react/addons');
+var CameraItem = require('./camera-item.js');
+
+var Animation = React.addons.CSSTransitionGroup;
+
 // cameras list
 //
 var CamerasListBox = React.createClass({
@@ -20,18 +25,44 @@ var CamerasListBox = React.createClass({
 	},
 
 	getInitialState: function() {
-		return {cameras: []};
+		return {
+			cameras:  [],
+			show:     this.props.show
+		};
+	},
+
+	toggle: function() {
+		this.setState({
+			show:  !this.state.show
+		});
 	},
 
 	componentDidMount: function() {
 		this.loadCameras();
+
+		var self = this;
+
+		$(window).on('toggle-cameras-list', function() {
+			self.toggle();
+		});
+	},
+
+	componentWillUnmount: function() {
+		//TODO: unregister toggle cameras event
 	},
 
 	render: function() {
+
+		var style = {};
+
+		if(!this.state.show) {
+			style.display = 'none';
+		}
+
 		return (
-			<div className='camerasListBox'>
+			<div className='camerasListBox' style={style}>
 				<h2>cameras</h2>
-				<CamerasList cameras={this.state.cameras}/>
+				<CamerasList key = 'cameras-list' cameras={this.state.cameras}/>
 			</div>
 		);
 	}
@@ -40,6 +71,7 @@ var CamerasListBox = React.createClass({
 
 var CamerasList = React.createClass({
 	render: function() {
+
 		var list = this.props.cameras.map( function(camera) {
 			return (
 				<CameraItem 
@@ -61,3 +93,4 @@ var CamerasList = React.createClass({
 	}
 });
 
+module.exports = CamerasListBox;
