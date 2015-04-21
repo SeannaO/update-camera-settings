@@ -3,6 +3,8 @@ function Indexer() {
 	this.elements = [];
 	this.agglutinated = null;
 	this.agglutinatedBy;
+
+	this.groups = [];
 };
 
 Indexer.prototype.includesInterval = function( begin, end ) {
@@ -27,6 +29,32 @@ Indexer.prototype.push = function( data ) {
 	data.totalTime = totalTime;	
 
 	self.elements.splice(i, 0, data);
+
+	this.addToGroups( data );
+};
+
+
+Indexer.prototype.addToGroups = function(d) {
+
+	d.start = parseInt( d.start );
+	d.end = parseInt( d.end );
+
+	for (var i in this.groups) {
+
+		var g = this.groups[i];
+
+		if (d.start >= g.start 
+			&& d.start <= g.end + 1000
+			&& d.end > g.end ) {
+				this.groups[i].end = d.end;
+				return;
+			}
+	}
+
+	this.groups.push({
+		start:  d.start,
+		end:    d.end
+	});
 };
 
 
@@ -67,8 +95,11 @@ Indexer.prototype.agglutinate = function( size ) {
 	self.agglutinatedBy = size;
 	return self.agglutinated;
 };
+////
 
 
+////
+// convert player time to unix time in millis
 Indexer.prototype.getAbsoluteTime = function( relative_time, begin, end ) {
 	
 	var self = this;
@@ -93,8 +124,11 @@ Indexer.prototype.getAbsoluteTime = function( relative_time, begin, end ) {
 		return self.getAbsoluteTime( relative_time, begin, end );
 	}
 }
+////
 
 
+////
+// convert unix time in millis to player time
 Indexer.prototype.getRelativeTime = function( absoluteTime ) {
 
 	var a = 0,
@@ -117,9 +151,11 @@ Indexer.prototype.getRelativeTime = function( absoluteTime ) {
 		}
 	}
 
-	if (el) return( (absoluteTime - el.start)/1000.0 + el.totalTime)
-};
 
+	if (el) return( (absoluteTime - el.start)/1000.0 + el.totalTime )
+};
+////
+//
 
 Indexer.prototype.clear = function() {
 	this.elements = [];
