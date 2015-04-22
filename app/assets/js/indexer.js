@@ -158,6 +158,7 @@ Indexer.prototype.getRelativeTime = function( absoluteTime ) {
 //
 
 Indexer.prototype.clear = function() {
-	this.elements = [];
-	this.agglutinated = null;
-}
+	this.groups         = [];
+	this.elements       = [];
+	this.agglutinated   = null;
+};
