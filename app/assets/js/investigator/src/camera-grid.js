@@ -4,6 +4,7 @@
 var React           = require('react/addons');
 var CameraContainer = require('./camera-container.js');
 var ReactDND        = require('react-dnd');
+var bus             = require('./event-service.js');
 
 var Animation = React.addons.CSSTransitionGroup;
 
@@ -18,6 +19,10 @@ var itemDropTarget = {
 			enable:   item.enable
 		});
 
+		// event emitter
+		bus.emit('addCamera', item.id);
+		//
+			
 		var sizes = component.recalculateSizes(newCameras.length);
 		component.setState({
 			cameras:       newCameras,
@@ -131,7 +136,7 @@ var CameraGrid = React.createClass({
 		});
 	},
 
-	changeDate: function(e, d) {
+	changeDate: function(d) {
 		var begin = d.timestamp;
 		var end  = d.timestamp + 24*60*60*1000;
 		this.setState({
@@ -141,8 +146,9 @@ var CameraGrid = React.createClass({
 	},
 
 	componentDidMount: function() {
+
 		window.addEventListener('resize', this.handleResize);
-		$(window).on('day-selected', this.changeDate);
+		bus.on('day-selected', this.changeDate);
 
 		var self = this;
 	},
@@ -155,6 +161,10 @@ var CameraGrid = React.createClass({
 				if (cameras[i].id == cameraItem.id) break;
 			}
 			cameras.splice(i, 1);
+
+			// event emitter
+			bus.emit('removeCamera', cameraItem.id);
+			//
 
 			var sizes = this.recalculateSizes(cameras.length);
 			this.setState({

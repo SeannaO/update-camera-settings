@@ -1,5 +1,6 @@
 var React      = require('react/addons');
 var CameraItem = require('./camera-item.js');
+var bus        = require('./event-service.js');
 
 var Animation = React.addons.CSSTransitionGroup;
 
@@ -42,13 +43,12 @@ var CamerasListBox = React.createClass({
 
 		var self = this;
 
-		$(window).on('toggle-cameras-list', function() {
-			self.toggle();
-		});
+		bus.on('toggle-cameras-list', this.toggle);
 	},
 
 	componentWillUnmount: function() {
-		//TODO: unregister toggle cameras event
+		
+		bus.removeListener( 'toggle-cameras-list', this.toggle );
 	},
 
 	render: function() {
