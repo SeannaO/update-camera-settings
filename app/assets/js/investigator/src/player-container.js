@@ -1,19 +1,34 @@
 var React    = require('react/addons');
 var swfUtils = require('./swf-utils.js');
+var bus      = require('./event-service.js');
 
 				// <div className = 'status-overlay'>
 				// 	loading...
 				// </div>
 //
 //
+global.playerListener = function(id, evName, obj) {
+	
+	var id = id.replace('strobe-', '');
+
+ 	bus.emit('playerEvent', {
+		id:      id,
+		evName:  evName
+	});
+
+	if (evName == 'timeupdate') {
+		
+		bus.emit('playerEvent-timeupdate-' + id, {
+			time:  obj.currentTime
+		});
+	}
+};
+
+
 var PlayerContainer = React.createClass({
 
 	statics: {
 		playerListener: function(id, evName, obj) {
-			$(window).trigger('player', {
-				id:      id,
-				evName:  evName
-			});
 		}
 	},
 
@@ -55,8 +70,31 @@ var PlayerContainer = React.createClass({
 			
 	},
 
+	handleSeek: function(d) {
+		
+		var absolute_time = d.time;
+		var relative_time = this.indexer.getRelativeTime( absolute_time, false );
+
+		this.seek( relative_time );
+	},
+	
+	seek: function( relative_time ) {
+		if ( isNaN(relative_time) ) {
+			this.pause();
+			return;
+		}
+
+		this.player.seek( relative_time );
+		this.play();
+	},
+
+
 	pause: function() {
-		this.player.pause();	
+		try {
+			this.player.pause();	
+		} catch(err) {
+			console.log( err );
+		}
 	},
 
 	refresh: function() {
@@ -104,7 +142,7 @@ var PlayerContainer = React.createClass({
 			controlBarMode:                  "none",
 			poster:                          "",
 			plugin_hls:                      "/swf/HLSDynamicPlugin.swf",
-			javascriptCallbackFunction:      "PlayerContainer.playerListener",
+			javascriptCallbackFunction:      "window.playerListener",
 			bufferTime:                      0.1,
 			dvrBufferTime:                   0.1,
 			initialBufferTime:               0.1,
@@ -155,6 +193,12 @@ var PlayerContainer = React.createClass({
 				for(var d of data.videos) {
 					this.indexer.push( d );
 				}
+
+				bus.emit('camera-metadata', {
+					id:        this.props.cam_id,
+					segments:  this.indexer.groups
+				});
+
 				if (done) done();
 			}.bind(this),
 			error: function(err) {
@@ -163,12 +207,24 @@ var PlayerContainer = React.createClass({
 		});
 	},
 
+	broadcastTime: function(d) {
+		
+		var time = this.indexer.getAbsoluteTime(d.time);
+
+		bus.emit('playerEvent-timeupdate', {
+			id:    this.props.cam_id,
+			time:  time
+		});
+	},
 
 	componentDidMount: function() {
 
 		this.indexer = new Indexer();
 		this.embedFlashPlayer();
 		this.loadIndexer();
+
+		bus.on('playerEvent-timeupdate-' + this.props.cam_id, this.broadcastTime );
+		bus.on('seek', this.handleSeek);
 	},
 
 	componentDidUpdate: function( prevProps, prevState) {
@@ -191,23 +247,23 @@ var PlayerContainer = React.createClass({
 				stream:  stream
 			});
 		}.bind(this));
-
-
 	},
 
 	componentWillUnmount: function() {
 		swfobject.removeSWF( 'strobe-' + this.props.cam_id );
-		console.log('unmount');
+
+		bus.removeListener('playerEvent-timeupdate-' + this.props.cam_id, this.broadcastTime);
+		bus.removeListener('seek', this.handleSeek);
 	},
 
 	render: function() {
-		console.log('render');
 		return (
 			<div 
-				ref       = 'container'
-				className = 'player-container' 
+				ref       = {this.props.cam_id}
+				className = 'player-container'
 			>
-				<div id = {'strobe-' + this.props.cam_id}
+				<div 
+					id = {'strobe-' + this.props.cam_id}
 					className = 'player-container'
 				/>
 			</div>
