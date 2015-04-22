@@ -1,8 +1,11 @@
 var React = require('react/addons');
 var bus   = require('./event-service.js');
 
+var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
 
 var Subtimeline = React.createClass({
+
+	mixins: [ PureRenderMixin ],
 
 	getInitialState: function() {
 		return {
@@ -20,11 +23,12 @@ var Subtimeline = React.createClass({
 		return ( w*d / timespan );
 	},
 		
-	shouldComponentUpdate: function( nextProps, nextState ) {
-		
-		
-		return true;
-	},
+
+	// shouldComponentUpdate: function(nextProps, nextState) {
+	// 	
+	// 	return true;
+	// },
+
 
 	getSegments: function() {
 
@@ -43,7 +47,7 @@ var Subtimeline = React.createClass({
 
 			segments.push(
 					<div 
-						key       = {seg.start}
+						key       = {this.props.camera.id + '_' + seg.start + '_' + seg.end}
 						style     = {seg_style}
 						className = 'subtimeline-segment'
 					/>
@@ -59,7 +63,7 @@ var Subtimeline = React.createClass({
 
 	render: function() {
 		
-		// console.log('rendering subtimeline');
+		console.log('rendering subtimeline');
 
 		var segments = this.getSegments();
 		

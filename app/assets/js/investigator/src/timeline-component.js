@@ -1,6 +1,8 @@
-var React = require('react/addons');
+var React       = require('react/addons');
 var Subtimeline = require('./subtimeline.js');
-var bus   = require('./event-service.js');
+var bus         = require('./event-service.js');
+
+var update = React.addons.update;
 
 
 var Cursor = React.createClass({
@@ -60,16 +62,22 @@ var Timeline = React.createClass({
 				'blue'
 			];
 
-			var newCameras = self.state.cameras;
-			var nCameras   = Object.keys( newCameras ).length;
+			var cameras  = self.state.cameras;
+			var nCameras = Object.keys(cameras).length;
 
 			var color = colors[ nCameras ];
 
-			newCameras[id] = {
+			var newCam = {};
+			newCam[id] = {
 				id:        id,
 				color:     color,
 				segments:  []
 			};
+
+			var newCameras = update( cameras, {
+				$merge: newCam
+			});
+
 			self.setState({
 				cameras: newCameras
 			});
@@ -86,7 +94,9 @@ var Timeline = React.createClass({
 		bus.on('playerEvent-timeupdate', function(d) {
 			var cameras = self.state.cameras;
 			if (!cameras[d.id]) return;
+
 			cameras[d.id].time = d.time;
+
 			self.setState({
 				cameras: cameras
 			});
@@ -159,7 +169,27 @@ var Timeline = React.createClass({
 	handleCameraMetadata: function(d) {
 		var cam = this.state.cameras[d.id];
 		if (!cam) return;
-		cam.segments = d.segments;
+	
+		console.log(d.segments);
+
+		cam.segments = [];
+
+		cam = update( cam, {
+			$merge: {
+				segments: d.segments
+			}
+		});
+
+		var newCam = {};
+		newCam[d.id] = cam;
+
+		var cameras = update( this.state.cameras, {
+			$merge: newCam
+		});
+
+		this.setState({
+			cameras: cameras
+		});
 	},
 
 	handleClick: function(e, d) {
@@ -177,10 +207,10 @@ var Timeline = React.createClass({
 
 		this.seek( this.state.begin + pos * timeSpan );
 
-		this.setState({
-			begin:  time - 15*60*1000,
-			end:    time + 15*60*1000
-		});
+		// this.setState({
+		// 	begin:  time - 15*60*1000,
+		// 	end:    time + 15*60*1000
+		// });
 
 	},
 
@@ -214,7 +244,6 @@ var Timeline = React.createClass({
 						opacity = {opacity}
 					/>
 				);
-			// subtimelines.push( this.getSubtimeline( cam ) );
 		}
 
 		return subtimelines;
