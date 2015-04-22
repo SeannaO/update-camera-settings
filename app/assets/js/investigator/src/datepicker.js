@@ -1,4 +1,5 @@
 var React = require('react');
+var bus   = require('./event-service.js');
 
 function isSameDay(a, b) {
   return a.startOf('day').isSame(b.startOf('day'));
@@ -21,7 +22,7 @@ var Datepicker = React.createClass({
 			onSet: function(d) {
 				if (!d) return;
 				console.log(d);
-			 	$(window).trigger('day-selected', {
+				bus.emit('day-selected', {
 					timestamp: d.select
 				});
 			}
