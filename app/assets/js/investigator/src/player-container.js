@@ -72,6 +72,10 @@ var PlayerContainer = React.createClass({
 
 	handleSeek: function(d) {
 		
+		if (!!d.id && d.id !== this.props.cam_id) {
+			return;
+		}
+
 		var absolute_time = d.time;
 		var relative_time = this.indexer.getRelativeTime( absolute_time, false );
 
