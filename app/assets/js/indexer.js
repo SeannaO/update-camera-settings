@@ -137,11 +137,11 @@ Indexer.prototype.getRelativeTime = function( absoluteTime ) {
 	var el,
 		i;
 
-	while( a < b ) {
-		i = Math.round( (a + b)/2 )
+	while( a <= b ) {
+		i = Math.floor( (a + b)/2 )
 		el = this.elements[ i ];
 		if (!el) return;
-		if (el.end > absoluteTime && el.start < absoluteTime) {
+		if (el.end >= absoluteTime - 500 && el.start <= absoluteTime + 500) {
 			return (absoluteTime - el.start)/1000.0 + el.totalTime;
 		}
 		else if (el.end < absoluteTime) {
@@ -151,6 +151,11 @@ Indexer.prototype.getRelativeTime = function( absoluteTime ) {
 		}
 	}
 
+	if (!el) return;
+
+	if ( absoluteTime > el.end || absoluteTime < el.start) {
+		return;
+	}
 
 	if (el) return( (absoluteTime - el.start)/1000.0 + el.totalTime )
 };
