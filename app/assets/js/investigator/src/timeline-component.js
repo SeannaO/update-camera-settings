@@ -1,14 +1,17 @@
-var React       = require('react/addons');
-var Subtimeline = require('./subtimeline.js');
-var bus         = require('./event-service.js');
+var React            = require('react/addons');
+var bus              = require('./event-service.js');
+var Subtimeline      = require('./subtimeline.js');
+var ThumbnailPreview = require('./thumbnail-component.js');
 
+var PureRenderMixin           = require('react/addons').addons.PureRenderMixin;
 var TimelineEventHandlerMixin = require('./timeline-event-handler-mixin.js');
+var TimelineZoomMixin         = require('./timeline-zoom-in-mixin.js');
+var TimelineAutoresizeMixin   = require('./timeline-autoresize-mixin.js');
 
 var update = React.addons.update;
 
 
 var Cursor = React.createClass({
-
 
 	render: function() {
 
@@ -17,7 +20,8 @@ var Cursor = React.createClass({
 		var style = {
 			left:        this.props.position + 'px',
 			background:  this.props.color,
-			display: 	 isNaN( position ) ? 'none' : '' 	
+			display: 	 isNaN( position ) ? 'none' : '',
+			opacity:     this.props.loading ? 0.5 : 1.0
 		}
 
 		return(
@@ -35,7 +39,10 @@ var Cursor = React.createClass({
 var Timeline = React.createClass({
 	
 	mixins: [
-		TimelineEventHandlerMixin
+		PureRenderMixin,
+		TimelineEventHandlerMixin,
+		TimelineZoomMixin,
+		TimelineAutoresizeMixin
 	],
 
 	getInitialState: function() {
@@ -49,26 +56,12 @@ var Timeline = React.createClass({
 		return {
 			begin:    d,
 			end:      d + day,
-			time:     Date.now(),
 			width:    0,
 			cameras:  {}
 		}
 	},
 
 	componentDidMount: function() {
-
-		var self = this;
-
-		setInterval( function() {
-
-			if(!self.isMounted()) return;
-			var width = self.refs.timeline.getDOMNode().offsetWidth;
-
-			self.setState({
-				time:   Date.now(),
-				width:  width
-			});
-		}, 1000);
 	},
 
 	getPosition: function( time ) {
@@ -76,8 +69,9 @@ var Timeline = React.createClass({
 		if (isNaN(time)) return;
 
 		var timespan = this.state.end - this.state.begin;
-		var d   = time - this.state.begin;
-		var w   = this.state.width;
+
+		var d = time - this.state.begin;
+		var w = this.state.width;
 
 		return ( w*d/timespan );
 	},
@@ -105,10 +99,7 @@ var Timeline = React.createClass({
 	},
 
 
-	handleClick: function(e, d) {
-
-
-		var px    = e.nativeEvent.offsetX;
+	getTimeFromPosition: function(px) {
 		var el    = this.refs.timeline.getDOMNode();
 		var width = el.offsetWidth;
 		
@@ -116,9 +107,18 @@ var Timeline = React.createClass({
 
 		var timeSpan = this.state.end - this.state.begin;
 
-		var time = this.state.begin + pos * timeSpan;
+		return this.state.begin + pos * timeSpan;
+	},
 
-		this.seek( this.state.begin + pos * timeSpan );
+
+	handleClick: function(e, d) {
+
+		var px   = e.nativeEvent.offsetX;
+		var time = this.getTimeFromPosition( px );
+
+		console.log( '[click]   time: ' + new Date(time) + '   px: ' + px );
+
+		this.seek( time );
 
 		// this.setState({
 		// 	begin:  time - 15*60*1000,
@@ -131,6 +131,28 @@ var Timeline = React.createClass({
 		bus.emit('seek', {
 			time: time
 		});
+		
+		this.setState({
+			time:    time,
+			loading:  true
+		});
+	},
+
+
+	componentDidUpdate: function( prevProps, prevState) {
+		if (prevState.time !== this.state.time) {
+			for(var cam_id in this.state.cameras) {
+				var cam = this.state.cameras[ cam_id ];
+				var dt = Math.abs( cam.time - this.state.time );
+				if (dt > 5000) {
+					// console.log('camera is falling behind');
+					bus.emit('seek', {
+						id:    cam_id,
+						time:  this.state.time
+					});
+				}
+			}
+		}
 	},
 
 
@@ -162,30 +184,127 @@ var Timeline = React.createClass({
 		return subtimelines;
 	},
 	
+	handleMouseEnter: function() {
+		this.setState({
+			showThumb: true
+		});
+	},
+
+	handleMouseLeave: function() {
+		this.setState({
+			showThumb: false
+		});
+	},
+
+	debounce: function(func, wait, immediate) {
+		var timeout;
+		return function() {
+			var context = this, args = arguments;
+			var later = function() {
+				timeout = null;
+				if (!immediate) func.apply(context, args);
+			};
+			var callNow = immediate && !timeout;
+			clearTimeout(timeout);
+			timeout = setTimeout(later, wait);
+			if (callNow) func.apply(context, args);
+		};
+	},
+
+	handleMouseMove: function(e) {
+		this.mouseMove(e);
+	},
+
+	mouseMove: function(e) {
+		var px = e.nativeEvent.offsetX;
+		var py = e.nativeEvent.offsetY;
+
+		console.log('px: ' + px);
+		var thumbs = [];
+		var time = this.getTimeFromPosition( px );
+
+		console.log( 'time: ' + new Date(time) + '   px: ' + px );
+
+		for (var i in this.state.cameras) {
+			var cam = this.state.cameras[i];
+			if(!cam.indexer) {
+				thumbs.push('');
+				continue;
+			} 
+
+			var el = cam.indexer.getRelativeTime( time, { returnElement: true });
+			if (!el) {
+				thumbs.push('');
+				continue;
+			}
+
+			var thumb_name = el.start + '_' + (el.end - el.start);
+			var thumb = "/cameras/" + cam.id + "/streams/" + cam.streams[0].id + "/thumb/" + thumb_name;
+			thumbs.push( thumb || '' );
+		}
+
+		this.setState({
+			thumbX:     px,
+			thumbY:     py,
+			thumbs:     thumbs,
+			thumbTime:  time
+		});
+	},
+
+	handleMouseDown: function() {
+		console.log('mouse down');
+	},
+
+	handleMouseUp: function() {
+		console.log('mouse up');
+	},
+
 
 	render: function() {
 
 		var position = this.getPosition( this.state.time );
 
-		var cursors = this.getCursors();
 		var subtimelines = this.getSubtimelines();
-					
+
+		var thumbnailStyle = {
+			position:  'absolute',
+			zIndex:    10000
+		}
+
 		return (
-			<div 
-				ref       = 'timeline'
-				id        = 'timeline-component'
-				className = 'shadow'
-				onClick   = {this.handleClick}
-			>
-				{subtimelines}
+			
+			<div>
+				<div {...this.getZoomMouseEvents() } 
+					ref          = 'timeline'
+					id           = 'timeline-component'
+					className    = ''
+					onClick      = {this.handleClick}
+					onMouseEnter = {this.handleMouseEnter}
+					onMouseLeave = {this.handleMouseLeave}
+					onMouseMove  = {this.handleMouseMove}
+					onMouseDown  = {this.handleMouseDown}
+					onMouseUp    = {this.handleMouseUp}
+				>
+					{subtimelines}
 
-				<Cursor 
-					key       = 'cursor'
-					ref       = 'cursor'
-					className = 'shadow'
-					position  = {position}/>
+					<Cursor 
+						key       = 'cursor'
+						ref       = 'cursor'
+						className = 'shadow'
+						position  = {position}
+						loading   = {this.state.loading}
+					/>
 
-				{cursors}	
+				</div>
+
+				<ThumbnailPreview 
+					px      = {this.state.thumbX}
+					py      = {this.state.thumbY}
+					thumbs  = {this.state.thumbs}
+					visible = {this.state.showThumb}
+					style   = {thumbnailStyle}
+					time    = {this.state.thumbTime}
+				/>
 			</div>
 			
 		);
