@@ -2,22 +2,22 @@ var React    = require('react/addons');
 var swfUtils = require('./swf-utils.js');
 var bus      = require('./event-service.js');
 
-				// <div className = 'status-overlay'>
-				// 	loading...
-				// </div>
+var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
+
 //
 //
+
 global.playerListener = function(id, evName, obj) {
-	
+
 	var id = id.replace('strobe-', '');
 
- 	bus.emit('playerEvent', {
+	bus.emit('playerEvent', {
 		id:      id,
 		evName:  evName
 	});
 
 	if (evName == 'timeupdate') {
-		
+
 		bus.emit('playerEvent-timeupdate-' + id, {
 			time:  obj.currentTime
 		});
@@ -27,9 +27,9 @@ global.playerListener = function(id, evName, obj) {
 
 var PlayerContainer = React.createClass({
 
+	mixins: [ PureRenderMixin ],
+
 	statics: {
-		playerListener: function(id, evName, obj) {
-		}
 	},
 
 	getParameters: function() {
@@ -79,21 +79,35 @@ var PlayerContainer = React.createClass({
 		var absolute_time = d.time;
 		var relative_time = this.indexer.getRelativeTime( absolute_time, false );
 
-		this.seek( relative_time );
+		this.seek( relative_time, absolute_time );
 	},
 	
 	seek: function( relative_time ) {
 		if ( isNaN(relative_time) ) {
+
+			this.setState({
+				status: "no_video_recorded" 
+			});
+
 			this.pause();
 			return;
 		}
 
 		this.player.seek( relative_time );
 		this.play();
+
+		this.setState({
+			status: 'loading'
+		});
+
 	},
 
-
 	pause: function() {
+		if (this.player.getState() != 'playing') {
+			console.log('not playing');
+			return;
+		}
+
 		try {
 			this.player.pause();	
 		} catch(err) {
@@ -114,8 +128,7 @@ var PlayerContainer = React.createClass({
 		if(!url) return;
 
 		try {
-			this.player.setSrc(url);
-			this.player.load();
+			this.player.setMediaResourceURL( url );
 		} catch(err) {
 			console.log(err);
 		}
@@ -123,6 +136,7 @@ var PlayerContainer = React.createClass({
 
 	getInitialState: function() {
 		return {
+			status: 'just_loaded'
 		}
 	},
 
@@ -164,15 +178,16 @@ var PlayerContainer = React.createClass({
 				, "/swf/expressInstall.swf"
 				, parameters
 				, {
-					allowFullScreen: "true",
-					wmode: 'direct'
+					allowFullScreen:  "true",
+					wmode:            'direct',
 				}
 				, {
 					name: playerID
 				}
 		);
 
-		this.player = $('#strobe-' + this.props.cam_id)[0];
+		this.player = document.getElementById( 'strobe-' + this.props.cam_id);
+		// this.player = $('#strobe-' + this.props.cam_id)[0];
 	},
 
 
@@ -200,7 +215,8 @@ var PlayerContainer = React.createClass({
 
 				bus.emit('camera-metadata', {
 					id:        this.props.cam_id,
-					segments:  this.indexer.groups
+					segments:  this.indexer.groups,
+					indexer:   this.indexer
 				});
 
 				if (done) done();
@@ -214,6 +230,12 @@ var PlayerContainer = React.createClass({
 	broadcastTime: function(d) {
 		
 		var time = this.indexer.getAbsoluteTime(d.time);
+
+		this.currentTime = time;
+
+		this.setState({
+			status: 'playing'
+		});
 
 		bus.emit('playerEvent-timeupdate', {
 			id:    this.props.cam_id,
@@ -251,16 +273,27 @@ var PlayerContainer = React.createClass({
 				stream:  stream
 			});
 		}.bind(this));
+
+	},
+
+	removeSWF: function() {
+		swfobject.removeSWF( 'strobe-' + this.props.cam_id );
 	},
 
 	componentWillUnmount: function() {
-		swfobject.removeSWF( 'strobe-' + this.props.cam_id );
+
+		this.removeSWF();
 
 		bus.removeListener('playerEvent-timeupdate-' + this.props.cam_id, this.broadcastTime);
 		bus.removeListener('seek', this.handleSeek);
 	},
 
 	render: function() {
+
+		var statusOverlayStyle = {
+			display: this.state.status == 'playing' ?  'none' : ''
+		};
+
 		return (
 			<div 
 				ref       = {this.props.cam_id}
@@ -270,6 +303,10 @@ var PlayerContainer = React.createClass({
 					id = {'strobe-' + this.props.cam_id}
 					className = 'player-container'
 				/>
+
+				<div className = 'status-overlay' style = {statusOverlayStyle}>
+					loading...
+				</div>
 			</div>
 		);
 	}
