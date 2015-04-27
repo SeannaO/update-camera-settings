@@ -126,10 +126,9 @@ Indexer.prototype.getAbsoluteTime = function( relative_time, begin, end ) {
 }
 ////
 
-
 ////
 // convert unix time in millis to player time
-Indexer.prototype.getRelativeTime = function( absoluteTime ) {
+Indexer.prototype.getRelativeTime = function( absoluteTime, options ) {
 
 	var a = 0,
 		b = this.elements.length-1;
@@ -142,6 +141,7 @@ Indexer.prototype.getRelativeTime = function( absoluteTime ) {
 		el = this.elements[ i ];
 		if (!el) return;
 		if (el.end >= absoluteTime - 500 && el.start <= absoluteTime + 500) {
+			if (options.returnElement) return el;
 			return (absoluteTime - el.start)/1000.0 + el.totalTime;
 		}
 		else if (el.end < absoluteTime) {
@@ -157,7 +157,8 @@ Indexer.prototype.getRelativeTime = function( absoluteTime ) {
 		return;
 	}
 
-	if (el) return( (absoluteTime - el.start)/1000.0 + el.totalTime )
+	if (options.returnElement) return el;
+	return( (absoluteTime - el.start)/1000.0 + el.totalTime )
 };
 ////
 //
