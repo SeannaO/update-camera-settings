@@ -12,6 +12,14 @@ var TimelineEventHandlerMixin = {
 		bus.on('day-selected', this.handleDateChange);
 	},
 
+	componentWillUnmount: function() {
+		// bus.on('addCamera', this.handleAddCamera);
+		// bus.on('removeCamera', this.handleRemoveCamera);
+		// bus.on('playerEvent-timeupdate', this.handlePlayerTimeUpdate);
+		// bus.on('camera-metadata', this.handleCameraMetadata);
+		// bus.on('day-selected', this.handleDateChange);
+	},
+
 	handleDateChange: function(d) {
 		
 		var date = new Date(d.timestamp);
@@ -33,10 +41,12 @@ var TimelineEventHandlerMixin = {
 		if (!cam) return;
 	
 		cam.segments = [];
+		cam.indexer  = null;
 
 		cam = update( cam, {
 			$merge: {
-				segments: d.segments
+				segments:  d.segments,
+				indexer:   d.indexer
 			}
 		});
 
@@ -52,7 +62,10 @@ var TimelineEventHandlerMixin = {
 		});
 	},
 
-	handleAddCamera: function(id) {
+	handleAddCamera: function( cam ) {
+
+		var id      = cam.id;
+		var streams = cam.streams;
 
 		var colors = [
 			'red',
@@ -69,6 +82,7 @@ var TimelineEventHandlerMixin = {
 		var newCam = {};
 		newCam[id] = {
 			id:        id,
+			streams:   streams,
 			color:     color,
 			segments:  []
 		};
@@ -80,7 +94,6 @@ var TimelineEventHandlerMixin = {
 		this.setState({
 			cameras: newCameras
 		});
-
 	},
 
 	handleRemoveCamera: function(id) {
@@ -97,9 +110,25 @@ var TimelineEventHandlerMixin = {
 
 		cameras[d.id].time = d.time;
 
-		this.setState({
-			cameras: cameras
-		});
+		var time = this.state.time;
+
+		if (!time || d.time > time) {
+			time = d.time;
+
+			this.setState({
+				cameras:  cameras,
+				time:     time,
+				loading:  false
+			});
+		}
+
+
+		if ( Math.abs( d.time - this.state.time ) > 5000 ) {
+			bus.emit('seek', {
+				time:  this.state.time,
+				id:    d.id
+			});
+		}
 	}
 
 };
