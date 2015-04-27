@@ -59,8 +59,15 @@ var ThumbnailPreview = React.createClass({
 
 		var shouldBeVisible = this.thumbsCounter > 0 && this.props.visible;
 
+		var offsetX = 50;
+
+		if (this.props.px + 350 - offsetX > 0.9*document.body.offsetWidth) {
+			offsetX = this.props.px + 350 - 0.9*document.body.offsetWidth;
+			console.log(offsetX);
+		}
+
 		var thumbPos = {
-			left:     this.props.px + 25,
+			left:     this.props.px - offsetX,
 			top:      this.props.py + 25,
 			display:  shouldBeVisible ? '' : 'none',
 		};
