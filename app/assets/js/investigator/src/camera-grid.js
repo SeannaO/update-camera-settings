@@ -20,7 +20,10 @@ var itemDropTarget = {
 		});
 
 		// event emitter
-		bus.emit('addCamera', item.id);
+		bus.emit('addCamera', {
+			id:       item.id,
+			streams:  item.streams
+		});
 		//
 			
 		var sizes = component.recalculateSizes(newCameras.length);
