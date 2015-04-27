@@ -116,8 +116,6 @@ var Timeline = React.createClass({
 		var px   = e.nativeEvent.offsetX;
 		var time = this.getTimeFromPosition( px );
 
-		console.log( '[click]   time: ' + new Date(time) + '   px: ' + px );
-
 		this.seek( time );
 
 		// this.setState({
@@ -145,7 +143,6 @@ var Timeline = React.createClass({
 				var cam = this.state.cameras[ cam_id ];
 				var dt = Math.abs( cam.time - this.state.time );
 				if (dt > 5000) {
-					// console.log('camera is falling behind');
 					bus.emit('seek', {
 						id:    cam_id,
 						time:  this.state.time
@@ -219,11 +216,8 @@ var Timeline = React.createClass({
 		var px = e.nativeEvent.offsetX;
 		var py = e.nativeEvent.offsetY;
 
-		console.log('px: ' + px);
 		var thumbs = [];
 		var time = this.getTimeFromPosition( px );
-
-		console.log( 'time: ' + new Date(time) + '   px: ' + px );
 
 		for (var i in this.state.cameras) {
 			var cam = this.state.cameras[i];
