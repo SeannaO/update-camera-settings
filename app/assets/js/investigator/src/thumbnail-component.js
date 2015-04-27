@@ -26,9 +26,16 @@ var ThumbnailPreview = React.createClass({
 
 			if (t) this.thumbsCounter++;
 
+			var img;
+			if (!t) {
+				img = <div className = 'thumb-not-available'> <center> no thumbnail </center> </div>
+			} else {
+				img = <img src = {t}/>
+			}
+
 			el.push( 
 					<div className = 'thumb'>
-						<img src={t}/>
+						{img}
 					</div>
 				   );
 		}
