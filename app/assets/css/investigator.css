@@ -12,6 +12,29 @@
 #toolbar:hover {
 }
 
+.thumb {
+	float:   left;
+	margin:  1px;
+}
+
+#thumbTime{
+	font-size:  12pt;
+	color:      rgb(80,80,80);
+	display:    inline-block;
+	width:      100%;
+}
+
+.thumbPopover {
+	position:    absolute;
+	width:       auto;
+	max-width:   335px;
+	height:      auto;
+	background:  rgba(255,255,255,0.8);
+	z-index:     15000;
+	display:     inline-block;
+	padding:     4px;
+}
+
 .subtimeline-segment {
 	height:          100%;
 	position:        absolute;
@@ -111,9 +134,9 @@
 
 
 .shadow {
-	-webkit-box-shadow:  2px 2px 4px 1px rgba(100,100,100,0.2);
-	-moz-box-shadow:     2px 2px 4px 1px rgba(100,100,100,0.2);
-	box-shadow:          2px 2px 4px 1px rgba(100,100,100,0.2);
+	-webkit-box-shadow:  2px 2px 4px 1px rgba(100,100,100,0.5);
+	-moz-box-shadow:     2px 2px 4px 1px rgba(100,100,100,0.5);
+	box-shadow:          2px 2px 4px 1px rgba(100,100,100,0.5);
 }
 
 .camera-item-available:hover {
