@@ -4,7 +4,7 @@ var CameraGrid       = require('./camera-grid.js');
 var ToggleCameraList = require('./toggle-cameras.js');
 var CamerasListBox   = require('./cameras-list.js');
 var Datepicker       = require('./datepicker.js');
-var Timeline         = require('./timeline-component.js');
+var Timeline         = require('./timeline/timeline-component.js');
 
 React.render(
 	<div>
