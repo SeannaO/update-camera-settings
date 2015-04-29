@@ -251,6 +251,24 @@ var PlayerContainer = React.createClass({
 
 		bus.on('playerEvent-timeupdate-' + this.props.cam_id, this.broadcastTime );
 		bus.on('seek', this.handleSeek);
+		bus.on('showThumb', this.handleThumb);
+		bus.on('hideThumb', this.handleHideThumb);
+	},
+
+	handleHideThumb: function() {
+		this.setState({
+			thumb: null
+		});
+	},
+
+	handleThumb: function(d) {
+		if (!!d.id && d.id !== this.props.cam_id) {
+			return;
+		}
+
+		this.setState({
+			thumb: d.thumb || 'no_thumb'
+		});
 	},
 
 	componentDidUpdate: function( prevProps, prevState) {
@@ -286,13 +304,30 @@ var PlayerContainer = React.createClass({
 
 		bus.removeListener('playerEvent-timeupdate-' + this.props.cam_id, this.broadcastTime);
 		bus.removeListener('seek', this.handleSeek);
+		bus.removeListener('showThumb', this.handleThumb);
+		bus.removeListener('hideThumb', this.handleHideThumb);
 	},
 
 	render: function() {
 
+		var thumbOverlayStyle = {
+			display: this.state.thumb ? '' : 'none'
+		};
+
+		var thumbEl;
+		if (this.state.thumb == 'no_thumb') {
+			thumbEl = <center><div className='overlay-message'>no video recorded</div></center>
+		} else {
+			thumbEl = <img src={this.state.thumb} width='100%' height='100%'/>
+		}
+
 		var statusOverlayStyle = {
 			display: this.state.status == 'playing' ?  'none' : ''
 		};
+
+		var overlay_message = '';
+		if (this.state.status == 'no_video_recorded') overlay_message = 'no video recorded';
+		else if (this.state.status == 'loading') overlay_message = 'loading...';
 
 		return (
 			<div 
@@ -305,7 +340,13 @@ var PlayerContainer = React.createClass({
 				/>
 
 				<div className = 'status-overlay' style = {statusOverlayStyle}>
-					loading...
+					<center>
+						<div className='overlay-message'>{overlay_message}</div>
+					</center>
+				</div>
+
+				<div className = 'status-overlay' style = {thumbOverlayStyle}>
+					{thumbEl}
 				</div>
 			</div>
 		);
