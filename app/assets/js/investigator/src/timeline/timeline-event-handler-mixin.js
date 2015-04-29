@@ -1,5 +1,5 @@
 var React  = require('react/addons');
-var bus    = require('./event-service.js');
+var bus    = require('../event-service.js');
 var update = React.addons.update;
 
 var TimelineEventHandlerMixin = {
@@ -98,9 +98,15 @@ var TimelineEventHandlerMixin = {
 
 	handleRemoveCamera: function(id) {
 		var cameras = this.state.cameras;
-		delete cameras[id];
+		var newCameras = {};
+
+		for (var i in cameras) {
+			if (i == id) continue;
+			newCameras[i] = cameras[i]
+		}
+
 		this.setState({
-			cameras: cameras
+			cameras: newCameras
 		});
 	},
 
