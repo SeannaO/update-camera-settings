@@ -20,6 +20,8 @@ var ThumbnailPreview = React.createClass({
 
 		this.thumbsCounter = 0;
 
+		var i = 0;
+
 		if (!this.props.thumbs) return;
 		var el = [];
 		for (var t of this.props.thumbs) {
@@ -34,7 +36,7 @@ var ThumbnailPreview = React.createClass({
 			}
 
 			el.push( 
-					<div className = 'thumb'>
+					<div key = {i++} className = 'thumb'>
 						{img}
 					</div>
 				   );
@@ -63,7 +65,6 @@ var ThumbnailPreview = React.createClass({
 
 		if (this.props.px + 350 - offsetX > 0.9*document.body.offsetWidth) {
 			offsetX = this.props.px + 350 - 0.9*document.body.offsetWidth;
-			console.log(offsetX);
 		}
 
 		var thumbPos = {
