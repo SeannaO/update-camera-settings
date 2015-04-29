@@ -1,5 +1,5 @@
 var React = require('react/addons');
-var bus   = require('./event-service.js');
+var bus   = require('../event-service.js');
 
 var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
 
