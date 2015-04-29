@@ -14,6 +14,7 @@ gulp.task('default', function() {
     .transform(reactify)
     .bundle()
 	.on('error', function(err) {
+		console.log(err);
 		console.log('file: ' + err.fileName);
 		console.log('line: ' + err.lineNumber);
 		console.log('msg: ' + err.description);
@@ -28,7 +29,7 @@ gulp.task('default', function() {
 });
  
 gulp.task('watch', function() {
-  gulp.watch(sourcesDir + '/' + "*.js", ['default']);
+  gulp.watch(sourcesDir + '/**/*.js', ['default']);
 });
 
 
