@@ -1,12 +1,14 @@
 var React            = require('react/addons');
-var bus              = require('./event-service.js');
+var bus              = require('../event-service.js');
 var Subtimeline      = require('./subtimeline.js');
 var ThumbnailPreview = require('./thumbnail-component.js');
+var FFTimeline       = require('./ff-timeline.js');
 
 var PureRenderMixin           = require('react/addons').addons.PureRenderMixin;
 var TimelineEventHandlerMixin = require('./timeline-event-handler-mixin.js');
 var TimelineZoomMixin         = require('./timeline-zoom-in-mixin.js');
 var TimelineAutoresizeMixin   = require('./timeline-autoresize-mixin.js');
+
 
 var update = React.addons.update;
 
@@ -116,7 +118,7 @@ var Timeline = React.createClass({
 		var px   = e.nativeEvent.offsetX;
 		var time = this.getTimeFromPosition( px );
 
-		this.seek( time );
+		this.seek( time - 10000 );
 
 		// this.setState({
 		// 	begin:  time - 15*60*1000,
@@ -245,12 +247,34 @@ var Timeline = React.createClass({
 		});
 	},
 
-	handleMouseDown: function() {
+	handleMouseDown: function(e) {
 		console.log('mouse down');
+		var px = e.nativeEvent.offsetX;
+
+		this.setState({
+			beginDrag: px
+		});
+
 	},
 
-	handleMouseUp: function() {
+	handleMouseUp: function(e) {
 		console.log('mouse up');
+
+		var dx = 0;
+		var px = e.nativeEvent.offsetX;
+		if (this.state.beginDrag) {
+			dx = Math.abs(px - this.state.beginDrag);
+		}
+
+		this.setState({
+			beginDrag: null
+		});
+
+		if (dx > 10) {
+			console.log('dragging');
+		} else {
+			this.handleClick(e);
+		}
 	},
 
 
@@ -265,6 +289,13 @@ var Timeline = React.createClass({
 			zIndex:    10000
 		}
 
+		var dragCursorLeftStyle = {
+			display: !!this.state.beginDrag,
+			left: this.state.beginDrag || 0,
+		}
+
+		console.log( dragCursorLeftStyle );
+
 		return (
 			
 			<div>
@@ -272,7 +303,6 @@ var Timeline = React.createClass({
 					ref          = 'timeline'
 					id           = 'timeline-component'
 					className    = ''
-					onClick      = {this.handleClick}
 					onMouseEnter = {this.handleMouseEnter}
 					onMouseLeave = {this.handleMouseLeave}
 					onMouseMove  = {this.handleMouseMove}
@@ -289,6 +319,7 @@ var Timeline = React.createClass({
 						loading   = {this.state.loading}
 					/>
 
+
 				</div>
 
 				<ThumbnailPreview 
@@ -299,6 +330,15 @@ var Timeline = React.createClass({
 					style   = {thumbnailStyle}
 					time    = {this.state.thumbTime}
 				/>
+
+
+				<FFTimeline 
+					begin   = {this.state.begin}
+					end     = {this.state.end}
+					cameras = {this.state.cameras}
+					seek    = {this.seek}
+				/>
+
 			</div>
 			
 		);
