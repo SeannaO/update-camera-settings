@@ -13,11 +13,11 @@ var TimelineEventHandlerMixin = {
 	},
 
 	componentWillUnmount: function() {
-		// bus.on('addCamera', this.handleAddCamera);
-		// bus.on('removeCamera', this.handleRemoveCamera);
-		// bus.on('playerEvent-timeupdate', this.handlePlayerTimeUpdate);
-		// bus.on('camera-metadata', this.handleCameraMetadata);
-		// bus.on('day-selected', this.handleDateChange);
+		bus.removeListener('addCamera', this.handleAddCamera);
+		bus.removeListener('removeCamera', this.handleRemoveCamera);
+		bus.removeListener('playerEvent-timeupdate', this.handlePlayerTimeUpdate);
+		bus.removeListener('camera-metadata', this.handleCameraMetadata);
+		bus.removeListener('day-selected', this.handleDateChange);
 	},
 
 	handleDateChange: function(d) {
@@ -102,7 +102,7 @@ var TimelineEventHandlerMixin = {
 
 		for (var i in cameras) {
 			if (i == id) continue;
-			newCameras[i] = cameras[i]
+			newCameras[i] = cameras[i];
 		}
 
 		this.setState({
@@ -111,6 +111,9 @@ var TimelineEventHandlerMixin = {
 	},
 
 	handlePlayerTimeUpdate: function(d) {
+		
+		if (Date.now() - this.seekTime < 1000) return;
+
 		var cameras = this.state.cameras;
 		if (!cameras[d.id]) return;
 

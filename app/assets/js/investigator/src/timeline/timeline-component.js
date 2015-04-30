@@ -120,6 +120,7 @@ var Timeline = React.createClass({
 
 		this.seek( time - 10000 );
 
+
 		// this.setState({
 		// 	begin:  time - 15*60*1000,
 		// 	end:    time + 15*60*1000
@@ -128,6 +129,9 @@ var Timeline = React.createClass({
 	},
 
 	seek: function(time) {
+
+		this.seekTime = Date.now();
+
 		bus.emit('seek', {
 			time: time
 		});
