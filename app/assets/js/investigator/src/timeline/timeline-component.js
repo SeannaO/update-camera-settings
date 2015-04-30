@@ -1,7 +1,8 @@
-var React            = require('react/addons');
-var bus              = require('../event-service.js');
-var Subtimeline      = require('./subtimeline.js');
-var FFTimeline       = require('./ff-timeline.js');
+var React         = require('react/addons');
+var bus           = require('../event-service.js');
+var Subtimeline   = require('./subtimeline.js');
+var FFTimeline    = require('./ff-timeline.js');
+var TimelineScale = require('./timeline-scale.js');
 
 var PureRenderMixin           = require('react/addons').addons.PureRenderMixin;
 var TimelineEventHandlerMixin = require('./timeline-event-handler-mixin.js');
@@ -57,8 +58,6 @@ var Timeline = React.createClass({
 		var day = 24*60*60*1000;
 
 		return {
-			begin:    d,
-			end:      d + day,
 			width:    0,
 			cameras:  {}
 		}
@@ -264,6 +263,12 @@ var Timeline = React.createClass({
 						loading   = {this.state.loading}
 					/>
 				</div>
+
+				<TimelineScale
+					begin = {this.state.begin}
+					end   = {this.state.end}
+					width = {this.state.width}
+				/>
 
 				{this.getThumbnailTooltipElement()}
 

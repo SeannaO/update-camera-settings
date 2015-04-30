@@ -12,6 +12,24 @@
 #toolbar:hover {
 }
 
+.tick {
+	position:    absolute;
+	top:         -1px;
+	width:       2px;
+	height:      5px;
+	background:  #8f8f8f;
+	z-index:     -1;
+	opacity:     0.7;
+}
+
+.timeline-time {
+	position:        absolute;
+	color:           #AEAEAE;
+	pointer-events:  none;
+	z-index:         -1;
+	top:             -14px;
+	font-size:       9pt;
+}
 
 .thumb {
 	float:       left;
@@ -247,10 +265,12 @@
 }
 
 #timeline-toolbar {
-	width: 90%;
-	margin-left: 5%;
-	height: 25px;
-	/* background: rgba(200,200,200,0.5); */
+	width:          90%;
+	margin-left:    5%;
+	height:         25px;
+	margin-top:     -12px;
+	margin-bottom:  25px;
+	/* background:  rgba(200,200,200,0.5); */
 }
 
 .camera-container {
