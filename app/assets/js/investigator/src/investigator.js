@@ -3,9 +3,9 @@ var React = require('react/addons');
 var CameraGrid       = require('./camera-grid.js');
 var ToggleCameraList = require('./toggle-cameras.js');
 var CamerasListBox   = require('./cameras-list.js');
-var Datepicker       = require('./datepicker.js');
+var Datepicker       = require('./toolbar/datepicker.js');
 var Timeline         = require('./timeline/timeline-component.js');
-var CurrentTime      = require('./current-time.js');
+var CurrentTime      = require('./toolbar/current-time.js');
 
 React.render(
 	<div>
