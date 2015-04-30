@@ -47,8 +47,6 @@ var FFTimeline = React.createClass({
 
 	componentWillUpdate: function(nextProps, nextState) {
 
-		console.log('fftimeline');
-
 		var cameras = nextProps.cameras;
 		var begin = Math.round(nextProps.begin);
 		var end = Math.round(nextProps.end);
