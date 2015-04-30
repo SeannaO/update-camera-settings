@@ -144,6 +144,9 @@ var Timeline = React.createClass({
 			for(var cam_id in this.state.cameras) {
 				var cam = this.state.cameras[ cam_id ];
 				var dt = Math.abs( cam.time - this.state.time );
+
+				bus.emit('current-time', this.state.time);
+
 				if (dt > 5000) {
 					bus.emit('seek', {
 						id:    cam_id,
@@ -293,8 +296,6 @@ var Timeline = React.createClass({
 			display: !!this.state.beginDrag,
 			left: this.state.beginDrag || 0,
 		}
-
-		console.log( dragCursorLeftStyle );
 
 		return (
 			
