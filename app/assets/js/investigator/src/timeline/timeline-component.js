@@ -1,13 +1,13 @@
 var React            = require('react/addons');
 var bus              = require('../event-service.js');
 var Subtimeline      = require('./subtimeline.js');
-var ThumbnailPreview = require('./thumbnail-component.js');
 var FFTimeline       = require('./ff-timeline.js');
 
 var PureRenderMixin           = require('react/addons').addons.PureRenderMixin;
 var TimelineEventHandlerMixin = require('./timeline-event-handler-mixin.js');
 var TimelineZoomMixin         = require('./timeline-zoom-in-mixin.js');
 var TimelineAutoresizeMixin   = require('./timeline-autoresize-mixin.js');
+var ThumbnailsTooltipMixin    = require('./thumbnails-tooltip-mixin.js');
 
 
 var update = React.addons.update;
@@ -44,7 +44,8 @@ var Timeline = React.createClass({
 		PureRenderMixin,
 		TimelineEventHandlerMixin,
 		TimelineZoomMixin,
-		TimelineAutoresizeMixin
+		TimelineAutoresizeMixin,
+		ThumbnailsTooltipMixin
 	],
 
 	getInitialState: function() {
@@ -187,67 +188,15 @@ var Timeline = React.createClass({
 	},
 	
 	handleMouseEnter: function() {
-		this.setState({
-			showThumb: true
-		});
+		this.thumbnailsMixinMouseEnter();
 	},
 
 	handleMouseLeave: function() {
-		this.setState({
-			showThumb: false
-		});
-	},
-
-	debounce: function(func, wait, immediate) {
-		var timeout;
-		return function() {
-			var context = this, args = arguments;
-			var later = function() {
-				timeout = null;
-				if (!immediate) func.apply(context, args);
-			};
-			var callNow = immediate && !timeout;
-			clearTimeout(timeout);
-			timeout = setTimeout(later, wait);
-			if (callNow) func.apply(context, args);
-		};
+		this.thumbnailsMixinMouseLeave();
 	},
 
 	handleMouseMove: function(e) {
-		this.mouseMove(e);
-	},
-
-	mouseMove: function(e) {
-		var px = e.nativeEvent.offsetX;
-		var py = e.nativeEvent.offsetY;
-
-		var thumbs = [];
-		var time = this.getTimeFromPosition( px );
-
-		for (var i in this.state.cameras) {
-			var cam = this.state.cameras[i];
-			if(!cam.indexer) {
-				thumbs.push('');
-				continue;
-			} 
-
-			var el = cam.indexer.getRelativeTime( time, { returnElement: true });
-			if (!el) {
-				thumbs.push('');
-				continue;
-			}
-
-			var thumb_name = el.start + '_' + (el.end - el.start);
-			var thumb = "/cameras/" + cam.id + "/streams/" + cam.streams[0].id + "/thumb/" + thumb_name;
-			thumbs.push( thumb || '' );
-		}
-
-		this.setState({
-			thumbX:     px,
-			thumbY:     py,
-			thumbs:     thumbs,
-			thumbTime:  time
-		});
+		this.thumbnailsMixinMouseMove(e);
 	},
 
 	handleMouseDown: function(e) {
@@ -287,14 +236,9 @@ var Timeline = React.createClass({
 
 		var subtimelines = this.getSubtimelines();
 
-		var thumbnailStyle = {
-			position:  'absolute',
-			zIndex:    10000
-		}
-
 		var dragCursorLeftStyle = {
-			display: !!this.state.beginDrag,
-			left: this.state.beginDrag || 0,
+			display:  !!this.state.beginDrag,
+			left:     this.state.beginDrag || 0,
 		}
 
 		return (
@@ -319,19 +263,9 @@ var Timeline = React.createClass({
 						position  = {position}
 						loading   = {this.state.loading}
 					/>
-
-
 				</div>
 
-				<ThumbnailPreview 
-					px      = {this.state.thumbX}
-					py      = {this.state.thumbY}
-					thumbs  = {this.state.thumbs}
-					visible = {this.state.showThumb}
-					style   = {thumbnailStyle}
-					time    = {this.state.thumbTime}
-				/>
-
+				{this.getThumbnailTooltipElement()}
 
 				<FFTimeline 
 					begin   = {this.state.begin}
