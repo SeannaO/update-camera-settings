@@ -253,7 +253,18 @@ var PlayerContainer = React.createClass({
 		bus.on('seek', this.handleSeek);
 		bus.on('showThumb', this.handleThumb);
 		bus.on('hideThumb', this.handleHideThumb);
+		bus.on('play', this.handlePlay);
+		bus.on('pause', this.handlePause);
 	},
+
+	handlePlay: function() {
+		this.play();
+	},
+
+	handlePause: function() {
+		this.pause();
+	},
+
 
 	handleHideThumb: function() {
 		this.setState({
@@ -306,6 +317,8 @@ var PlayerContainer = React.createClass({
 		bus.removeListener('seek', this.handleSeek);
 		bus.removeListener('showThumb', this.handleThumb);
 		bus.removeListener('hideThumb', this.handleHideThumb);
+		bus.removeListener('play', this.handlePlay);
+		bus.removeListener('pause', this.handlePause);
 	},
 
 	render: function() {

@@ -6,6 +6,7 @@ var CamerasListBox   = require('./cameras-list.js');
 var Datepicker       = require('./toolbar/datepicker.js');
 var Timeline         = require('./timeline/timeline-component.js');
 var CurrentTime      = require('./toolbar/current-time.js');
+var TogglePlay       = require('./toolbar/toggle-play.js');
 
 React.render(
 	<div>
@@ -33,4 +34,9 @@ React.render(
 React.render(
 	<CurrentTime/>,
 	document.getElementById('current-time')
+);
+
+React.render(
+	<TogglePlay/>,
+	document.getElementById('toggle-play')
 );

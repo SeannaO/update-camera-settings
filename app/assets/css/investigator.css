@@ -75,6 +75,7 @@
 	height:      100%;
 }
 
+
 .btn-highlight {
 	cursor:  pointer;
 }
@@ -89,12 +90,21 @@
 
 }
 
+#centralized-buttons {
+	position:    absolute;
+	width:       auto;
+	display:     inline-block;
+	margin-top:  15px;
+	left:        50%;
+}
+
 .timeline-toolbar-item {
 	position:      relative;
 	float:         left;
 	margin-right:  10px;
 	top:           50%;
 	transform:     translateY(-50%);
+	font-size:     18pt;
 }
 
 .fadeIn-enter {
@@ -107,8 +117,10 @@
 }
 
 #toggle-date-picker {
-	font-size:    18pt;
+	font-size:   18pt;
+	margin-top:  -3.8px;
 }
+
 
 .white-bg {
 	background:  white;
