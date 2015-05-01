@@ -31,7 +31,8 @@
 		<script src="/js/lib/picker.js"></script>
 		<script src="/js/lib/picker.date.js"></script>
 
-        <script></script>
+		<script>
+		</script>
 
     </head>
 
@@ -43,9 +44,21 @@
 		</div>
         <hr>
 
+		<div id = "timeline-toolbar" class='noselect'>
+			<div id = 'datepicker-button' class = 'onTop'></div>
+			<div id = 'toolbar-spacer' class = 'timeline-toolbar-item' style = 'width: 30px; height: 10px'></div>
+			<div id = 'current-time' class = 'timeline-toolbar-item'></div>
+			<div id = 'centralized-buttons'>
+				<div id = 'skip-backward' class= 'timeline-toolbar-item'></div>
+				<div id = 'toggle-play' class = 'timeline-toolbar-item'></div>
+				<div id = 'skip-forward' class = 'timeline-toolbar-item'></div>
+			</div>
+		</div>
+		<div id = "timeline-container"></div>
+
 		<div id="main"></div>
 
-		<script type="text/javascript" src="/js/investigator/build/investigator.js"></script>
+		<script type="text/javascript" src="/js/investigator/build/main.js"></script>
 
     </body>
 

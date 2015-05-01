@@ -10,6 +10,7 @@ var TimelineEventHandlerMixin = {
 		bus.on('playerEvent-timeupdate', this.handlePlayerTimeUpdate);
 		bus.on('camera-metadata', this.handleCameraMetadata);
 		bus.on('day-selected', this.handleDateChange);
+		bus.on('skip', this.handleSkip);
 	},
 
 	componentWillUnmount: function() {
@@ -18,6 +19,12 @@ var TimelineEventHandlerMixin = {
 		bus.removeListener('playerEvent-timeupdate', this.handlePlayerTimeUpdate);
 		bus.removeListener('camera-metadata', this.handleCameraMetadata);
 		bus.removeListener('day-selected', this.handleDateChange);
+		bus.removeListener('skip', this.handleSkip);
+	},
+
+	handleSkip: function(d) {
+		if (!d || isNaN(d.dt)) return;
+		this.seek(this.state.time + d.dt*1000)
 	},
 
 	handleDateChange: function(d) {
