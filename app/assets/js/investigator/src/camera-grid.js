@@ -65,26 +65,6 @@ var CameraGrid = React.createClass({
 	},
 
 	moveCamera: function(id, afterId) {
-// 		var cameras = this.state.cameras;
-//
-// 		var camIndex, 
-// 			afterIndex;
-//
-// 		for(var i in cameras) {
-// 			if (cameras[i].id == id) camIndex = i;
-// 			if (cameras[i].id == afterId) afterIndex = i;
-// 		}
-// 	
-// 		var cam = cameras[camIndex];
-//
-// 		this.setState(React.addons.update(this.state, {
-// 			cameras: {
-// 				$splice: [
-// 					[camIndex, 1],
-// 					[afterIndex, 0, cam]
-// 				]
-// 			}
-// 		}));
 	},
 
 	recalculateSizes: function( n_cameras ) {
@@ -224,7 +204,7 @@ var CameraGrid = React.createClass({
 					ref        = {cameraItem.id}
 					width      = {width}
 					height     = {height}
-					key        = {cameraItem.id}
+					key        = {cameraItem.id + '_' + self.state.begin + '_' + self.state.end}
 					cam_id     = {cameraItem.id}
 					name       = {cameraItem.name}
 					ip         = {cameraItem.ip}

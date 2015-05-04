@@ -187,7 +187,6 @@ var PlayerContainer = React.createClass({
 		);
 
 		this.player = document.getElementById( 'strobe-' + this.props.cam_id);
-		// this.player = $('#strobe-' + this.props.cam_id)[0];
 	},
 
 
@@ -284,6 +283,8 @@ var PlayerContainer = React.createClass({
 
 	componentDidUpdate: function( prevProps, prevState) {
 
+		var self = this;
+
 		if ( prevProps.begin == this.props.begin 
 			&& prevProps.end == this.props.end 
 			&& prevProps.activeStream == this.props.activeStream
@@ -297,11 +298,11 @@ var PlayerContainer = React.createClass({
 		var stream = this.props.activeStream;
 
 		this.loadIndexer( function(err) {
-			this.loadVideo({
+			self.loadVideo({
 				time:    time,
 				stream:  stream
 			});
-		}.bind(this));
+		});
 
 	},
 
