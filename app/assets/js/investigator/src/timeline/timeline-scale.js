@@ -75,7 +75,7 @@ var TimelineScale = React.createClass({
 		var scale = this.getScale();
 
 		return(
-			<div>
+			<div className = 'noselect'>
 				{scale}
 			</div>
 		);

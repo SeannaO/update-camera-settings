@@ -73,7 +73,7 @@ var ThumbnailPreview = React.createClass({
 			display:  shouldBeVisible ? '' : 'none',
 		};
 
-		var style = 'shadow thumbPopover';
+		var style = 'shadow thumbPopover noselect';
 
 		return(
 				<div
