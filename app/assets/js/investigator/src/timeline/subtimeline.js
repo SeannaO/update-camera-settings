@@ -63,8 +63,6 @@ var Subtimeline = React.createClass({
 
 	render: function() {
 		
-		console.log('rendering subtimeline');
-
 		var segments = this.getSegments();
 		
 		return (

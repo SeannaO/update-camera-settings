@@ -10,7 +10,6 @@ var TimelineAutoresizeMixin = {
 	},
 
 	resize: function() {
-		console.log('resize');
 		var width = this.refs.timeline.getDOMNode().offsetWidth;
 
 		this.setState({
