@@ -341,6 +341,7 @@ var PlayerContainer = React.createClass({
 		var overlay_message = '';
 		if (this.state.status == 'no_video_recorded') overlay_message = 'no video recorded';
 		else if (this.state.status == 'loading') overlay_message = 'loading...';
+		else if (this.state.status == 'just_loaded') overlay_message = 'player ready';
 
 		return (
 			<div 
