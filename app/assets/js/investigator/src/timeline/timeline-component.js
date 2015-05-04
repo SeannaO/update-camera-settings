@@ -12,6 +12,7 @@ var TimelineEventHandlerMixin = require('./timeline-event-handler-mixin.js');
 var TimelineZoomMixin         = require('./timeline-zoom-in-mixin.js');
 var TimelineAutoresizeMixin   = require('./timeline-autoresize-mixin.js');
 var ThumbnailsTooltipMixin    = require('./thumbnails-tooltip-mixin.js');
+var TimelineScrollMixin       = require('./timeline-scroll-mixin.js');
 
 var update = React.addons.update;
 
@@ -24,6 +25,7 @@ var Timeline = React.createClass({
 		TimelineZoomMixin,
 		TimelineAutoresizeMixin,
 		ThumbnailsTooltipMixin,
+		TimelineScrollMixin,
 		tweenState.Mixin
 	],
 
@@ -32,8 +34,6 @@ var Timeline = React.createClass({
 		var d = new Date();
 		d.setHours(0,0,0,0);
 		d = Date.parse(d);
-
-		var day = 24*60*60*1000;
 
 		return {
 			width:    0,
@@ -83,11 +83,11 @@ var Timeline = React.createClass({
 		this.seekTime = Date.now();
 
 		bus.emit('seek', {
-			time: time
+			time:  time
 		});
 		
 		this.setState({
-			time:    time,
+			time:     time,
 			loading:  true
 		});
 	},
@@ -191,7 +191,6 @@ var Timeline = React.createClass({
 		}
 	},
 
-
 	render: function() {
 
 		var position = this.getPosition( this.state.time );
@@ -231,8 +230,9 @@ var Timeline = React.createClass({
 						p2      = {this.state.endDrag}
 						visible = {!!this.state.beginDrag && !!this.state.endDrag}
 					/>
-
 				</div>
+
+				{ this.getScrollButtons() }
 
 				<TimelineScale
 					begin = {this.getTweeningValue('begin')}
@@ -248,12 +248,9 @@ var Timeline = React.createClass({
 					cameras = {this.state.cameras}
 					seek    = {this.seek}
 				/>
-
 			</div>
-			
 		);
 	}
 });
 
 module.exports = Timeline;
-
