@@ -32,9 +32,22 @@ var itemDropTarget = {
 			height:        sizes.height,
 			playerWidth:   sizes.playerWidth,
 			playerHeight:  sizes.playerHeight,
-			paddingLeft:   sizes.paddingLeft
+			paddingLeft:   sizes.paddingLeft,
+			hovering:      false
 		});
-	}
+	},
+
+	leave: function(component, item) {
+		component.setState({
+			hovering: false
+		});
+	},
+
+	enter: function(component, item) {
+		component.setState({
+			hovering: true
+		});
+	},
 };
 
 
@@ -223,6 +236,19 @@ var CameraGrid = React.createClass({
 				/>
 			);
 		});
+
+		var gridIconStyle = {};
+		if (this.state.hovering) {
+			gridIconStyle = {
+				color:  'rgba(100,100,200,0.5)'
+			};
+		}
+
+		if (list.length == 0) {
+			list = 	<div id = 'centralized-grid-icon' style={gridIconStyle}>
+						<span className = 'glyphicon glyphicon-facetime-video'/>
+					</div>
+		}
 
 		return (
 			<div ref = 'grid' {...this.dropTargetFor('cameraItem')} className='cameraGrid' style={style}>

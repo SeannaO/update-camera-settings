@@ -46,6 +46,16 @@
 	width:      100%;
 }
 
+#centralized-grid-icon {
+	position:   absolute;
+	left:       50%;
+	top:        30%;
+	font-size:  80pt;
+	transform:  translate(-50%,-50%);
+	color:      rgba(90,90,90, 0.3);
+	display:    inline-block
+}
+
 .thumb-not-available {
 	color:       rgb(80,80,80);
 	margin-top:  50px;
@@ -78,6 +88,7 @@
 
 .btn-highlight {
 	cursor:  pointer;
+	color:   rgb(90,90,90);
 }
 
 .btn-highlight:hover {
@@ -90,12 +101,21 @@
 
 }
 
+#rightmost-buttons {
+	position:    absolute;
+	right:       5%;
+	margin-top:  15px;
+	display:     inline-block;
+	width:       auto;
+}
+
 #centralized-buttons {
 	position:    absolute;
 	width:       auto;
 	display:     inline-block;
 	margin-top:  15px;
 	left:        50%;
+	transform:   translateX(-50%);
 }
 
 .timeline-toolbar-item {
@@ -105,6 +125,7 @@
 	top:           50%;
 	transform:     translateY(-50%);
 	font-size:     18pt;
+	color:         rgb(90,90,90);
 }
 
 .fadeIn-enter {
@@ -118,7 +139,6 @@
 
 #toggle-date-picker {
 	font-size:   18pt;
-	margin-top:  -3.8px;
 }
 
 
@@ -243,13 +263,14 @@
 }
 
 .camera-container-menu {
-	position:    absolute;
-	top:         -20px;
-	z-index:     100;
-	background:  rgba(0,0,0,0.7);
-	width:       100%;
-	height:      20px;
-	color:       rgba(255,255,255,0.7);
+	position:       absolute;
+	top:            -20px;
+	z-index:        100;
+	width:          100%;
+	height:         20px;
+	color:          rgba(255,255,255,0.7);
+	background:     rgb(65, 65, 95);
+	padding-left:   5px;
 }
 
 .drag-cursor {
@@ -301,6 +322,7 @@
 	width:       100%;
 	height:      20px;
 	background:  rgba(100,100,200, 0.1);
+	overflow:  hidden
 }
 
 #timeline-container {
@@ -322,7 +344,7 @@
 #ff-timeline {
 	width:       100%;
 	height:      10px;
-	background:  rgba(200,200,200, 0.5);
+	background:  rgba(200,200,200, 0.3);
 	position:    absolute;
 	top:         25px;
 }
