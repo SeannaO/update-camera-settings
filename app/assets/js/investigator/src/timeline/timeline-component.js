@@ -1,8 +1,10 @@
-var React         = require('react/addons');
-var bus           = require('../event-service.js');
-var Subtimeline   = require('./subtimeline.js');
-var FFTimeline    = require('./ff-timeline.js');
-var TimelineScale = require('./timeline-scale.js');
+var React            = require('react/addons');
+var bus              = require('../event-service.js');
+var Subtimeline      = require('./subtimeline.js');
+var FFTimeline       = require('./ff-timeline.js');
+var TimelineScale    = require('./timeline-scale.js');
+var TimelineSelector = require('./timeline-selector.js');
+var tweenState       = require('react-tween-state');
 
 var PureRenderMixin           = require('react/addons').addons.PureRenderMixin;
 var TimelineEventHandlerMixin = require('./timeline-event-handler-mixin.js');
@@ -46,7 +48,8 @@ var Timeline = React.createClass({
 		TimelineEventHandlerMixin,
 		TimelineZoomMixin,
 		TimelineAutoresizeMixin,
-		ThumbnailsTooltipMixin
+		ThumbnailsTooltipMixin,
+		tweenState.Mixin
 	],
 
 	getInitialState: function() {
@@ -118,7 +121,7 @@ var Timeline = React.createClass({
 		var px   = e.nativeEvent.offsetX;
 		var time = this.getTimeFromPosition( px );
 
-		this.seek( time - 10000 );
+		this.seek( time - 1000 );
 
 
 		// this.setState({
@@ -146,8 +149,9 @@ var Timeline = React.createClass({
 	componentDidUpdate: function( prevProps, prevState) {
 		if (prevState.time !== this.state.time) {
 			for(var cam_id in this.state.cameras) {
+
 				var cam = this.state.cameras[ cam_id ];
-				var dt = Math.abs( cam.time - this.state.time );
+				var dt  = Math.abs( cam.time - this.state.time );
 
 				bus.emit('current-time', this.state.time);
 
@@ -178,8 +182,8 @@ var Timeline = React.createClass({
 			subtimelines.push(
 					<Subtimeline
 						key     = {cam.id}
-						begin   = {this.state.begin}
-						end     = {this.state.end}
+						begin   = {this.getTweeningValue('begin')}
+						end     = {this.getTweeningValue('end')}
 						width   = {this.state.width}
 						camera  = {cam}
 						opacity = {opacity}
@@ -200,10 +204,15 @@ var Timeline = React.createClass({
 
 	handleMouseMove: function(e) {
 		this.thumbnailsMixinMouseMove(e);
+		if (!!this.state.beginDrag) {
+			var px = e.nativeEvent.offsetX;
+			this.setState({
+				endDrag: px
+			});
+		}
 	},
 
 	handleMouseDown: function(e) {
-		console.log('mouse down');
 		var px = e.nativeEvent.offsetX;
 
 		this.setState({
@@ -213,7 +222,6 @@ var Timeline = React.createClass({
 	},
 
 	handleMouseUp: function(e) {
-		console.log('mouse up');
 
 		var dx = 0;
 		var px = e.nativeEvent.offsetX;
@@ -221,12 +229,34 @@ var Timeline = React.createClass({
 			dx = Math.abs(px - this.state.beginDrag);
 		}
 
+		var beginDrag = this.state.beginDrag;
+		var endDrag   = this.state.endDrag;
+
+		var max = Math.max( beginDrag, endDrag );
+		var min = Math.min( beginDrag, endDrag );
+
+		beginDrag = min;
+		endDrag   = max;
+
 		this.setState({
-			beginDrag: null
+			beginDrag:  null,
+			endDrag:    null
 		});
 
-		if (dx > 10) {
-			console.log('dragging');
+		if (dx > 5) {
+			var begin = this.getTimeFromPosition( beginDrag );
+			var end   = this.getTimeFromPosition( endDrag );
+
+			this.tweenState( 'begin', {
+				easing:    tweenState.easingTypes.easeInOutQuad,
+				duration:  200,
+				endValue:  begin
+			});
+			this.tweenState( 'end', {
+				easing:    tweenState.easingTypes.easeInOutQuad,
+				duration:  200,
+				endValue:  end
+			});
 		} else {
 			this.handleClick(e);
 		}
@@ -250,7 +280,7 @@ var Timeline = React.createClass({
 				<div {...this.getZoomMouseEvents() } 
 					ref          = 'timeline'
 					id           = 'timeline-component'
-					className    = ''
+					className    = 'noselect'
 					onMouseEnter = {this.handleMouseEnter}
 					onMouseLeave = {this.handleMouseLeave}
 					onMouseMove  = {this.handleMouseMove}
@@ -266,11 +296,18 @@ var Timeline = React.createClass({
 						position  = {position}
 						loading   = {this.state.loading}
 					/>
+
+					<TimelineSelector
+						p1      = {this.state.beginDrag}
+						p2      = {this.state.endDrag}
+						visible = {!!this.state.beginDrag && !!this.state.endDrag}
+					/>
+
 				</div>
 
 				<TimelineScale
-					begin = {this.state.begin}
-					end   = {this.state.end}
+					begin = {this.getTweeningValue('begin')}
+					end   = {this.getTweeningValue('end')}
 					width = {this.state.width}
 				/>
 
