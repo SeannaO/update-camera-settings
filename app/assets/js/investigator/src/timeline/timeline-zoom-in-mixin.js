@@ -1,7 +1,9 @@
-var React = require('react/addons');
+var React      = require('react/addons');
+var tweenState = require('react-tween-state');
 
 var TimelineZoomMixin = {
-	
+
+	startDragThreshold: 5,
 
 	getZoomMouseEvents: function() {
 		return {
@@ -27,8 +29,35 @@ var TimelineZoomMixin = {
 			dragStartPos:  px,
 			dragEndPos:    null
 		});
+	},
 
-		console.log('drag start:');
+	handleDragEnd: function(beginDrag, endDrag, dx) {
+
+		this.setState({
+			dragging:   false,
+			beginDrag:  null,
+			endDrag:    null
+		});
+
+		if (dx > this.startDragThreshold) {
+			var begin = this.getTimeFromPosition( beginDrag );
+			var end   = this.getTimeFromPosition( endDrag );
+
+			this.tweenState( 'begin', {
+				easing:    tweenState.easingTypes.easeInOutQuad,
+				duration:  200,
+				endValue:  begin
+			});
+
+			this.tweenState( 'end', {
+				easing:    tweenState.easingTypes.easeInOutQuad,
+				duration:  200,
+				endValue:  end
+			});
+			return true;
+		}
+
+		return false;
 	}
 };
 

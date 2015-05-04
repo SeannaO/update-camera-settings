@@ -185,26 +185,8 @@ var Timeline = React.createClass({
 		beginDrag = min;
 		endDrag   = max;
 
-		this.setState({
-			beginDrag:  null,
-			endDrag:    null
-		});
-
-		if (dx > 5) {
-			var begin = this.getTimeFromPosition( beginDrag );
-			var end   = this.getTimeFromPosition( endDrag );
-
-			this.tweenState( 'begin', {
-				easing:    tweenState.easingTypes.easeInOutQuad,
-				duration:  200,
-				endValue:  begin
-			});
-			this.tweenState( 'end', {
-				easing:    tweenState.easingTypes.easeInOutQuad,
-				duration:  200,
-				endValue:  end
-			});
-		} else {
+		var hasDragged = this.handleDragEnd( beginDrag, endDrag, dx);
+		if ( !hasDragged ){
 			this.handleClick(e);
 		}
 	},
