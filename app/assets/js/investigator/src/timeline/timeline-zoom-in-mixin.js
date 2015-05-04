@@ -16,6 +16,12 @@ var TimelineZoomMixin = {
 
 	componentDidMount: function() {
 		bus.on('zoom-out', this.zoomOut);
+		bus.on('day-selected', this.clearHistory);
+	},
+
+	componentWillUnmount: function() {
+		bus.removeListener('zoom-out', this.zoomOut);
+		bus.removeListener('day-selected', this.clearHistory);
 	},
 
 	handleDragstart: function(e, d) {
@@ -105,6 +111,10 @@ var TimelineZoomMixin = {
 		});
 	},
 
+
+	clearHistory: function() {
+		this.zoomHistory = [];
+	},
 
 	popZoom: function() {
 		var zoom = this.zoomHistory.pop();
