@@ -1,6 +1,7 @@
 var React            = require('react/addons');
 var bus              = require('../event-service.js');
 var Subtimeline      = require('./subtimeline.js');
+var Cursor           = require('./cursor.js');
 var FFTimeline       = require('./ff-timeline.js');
 var TimelineScale    = require('./timeline-scale.js');
 var TimelineSelector = require('./timeline-selector.js');
@@ -12,33 +13,7 @@ var TimelineZoomMixin         = require('./timeline-zoom-in-mixin.js');
 var TimelineAutoresizeMixin   = require('./timeline-autoresize-mixin.js');
 var ThumbnailsTooltipMixin    = require('./thumbnails-tooltip-mixin.js');
 
-
 var update = React.addons.update;
-
-
-var Cursor = React.createClass({
-
-	render: function() {
-
-		var position = this.props.position;
-
-		var style = {
-			left:        this.props.position + 'px',
-			background:  this.props.color,
-			display: 	 isNaN( position ) ? 'none' : '',
-			opacity:     this.props.loading ? 0.5 : 1.0
-		}
-
-		return(
-			<div
-				ref       = 'cursor'
-				className = 'timeline-cursor'
-				style     = {style}>
-			</div>
-		);
-	}
-});
-
 
 /// 
 var Timeline = React.createClass({
@@ -69,6 +44,7 @@ var Timeline = React.createClass({
 	componentDidMount: function() {
 	},
 
+
 	getPosition: function( time ) {
 
 		if (isNaN(time)) return;
@@ -79,28 +55,6 @@ var Timeline = React.createClass({
 		var w = this.state.width;
 
 		return ( w*d/timespan );
-	},
-
-	getCursors: function() {
-
-		var cameras = this.state.cameras;
-
-		if (!cameras) return;
-
-		var cursors = [];
-		
-		for( var id in cameras ) {
-			var position = this.getPosition( cameras[id].time );
-			cursors.push(
-				<Cursor
-					key      = {id}
-					position = {position}
-					color    = {cameras[id].color}
-				/>
-			);
-		}
-
-		return cursors;
 	},
 
 
@@ -122,13 +76,6 @@ var Timeline = React.createClass({
 		var time = this.getTimeFromPosition( px );
 
 		this.seek( time - 1000 );
-
-
-		// this.setState({
-		// 	begin:  time - 15*60*1000,
-		// 	end:    time + 15*60*1000
-		// });
-
 	},
 
 	seek: function(time) {
