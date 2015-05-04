@@ -1,14 +1,21 @@
 var React      = require('react/addons');
 var tweenState = require('react-tween-state');
+var bus        = require('../event-service.js');
 
 var TimelineZoomMixin = {
 
 	startDragThreshold: 5,
 
+	zoomHistory: [],
+
 	getZoomMouseEvents: function() {
 		return {
 			onDrag:  this.handleDragstart,
 		}
+	},
+
+	componentDidMount: function() {
+		bus.on('zoom-out', this.zoomOut);
 	},
 
 	handleDragstart: function(e, d) {
@@ -31,6 +38,7 @@ var TimelineZoomMixin = {
 		});
 	},
 
+
 	handleDragEnd: function(beginDrag, endDrag, dx) {
 
 		this.setState({
@@ -40,24 +48,75 @@ var TimelineZoomMixin = {
 		});
 
 		if (dx > this.startDragThreshold) {
-			var begin = this.getTimeFromPosition( beginDrag );
-			var end   = this.getTimeFromPosition( endDrag );
 
-			this.tweenState( 'begin', {
-				easing:    tweenState.easingTypes.easeInOutQuad,
-				duration:  200,
-				endValue:  begin
-			});
+			this.zoomIn( beginDrag, endDrag );
 
-			this.tweenState( 'end', {
-				easing:    tweenState.easingTypes.easeInOutQuad,
-				duration:  200,
-				endValue:  end
-			});
 			return true;
 		}
 
 		return false;
+	},
+
+
+	zoomIn: function( beginDrag, endDrag ) {
+
+		this.pushZoom( this.state.begin, this.state.end );
+		bus.emit('zoom-in', {});
+
+		var begin = this.getTimeFromPosition( beginDrag );
+		var end   = this.getTimeFromPosition( endDrag );
+
+		this.tweenState( 'begin', {
+			easing:    tweenState.easingTypes.easeInOutQuad,
+			duration:  200,
+			endValue:  begin
+		});
+
+		this.tweenState( 'end', {
+			easing:    tweenState.easingTypes.easeInOutQuad,
+			duration:  200,
+			endValue:  end
+		});
+
+	},
+
+
+	zoomOut: function() {
+
+		var zoom = this.popZoom();
+
+		if (!zoom) {
+			return;
+		}
+		else if (!this.zoomHistory[0]) {
+			bus.emit('no-more-zoom-out',{});
+		}
+
+		this.tweenState( 'begin', {
+			easing:    tweenState.easingTypes.easeInOutQuad,
+			duration:  200,
+			endValue:  zoom.begin
+		});
+
+		this.tweenState( 'end', {
+			easing:    tweenState.easingTypes.easeInOutQuad,
+			duration:  200,
+			endValue:  zoom.end
+		});
+	},
+
+
+	popZoom: function() {
+		var zoom = this.zoomHistory.pop();
+		return zoom;
+	},
+
+
+	pushZoom: function(begin, end) {
+		this.zoomHistory.push({
+			begin:  begin,
+			end:    end
+		});
 	}
 };
 
