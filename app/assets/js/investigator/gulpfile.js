@@ -5,7 +5,7 @@ var source     = require('vinyl-source-stream'),
     notify     = require('gulp-notify');
  
 var sourcesDir    = './src',
-    appEntryPoint = "investigator.js",
+    appEntryPoint = "main.js",
     targetDir     = './build';
  
  
