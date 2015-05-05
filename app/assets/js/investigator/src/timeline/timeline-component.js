@@ -49,9 +49,9 @@ var Timeline = React.createClass({
 
 		if (isNaN(time)) return;
 
-		var timespan = this.state.end - this.state.begin;
+		var timespan = this.getTweeningValue('end') - this.getTweeningValue('begin');
 
-		var d = time - this.state.begin;
+		var d = time - this.getTweeningValue('begin');
 		var w = this.state.width;
 
 		return ( w*d/timespan );
