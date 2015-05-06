@@ -18,6 +18,7 @@ var CamerasListBox = React.createClass({
 					if (d.streams.length) list.push(d);
 				}
 				this.setState({cameras: list});
+				bus.emit('loaded-cameras-list', {cameras: list});
 			}.bind(this),
 			error: function(xhr, status, err) {
 				console.error(this.props.url, status, err.toString());
@@ -62,7 +63,11 @@ var CamerasListBox = React.createClass({
 		return (
 			<div className='camerasListBox' style={style}>
 				<h2>cameras</h2>
-				<CamerasList key = 'cameras-list' cameras={this.state.cameras}/>
+				<CamerasList 
+					ref     = 'camerasList'
+					key     = 'cameras-list'
+					cameras = {this.state.cameras}
+				/>
 			</div>
 		);
 	}
@@ -70,6 +75,35 @@ var CamerasListBox = React.createClass({
 
 
 var CamerasList = React.createClass({
+
+	componentDidMount: function() {
+		bus.on('addCamera', this.handleAddCamera);
+		bus.on('removeCamera', this.handleRemoveCamera);
+	},
+
+	componentWillUnmount: function() {
+		bus.removeListener('addCamera', this.handleAddCamera);
+		bus.removeListener('removeCamera', this.handleRemoveCamera);
+	},
+
+	handleAddCamera: function(d) {
+		this.disableItem( d.id );	
+	},
+
+	handleRemoveCamera: function( id ) {
+		this.enableItem( id );
+	},
+
+	enableItem: function( id ) {
+		if (!this.refs[id]) return;
+		this.refs[id].enable();
+	},
+
+	disableItem: function( id ) {
+		if (!this.refs[id]) return;
+		this.refs[id].disable();
+	},
+
 	render: function() {
 
 		var list = this.props.cameras.map( function(camera) {
@@ -80,6 +114,7 @@ var CamerasList = React.createClass({
 					ip      = {camera.ip}
 					streams = {camera.streams}
 					cam_id  = {camera._id}
+					ref     = {camera._id}
 				>
 				</CameraItem>
 			);

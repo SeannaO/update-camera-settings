@@ -8,7 +8,6 @@ var itemDragSource = {
 				name:     component.props.name,
 				ip:       component.props.ip,
 				streams:  component.props.streams,
-				enable:   component.enable,
 				id:       component.props.cam_id
 			}
 		};
@@ -16,9 +15,7 @@ var itemDragSource = {
 
 	endDrag: function( component, effect ) {
 		if(effect) {
-			component.setState({
-				hasDropped: true
-			});
+			component.disable();
 		}
 	},
 
@@ -49,6 +46,12 @@ var CameraItem = React.createClass({
 	enable: function() {
 		this.setState({
 			hasDropped: false
+		});
+	},
+
+	disable: function() {
+		this.setState({
+			hasDropped: true
 		});
 	},
 

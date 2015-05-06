@@ -10,31 +10,8 @@ var Animation = React.addons.CSSTransitionGroup;
 
 var itemDropTarget = {
 	acceptDrop: function(component, item) {
-		var newCameras = component.state.cameras;
-		newCameras.push({
-			name:     item.name,
-			ip:       item.ip,
-			id:       item.id,
-			streams:  item.streams,
-			enable:   item.enable
-		});
 
-		// event emitter
-		bus.emit('addCamera', {
-			id:       item.id,
-			streams:  item.streams
-		});
-		//
-			
-		var sizes = component.recalculateSizes(newCameras.length);
-		component.setState({
-			cameras:       newCameras,
-			height:        sizes.height,
-			playerWidth:   sizes.playerWidth,
-			playerHeight:  sizes.playerHeight,
-			paddingLeft:   sizes.paddingLeft,
-			hovering:      false
-		});
+		component.addCamera( item );
 	},
 
 	leave: function(component, item) {
@@ -54,7 +31,6 @@ var itemDropTarget = {
 var CameraGrid = React.createClass({
 
 	mixins: [ReactDND.DragDropMixin],
-
 		
 	statics: {
 		configureDragDrop: function(register) {
@@ -62,6 +38,34 @@ var CameraGrid = React.createClass({
 				dropTarget: itemDropTarget
 			});
 		}
+	},
+
+	addCamera: function(cam) {
+
+		var newCameras = this.state.cameras;
+
+		newCameras.push({
+			name:     cam.name,
+			ip:       cam.ip,
+			id:       cam.id,
+			streams:  cam.streams
+		});
+
+		bus.emit('addCamera', {
+			id:       cam.id,
+			streams:  cam.streams
+		});
+			
+		var sizes = this.recalculateSizes(newCameras.length);
+
+		this.setState({
+			cameras:       newCameras,
+			height:        sizes.height,
+			playerWidth:   sizes.playerWidth,
+			playerHeight:  sizes.playerHeight,
+			paddingLeft:   sizes.paddingLeft,
+			hovering:      false
+		});
 	},
 
 	moveCamera: function(id, afterId) {
@@ -151,7 +155,6 @@ var CameraGrid = React.createClass({
 
 	removeCamera: function(cameraItem) {
 		return function() {
-			cameraItem.enable();
 			var cameras = this.state.cameras;
 			for (var i in cameras) {
 				if (cameras[i].id == cameraItem.id) break;
