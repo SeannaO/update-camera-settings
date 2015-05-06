@@ -15,13 +15,67 @@ var Investigator = React.createClass({
 		InvestigatorEventsMixin
 	],
 
+	componentDidMount: function() {
+	},
+
+	loadSession: function() {
+
+		var state = sessionStorage.getItem('state');
+		if (!state) return;
+
+		state = JSON.parse(state);
+
+		// load cameras
+		for(var i in state.cameras) {
+			var cam = state.cameras[i];
+			setTimeout( (function(c) {
+				this.refs.grid.addCamera(c);
+			}).bind(this, cam), 50*i);
+		}
+
+		// load day
+		if (state.day) {
+			bus.emit('day-selected', state.day);
+		}
+
+		// load interval
+		if (state.begin && state.end) {
+			setTimeout( (function() {
+				this.refs.timeline.zoomToInterval( state.begin, state.end );
+			}).bind(this), 50);
+		}
+
+		// load time
+		if (state.time) {
+			this.refs.timeline.seek( state.time );
+		}
+	},
+
 	getInitialState: function() {
 		return {
 			cameras: {}
 		}
 	},
 
-	shouldComponentUpdate: function() {
+
+	shouldComponentUpdate: function( nextProps, nextState ) {
+
+		if (nextState.availableCameras != this.state.availableCameras) {
+			this.loadSession();
+			return false;
+		}
+
+
+		sessionStorage.setItem('state', JSON.stringify({
+			begin:    nextState.begin,
+			end:      nextState.end,
+			cameras:  nextState.cameras,
+			time:     nextState.time,
+			day:      nextState.day
+		}));
+
+		sessionStorage.setItem('cameraCount', Object.keys( nextState.cameras ).length );
+		
 		return false;
 	},
 
@@ -38,7 +92,7 @@ var Investigator = React.createClass({
 				</div>
 
 				<div id = 'timeline-container'>
-					<Timeline />
+					<Timeline ref = 'timeline'/>
 				</div>
 			</div>
 		)

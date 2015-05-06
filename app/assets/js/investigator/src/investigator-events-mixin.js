@@ -89,13 +89,14 @@ var InvestigatorEventsMixin = {
 	},
 
 	handleAddCamera: function(cam) {
+
 		var id      = cam.id;
 		var streams = cam.streams;
 
 		var cameras  = this.state.cameras;
-		var nCameras = Object.keys(cameras).length;
 
 		var newCam = {};
+
 		newCam[id] = {
 			id:        id,
 			streams:   streams
@@ -124,6 +125,13 @@ var InvestigatorEventsMixin = {
 		});
 	},
 	
+	handleDaySelected: function(d) {
+		this.setState( {
+			day: d 
+		});
+	},
+
+
 	componentDidMount: function() {
 		bus.on('interval-change', this.handleIntervalChange);
 		bus.on('loaded-cameras-list', this.handleCamerasList);
@@ -132,6 +140,7 @@ var InvestigatorEventsMixin = {
 		bus.on('current-time', this.handleTimeUpdate);
 		bus.on('addCamera', this.handleAddCamera);
 		bus.on('removeCamera', this.handleRemoveCamera);
+		bus.on('day-selected', this.handleDaySelected);
 	},
 	
 	componentWillUnmount: function() {
@@ -142,6 +151,7 @@ var InvestigatorEventsMixin = {
 		bus.removeListener('current-time', this.handleTimeUpdate);
 		bus.removeListener('addCamera', this.handleAddCamera);
 		bus.removeListener('removeCamera', this.handleRemoveCamera);
+		bus.removeListener('day-selected', this.handleDaySelected);
 	},
 };
 
