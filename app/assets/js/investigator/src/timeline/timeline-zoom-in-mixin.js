@@ -64,6 +64,24 @@ var TimelineZoomMixin = {
 	},
 
 
+	zoomToInterval: function( begin, end ) {
+
+		this.pushZoom( this.state.begin, this.state.end );
+
+		bus.emit('zoom-in', {});
+
+		this.setState({
+			begin:  begin,
+			end:    end
+		});
+
+		bus.emit('interval-change', {
+			begin:  begin,
+			end:    end
+		});
+	},
+
+
 	zoomIn: function( beginDrag, endDrag ) {
 
 		this.pushZoom( this.state.begin, this.state.end );
@@ -120,7 +138,6 @@ var TimelineZoomMixin = {
 			end:    zoom.end
 		});
 	},
-
 
 	clearHistory: function() {
 		this.zoomHistory = [];
