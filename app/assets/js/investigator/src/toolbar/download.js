@@ -3,7 +3,8 @@ var React = require('react/addons');
 var DownloadButton = React.createClass({
 
 	handleClick: function() {
-		console.log('download');
+		var cb = this.props.onclick || function(){ console.log('no cb')};
+		cb();
 	},
 
 	getInitialState: function() {
@@ -13,7 +14,8 @@ var DownloadButton = React.createClass({
 
 	render: function() {
 
-		var className = 'btn-highlight glyphicon glyphicon-save';
+		var className = 'btn-highlight glyphicon glyphicon-save camera-toolbar-item';
+
 		return(
 			<span
 				className = {className}

@@ -5,7 +5,7 @@ var TogglePlay     = require('./toggle-play.js');
 var Skip           = require('./skip.js');
 var GoLiveButton   = require('./go-live.js');
 var ZoomOutButton  = require('./zoom-out.js');
-var DownloadButton = require('./download.js');
+var bus            = require('../event-service.js');
 
 var Toolbar = React.createClass({
 
@@ -52,11 +52,6 @@ var Toolbar = React.createClass({
 
 				<div id = 'rightmost-buttons' className = ''>
 					<div id = 'go-live' className ='timeline-toolbar-item'></div>
-					<div id = 'download' className ='timeline-toolbar-item'>
-						<DownloadButton
-							isLive = {false}
-						/>
-					</div>
 				</div>
 
 			</div>
