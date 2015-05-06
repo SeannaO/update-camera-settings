@@ -1,47 +1,45 @@
-//
-//
-
-// var dragSource = {
-// 	beginDrag: function(component) {
-// 		return {
-// 			item: {
-// 				id: component.props.cam_id
-// 			}
-// 		};
-// 	}
-// };
-
-// var dropTarget = {
-// 	over: function(component, item) {
-// 		component.props.moveCamera(item.id, component.props.cam_id);
-// 	}
-// };
-var React           = require('react/addons');
-var PlayerContainer = require('./player-container.js');
+var React            = require('react/addons');
+var PlayerContainer  = require('./player-container.js');
+var DownloadButton   = require('./toolbar/download.js');
+var GoToCameraButton = require('./toolbar/go-to-camera.js');
+var bus              = require('./event-service.js');
 
 
 var CameraContainer = React.createClass({
-
-
-// 	mixins: [ReactDND.DragDropMixin],	
-//
-// 	statics: {
-// 		configureDragDrop: function(register) {
-// 			register('cameraContainer', {
-// 				dropTarget:  dropTarget,
-// 				dragSource:  dragSource
-// 			});
-// 		}
-// 	},
 
 	componentDidMount: function() {
 	},
 
 	getInitialState: function() {
 		return {
-			width:   '480px',
-			height:  '360px',
+			width:     '480px',
+			height:    '360px',
+			hovering:  false
 		}
+	},
+
+	mouseEnterHandler: function() {
+		this.setState({
+			hovering:  true
+		});
+	},
+
+	mouseLeaveHandler: function() {
+		this.setState({
+			hovering:  false
+		});
+	},
+
+	downloadVideo: function(id) {
+		bus.emit('download-video', {
+			id:  this.props.cam_id
+		});
+	},
+
+	goToCamera: function(id) {
+		bus.emit('go-to-camera', {
+			id: this.props.cam_id
+		});
 	},
 
 	render: function() {
@@ -51,10 +49,17 @@ var CameraContainer = React.createClass({
 			height:  this.props.height
 		}
 
+		var toolbarStyle = {
+			opacity: this.state.hovering ? 0.8 : 0.1
+		}
+
 		return (
-			<div ref = 'container' className='camera-container' style={style}
-				// {...this.dragSourceFor('cameraContainer')}
-				// {...this.dropTargetFor('cameraContainer')}
+			<div 
+				ref          = 'container'
+				className    = 'camera-container'
+				style        = {style}
+				onMouseEnter = {this.mouseEnterHandler}
+				onMouseLeave = {this.mouseLeaveHandler}
 			>
 				<div className='camera-container-menu'>
 					<div className='close-window' onClick = {this.props.close}> [ x ] </div>
@@ -71,6 +76,15 @@ var CameraContainer = React.createClass({
 					begin   = {this.props.begin}
 					end     = {this.props.end}
 				/>
+
+				<div className = 'player-toolbar' style = {toolbarStyle}>
+					<DownloadButton
+					 	onclick = {this.downloadVideo}
+					/>
+					<GoToCameraButton
+					 	onclick = {this.goToCamera}
+					/>
+				</div>
 			</div>
 		);
 	}
