@@ -176,7 +176,8 @@ CameraPage.prototype.setupEvents = function() {
 
 		if (self.state && self.state.time) {
 			
-			var offset = self.timeline.indexer.getRelativeTime(self.state.time);
+			var offset = self.timeline.indexer.getRelativeTime(self.state.time, {returnClosestTime: true} );
+
 			self.jumpTo({ 
 				time: offset
 			});

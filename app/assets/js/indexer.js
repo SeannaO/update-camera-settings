@@ -154,7 +154,9 @@ Indexer.prototype.getRelativeTime = function( absoluteTime, options ) {
 	if (!el) return;
 
 	if ( absoluteTime > el.end || absoluteTime < el.start) {
-		return;
+ 		if ( options.returnClosestTime )
+			return (absoluteTime - el.start)/1000.0 + el.totalTime;
+		else return;
 	}
 
 	if (options.returnElement) return el;
