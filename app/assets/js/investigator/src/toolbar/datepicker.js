@@ -21,7 +21,6 @@ var Datepicker = React.createClass({
 		this.pickadate = $(this.refs.button.getDOMNode()).pickadate({
 			onSet: function(d) {
 				if (!d) return;
-				console.log(d);
 				bus.emit('day-selected', {
 					timestamp: d.select
 				});

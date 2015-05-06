@@ -18,8 +18,7 @@ var CurrentTime = React.createClass({
 		if (!d) return;
 
 		var t = Math.round( d.timestamp );
-
-		this.handleDateUpdate(t);
+		this.handleTimeUpdate(t);
 	},
 
 	handleTimeUpdate: function(t) {
