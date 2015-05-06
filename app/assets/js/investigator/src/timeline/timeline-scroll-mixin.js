@@ -1,5 +1,6 @@
 var React      = require('react/addons');
 var tweenState = require('react-tween-state');
+var bus        = require('../event-service.js');
 
 var TimelineScrollMixin = {
 
@@ -21,6 +22,11 @@ var TimelineScrollMixin = {
 			duration:  200,
 			endValue: end
 		});
+
+		bus.emit('interval-change', {
+			begin:  begin,
+			end:    end
+		});
 	},
 
 	scrollLeft: function() {
@@ -40,6 +46,11 @@ var TimelineScrollMixin = {
 			easing:    tweenState.easingTypes.easeInOutQuad,
 			duration:  200,
 			endValue: end
+		});
+
+		bus.emit('interval-change', {
+			begin:  begin,
+			end:    end
 		});
 	},
 

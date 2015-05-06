@@ -10,7 +10,7 @@ var TimelineZoomMixin = {
 
 	getZoomMouseEvents: function() {
 		return {
-			onDrag:  this.handleDragstart,
+			onDrag:  this.handleDragstart
 		}
 	},
 
@@ -67,6 +67,7 @@ var TimelineZoomMixin = {
 	zoomIn: function( beginDrag, endDrag ) {
 
 		this.pushZoom( this.state.begin, this.state.end );
+
 		bus.emit('zoom-in', {});
 
 		var begin = this.getTimeFromPosition( beginDrag );
@@ -84,6 +85,10 @@ var TimelineZoomMixin = {
 			endValue:  end
 		});
 
+		bus.emit('interval-change', {
+			begin:  begin,
+			end:    end
+		});
 	},
 
 
@@ -108,6 +113,11 @@ var TimelineZoomMixin = {
 			easing:    tweenState.easingTypes.easeInOutQuad,
 			duration:  200,
 			endValue:  zoom.end
+		});
+
+		bus.emit('interval-change', {
+			begin:  zoom.begin,
+			end:    zoom.end
 		});
 	},
 
