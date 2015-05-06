@@ -1,11 +1,12 @@
-var React          = require('react/addons');
-var Datepicker     = require('./datepicker.js');
-var CurrentTime    = require('./current-time.js');
-var TogglePlay     = require('./toggle-play.js');
-var Skip           = require('./skip.js');
-var GoLiveButton   = require('./go-live.js');
-var ZoomOutButton  = require('./zoom-out.js');
-var bus            = require('../event-service.js');
+var React            = require('react/addons');
+var Datepicker       = require('./datepicker.js');
+var CurrentTime      = require('./current-time.js');
+var TogglePlay       = require('./toggle-play.js');
+var Skip             = require('./skip.js');
+var GoLiveButton     = require('./go-live.js');
+var ZoomOutButton    = require('./zoom-out.js');
+var bus              = require('../event-service.js');
+var ToggleCameraList = require('./../toggle-cameras.js');
 
 var Toolbar = React.createClass({
 
@@ -52,6 +53,9 @@ var Toolbar = React.createClass({
 
 				<div id = 'rightmost-buttons' className = ''>
 					<div id = 'go-live' className ='timeline-toolbar-item'></div>
+					<div className = 'timeline-toolbar-item'>
+						<ToggleCameraList />
+					</div>
 				</div>
 
 			</div>
