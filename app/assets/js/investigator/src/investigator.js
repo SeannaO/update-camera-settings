@@ -1,11 +1,11 @@
 var React = require('react/addons');
 
-var CameraGrid       = require('./camera-grid.js');
+var CameraGrid       = require('./grid/camera-grid.js');
 var ToggleCameraList = require('./toggle-cameras.js');
-var CamerasListBox   = require('./cameras-list.js');
+var CamerasListBox   = require('./cameras-list/cameras-list.js');
 var Timeline         = require('./timeline/timeline-component.js');
 var Toolbar          = require('./toolbar/toolbar.js');
-var bus              = require('./event-service.js');
+var bus              = require('./services/event-service.js');
 
 var InvestigatorEventsMixin = require('./investigator-events-mixin.js');
 

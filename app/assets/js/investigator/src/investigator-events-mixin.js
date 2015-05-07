@@ -1,5 +1,5 @@
 var React  = require('react/addons');
-var bus    = require('./event-service.js');
+var bus    = require('./services/event-service.js');
 var update = React.addons.update;
 
 var InvestigatorEventsMixin = {
