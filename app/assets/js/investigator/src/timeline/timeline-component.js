@@ -1,5 +1,5 @@
 var React            = require('react/addons');
-var bus              = require('../event-service.js');
+var bus              = require('../services/event-service.js');
 var Subtimeline      = require('./subtimeline.js');
 var Cursor           = require('./cursor.js');
 var FFTimeline       = require('./ff-timeline.js');

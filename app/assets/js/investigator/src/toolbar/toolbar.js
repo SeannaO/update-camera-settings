@@ -5,7 +5,7 @@ var TogglePlay       = require('./toggle-play.js');
 var Skip             = require('./skip.js');
 var GoLiveButton     = require('./go-live.js');
 var ZoomOutButton    = require('./zoom-out.js');
-var bus              = require('../event-service.js');
+var bus              = require('../services/event-service.js');
 var ToggleCameraList = require('./../toggle-cameras.js');
 
 var Toolbar = React.createClass({

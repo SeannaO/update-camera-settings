@@ -15,8 +15,6 @@ var TimelineSelector = React.createClass({
 		var right = p1 < p2 ? p2 : p1;
 		var width = right - left;
 
-		console.log(left + ' ' + right + ' ' + width);
-
 		var style = {
 			position:       'absolute',
 			top:            '0px',

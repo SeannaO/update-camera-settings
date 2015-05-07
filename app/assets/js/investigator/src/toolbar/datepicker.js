@@ -1,5 +1,5 @@
 var React = require('react');
-var bus   = require('../event-service.js');
+var bus   = require('../services/event-service.js');
 
 function isSameDay(a, b) {
   return a.startOf('day').isSame(b.startOf('day'));

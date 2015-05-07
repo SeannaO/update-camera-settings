@@ -1,6 +1,6 @@
 var React           = require('react/addons');
 var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
-var bus             = require('../event-service.js');
+var bus             = require('../services/event-service.js');
 
 var FFTimeline = React.createClass({
 

@@ -1,6 +1,6 @@
 var React      = require('react/addons');
 var tweenState = require('react-tween-state');
-var bus        = require('../event-service.js');
+var bus        = require('../services/event-service.js');
 
 var TimelineZoomMixin = {
 
