@@ -149,12 +149,12 @@ var TimelineEventHandlerMixin = {
 		}
 
 
-		if ( Math.abs( d.time - this.state.time ) > 5000 ) {
-			bus.emit('seek', {
-				time:  this.state.time,
-				id:    d.id
-			});
-		}
+		// if ( Math.abs( d.time - this.state.time ) > 5000 ) {
+		// 	bus.emit('seek', {
+		// 		time:  this.state.time,
+		// 		id:    d.id
+		// 	});
+		// }
 	}
 
 };

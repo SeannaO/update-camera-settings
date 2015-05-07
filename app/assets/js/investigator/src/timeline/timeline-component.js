@@ -104,7 +104,8 @@ var Timeline = React.createClass({
 
 				bus.emit('current-time', this.state.time);
 
-				if (dt > 5000) {
+				var timeSinceLastSeek = Date.now() - this.seekTime;
+				if (dt > 5000 && timeSinceLastSeek > 2000) {
 					bus.emit('seek', {
 						id:    cam_id,
 						time:  this.state.time
