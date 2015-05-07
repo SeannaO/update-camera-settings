@@ -1,7 +1,6 @@
 var React = require('react/addons');
 
 var CameraGrid       = require('./grid/camera-grid.js');
-var ToggleCameraList = require('./toggle-cameras.js');
 var CamerasListBox   = require('./cameras-list/cameras-list.js');
 var Timeline         = require('./timeline/timeline-component.js');
 var Toolbar          = require('./toolbar/toolbar.js');

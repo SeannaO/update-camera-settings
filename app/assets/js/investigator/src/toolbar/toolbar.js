@@ -1,12 +1,12 @@
 var React            = require('react/addons');
+var bus              = require('../services/event-service.js');
 var Datepicker       = require('./datepicker.js');
 var CurrentTime      = require('./current-time.js');
 var TogglePlay       = require('./toggle-play.js');
 var Skip             = require('./skip.js');
 var GoLiveButton     = require('./go-live.js');
 var ZoomOutButton    = require('./zoom-out.js');
-var bus              = require('../services/event-service.js');
-var ToggleCameraList = require('./../toggle-cameras.js');
+var ToggleCameraList = require('./toggle-cameras.js');
 
 var Toolbar = React.createClass({
 
