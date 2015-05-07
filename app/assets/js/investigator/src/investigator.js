@@ -75,10 +75,20 @@ var Investigator = React.createClass({
 
 		sessionStorage.setItem('cameraCount', Object.keys( nextState.cameras ).length );
 		
+		if (this.state.cameras != nextState.cameras) {
+			console.log('new cameras');
+			return true;
+		}
+
 		return false;
+
 	},
 
 	render: function() {
+
+		var nCameras = 0;
+		if (this.state.cameras) nCameras = Object.keys( this.state.cameras );
+
 		return (
 			<div>
 				<div id = "grid">
@@ -87,7 +97,9 @@ var Investigator = React.createClass({
 				</div>
 
 				<div id = 'timeline-toolbar-container'>
-					<Toolbar/>
+					<Toolbar 
+						noCameras = { nCameras == 0 }
+					/>
 				</div>
 
 				<div id = 'timeline-container'>

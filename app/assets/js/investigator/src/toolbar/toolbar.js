@@ -11,6 +11,12 @@ var ToggleCameraList = require('./toggle-cameras.js');
 var Toolbar = React.createClass({
 
 	render: function() {
+
+		var disabledWhenNoCameras = {
+			pointerEvents:  this.props.noCameras ? 'none' :  '',
+			opacity:        this.props.noCameras ? 0.2 :  '',
+		};
+
 		return(
 			<div id = 'timeline-toolbar' className = 'noselect'>
 
@@ -24,13 +30,13 @@ var Toolbar = React.createClass({
 					<CurrentTime/>
 				</div>
 
-				<div id = 'zoom-out' className = 'timeline-toolbar-item'>
+				<div id = 'zoom-out' className = 'timeline-toolbar-item' style={disabledWhenNoCameras}>
 					<ZoomOutButton
 						visible = {false}
 					/>
 				</div>
 
-				<div id = 'centralized-buttons'>
+				<div id = 'centralized-buttons' style = {disabledWhenNoCameras}>
 
 					<div id = 'skip-backward' className = 'timeline-toolbar-item'>
 						<Skip
