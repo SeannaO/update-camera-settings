@@ -75,6 +75,7 @@ var CameraContainer = React.createClass({
 					key     = {this.props.cam_id}
 					begin   = {this.props.begin}
 					end     = {this.props.end}
+					isLive  = {this.props.isLive}
 				/>
 
 				<div className = 'player-toolbar' style = {toolbarStyle}>

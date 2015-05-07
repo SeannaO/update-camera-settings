@@ -16,7 +16,32 @@
 #toolbar:hover {
 }
 
-#toolbar-spacer {
+.timeline-overlay {
+	width:        103%;
+	margin-left:  -1.5%;
+	margin-top:   -13px;
+	height:       50px;
+	background:   rgba(225,225,225,0.7);
+	color:        rgb(100,100,100);
+	z-index:      5000;
+	position:     absolute;
+	font-size:    12pt;
+	cursor:       pointer;
+}
+.timeline-overlay:hover{
+	color:       #428bca;
+	background:  rgba(240,240,240,0.8);
+}
+
+.timeline-overlay-text {
+	position: relative;
+	transform: translateY(50%);
+}
+
+.timeline-toolbar-container {
+}
+
+.toolbar-spacer {
 	width:   30px;
 	height:  10px;
 }
@@ -154,6 +179,7 @@
 	left:        50%;
 	transform:   translateX(-50%);
 }
+
 
 .timeline-toolbar-item {
 	position:      relative;
@@ -301,14 +327,14 @@
 }
 
 .camera-container-menu {
-	position:       absolute;
-	top:            -20px;
-	z-index:        100;
-	width:          100.1%;
-	height:         20px;
-	color:          rgba(255,255,255,0.7);
-	background:     rgb(65, 65, 95);
-	padding-left:   5px;
+	position:      absolute;
+	top:           -20px;
+	z-index:       100;
+	width:         100.1%;
+	height:        20px;
+	color:         rgba(255,255,255,0.7);
+	background:    black;
+	padding-left:  5px;
 }
 
 .drag-cursor {

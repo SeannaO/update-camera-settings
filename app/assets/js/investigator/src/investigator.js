@@ -1,17 +1,19 @@
 var React = require('react/addons');
 
-var CameraGrid       = require('./grid/camera-grid.js');
-var CamerasListBox   = require('./cameras-list/cameras-list.js');
-var Timeline         = require('./timeline/timeline-component.js');
-var Toolbar          = require('./toolbar/toolbar.js');
-var bus              = require('./services/event-service.js');
+var CameraGrid           = require('./grid/camera-grid.js');
+var CamerasListBox       = require('./cameras-list/cameras-list.js');
+var Timeline             = require('./timeline/timeline-component.js');
+var TimelineOverlayMixin = require('./timeline-overlay-mixin.js');
+var Toolbar              = require('./toolbar/toolbar.js');
+var bus                  = require('./services/event-service.js');
 
 var InvestigatorEventsMixin = require('./investigator-events-mixin.js');
 
 var Investigator = React.createClass({
 
 	mixins: [ 
-		InvestigatorEventsMixin
+		InvestigatorEventsMixin,
+		TimelineOverlayMixin
 	],
 
 	componentDidMount: function() {
@@ -64,7 +66,6 @@ var Investigator = React.createClass({
 			return false;
 		}
 
-
 		sessionStorage.setItem('state', JSON.stringify({
 			begin:    nextState.begin,
 			end:      nextState.end,
@@ -73,10 +74,11 @@ var Investigator = React.createClass({
 			day:      nextState.day
 		}));
 
-		sessionStorage.setItem('cameraCount', Object.keys( nextState.cameras ).length );
 		
-		if (this.state.cameras != nextState.cameras) {
-			console.log('new cameras');
+		if (
+				this.state.cameras != nextState.cameras ||
+				this.state.isLive != nextState.isLive 
+		) {
 			return true;
 		}
 
@@ -89,21 +91,32 @@ var Investigator = React.createClass({
 		var nCameras = 0;
 		if (this.state.cameras) nCameras = Object.keys( this.state.cameras );
 
+		var liveTimelineOverlay = this.state.isLive ? this.getTimelineOverlay() : '';
+
 		return (
 			<div>
 				<div id = "grid">
-					<CameraGrid ref = 'grid'/>
+					<CameraGrid 
+						ref    = 'grid'
+						isLive = {this.state.isLive}
+					/>
 					<CamerasListBox url='/cameras.json' show={false} />
 				</div>
 
 				<div id = 'timeline-toolbar-container'>
 					<Toolbar 
 						noCameras = { nCameras == 0 }
+						isLive    = {this.state.isLive}
 					/>
 				</div>
 
 				<div id = 'timeline-container'>
-					<Timeline ref = 'timeline'/>
+					<Timeline 
+						ref    = 'timeline'
+						isLive = {this.state.isLive}
+					/>
+
+					{ liveTimelineOverlay }
 				</div>
 			</div>
 		)

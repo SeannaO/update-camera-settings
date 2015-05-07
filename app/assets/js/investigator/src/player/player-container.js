@@ -75,6 +75,8 @@ var PlayerContainer = React.createClass({
 			return;
 		}
 
+		if (this.props.isLive) return;
+
 		var absolute_time = d.time;
 		var relative_time = this.indexer.getRelativeTime( absolute_time, false );
 
@@ -145,10 +147,16 @@ var PlayerContainer = React.createClass({
 
 		var autoplay = this.props.autoplay || true;
 
-		var url = this.generateUrl({
-			begin:  this.props.begin,
-			end:    this.props.end
-		});
+		var url;
+
+		if (this.props.isLive) {
+			 url = this.generateUrl();
+		} else {
+			 url = this.generateUrl({
+				begin:  this.props.begin,
+				end:    this.props.end
+			});
+		}
 
 		var playerID = 'strobe-' + this.props.cam_id;
 
@@ -287,6 +295,7 @@ var PlayerContainer = React.createClass({
 		if ( prevProps.begin == this.props.begin 
 			&& prevProps.end == this.props.end 
 			&& prevProps.activeStream == this.props.activeStream
+			&& prevProps.isLive == this.props.isLive
 		) return;
 
 		var time = {
@@ -296,12 +305,18 @@ var PlayerContainer = React.createClass({
 
 		var stream = this.props.activeStream;
 
-		this.loadIndexer( function(err) {
-			self.loadVideo({
-				time:    time,
+		if (this.props.isLive) {
+			this.loadVideo({
 				stream:  stream
 			});
-		});
+		} else {
+			this.loadIndexer( function(err) {
+				self.loadVideo({
+					time:    time,
+					stream:  stream
+				});
+			});
+		}
 
 	},
 

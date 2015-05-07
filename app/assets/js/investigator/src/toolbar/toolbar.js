@@ -10,12 +10,17 @@ var ToggleCameraList = require('./toggle-cameras.js');
 
 var Toolbar = React.createClass({
 
+	disabledWhen: function( disabled ) {
+		var style = {
+			pointerEvents:  disabled ? 'none' :  '',
+			opacity:        disabled ? 0.2 :  ''
+		};
+
+		return style;
+	},
+
 	render: function() {
 
-		var disabledWhenNoCameras = {
-			pointerEvents:  this.props.noCameras ? 'none' :  '',
-			opacity:        this.props.noCameras ? 0.2 :  '',
-		};
 
 		return(
 			<div id = 'timeline-toolbar' className = 'noselect'>
@@ -24,19 +29,29 @@ var Toolbar = React.createClass({
 					<Datepicker id = 'datepicker-button' className = 'onTop'/>
 				</div>
 
-				<div id = 'toolbar-spacer' className = 'timeline-toolbar-item'></div>
+				<div className = 'toolbar-spacer timeline-toolbar-item'></div>
 
 				<div id = 'current-time' className = 'timeline-toolbar-item'>
 					<CurrentTime/>
 				</div>
 
-				<div id = 'zoom-out' className = 'timeline-toolbar-item' style={disabledWhenNoCameras}>
+				<div className = 'toolbar-spacer timeline-toolbar-item'></div>
+
+				<div id = 'go-live' className = 'timeline-toolbar-item' 
+					style = {this.disabledWhen(this.props.noCameras || this.props.isLive)}
+				>
+					<GoLiveButton/>
+				</div>
+
+				<div id = 'zoom-out' className = 'timeline-toolbar-item' 
+					style = {this.disabledWhen(this.props.noCameras || this.props.isLive)} 
+				>
 					<ZoomOutButton
 						visible = {false}
 					/>
 				</div>
 
-				<div id = 'centralized-buttons' style = {disabledWhenNoCameras}>
+				<div id = 'centralized-buttons' style = {this.disabledWhen( this.props.noCameras || this.props.isLive )}>
 
 					<div id = 'skip-backward' className = 'timeline-toolbar-item'>
 						<Skip

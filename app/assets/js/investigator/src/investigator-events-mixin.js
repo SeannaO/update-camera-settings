@@ -127,10 +127,17 @@ var InvestigatorEventsMixin = {
 	
 	handleDaySelected: function(d) {
 		this.setState( {
-			day: d 
+			day:     d,
+			isLive:  false
 		});
 	},
 
+	handleGoLive: function() {
+		console.log('go live');
+		this.setState({
+			isLive: true
+		});
+	},
 
 	componentDidMount: function() {
 		bus.on('interval-change', this.handleIntervalChange);
@@ -141,6 +148,7 @@ var InvestigatorEventsMixin = {
 		bus.on('addCamera', this.handleAddCamera);
 		bus.on('removeCamera', this.handleRemoveCamera);
 		bus.on('day-selected', this.handleDaySelected);
+		bus.on('go-live', this.handleGoLive);
 	},
 	
 	componentWillUnmount: function() {
@@ -152,6 +160,7 @@ var InvestigatorEventsMixin = {
 		bus.removeListener('addCamera', this.handleAddCamera);
 		bus.removeListener('removeCamera', this.handleRemoveCamera);
 		bus.removeListener('day-selected', this.handleDaySelected);
+		bus.removeListener('go-live', this.handleGoLive);
 	},
 };
 

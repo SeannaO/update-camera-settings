@@ -207,7 +207,7 @@ var CameraGrid = React.createClass({
 					ref        = {cameraItem.id}
 					width      = {width}
 					height     = {height}
-					key        = {cameraItem.id + '_' + self.state.begin + '_' + self.state.end}
+					key        = {cameraItem.id + '_' + self.state.begin + '_' + self.state.end + '_' + self.props.isLive}
 					cam_id     = {cameraItem.id}
 					name       = {cameraItem.name}
 					ip         = {cameraItem.ip}
@@ -216,6 +216,7 @@ var CameraGrid = React.createClass({
 					moveCamera = {self.moveCamera}
 					begin      = {self.state.begin}
 					end        = {self.state.end}
+					isLive     = {self.props.isLive}
 				/>
 			);
 		});

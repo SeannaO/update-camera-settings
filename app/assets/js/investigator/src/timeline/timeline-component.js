@@ -80,6 +80,8 @@ var Timeline = React.createClass({
 
 	seek: function(time) {
 
+		if (this.props.isLive) return;
+
 		this.seekTime = Date.now();
 
 		bus.emit('seek', {
@@ -191,9 +193,10 @@ var Timeline = React.createClass({
 		}
 	},
 
+
 	render: function() {
 
-		var position = this.getPosition( this.state.time );
+		var position = this.props.isLive ? 0 : this.getPosition( this.state.time );
 
 		var subtimelines = this.getSubtimelines();
 
