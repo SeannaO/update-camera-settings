@@ -50,11 +50,11 @@ portChecker.check(8080, function(err, found) {
 	var self = this;
 
 	// launches cpulimit to control svcd process
-	exec('killall -9 cpulimit', function( error, stdout, stderr) {
-		exec('./cpulimit -l20 -p `pgrep svcd`', function( error, stdout, stderr ) {
-			console.log('*** launching cpulimit');
-		});
-	});
+	// exec('killall -9 cpulimit', function( error, stdout, stderr) {
+	// 	exec('./cpulimit -l20 -p `pgrep svcd`', function( error, stdout, stderr ) {
+	// 		console.log('*** launching cpulimit');
+	// 	});
+	// });
 
 	// monitor memory usage of rtsp_grabber
 	// kills rtsp_grabber if memory usage is greater than 50%
