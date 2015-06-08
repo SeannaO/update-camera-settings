@@ -345,6 +345,16 @@
 	background:  black;
 }
 
+.ff-cursor {
+	position:     absolute;
+	width:        2%;
+	height:       20px;
+	background:   rgba(36,203,252,0.7);
+	top:          -3.5px;
+	height:       17px;
+	margin-left:  0.5%;
+}
+
 .ff-segment {
 	border:        1 solid black;
 	width:         3.2%;
