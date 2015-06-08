@@ -6,6 +6,7 @@ var FFTimeline       = require('./ff-timeline.js');
 var TimelineScale    = require('./timeline-scale.js');
 var TimelineSelector = require('./timeline-selector.js');
 var tweenState       = require('react-tween-state');
+var PreviewCursor    = require('./preview-cursor.js');
 
 var PureRenderMixin           = require('react/addons').addons.PureRenderMixin;
 var TimelineEventHandlerMixin = require('./timeline-event-handler-mixin.js');
@@ -234,6 +235,11 @@ var Timeline = React.createClass({
 						p2      = {this.state.endDrag}
 						visible = {!!this.state.beginDrag && !!this.state.endDrag}
 					/>
+
+					<PreviewCursor 
+						getPosition = {this.getPosition}
+					/>
+
 				</div>
 
 				{ this.getScrollButtons() }

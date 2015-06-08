@@ -7,23 +7,27 @@ var Draggable       = require('react-draggable');
 var FFCursor = React.createClass({
 
 	handleStop: function() {
+		if (!this.props.onDragEnd) return;
+		this.props.onDragEnd();
 	},
 
 	handleDrag: function() {
+		if (!this.props.onDrag) return;
+		this.props.onDrag();
 	},
 
 	render: function() {
 		return (
-				<Draggable
-					onDrag    = {this.handleDrag}
-					onStop    = {this.handleStop}
-					axis      = "x"
-				>
-					<div
-						id        = "ff-cursor"
-						className = 'ff-cursor'
-						/>
-				</Draggable>
+			<Draggable
+				onDrag    = {this.handleDrag}
+				onStop    = {this.handleStop}
+				axis      = "x"
+			>
+				<div
+					id        = "ff-cursor"
+					className = 'ff-cursor'
+					/>
+			</Draggable>
 		);
 	}
 });
@@ -177,9 +181,9 @@ var FFTimeline = React.createClass({
 				<div 
 					className   = 'ff-segment'
 					key         = {i}
-					onMouseMove = {this.handleMouseMove(i)}
 					onClick     = {this.handleMouseClick(i)}
 					style       = {style}
+					id = {i}
 				>
 				</div>
 			);
@@ -188,13 +192,61 @@ var FFTimeline = React.createClass({
 		return segs;
 	},
 
+	handleCursorDragEnd: function(e) {
+		if (!this.currentSegment) return;
+
+		this.handleMouseClick(this.currentSegment)();
+		bus.emit('ff-preview', {
+			hide: true
+		});
+	},
+
+	handleCursorDrag: function(e) {
+		var ffCursor   = this.refs.ffCursor.getDOMNode();
+		var ffTimeline = this.refs.ffTimeline.getDOMNode();
+
+		var y = $(ffTimeline).offset().top;
+		var x = $(ffCursor).offset().left+30;
+
+		$(ffCursor).hide();
+		var el = document.elementFromPoint(x, y);
+		$(ffCursor).show();
+
+		el = $(el);
+		
+		var i = el.attr('id');
+
+		var seg = this.segments[i];
+
+		this.currentSegment = i;
+
+		if (!seg) return;
+
+		bus.emit('ff-preview', {
+			time: seg.begin - 5000
+		});
+
+		for (var id in this.props.cameras) {
+			bus.emit('showThumb', {
+				id:     id,
+				thumb:  seg.thumbs[id]
+			});
+		}
+	},
+
 	render: function() {
 		return (
-			<div id = 'ff-timeline'
+			<div 
+				ref          = 'ffTimeline'
+				id           = 'ff-timeline'
 				onMouseLeave = {this.handleMouseLeave}
 			>
 				{this.getSegments()}
-				<FFCursor/>
+				<FFCursor
+					ref       = 'ffCursor'
+					onDrag    = {this.handleCursorDrag}
+					onDragEnd = {this.handleCursorDragEnd}
+				/>
 			</div>
 		);
 	}

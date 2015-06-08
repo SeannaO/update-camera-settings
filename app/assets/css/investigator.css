@@ -16,6 +16,14 @@
 #toolbar:hover {
 }
 
+.preview-cursor {
+	position:    absolute;
+	width:       3px;
+	height:      100%;
+	top:         0px;
+	background:  red;
+}
+
 .timeline-overlay {
 	width:        103%;
 	margin-left:  -1.5%;
