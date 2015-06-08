@@ -54,7 +54,7 @@ Preview.prototype.loadImage = function( d, cb ) {
 		// seg.appendTo('#preview');
 
 		seg.on('mouseenter', function() {
-			self.displayFrame( d.url );
+			// self.displayFrame( d.url );
 			// $(img).css('width', '30px');
 			// $(img).css('opacity', 0.9);
 		});
@@ -100,7 +100,7 @@ Preview.prototype.loadImage = function( d, cb ) {
 	};
 
 	$(img).on('mouseover', function(ev, el) {
-		self.displayFrame( d.url );
+		// self.displayFrame( d.url );
 		$('#ghost-cursor').css('left', px + '%');
 		var time = d.start;
 		if (!!time) {
