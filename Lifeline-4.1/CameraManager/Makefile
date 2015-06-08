@@ -1,5 +1,5 @@
 APP_ID = CameraManager
-APP_VERSION = 1.4.8
+APP_VERSION = 1.4.9
 APP_VENDOR = solink
 
 APP_API_TABLE = sdkRpcTable.xml
