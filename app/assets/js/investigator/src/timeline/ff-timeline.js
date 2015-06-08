@@ -1,6 +1,32 @@
 var React           = require('react/addons');
 var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
 var bus             = require('../services/event-service.js');
+var Draggable       = require('react-draggable');
+
+
+var FFCursor = React.createClass({
+
+	handleStop: function() {
+	},
+
+	handleDrag: function() {
+	},
+
+	render: function() {
+		return (
+				<Draggable
+					onDrag    = {this.handleDrag}
+					onStop    = {this.handleStop}
+					axis      = "x"
+				>
+					<div
+						id        = "ff-cursor"
+						className = 'ff-cursor'
+						/>
+				</Draggable>
+		);
+	}
+});
 
 var FFTimeline = React.createClass({
 
@@ -168,6 +194,7 @@ var FFTimeline = React.createClass({
 				onMouseLeave = {this.handleMouseLeave}
 			>
 				{this.getSegments()}
+				<FFCursor/>
 			</div>
 		);
 	}
