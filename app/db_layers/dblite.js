@@ -28,6 +28,25 @@ Dblite.prototype.close = function() {
 	this.db.close();
 };
 
+
+Dblite.prototype.deleteMultipleVideos = function( ids, cb ) {
+
+	if (!ids || !ids.length) {
+		cb('empty id list', []);
+		return;
+	}
+
+	ids = ids.join(',');
+	var query = 'DELETE FROM videos WHERE id IN (' + ids + ')';
+
+	this.db.query( query,
+		function(err, rows) {
+			cb( err, rows );		
+		}
+	);
+};
+
+
 Dblite.prototype.deleteVideo = function( id, cb ) {
 
 	var query = 'DELETE FROM videos WHERE id = ' + parseInt(id);
@@ -232,8 +251,8 @@ Dblite.prototype.getNewestChunks = function( numberOfChunks, cb ) {
  */
 Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
 
-    var t0 = (startTime - 15000);
-    var t1 = (startTime + 15000);
+    var t0 = (startTime - 20000);
+    var t1 = (startTime + 20000);
 
     var query = 'SELECT start, end, file FROM videos WHERE start BETWEEN '+t0+' AND '+t1+' ORDER BY start ASC';
     //var query = 'SELECT start, end, file FROM videos WHERE start <= ' + startTime + ' AND end >= ' + startTime + ' ORDER BY start ASC';
@@ -251,7 +270,8 @@ Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
                 if (!data || data.length === 0) {
 					console.error('[searchVideoByTime] no data');
 					console.error(data);
-                     cb( "", 0 );
+					cb( "", 0 );
+					return;
                 } else {
 					var k = 0;
                     // offset = Math.round( (startTime - data[k].start)/1000.0 );
@@ -261,13 +281,22 @@ Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
 					for (var i = 0; i < data.length; i++) {
                     	// var off = Math.round( (startTime - data[i].start)/1000.0 );
                     	var off = (startTime - data[i].start)/1000.0;
-						if(off < minOffset && off >= 0) {
+						var isValid = (startTime < data[i].end - 500);
+						
+						if(off < minOffset && off >= 0 && isValid) {
 							minOffset = off;
 							offset = minOffset;
 							k = i;
 						}
 					}
 
+					if (startTime > data[k].end + 1000) {
+						cb('', 0);
+						return;
+					}
+					if (startTime > data[k].end - 100 ) {
+						offset = (data[k].end - data[k].start - 100)/1000.0;
+					} 
                     cb(data[k].file, offset);
                 }
             });
