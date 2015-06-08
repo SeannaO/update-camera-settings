@@ -160,7 +160,7 @@ var onvifScan = function( prefix, cb ) {
 
 				var status = '';
 
-				if (response.indexOf('upported') !== -1) {
+				if (!response || response.indexOf('upported') !== -1) {
 					status = 'not supported';
 				} else if (response.indexOf('uthorized') !== -1) {
 					status = 'unauthorized';
