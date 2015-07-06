@@ -444,7 +444,7 @@ portChecker.check(8080, function(err, found) {
 
 	// - - - - -
 	// health check modules
-	require('./controllers/health.js')( io );
+	// require('./controllers/health.js')( io );
 	// - - -
 
 
