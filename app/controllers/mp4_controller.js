@@ -27,7 +27,7 @@ function inMemorySnapshot( file, offset, precision, res, options, cb) {
 	// console.log("===== offset: " + offset );
 
 	if (precision === 0) {
-		child = spawn( 'ffmpeg', 
+		child = spawn( './ffmpeg', 
 					['-y',
 					'-i', file,
 					'-vframes', '1',
@@ -39,7 +39,7 @@ function inMemorySnapshot( file, offset, precision, res, options, cb) {
 					'-'
 					]);
 	} else {
-		child = spawn( 'ffmpeg', 
+		child = spawn( './ffmpeg', 
 					['-y',
 					'-i', file,
 					'-vframes', '1',

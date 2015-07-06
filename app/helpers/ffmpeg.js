@@ -42,7 +42,7 @@ var inMemoryStitch = function( files, offset, req, res ) {
     var fileList = files.join('|');
     fileList = "concat:" + fileList;
 
-	var child = spawn('ffmpeg', [
+	var child = spawn('./ffmpeg', [
 			'-y', 
 			'-i', fileList, 
 			'-ss', offset.begin/1000, 
