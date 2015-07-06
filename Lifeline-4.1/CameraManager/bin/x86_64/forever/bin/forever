@@ -1,8 +1,0 @@
-#!/bin/bash
-echo "===== LAUNCHING NODE ====="
-node -v
-pkill -f /solink/CameraManager/app.js
-cd /opt/apps/solink/CameraManager
-node /opt/apps/solink/CameraManager/node_modules/forever/bin/real_forever /opt/apps/solink/CameraManager/app.js /nfs/solink
-echo "===== end of LAUNCHING NODE ====="
-
