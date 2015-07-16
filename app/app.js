@@ -13,6 +13,8 @@ var DiskSpaceAgent    = require('./helpers/diskSpaceAgent.js');      // agent th
 
 var passport          = require('passport');
 var BasicStrategy     = require('passport-http').BasicStrategy;
+var MemoryMonitors    = require('./services/memory-monitors.js');
+
 var authCache = {};
 
 var Trash = require('./helpers/trash.js');
@@ -41,78 +43,23 @@ portChecker.check(8080, function(err, found) {
 	}
 	//
 	console.log('launching app...');
-	exec('pkill -f mem.sh', function( error, stdout, stderr) {});
-	exec('pkill -f mem_pid.sh', function( error, stdout, stderr) {});
+
+	// - -
 	exec('killall -9 iostat', function( error, stdout, stderr) {});
 	exec('killall -9 smartctl', function( error, stdout, stderr) {});
 	// - - 
 
 	var self = this;
 
-	// launches cpulimit to control svcd process
-	// exec('killall -9 cpulimit', function( error, stdout, stderr) {
-	// 	exec('./cpulimit -l20 -p `pgrep svcd`', function( error, stdout, stderr ) {
-	// 		console.log('*** launching cpulimit');
-	// 	});
-	// });
+	// launch node memory monitor
+	// exit process if using more than 30% of memory
+	MemoryMonitors.launchNodeMemMonitor( 30 );
 
-	// monitor memory usage of rtsp_grabber
-	// kills rtsp_grabber if memory usage is greater than 50%
-	self.rtspMemMonitor = spawn('./mem.sh', ['rtsp_grabber', '50']);
-	self.rtspMemMonitor.stderr.on('data', function(data) {
-		console.error('[app] rtsp_grabber is getting memory hungry');
+	// launch thumbnailer and rtsp_grabber
+	require('./services/thumbnailer').launch();
+	require('./services/rtspGrabber').launch( function() {
+		camerasController.simplyRestartRecording();
 	});
-
-	// monitor node memory usage
-	// kills node if memory usage is greater than 30%
-	self.nodeMemMonitor = exec('./mem_pid.sh '+ process.pid +' 30');
-	self.nodeMemMonitor.stderr.on('data', function(data) {
-		console.error('[app] node is getting memory hungry');
-		console.error(data);
-	});
-
-
-	// launches custom ffmpeg
-	console.log('[app] launching rtsp_grabber');
-	this.launchRtspGrabber = function( cb ) {
-		exec('killall -9 rtsp_grabber', function( error, stdout, stderr) {
-
-			if (self.grabberProcess) {
-				self.grabberProcess.removeAllListeners();
-			}
-
-			self.grabberProcess = spawn('./rtsp_grabber');
-			self.grabberProcess.once('exit', function(code) {
-
-				console.error('[app] rtsp_grabber exited; relaunching...');
-				self.launchRtspGrabber();
-				console.log('[app] rtsp_grabber relaunched'); 
-
-				clearTimeout(self.restartRecordingTimeout);
-				self.restartRecordingTimeout = setTimeout( function() {
-					console.log('[app] restarting recorder');
-					camerasController.simplyRestartRecording();
-				}, 1000);
-			});
-		});
-	};
-
-	this.launchThumbnailer = function() {
-		exec('killall -9 thumbnailer', function( error, stdout, stderr) {
-			self.thumbnailerProcess = exec('./thumbnailer', function( error, stdout, stderr ) {
-			});
-			console.log('*** launching thumbnailer');
-			self.thumbnailerProcess.on('exit', function() {
-				console.error('*** relaunching thumbaniler');
-				self.launchThumbnailer();	
-			});
-		});
-	};
-
-	//
-
-	this.launchRtspGrabber();
-	this.launchThumbnailer();
 
 
 	var logger = new (winston.Logger)({
