@@ -4,7 +4,6 @@ var RecordModel    = require('./record_model');         // recorder
 var Dblite         = require('../db_layers/dblite.js'); // sqlite layer
 var util           = require('util');                   // for inheritance
 var EventEmitter   = require('events').EventEmitter;    // events
-var find           = require('findit');
 var path           = require('path');
 var Streamer       = require('../helpers/live_streamer.js');
 var MotionStreamer = require('../helpers/live_motion.js');
@@ -215,24 +214,6 @@ Camera.prototype.addStream = function( stream, cb ) {
 					recorder.startRecording();
 				}
 
-// 				// ---
-// 				// EXPERIMENTAL
-// 				stream.lastReset = Date.now();	
-// 				stream.streamer.on('camera_disconnected', function() {
-// 					self.emit('camera_status', { cam_id: self._id, status: 'disconnected', stream_id: stream.id });
-// 					if (Date.now() - stream.lastReset > 5000) {
-// 						recorder.restart();
-// 						stream.lastReset = Date.now();
-// 					}
-// 				});
-//
-// 				stream.streamer.on('camera_connected', function() {
-// 					recorder.lastChunkTime = Date.now();
-// 					self.emit('camera_status', { cam_id: self._id, status: 'online', stream_id: stream.id });
-// 				});
-// 				// EXPERIMENTAL
-// 				// ---
-
 				recorder.on('new_chunk', function(data) {
 					self.emit( 'new_chunk', data);
 					self.emitPendingMotion(data);
@@ -260,127 +241,13 @@ Camera.prototype.addStream = function( stream, cb ) {
 		    console.error(err.toString());
 		    var msg = err.toString();
 		    if (msg.indexOf('disk image is malformed') !== -1){
-		    	self.restoreBackupAndReindex(stream);
+				console.error('[Camera.Stream]  sqlite database is corrupted');
 		    }
 		});
 	});
 };
 // end of addStream
 //
-
-
-Camera.prototype.restoreBackupAndReindex = function( stream, cb ) {
-	// delete the old database file
-    // recreate the database
-    var self = this;
-	stream.db.backup.restore(function(err, backup){
-		var storedVideosFolder = self.videosFolder + "/" + stream.id + "/videos";
-		if (err){
-			if (err === "empty"){
-				fs.unlink(self.videosFolder + '/db_'+stream.id+'.sqlite', function (err) {
-					if (err){
-						console.log(err);
-						console.error("unable to delete corrupt sqlite file");	
-						if (cb) cb(err);
-					}else{
-						self.reIndexDatabaseFromFileStructure(stream, storedVideosFolder, cb);
-					}
-				});
-			}else{
-				console.error(err);
-				if (cb) cb(err);
-			}
-		}else{
-			stream.db.getNewestChunks(1,function(rows){
-				if (rows && rows.length > 0){
-					self.reIndexDatabaseFromFileStructureAfterTimestamp(stream, storedVideosFolder, rows[0], cb);
-				}else{
-					if (cb) cb();
-				}
-			});
-		}
-	});
-};
-
-
-Camera.prototype.reIndexDatabaseFromFileStructure = function(stream, storedVideosFolder, cb){
-	var self = this;
-
-	// create the database
-	stream.db.createTableIfNotExists(function(err){
-		if (err){
-			console.log(err);
-			console.error("unable to recreate table.");
-			if (cb) cb(err);
-		}else{
-			var finder = find(storedVideosFolder);
-			finder.on('file', function (file, stat) {
-				self.parseFile(file, function(matches){
-					if (matches){
-						stream.recordModel.addFileToIndexInDatabase(file);
-					}
-				});
-			});
-			finder.on('end', function () {
-				stream.recordModel.indexPendingFilesAfterCorruptDatabase(cb);
-			});
-		}
-	});
-};
-
-Camera.prototype.reIndexDatabaseFromFileStructureAfterTimestamp = function(stream, storedVideosFolder, indexItem, cb){
-	var self = this;
-	fs.stat(indexItem.file, function(err, stats){
-		var most_recent_dir = path.dirname(indexItem.file);
-		var lastFileStored = indexItem.start;
-		// finish indexing the folder that the last file was recorded in
-		var finder = find(most_recent_dir);
-		finder.on('file', function (file, stats) {
-			self.parseFile(file, function(matches){
-				if (matches && parseInt(matches[1]) > lastFileStored){
-					stream.recordModel.addFileToIndexInDatabase(file);
-				}
-			});
-		});
-		finder.on('end', function () {
-			// finish indexing all the folders after the last indexed file
-			fs.readdir(storedVideosFolder, function(err, list){
-				if (err){
-					if (cb) cb();
-				}else{
-					var unindexed_folders = [];
-					var re = /([\d]+)-([\d]+)-([\d]+)/
-					var last_recorded_date = new Date(indexItem.start);
-					var day_after_last_date = new Date(
-						last_recorded_date.getUTCFullYear(), 
-						last_recorded_date.getUTCMonth(),
-						last_recorded_date.getUTCDate()
-					);
-					for (var idx in list) {
-
-						var matches = re.exec(list[idx]);
-						
-						if (matches && matches.length == 4) {
-							
-							var year    = parseInt(matches[1]);
-							var month   = parseInt(matches[2])-1;
-							var day     = parseInt(matches[3]);
-							var dirdate = new Date(year, month, day);
-							
-							if (dirdate > day_after_last_date){
-								unindexed_folders.push(storedVideosFolder + "/" + list[idx]);
-							}
-						}
-					}
-					self.addFilesInFoldersToIndexInDatabase(unindexed_folders, stream.recordModel, function(){
-						console.log("indexPendingFilesAfterCorruptDatabase");
-						stream.recordModel.indexPendingFilesAfterCorruptDatabase(cb);
-					});
-				}
-			});
-		});
-	});
-};
 
 
 Camera.prototype.parseFile = function(file, cb){
@@ -391,27 +258,6 @@ Camera.prototype.parseFile = function(file, cb){
 	}else{
 		cb(null);
 	}
-};
-
-
-Camera.prototype.addFilesInFoldersToIndexInDatabase = function( folders, recordModel, done ) {
-	var self = this;
-	if (folders.length == 0) {
-		if (done) done();	// we're done					
-	} else {
-		var folder = folders.shift();	// next file
-		var finder = find(folder);
-		finder.on('file', function (file, stat) {
-			self.parseFile(file,function(matches){
-				if (matches){
-					recordModel.addFileToIndexInDatabase(file);
-				}
-			});
-		});
-		finder.on('end', function () {
-			self.addFilesInFoldersToIndexInDatabase(folders,recordModel,done);
-		});
-    }
 };
 
 
@@ -1297,21 +1143,3 @@ Camera.prototype.toJSON = function() {
 
 
 module.exports = Camera;
-
-
-/**
- * Helper method: generates UUID for streams
- *
- * @return { string } UUID string 
- */
-function generateUUID() {
-    var d = new Date().getTime();
-    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = (d + Math.random()*16)%16 | 0;
-        d = Math.floor(d/16);
-        return (c=='x' ? r : (r&0x7|0x8)).toString(16);
-    });
-    return uuid;
-}
-// end of generateUUID
-//
