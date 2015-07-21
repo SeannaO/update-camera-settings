@@ -19,6 +19,7 @@
     "grunt-mocha-istanbul": "~2.3.1"
   },
   "dependencies": {
-    "fs-extra": "~0.16.5"
+    "fs-extra": "~0.16.5",
+    "nedb": "~1.1.2"
   }
 }
