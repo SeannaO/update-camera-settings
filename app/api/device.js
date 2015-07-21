@@ -1,86 +1,27 @@
 var request = require('request');
+var exec = require('child_process').exec;
+var os = require('os');
 
 module.exports = function( app, passport) {
 
-	if (process.env['NODE_ENV'] === 'development') {
-		device_url = 'https://192.168.215.129/cp/SystemInfo?v=2';
-		storage_url = 'https://Administrator:password@192.168.215.129/cp/StorageInfo?v=2';
-	} else {
-		
-		var password = process.env['PASSWORD'];
-		var user = process.env['USER'];
-
-		device_url = 'https://localhost/cp/SystemInfo?v=2';
-		storage_url = 'https://' + user + ':' + password + '@localhost/cp/StorageInfo?v=2';
-	}
-
-	
 	// - - -
 	// gets json device info
 	app.get('/device.json', passport.authenticate('basic', {session: false}), function(req, res) {
 		
-		var device_url = '';
-
-		if (process.env['NODE_ENV'] === 'development') {
-			device_url = 'https://192.168.215.129/cp/SystemInfo?v=2';
-		} else {
-			device_url = 'https://localhost/cp/SystemInfo?v=2';
-		}
-
-
-		request({ 
-			method: 'GET',
-			strictSSL: false,
-			uri: device_url,
-			timeout: 5000
-			}, function (error, response, body) {
-				if (error){
-					console.error("*** getCamera within device.json: ");
-					console.error( error ) ;
-					console.error("* * *");
-					res.status(422).json({ success: false, error: error });
-				}else{
-					res.writeHead(200, {'Content-Type': 'application/json'});
-					res.end(body)
-				}
-			}
-		);
+		getDeviceInfo( function(d) {
+			res.status(200).json(d);
+		});
 	});
+
 
 	// - - -
 	// gets json device info
 	app.get('/device/storage.json', passport.authenticate('basic', {session: false}), function(req, res) {
 
-		var storage_url = '';
-
-		if (process.env['NODE_ENV'] === 'development') {
-			storage_url = 'https://Administrator:password@192.168.215.129/cp/StorageInfo?v=2';
-		} else {
-			
-			var password = process.env['PASSWORD'];
-			var user = process.env['USER'];
-
-			storage_url = 'https://' + user + ':' + password + '@localhost/cp/StorageInfo?v=2';
-		}
-	
-		request({ 
-			method: 'GET',
-			strictSSL: false,
-			uri: storage_url,
-			timeout: 5000
-			}, function (error, response, body) {
-				if (error){
-					console.error("*** getCamera within /device/storage.json: ");
-					console.error( error ) ;
-					console.error("* * *");
-					res.status(422).json({ success: false, error: error });
-				}else{
-					res.writeHead(200, {'Content-Type': 'application/json'});
-					res.end(body)
-				}
-			}
-		);
-	});	
+		getDeviceInfo( function(d) {
+			res.status(200).json(d);
+		});
+	});
 
 	// get timezone
 	app.get('/device/tz.json', passport.authenticate('basic', {session: false}), function(req, res) {
@@ -107,5 +48,35 @@ module.exports = function( app, passport) {
 
 		res.json( data );
 	});
+
 };
 
+
+var getDeviceInfo = function( cb ) {
+
+		if (!cb) return;
+
+		var localIp = process.env.IP;
+
+		var list  = localIp.split('.');
+		var subnet = list[list.length-1];
+
+		exec('df -k ' + process.env.BASE_FOLDER + '|grep /', function (err, resp){
+			
+			var respList = resp.replace(/\s+/gm,' ').split(' ');
+			var memUsed = parseInt(respList[2]) * 1024;
+			var memFree = parseInt(respList[3]) * 1024;
+			var memSize = memFree + memUsed;
+
+			hostname = os.hostname();
+
+			cb({
+				size:     memSize,
+				used:     memUsed,
+				model:    'Connect over QNAP',
+				name:     hostname + ' ' + subnet,
+				ip:       localIp,
+				version:  '-'
+			});
+		});	
+}
