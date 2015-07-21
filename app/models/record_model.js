@@ -211,27 +211,6 @@ RecordModel.prototype.setStatus = function( status ) {
 //
 
 
-/**
- * Index files on peding list
- *
- * @param { function } Callback that is called when all files have been indexed
- *
- */
-RecordModel.prototype.indexPendingFilesAfterCorruptDatabase = function( cb ) {
-
-    var self = this;
-
-	if (self.filesToIndex.length == 0) {
-		if (cb) cb();	// we're done					
-	} else {
-		var file = self.filesToIndex.shift();	// next file
-		self.indexFileInDatabase( file, function() {
-			self.indexPendingFilesAfterCorruptDatabase( cb );// recursive call
-		});
-    }
-};
-
-
 RecordModel.prototype.setupDbusListener = function() {
 
 	var self = this;
@@ -407,12 +386,12 @@ RecordModel.prototype.receiveSignal = function( msg_info, args ) {
 		self.lastIdReceived = parseInt( new_chunk.file_id );
 
 		video = {
-			cam:     self.camId,
-			cam_name: self.camera.cameraName(),
-			stream:  self.stream.id,         // appends stream id to the chunk
-			start:   new_chunk.start_time * 1000,
-			end:     ( Math.round(1000*new_chunk.start_time) + Math.round(1000*new_chunk.duration_secs ) ),
-			file:    new_chunk.file_id + '.ts'
+			cam:       self.camId,
+			cam_name:  self.camera.cameraName(),
+			stream:    self.stream.id,         // appends stream id to the chunk
+			start:     new_chunk.start_time * 1000,
+			end:       ( Math.round(1000*new_chunk.start_time) + Math.round(1000*new_chunk.duration_secs ) ),
+			file:      new_chunk.file_id + '.ts'
 		};
 
 		if (self.status != RECORDING) {
@@ -626,135 +605,6 @@ RecordModel.prototype.setupFolderSync = function(folder) {
 //
 
 
-RecordModel.prototype.addFileToIndexInDatabase = function(file){
-	this.filesToIndex.push(file);
-};
-
-RecordModel.prototype.indexFileInDatabase = function(file, cb){
-	var self = this;
-	var ext = file.split('.').pop();
-	if (ext === 'ts'){
-		this.calcDurationFromFile(file, function(err, videoChunk){								
-			if (videoChunk){
-				self.db.insertVideo(videoChunk);
-				if (cb) cb(null, videoChunk);
-			}else{
-				self.calcDurationWithFileInfo(file, stat, function(err, videoChunk){
-					if (videoChunk){
-						self.db.insertVideo(videoChunk);
-						if (cb) cb(null, videoChunk);
-					}else{
-						console.error("Unable to insert video into database after being corrupted: " + file);
-						console.error(err);
-						if (cb) cb(err);
-					}
-				});
-			}
-		});
-	}else{
-		if (cb) cb("not a .ts file");
-	}
-};
-
-
-/**
- * Calculates chunk duration by parsing a previously stored file for recovery
- *  
- *  @param { file } string File path
- *  @param { cb } function Callback function that receives chunk object as parameter
- */
-RecordModel.prototype.calcDurationFromFile = function( file, cb ) {
-
-	var self = this;
-	var re = /([\d]+)_([\d]+).ts/;
-	var matches = re.exec(file);
-		
-	if (matches && matches.length == 3){
-		var start = parseInt(matches[1]);
-		var end   = start + parseInt(matches[2]);
-
-		video = {
-			cam:     self.camId,
-			stream:  self.stream.id,		// appends stream id to the chunk
-			start:   start,
-			end:     end,
-			file:    file
-		};
-
-		cb(null, video );
-	}else{
-		cb("[RecordModel.calcDurationFromFile]  file does not have start time and duration", null );
-	}
-};
-
-
-/**
- * Calculates chunk duration using file system stats and ffmpeg
- *  
- *  @param { file } string File path
- *  @param { cb } function Callback function that receives chunk object as parameter
- */
-RecordModel.prototype.calcDuration = function( file, cb ) {
-
-	var self = this;
-
-	if (!file) {
-		cb( 'undefined file' );
-		return;
-	}
-
-    fs.stat( file, function( err, fileInfo ) {
-		
-		if ( err ) { 
-			console.error( err );
-			cb(err);
-			return;
-		}
-		self.calcDurationWithFileInfo(file, fileInfo, cb);
-	});
-};
-// end of calcDuration
-//
-
-
-/**
- * Calculates chunk duration using file system stats and ffmpeg
- *  
- *  @param { file } string File path
- *  @param { cb } function Callback function that receives chunk object as parameter
- */
-RecordModel.prototype.calcDurationWithFileInfo = function( file, fileInfo, cb ) {
-
-	var self = this;
-
-	var lastModified = ( new Date(fileInfo.mtime) ).getTime();	// mtime: last modified time
-																// getTime: converts to Unix millis
-	ffmpeg.calcDuration( file, function(err, duration) {
-		if (!err && duration){
-
-			var start = lastModified - duration;
-			var end   = lastModified;
-
-			video = {
-				cam:     self.camId,
-				stream:  self.stream.id,		// appends stream id to the chunk
-				start:   start,
-				end:     end,
-				file:    file
-			};
-
-			cb(null, video );
-		}else{
-			if (!err && !duration) err = 'could not calculate duration for file ' + file;
-			cb(err);
-		}
-
-	});
-};
-// end of calcDurationWithFileInfo
-//
-
-
 /**
  * Moves file to appropriate folder and generates thumb
  *  
@@ -810,27 +660,8 @@ RecordModel.prototype.moveFile = function( video, cb ) {
 			});
 		});
 	});
-
 };
 // end of moveFile
-//
-
-
-/**
- * Adds files array to pending list
- *  
- *  @param { files } array Files array ( filenames only )
- */
-RecordModel.prototype.addNewVideosToPendingList = function( files ) {
-
-    var self = this;
-
-    for ( var i in files ) {
-		var file = files[i];
-		self.pending.push(  self.folder + "/videos/tmp/" + file );
-	}
-};
-// end of addNewVideosToPendingList
 //
 
 
@@ -855,4 +686,3 @@ RecordModel.prototype.recordContinuously = function() {
 
 
 module.exports = RecordModel;
-
