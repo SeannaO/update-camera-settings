@@ -1,12 +1,11 @@
-//require('look').start(); // -- profiler ( NOT for production )
-// var agent          = require('webkit-devtools-agent');
+'use strict';
+
 var winston           = require('winston');
 var express           = require('express');                          // express
 var request           = require('request');                          // request
 var moment            = require('moment');
 var tsHandler         = require('./helpers/ts');                     // ts abstraction
 var hlsHandler        = require('./controllers/hls_controller');     // hls abstraction
-var mp4Handler        = require('./controllers/mp4_controller');     // mp4 abstraction
 var CamerasController = require('./controllers/cameras_controller'); // cameras controller
 var fs                = require('fs');                               // for sending files
 var DiskSpaceAgent    = require('./helpers/diskSpaceAgent.js');      // agent that periodically checks disk space
@@ -15,17 +14,8 @@ var passport          = require('passport');
 var BasicStrategy     = require('passport-http').BasicStrategy;
 var MemoryMonitors    = require('./services/memory-monitors.js');
 
-var authCache = {};
-
-var Trash = require('./helpers/trash.js');
-
-// - - -
-// kills any ffmpeg, iostat and smartctl processes that might be already running
-var exec  = require('child_process').exec;
-var spawn = require('child_process').spawn;
-
-var portChecker = require('./helpers/port_checker.js');
-
+var Trash           = require('./helpers/trash.js');
+var portChecker     = require('./helpers/port_checker.js');
 var scannerNotifier = require('./helpers/camera_scanner/scanner.js').emitter;
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -43,11 +33,6 @@ portChecker.check(8080, function(err, found) {
 	}
 	//
 	console.log('launching app...');
-
-	// - -
-	exec('killall -9 iostat', function( error, stdout, stderr) {});
-	exec('killall -9 smartctl', function( error, stdout, stderr) {});
-	// - - 
 
 	var self = this;
 
@@ -114,7 +99,6 @@ portChecker.check(8080, function(err, found) {
 	};
 
 	// - - -
-	// - - -
 	// stores machine ip
 	var localIp = "";
 	var hostname = require('os').hostname();
@@ -131,10 +115,9 @@ portChecker.check(8080, function(err, found) {
 		}
 	}, 10000);
 	// - - -
-	// - - -
 	//
 
-	//
+	////
 	var lifelineAuthentication = function(username,password, done){
 		var ok = ( username === 'local-solink' && password === '__connect__' );
 		return done(null, ok);
@@ -297,7 +280,7 @@ portChecker.check(8080, function(err, found) {
 
 
 	// instantiates camerasController, launching all cameras
-	var camerasController = new CamerasController( mp4Handler, baseFolder + '/cam_db', baseFolder);
+	var camerasController = new CamerasController( baseFolder + '/cam_db', baseFolder);
 
 
 	app.all('/*', function(req, res, next) {
@@ -379,8 +362,6 @@ portChecker.check(8080, function(err, found) {
 	camerasController.on('camera_status', function( data ) {
 		if (data.status === "disconnected" || data.status === "offline"){
 			console.error("[camera_status] " + data.cam_id + " : " + data.stream_id + " is " + data.status);
-		}else{
-			// console.log("[camera_status] " + data.cam_id + " : " + data.stream_id + " is "+ data.status);	
 		}
 		io.sockets.emit( 'cameraStatus', data );
 	});
@@ -390,7 +371,6 @@ portChecker.check(8080, function(err, found) {
 	});
 
 	camerasController.on('grid', function( data ) {
-		// io.sockets.emit('grid', data);
 		io.of('/motion_grid').emit('grid', data);
 	});
 
@@ -434,11 +414,11 @@ portChecker.check(8080, function(err, found) {
 
 	// - - -
 	// static files
-	app.use('/css'   , express.static(__dirname + '/assets/css'));
-	app.use('/js'    , express.static(__dirname + '/assets/js'));
-	app.use('/img'   , express.static(__dirname + '/assets/img',   { maxAge: 3600 * 1000 } ));
-	app.use('/swf'   , express.static(__dirname + '/assets/swf',   { maxAge: 3600 * 1000 } ));
-	app.use('/fonts' , express.static(__dirname + '/assets/fonts', { maxAge: 3600 * 1000 } ));
+	app.use('/css', express.static(__dirname + '/assets/css'));
+	app.use('/js', express.static(__dirname + '/assets/js'));
+	app.use('/img', express.static(__dirname + '/assets/img',   { maxAge: 3600 * 1000 } ));
+	app.use('/swf', express.static(__dirname + '/assets/swf',   { maxAge: 3600 * 1000 } ));
+	app.use('/fonts', express.static(__dirname + '/assets/fonts', { maxAge: 3600 * 1000 } ));
 	app.use(express.static(__dirname + '/assets/public'));
 	// end of static files
 	// - - -
@@ -501,12 +481,8 @@ portChecker.check(8080, function(err, found) {
 	});
 
 
-
 	app.get('/pos_monitor', passport.authenticate('basic', {session: false}), function(req, res) {
 		var monitor_url = 'https://solink:_tcpdump_wrapper_@localhost:3000/instances';
-		// if (process.env.NODE_ENV === 'development') {
-		// 	monitor_url = 'https://solink:_tcpdump_wrapper_@192.168.0.13:3000/instances';
-		// }
 		request({
 			url: monitor_url,
 			method: "GET",
@@ -523,14 +499,10 @@ portChecker.check(8080, function(err, found) {
 		res.sendfile(__dirname + '/views/config.html');			
 	});
 
-	app.get('/hls', passport.authenticate('basic', {session: false}), function(req, res) {
-		res.sendfile(__dirname + '/views/js_hls.html');			// main page - alternative route
-	});
-	// - - -
 	// - - -
 	// gets ts segment
 	// TODO: get authentication to work with HLS video tag
-	app.get('/cameras/:cam_id/ts/:stream_id/:file', function(req, res) {
+	app.get('/cameras/:cam_id/ts/:stream_id/:file', passport.authenticate('basic', {session: false}), function(req, res) {
 	   
 		var camId    = req.params.cam_id;
 		var streamId = req.params.stream_id;
@@ -596,40 +568,6 @@ portChecker.check(8080, function(err, found) {
 	app.post('/reload', passport.authenticate('basic', {session: false}), function(req, res) {
 		io.sockets.emit('reload');
 	});
-
-	/////////////
-	///// dev only ////////
-	/////////////
-	app.get('/dev/motion', passport.authenticate('basic', {session: false}), function(req, res){
-
-		// request({
-		// 	uri: "http://Administrator:password@192.168.215.108:8080/cameras/VHYcWYVtjAu6MlWO/sensors?start="+req.query.start+"&end="+req.query.end,
-		// 	method: "GET",
-		// }, function(error, response, body){
-		// 		console.log(body);
-		// 		res.end(body);
-		// 	});
-		var d = {};
-		d.data = [];
-
-		var start = parseInt( req.query.start );
-		var end = parseInt( req.query.end );
-
-		console.log("start: " + start );
-		console.log("end: " + end);
-		for (var t = start; t < end; t = t+10000) {
-			if (Math.random() > 0.8) {
-				d.data.push({
-					t: t
-				});
-			}
-		};
-
-		res.json(d);
-	});
-	/////////////
-	///// dev only ////////
-	/////////////
 
 
 	// server.listen(process.env.PORT || 8080);
