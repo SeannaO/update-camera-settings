@@ -48,6 +48,8 @@ module.exports = function( app, socket, passport) {
 			var api = require('../helpers/camera_scanner/cam_api/api.js').getApi( camera.manufacturer );
 			if (!api) {
 				console.error('no api found');
+				res.status(422).json({error: 'no api found'});
+				return;
 			}
 			api.setCameraParams(camera);
 			api.getResolutionOptions(function(err, resolutions){
