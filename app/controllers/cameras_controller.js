@@ -1,19 +1,16 @@
-var Datastore          = require('nedb');                           // nedb datastore
+'use strict';
+
+var Datastore          = require('nedb');                           //
 var Camera             = require('./../models/camera_model');       //
 var EventEmitter       = require('events').EventEmitter;            //
-var util               = require('util');                           // for inheritance
+var util               = require('util');                           //
 var checkH264          = require('../helpers/ffmpeg.js').checkH264;
-var find               = require('findit');
 var OrphanFilesChecker = require('../helpers/orphanFiles.js');
 var Thumbnailer        = require('../helpers/thumbnailer.js');
 var SensorData         = require('../models/sensor_model.js');
+var mp4Handler         = require('./mp4_controller.js');     	
 
- // sqlite layer
-
-// It seems that the mp4Handler should not be passed in as an argument. The mp4Handler is only used for taking snapshots and 
-// this logic should be happening outside of the CamerasController, especially since it has request handling as part of it
-
-function CamerasController( mp4Handler, filename, videosFolder, cb ) {
+function CamerasController( cam_db_filename, videosFolder, cb ) {
 
     var self = this;
 	this.cameras = [];
@@ -22,7 +19,7 @@ function CamerasController( mp4Handler, filename, videosFolder, cb ) {
 
 	this.thumbnailer = new Thumbnailer();
 
-    this.db = new Datastore({ filename: filename });
+    this.db = new Datastore({ filename: cam_db_filename });
 
 	self.setup( function(err) {
 			setTimeout( function() {
