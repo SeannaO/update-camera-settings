@@ -136,62 +136,8 @@ portChecker.check(8080, function(err, found) {
 
 	//
 	var lifelineAuthentication = function(username,password, done){
-		//
-		// there's a bug in lifeline authentication API
-		// it accepts empty username/password as valid credentials
-		// so I'm avoiding those here
-		// howver, notice that in case Lifeline has not a username/password, 
-		// this will prevent the user from logging in
-		if (typeof(username) == 'undefined' || typeof(password) == 'undefined') {
-			return done('invalid username/password', false);
-		}
-		username = username || '%20';
-		password = password || '%20';
-
-		var url = "https://" + username + ":" + password + "@localhost/cp/UserVerify?v=2&login=" + username + "&password=" + password;
-
-		if (process.env['NODE_ENV'] === 'development') {
-			// url = "https://192.168.215.133/cp/UserVerify?v=2&login=" + username + "&password=" + password;
-			return done(null, true);
-		} 
-		
-
-		if (!authCache.date || Date.now() - authCache.date > 15 * 60 * 1000) {	// auth cache expires every 15mini
-			
-			request({ 
-				url:         url,
-				strictSSL:   false,
-				headers: {
-					'User-Agent':      'nodejs',
-					'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
-				},
-			}, function( error, response, body) {
-				if (error){ return done(error, false); }
-				if (body) { 
-
-					if (body === 'true') {
-						// stores lifeline auth in memory for later use
-						process.env['USER'] = username;
-						process.env['PASSWORD'] = password;
-						
-						authCache.username = username;
-						authCache.password = password;
-						authCache.date = Date.now();
-						
-						return done(null,true);
-					} else {
-						console.log("connect unauthorized");
-						return done("unauthorized", false);
-					}
-				}
-			});
-		} else {
-			if ( username.toLowerCase() === authCache.username.toLowerCase() && password === authCache.password ) {
-				return done( null, true );
-			} else {
-				return done( 'unauthorized', false );
-			}
-		}
+		var ok = ( username === 'local-solink' && password === '__connect__' );
+		return done(null, ok);
 	};
 
 	passport.use(new BasicStrategy( function(username,password,done){
@@ -214,7 +160,6 @@ portChecker.check(8080, function(err, found) {
 		})
 	);
 
-	// Your own super cool function
 	var logrequest = function(req, res, next) {
 		var auth_user = "";
 		if (req.headers.authorization){
@@ -251,8 +196,6 @@ portChecker.check(8080, function(err, found) {
 	io.configure(function (){
 	  io.set('authorization', function (handshakeData, callback) {
 		// extract the username and password from the handshakedata
-		console.log("hostname :" + hostname);
-		console.log(handshakeData);
 		if (localIp !== handshakeData.address.address){
 			console.log("XDomain SocketIO connection:" + JSON.stringify(handshakeData, null, 4));
 			var re = /Basic (.+)/;
@@ -272,7 +215,7 @@ portChecker.check(8080, function(err, found) {
 						callback(err, success);
 					});
 				}
-			}else if (handshakeData.query.username && handshakeData.query.password){
+			} else if (handshakeData.query.username && handshakeData.query.password){
 				console.log("unauthorized: Bad username and password");
 				lifelineAuthentication(handshakeData.query.username,handshakeData.query.password, function(err, success){
 					if (!err){
@@ -280,11 +223,11 @@ portChecker.check(8080, function(err, found) {
 					}
 					callback(err, success);
 				});
-			}else{
+			} else{
 				console.log("unauthorized: Specify username and password");
 				callback("unauthorized: Specify username and password", false);
 			}
-		}else{
+		} else{
 			callback(null, true);
 		}
 	  });
