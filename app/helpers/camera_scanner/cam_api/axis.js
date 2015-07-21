@@ -413,6 +413,7 @@ Axis.prototype.getNumberOfSources = function (cb) {
 	}, function( error, response, body) {
 		if (!error && body && body.indexOf('nauthorized') > -1) {
 			cb('not authorized', []);
+			return;
 		}
 		if (!error && body)	{
 
@@ -427,12 +428,12 @@ Axis.prototype.getNumberOfSources = function (cb) {
 			} 
 			else {
 				cb(null, nSources);
+				return;
 			}
 		} else{
 			cb(error, 0);
 		}
-	}
-	);
+	});
 };
 
 
@@ -561,7 +562,6 @@ Axis.prototype.getResolutionOptionsForEncoderCamera = function (camera_no, cb) {
 
 Axis.prototype.getResolutionOptionsForSingleCamera = function ( cb ) {
 
-
 	var self = this;
 	var url;
 		url = listResolutionsUrl
@@ -581,6 +581,7 @@ Axis.prototype.getResolutionOptionsForSingleCamera = function ( cb ) {
 	}, function( error, response, body) {
 		if (!error && body && body.indexOf('nauthorized') > -1) {
 			cb('not authorized', []);
+			return;
 		}
 		if (!error && body)	{
 
@@ -627,8 +628,3 @@ Axis.prototype.getSensitivityRange = function () {
 
 
 module.exports = Axis;
-
-
-
-
-
