@@ -257,15 +257,15 @@ Arecont.prototype.setParam = function(key, value, cb){
 //
 // NATIVE MOTION
 //
-// Arecont.prototype.isMotionEnabled = function(cb) {
-// 	this.getParam("motiondetect",function(error, value){
-// 		if (error){
-// 			cb(error, false);
-// 		}else{
-// 			cb(null, value == "on" ? true : false);
-// 		}
-// 	});
-// };
+Arecont.prototype.isMotionEnabled = function(cb) {
+	this.getParam("motiondetect",function(error, value){
+		if (error){
+			cb(error, false);
+		}else{
+			cb(null, value == "on" ? true : false);
+		}
+	});
+};
 //
 // Arecont.prototype.setupMotionDetection = function(){
 // 	setParam("mdzonesize", 2, function(error, body){
