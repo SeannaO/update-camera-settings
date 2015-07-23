@@ -424,7 +424,7 @@
                 success: function( data ) {
                     var percent = (data.used/data.size)*100;
                     $("#storage-space .progress").append("<div class=\"progress-bar progress-bar-info\" role=\"progressbar\" aria-valuenow=\""+ data.used +"\" aria-valuemin=\"0\" aria-valuemax=\"" + data.size + "\" style=\"width: " + percent + "%\"><span class=\"sr-only\">"+percent+"% Full</span></div>");
-                    $("#storage-info").html(Math.round(data.used/(1024*1024*1024)) + " of " + Math.round(data.size/(1024*1204*1024)) + " GB used");
+                    $("#storage-info").html(Math.round(data.used/(1024*1024*1024)) + " of " + Math.round(data.size/(1024*1024*1024)) + " GB used");
                 },
                 error: function( data ) {
                     $("#storage-space .progress").append("<div class=\"progress-bar progress-bar-info\" role=\"progressbar\" style=\"width: 0%\"><span class=\"sr-only\">Unknown</span></div>");
