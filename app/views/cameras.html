@@ -46,17 +46,44 @@
 
         <script>
 		
-            var socket = io.connect();
-			// var scannerSocket = io.connect('/scanner');
+            var main_socket = io.connect('');
+            var page_socket = io.connect('/main-page');
 			
-			socket.on('time', function(data) {
+			page_socket.on('time', function(data) {
 				$("#device-time").html(data.string);
 				local_offset = (new Date()).getTimezoneOffset()/60;
 
 				Date.tz_offset = local_offset - data.tz_offset;
 			});
 
-            socket.on('motion', function(data){
+			page_socket.on('scanner_status', function(data) {
+				$('#camera-scanner-btn').attr('disabled', data.busy)	
+				if (data.busy) {
+					$('#scan-btn-text').html('scanning... ');
+				} else {
+					$('#scan-btn-text').html('Scan for Cameras');
+				}
+			});
+			
+			page_socket.on('scanner_progress', function(data) {
+				$('#camera-scanner-btn').attr('disabled', true);
+				var progress = Math.round(data.progress * 100);
+				$('#scan-btn-text').html('scanning... ' + progress + '% complete' );
+				if (progress >= 100) {
+					$('#camera-scanner-btn').attr('disabled', false)	
+					$('#scan-btn-text').html('Scan for Cameras');
+				}
+			});
+
+			page_socket.on('bps', function(data) {
+				var streamId = data.stream_id;
+				var avg = data.avg / 8000;
+				avg = Math.round(avg);
+
+				$('#'+streamId+'-bps-info').html(avg);
+			});
+
+            main_socket.on('motion', function(data){
 				for (var i in cameras) {
 					if (i === data.id) {
 						var cam = cameras[i];
@@ -70,43 +97,7 @@
 				}
             });
 
-			socket.on('scanner_status', function(data) {
-				$('#camera-scanner-btn').attr('disabled', data.busy)	
-				if (data.busy) {
-					$('#scan-btn-text').html('scanning... ');
-				} else {
-					$('#scan-btn-text').html('Scan for Cameras');
-				}
-			});
-			
-			socket.on('scanner_progress', function(data) {
-				$('#camera-scanner-btn').attr('disabled', true);
-				var progress = Math.round(data.progress * 100);
-				$('#scan-btn-text').html('scanning... ' + progress + '% complete' );
-				if (progress >= 100) {
-					$('#camera-scanner-btn').attr('disabled', false)	
-					$('#scan-btn-text').html('Scan for Cameras');
-				}
-			});
-
-			socket.on('scanner_cam', function(data) {
-				// console.log('scanner cam');
-				// console.log(data);
-			});
-
-			socket.on('bps', function(data) {
-				var streamId = data.stream_id;
-				var avg = data.avg / 8000;
-				avg = Math.round(avg);
-
-				if ( data.lowest ) {
-					// avg = '! ' + avg;
-					
-				}
-				$('#'+streamId+'-bps-info').html(avg);
-			});
-
-			socket.on('cameraCreated', function(data) {
+			main_socket.on('cameraCreated', function(data) {
 				setTimeout( function() {
 					var id = data._id;
 					if ( !cameras[id] ) {
@@ -118,7 +109,7 @@
 				}, 1000 );
 			});
 
-			socket.on('cameraRemoved', function(data) {
+			main_socket.on('cameraRemoved', function(data) {
 				var id = data._id;
 				if ( !cameras[id].deletedOn || Date.now() - cameras[id].deletedOn > 5000 ) {
 					delete cameras[id];
@@ -128,7 +119,7 @@
 				}
 			});
 
-			socket.on('cameraUpdated', function(data) {
+			main_socket.on('cameraUpdated', function(data) {
 				var id = data._id;
 				if ( !cameras[id].updatedOn || Date.now() - cameras[id].updatedOn > 5000 ) {
 					cameras[id].updatedOn = null;
@@ -140,23 +131,14 @@
 
 			});
 
-            /*
-            socket.on('camera_connected', function(data) {
-                console.log('camera_connected');
-                console.log(data);
-            });
-            */
-            socket.on('cameraStatus', function(data) {
+            main_socket.on('cameraStatus', function(data) {
                 var $camitem = $("#camera-item-"+data.cam_id);
                 $camitem.find('.camera-item-status').html(data.status);
 				if (data.status === 'offline' || data.status === 'disconnected') {
-					// console.log("#timeline-"+data.cam_id);
-					//if (data.status === 'disconnected') alert( data.cam_id + " disconnected");
 					$camitem.animate({
 						backgroundColor: "rgb(243, 255, 102)"
 					}, 1000);
 				} else if (data.status === 'online' || data.status === 'connected') {
-				// console.log('connected');
 					$camitem.animate({
 						backgroundColor: "none"
 					}, 1000);
@@ -533,11 +515,11 @@
 				});
 			}
 
-			socket.on('newThumb', function(data) {
+			page_socket.on('newThumb', function(data) {
 				updateThumb( data );
 			});
 
-            socket.on('newChunk', function (data) {
+            page_socket.on('newChunk', function (data) {
 				// console.log(data);
                 $("#timeline-"+data.stream).animate({
 					backgroundColor: "none"

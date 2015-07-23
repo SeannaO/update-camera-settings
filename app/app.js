@@ -124,24 +124,11 @@ portChecker.check(8080, function(err, found) {
 	};
 
 	passport.use(new BasicStrategy( function(username,password,done){
-					
-			// bypasses auth for development mode
-			if (process.env['NODE_ENV'] === 'development') {
-				process.nextTick(function() {
-					
-					// stores lifeline auth in memory for later usage
-					process.env['USER'] = username;
-					process.env['PASSWORD'] = password;
 
-					return done( null, true );
-				});	
-				return;
-			}
-			process.nextTick(function(){
-				lifelineAuthentication(username,password, done);
-			});
-		})
-	);
+		process.nextTick(function(){
+			lifelineAuthentication(username,password, done);
+		});
+	}));
 
 	var logrequest = function(req, res, next) {
 		var auth_user = "";
@@ -325,12 +312,12 @@ portChecker.check(8080, function(err, found) {
 	// socket.io broadcasts setup
 	camerasController.on('new_chunk', function( data ) {
 		//console.log("[new_chunk] " + JSON.stringify(data, null, 4));
-		io.sockets.emit( 'newChunk', data );	
+		io.of('/main-page').emit( 'newChunk', data );
 	});
 
 	camerasController.on('new_thumb', function( data ) {
 		//console.log("[new_thumb] " + JSON.stringify(data, null, 4));
-		io.sockets.emit( 'newThumb', data );	
+		io.of('/main-page').emit( 'newThumb', data );
 	});
 
 	camerasController.on('motion', function( data ) {
@@ -367,7 +354,7 @@ portChecker.check(8080, function(err, found) {
 	});
 
 	camerasController.on('bps', function( data ) {
-		io.sockets.emit('bps', data);
+		io.of('/main-page').emit('bps', data);
 	});
 
 	camerasController.on('grid', function( data ) {
@@ -375,13 +362,13 @@ portChecker.check(8080, function(err, found) {
 	});
 
 	scannerNotifier.on('status', function(data) {
-		io.sockets.emit('scanner_status', data);
+		io.of('/main-page').emit('scanner_status', data);
 	});
 	scannerNotifier.on('camera', function(data) {
-		io.sockets.emit('scanner_cam', data);
+		io.of('/main-page').emit('scanner_cam', data);
 	});
 	scannerNotifier.on('progress', function(data) {
-		io.sockets.emit('scanner_progress', data);
+		io.of('/main-page').emit('scanner_progress', data);
 	});
 	
 	setInterval( function() {
@@ -391,7 +378,7 @@ portChecker.check(8080, function(err, found) {
 		var time = moment().format('HH:mm:ss');
 		var tz_offset = d.getTimezoneOffset()/60;
 
-		io.sockets.emit( 'time', {
+		io.of('/main-page').emit( 'time', {
 			unix:       unixTime,
 			string:     time,
 			tz_offset:  tz_offset
