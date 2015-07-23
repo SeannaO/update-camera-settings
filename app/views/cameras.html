@@ -197,7 +197,7 @@
         <div class="btn-group" style="float:right;">
             <a id="multiview-btn" href="/multiview" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-facetime-video"></span> Live</a>
             <a id="multiview-btn" href="/investigator" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-search"></span> Investigator</a>
-            <a id="health-btn" href="/health" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-stats"></span> Device Health</a>
+            <!-- <a id="health&#45;btn" href="/health" class="btn btn&#45;sm btn&#45;default"><span class="glyphicon glyphicon&#45;stats"></span> Device Health</a> -->
             <a id="config-btn" href="/config" class="btn btn-default" style="height:30px;"><span class="glyphicon glyphicon-cog"></span></a>            
         </div>
         <div class="btn-group">
@@ -424,7 +424,7 @@
                 success: function( data ) {
                     var percent = (data.used/data.size)*100;
                     $("#storage-space .progress").append("<div class=\"progress-bar progress-bar-info\" role=\"progressbar\" aria-valuenow=\""+ data.used +"\" aria-valuemin=\"0\" aria-valuemax=\"" + data.size + "\" style=\"width: " + percent + "%\"><span class=\"sr-only\">"+percent+"% Full</span></div>");
-                    $("#storage-info").html(Math.round(data.used/1000000000) + " of " + Math.round(data.size/1000000000) + " GB used");
+                    $("#storage-info").html(Math.round(data.used/(1024*1024*1024)) + " of " + Math.round(data.size/(1024*1204*1024)) + " GB used");
                 },
                 error: function( data ) {
                     $("#storage-space .progress").append("<div class=\"progress-bar progress-bar-info\" role=\"progressbar\" style=\"width: 0%\"><span class=\"sr-only\">Unknown</span></div>");

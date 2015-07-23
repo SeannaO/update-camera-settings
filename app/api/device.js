@@ -61,11 +61,11 @@ var getDeviceInfo = function( cb ) {
 		var list  = localIp.split('.');
 		var subnet = list[list.length-1];
 
-		exec('df -k ' + process.env.BASE_FOLDER + '|grep /', function (err, resp){
+		exec('df -m ' + process.env.BASE_FOLDER + '|grep /', function (err, resp){
 			
 			var respList = resp.replace(/\s+/gm,' ').split(' ');
-			var memUsed = parseInt(respList[2]) * 1024;
-			var memFree = parseInt(respList[3]) * 1024;
+			var memUsed = parseInt(respList[2]) * 1024 * 1024;
+			var memFree = parseInt(respList[3]) * 1024 * 1024;
 			var memSize = memFree + memUsed;
 
 			hostname = os.hostname();
