@@ -18,6 +18,8 @@ var Trash           = require('./helpers/trash.js');
 var portChecker     = require('./helpers/port_checker.js');
 var scannerNotifier = require('./helpers/camera_scanner/scanner.js').emitter;
 
+var localAuth = require('./helpers/local-auth.js').auth;
+
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 portChecker.check(8080, function(err, found) {
@@ -119,8 +121,13 @@ portChecker.check(8080, function(err, found) {
 
 	////
 	var lifelineAuthentication = function(username,password, done){
-		var ok = ( username === 'local-solink' && password === '__connect__' );
-		return done(null, ok);
+		localAuth( username, password, function(err, ok ) {
+			if (err) {
+				console.error('[auth error]  ', err);
+				return done(err, false);
+			}
+			return done(null, ok);
+		});
 	};
 
 	passport.use(new BasicStrategy( function(username,password,done){
