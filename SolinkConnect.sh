@@ -15,15 +15,13 @@ case "$1" in
     fi
     : ADD START ACTIONS HERE
     cd $QPKG_ROOT/app
-    ./node_modules/forever/bin/forever --sourceDir=$QPKG_ROOT/app start ./app.js "/share/SolinkConnect" -development
-    ./node_modules/forever/bin/forever start $QPKG_ROOT/app/server.js
+    ./node_modules/forever/bin/forever --sourceDir=$QPKG_ROOT/app start ./app.js "/share/SolinkConnect"
     ;;
 
   stop)
     : ADD STOP ACTIONS HERE
     cd $QPKG_ROOT/app
     ./node_modules/forever/bin/forever stop $QPKG_ROOT/app/app.js 
-    ./node_modules/forever/bin/forever stop $QPKG_ROOT/app/server.js
     ;;
 
   restart)
