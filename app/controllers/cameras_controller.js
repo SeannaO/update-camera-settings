@@ -121,7 +121,7 @@ CamerasController.prototype.takeSnapshot = function( camId, req, res, cb ) {
 
     this.getCamera( camId, function(err, cam) {
 
-		var firstStreamId;
+		var streamId;
 
 		if (cam) {
 			streamId = req.query.stream || Object.keys(cam.streams)[0];
