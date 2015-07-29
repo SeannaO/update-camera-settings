@@ -15,7 +15,7 @@ case "$1" in
     fi
     : ADD START ACTIONS HERE
     cd $QPKG_ROOT/app
-    ./node_modules/forever/bin/forever --sourceDir=$QPKG_ROOT/app start ./app.js "/share/SolinkConnect"
+    ./node_modules/forever/bin/forever --sourceDir=$QPKG_ROOT/app -a -l /dev/null -o /dev/null -e /dev/null -p $QPKG_ROOT start ./app.js "/share/SolinkConnect" > /dev/null
     ;;
 
   stop)
