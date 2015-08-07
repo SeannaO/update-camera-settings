@@ -495,8 +495,8 @@ portChecker.check(8080, function(err, found) {
 
 	// - - -
 	// gets ts segment
-	// TODO: get authentication to work with HLS video tag
-	app.get('/cameras/:cam_id/ts/:stream_id/:file', passport.authenticate('basic', {session: false}), function(req, res) {
+	// TODO: get authentication to work with HLS cross domain requests
+	app.get('/cameras/:cam_id/ts/:stream_id/:file', function(req, res) {
 	   
 		var camId    = req.params.cam_id;
 		var streamId = req.params.stream_id;
