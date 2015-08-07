@@ -39,8 +39,8 @@ portChecker.check(8080, function(err, found) {
 	var self = this;
 
 	// launch node memory monitor
-	// exit process if using more than 30% of memory
-	MemoryMonitors.launchNodeMemMonitor( 30 );
+	// exit process if using more than 50% of memory
+	MemoryMonitors.launchNodeMemMonitor( 50 );
 
 	// launch thumbnailer and rtsp_grabber
 	require('./services/thumbnailer').launch();
