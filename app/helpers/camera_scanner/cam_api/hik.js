@@ -141,6 +141,9 @@ Hik.prototype.getRtspUrl = function ( profile, cb ) {
 	
 	var self = this;
 
+	// insert dummy resolution to handle empty resolution response during camera setup
+	profile.resolution = profile.resolution || '800x600';
+
 	var resolution = profile.resolution.split('x');
 
 	self.getResolutionOptions( function() {
