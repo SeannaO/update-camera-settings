@@ -77,7 +77,7 @@
 
 			page_socket.on('bps', function(data) {
 				var streamId = data.stream_id;
-				var avg = data.avg / 8000;
+				var avg = data.avg / 1000;
 				avg = Math.round(avg);
 
 				$('#'+streamId+'-bps-info').html(avg);
@@ -160,10 +160,10 @@
                         <dt>IP Address:</dt>
                             <dd class="ip_address"></dd>
                     </div>
-                    <div class="info-item">
-                        <dt>Model:</dt>
-                            <dd class="model"></dd>
-                    </div>
+                    <!-- <div class="info&#45;item"> -->
+                    <!--     <dt>Model:</dt> -->
+                    <!--         <dd class="model"></dd> -->
+                    <!-- </div> -->
                     <div class="info-item">
                         <dt>Firmware Version:</dt>
                             <dd class="version"></dd>
