@@ -82,7 +82,7 @@ var timelineSetup = function( cam_id, id, name, cb ) {
 		});
 
 		var streamId = id;
-		cameraItemBps.append('<div> <span id="'+streamId+'-bps-info">0</span> kB/s</div>');
+		cameraItemBps.append('<div> <span id="'+streamId+'-bps-info">0</span> kb/s</div>');
 
 		timelineContainer.append(timelineName);
 		timelineContainer.append(cameraItemBps);
@@ -1254,7 +1254,7 @@ var addStream = function( stream, cb ) {
 			class: 'check-stream-status'
 		});        
 
-		$('#'+new_stream_tab_id).append(check_stream_button);                  
+		// $('#'+new_stream_tab_id).append(check_stream_button);                  
 		$('#'+new_stream_tab_id).append(remove_stream_button); 
 		$('#'+new_stream_tab_id).append(spinner);
 		$('#'+new_stream_tab_id).append(check_stream_status);  
