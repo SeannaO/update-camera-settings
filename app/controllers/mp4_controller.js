@@ -19,8 +19,14 @@ function inMemorySnapshot( file, offset, precision, res, options, cb) {
 
 	var child;
 	
+	var scale = 'scale=-1:-1';
+
 	if (options.size) {
-		size = ' -s ' + options.size.width + 'x' + options.size.height;
+		if (options.size.width) {
+			scale = 'scale='+options.size.width+':-1';
+		} else if (options.size.height) {
+			scale = 'scale=-1:'+options.size.height;
+		}
 	}
 	
 	// console.log("===== snapshot precision: " + precision );
@@ -36,6 +42,7 @@ function inMemorySnapshot( file, offset, precision, res, options, cb) {
 					'-vcodec', 'mjpeg',
 					'-an',
 					'-loglevel', 'quiet',
+					'-vf', scale,
 					'-'
 					]);
 	} else {
@@ -48,6 +55,7 @@ function inMemorySnapshot( file, offset, precision, res, options, cb) {
 					'-vcodec', 'mjpeg',
 					'-an',
 					'-loglevel', 'quiet',
+					'-vf', scale,
 					'-'
 					]);
 	}
@@ -215,6 +223,15 @@ function takeSnapshot( db, cam, req, res, cb ) {
         return;
     }
 
+	var options = {};
+	if (req.query.width) {
+		options.size = {};
+		options.size.width = req.query.width;
+	} else if (req.query.height) {
+		options.size = {};
+		options.size.height = req.query.height;
+	}
+
     db.searchVideoByTime( time, function( file, offset ) {
         
         // offset = Math.round( offset );
@@ -226,7 +243,7 @@ function takeSnapshot( db, cam, req, res, cb ) {
 
         fs.exists(file, function(exists) {
             if (exists) {
-				inMemorySnapshot(file, offset, precision, res, function() {
+				inMemorySnapshot(file, offset, precision, res, options, function() {
 					if (cb) cb();
 				});
             } else {
