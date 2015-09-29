@@ -167,6 +167,32 @@ Timeline.prototype.setupEvents = function() {
 		}
 	});
 
+	this.timelineSelectorEl.mouseup( function(e) {
+		
+		self.timelineSelector.hideTimes();
+
+		self.mouse.pressed = false;
+		$('.timeline-marker').fadeOut();
+		
+		if ( !self.mouse.dragged ) {
+			// console.log("that was a click");
+		} else { 
+			// console.log("that was a drag");
+			var startTime = self.getTimeByPosition(
+				self.timelineSelector.left
+			);
+
+			var endTime = self.getTimeByPosition(
+				self.timelineSelector.right
+			);
+			
+			self.zoom(startTime, endTime);	
+
+			self.timelineSelector.setLeft( 0 );
+			self.timelineSelector.setRight( 0 ); 				
+		}
+	});
+
 	this.el.mouseup( function(e) {
 		
 		self.timelineSelector.hideTimes();
