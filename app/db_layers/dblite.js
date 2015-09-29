@@ -69,9 +69,11 @@ Dblite.prototype.createTableIfNotExists = function( cb ) {
 		self.db.query(createStartIndex, function() {
 			console.log('created start index');
 			self.db.query(createEndIndex, function() {
-				self.db.query('pragma locking_mode=exclusive', function() {
-					self.db.query('.show');
-					if (cb) cb();
+				self.db.query('pragma journal_mode=WAL', function() {
+					self.db.query('pragma locking_mode=exclusive', function() {
+						self.db.query('.show');
+						if (cb) cb();
+					});
 				});
 			});
 		});
