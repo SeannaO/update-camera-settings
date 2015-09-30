@@ -127,7 +127,7 @@ Camera.prototype.addAllStreams = function( streams, cb ) {
  *	and starts recording stream if camera should be recording
  *
  * @param {stream} obj 
- *     stream should contain: { resolution, framerate, quality }
+ *     stream should contain: { resolution, framerate, quality, bitrate}
  */
 Camera.prototype.addStream = function( stream, cb ) {
 
@@ -150,7 +150,8 @@ Camera.prototype.addStream = function( stream, cb ) {
 			framerate:      stream.framerate,
 			quality:        stream.quality,
 			suggested_url:  stream.url,
-			camera_no: 		stream.camera_no
+			bitrate:        stream.bitrate,
+			camera_no:      stream.camera_no
 		}, function(url) {
 
 			stream.url = url;
@@ -513,7 +514,7 @@ Camera.prototype.updateStream = function( stream, cb ) {
 
 	// these are the parameters that requires restarting the recorder when they change,
 	// because the rtsp url changes.
-	var restartParams = ['resolution', 'framerate', 'quality', 'url', 'ip', 'camera_no'];
+	var restartParams = ['resolution', 'framerate', 'quality', 'url', 'ip', 'camera_no', 'bitrate'];
 
 	// iterates through restart params, checks if any of them changed, 
 	// sets restarting if needed
@@ -609,8 +610,9 @@ Camera.prototype.restartStream = function( streamId, cb ) {
 		resolution:     stream.resolution,
 		framerate:      stream.framerate,
 		quality:        stream.quality,
+		bitrate:        stream.bitrate,
 		suggested_url:  self.streams[streamId].url,
-		camera_no: 		stream.camera_no
+		camera_no:      stream.camera_no
 	}, function(url) {
 
 		// self.streams[streamId].recordModel.stopRecording();
@@ -1095,10 +1097,11 @@ Camera.prototype.getStreamsJSON = function() {
 			resolution:   s.resolution,
 			quality:      s.quality,
 			framerate:    s.framerate,
+			bitrate:      s.bitrate,
 			name:         s.name,
 			id:           id,
 			latestThumb:  s.latestThumb,
-			camera_no: 	  s.camera_no
+			camera_no:    s.camera_no
 		}); 
 	}
 
