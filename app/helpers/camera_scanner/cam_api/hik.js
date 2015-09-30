@@ -14,8 +14,8 @@ var requestXML =
 	+ 	'<videoResolutionWidth>{width}</videoResolutionWidth>'
 	+ 	'<videoResolutionHeight>{height}</videoResolutionHeight>'
 	+ 	'<videoQualityControlType>vbr</videoQualityControlType>'
-	+ 	'<constantBitRate>512</constantBitRate>'
-	+ 	'<vbrUpperCap>512</vbrUpperCap>'
+	+ 	'<constantBitRate>{bitrate}</constantBitRate>'
+	+ 	'<vbrUpperCap>{bitrate}</vbrUpperCap>'
 	+ 	'<vbrLowerCap>32</vbrLowerCap>'
 	+ 	'<fixedQuality>60</fixedQuality>'
 	+ 	'<maxFrameRate>{fps}</maxFrameRate>'
@@ -52,6 +52,7 @@ var getResolutions = function( ip, username, password, channel, cb ) {
 				}
 				var resolutions = [];
 				var fpsData = [];
+				var bitrates = {};
 				
 				if (!data.StreamingChannel) {
 					if(cb) cb('invalid response: no StreamingChannel tag', []);
@@ -64,10 +65,21 @@ var getResolutions = function( ip, username, password, channel, cb ) {
 					return;
 				}
 
+				// resolutions
 				data = data.Video[0];
 				if (!data.videoResolutionWidth || !data.videoResolutionWidth[0]) {
 					if(cb) cb('invalid response: no videoResolutionWidth tag', []);
 					return;
+				}
+
+				// bitrate range
+				if (!data.constantBitRate || !data.constantBitRate[0] || !data.constantBitRate[0]['$']) {
+					console.error('[Hik]  no bitrate options found, using default 512');
+					bitrates.min = '512';
+					bitrate.max  = '512';
+				} else {
+					bitrates.min = data.constantBitRate[0]['$'].min || '512';
+					bitrates.max = data.constantBitRate[0]['$'].max || '512';
 				}
 
 				// fps options
@@ -104,7 +116,7 @@ var getResolutions = function( ip, username, password, channel, cb ) {
 						value:  values[i]
 					});
 				}
-				if (cb) cb(null, resolutions, fpsData);
+				if (cb) cb(null, resolutions, fpsData, bitrates);
 			});
 		}
 	);
@@ -117,6 +129,7 @@ var Hik = function() {
 
 	this.resolution2channel   = {};
 	this.fpsOptionsPerChannel = {};
+	this.bitrateOptionsPerChannel = {};
 };
 
 Hik.prototype.apiName = function() {
@@ -147,10 +160,12 @@ Hik.prototype.getRtspUrl = function ( profile, cb ) {
 	var resolution = profile.resolution.split('x');
 
 	self.getResolutionOptions( function() {
+
 		var channel = self.resolution2channel[ profile.resolution ];
-		var width = resolution[0];
-		var height = resolution[1];
-		var fps = profile.framerate || 15;
+		var width   = resolution[0];
+		var height  = resolution[1];
+		var fps     = profile.framerate || 15;
+		var bitrate = profile.bitrate || 512;
 
 		fps *= 100;
 
@@ -180,6 +195,7 @@ Hik.prototype.getRtspUrl = function ( profile, cb ) {
 			channel:  channel,
 			width:    width,
 			height:   height,
+			bitrate:  bitrate,
 			fps:      fps
 		}, function(err, body) {
 			if(cb) cb(url);
@@ -194,6 +210,7 @@ Hik.prototype.configCamera = function(params, cb) {
 		.replace('{channel}', 	params.channel)
 		.replace('{width}', 	params.width)
 		.replace('{height}', 	params.height)
+		.replace(/{bitrate}/g, 	params.bitrate)
 		.replace('{fps}', 		params.fps);
 
 	var url = configURL
@@ -215,6 +232,7 @@ Hik.prototype.configCamera = function(params, cb) {
 		});
 };
 
+
 Hik.prototype.getResolutionOptions = function(cb) {
 
 	var self = this;
@@ -229,7 +247,7 @@ Hik.prototype.getResolutionOptions = function(cb) {
 	var resolutions = [];
 	var error; 
 
-	getResolutions(this.ip, this.username, this.password, 1, function(err, res, fpsData) {
+	getResolutions(this.ip, this.username, this.password, 1, function(err, res, fpsData, bitrates) {
 		for (var i in res) {
 			if (!currentResolutions[res[i].name]) {
 				currentResolutions[res[i].name] = true;
@@ -238,30 +256,31 @@ Hik.prototype.getResolutionOptions = function(cb) {
 			}
 
 			self.addFpsOptions( 1, fpsData );
+			self.addBitrateOptions( 1, bitrates );
 		}
 		error = error || err;
-		getResolutions(self.ip, self.username, self.password, 2, function(err, res, fpsData) {
+		getResolutions(self.ip, self.username, self.password, 2, function(err, res, fpsData, bitrates) {
 			for (var i in res) {
 				if (!currentResolutions[res[i].name]) {
 					currentResolutions[res[i].name] = true;
 					self.resolution2channel[ res[i].value ] = 2;
 					resolutions.push( res[i] );
 				}
-
 			}
 
 			self.addFpsOptions( 2, fpsData );
+			self.addBitrateOptions( 1, bitrates );
 
 			error = error || err;
 			if( res.length == 0 && error ) {
 				cb(error, []);
 			} else {
-				cb( null, resolutions );
+				cb( null, resolutions, bitrates );
 			}
 		});
 	});
-
 };
+
 
 Hik.prototype.addFpsOptions = function( channel, fpsData ) {
 	var self = this;
@@ -270,6 +289,16 @@ Hik.prototype.addFpsOptions = function( channel, fpsData ) {
 	for(var i in fpsData) {
 		self.fpsOptionsPerChannel[channel].push( fpsData[i] );
 	}
+};
+
+
+Hik.prototype.addBitrateOptions = function( channel, bitrateData ) {
+	if (!bitrateData) { return; }
+
+	this.bitrateOptionsPerChannel[channel] = {
+		min:  bitrateData.min,
+		max:  bitrateData.max
+	};
 };
 
 Hik.prototype.setCameraParams = function(params) {
