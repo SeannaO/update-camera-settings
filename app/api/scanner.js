@@ -52,14 +52,19 @@ module.exports = function( app, socket, passport) {
 				return;
 			}
 			api.setCameraParams(camera);
-			api.getResolutionOptions(function(err, resolutions){
+			api.getResolutionOptions(function(err, resolutions, bitrates){
 				if (err) {
 					console.error("*** getResolutionOptions for " + camera.manufacturer + ": ");
 					console.error( err ) ;
 					console.error("* * *");
 					res.status(422).json( { error: err } );
 				} else {
-					res.json({ framerate_range: api.getFrameRateRange(), resolutions: resolutions, quality_range: api.getVideoQualityRange()});
+					res.json({
+						framerate_range:  api.getFrameRateRange(),
+						resolutions:      resolutions,
+						quality_range:    api.getVideoQualityRange(),
+						bitrate_range:    bitrates
+					});
 				}
 			});
 		}else{
