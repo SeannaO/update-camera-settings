@@ -160,13 +160,13 @@
                         <dt>IP Address:</dt>
                             <dd class="ip_address"></dd>
                     </div>
-                    <!-- <div class="info&#45;item"> -->
-                    <!--     <dt>Model:</dt> -->
-                    <!--         <dd class="model"></dd> -->
-                    <!-- </div> -->
+                    <div class="info-item">
+                        <dt>Model:</dt>
+                            <dd class="model"></dd>
+                    </div>
                     <div class="info-item">
                         <dt>Firmware Version:</dt>
-                            <dd class="version"></dd>
+                            <dd class="firmware_version"></dd>
                     </div>
 					<div class="info-item .device-time">
 						<dt>Device time:</dt>
@@ -409,7 +409,7 @@
                     default_subnet = data.ip.substr(0,last_idx);
                     $("#camera-subnet").val(default_subnet);
                     $("#device-info .model").html(data.model);
-                    $("#device-info .version").html(data.version);
+                    $("#device-info .firmware_version").html(data.firmware);
                     $("#device-info dl").show();
                 },
                 error: function( data ) {

@@ -1,6 +1,8 @@
 var request = require('request');
-var exec = require('child_process').exec;
-var os = require('os');
+var exec    = require('child_process').exec;
+var os      = require('os');
+
+var QNAP_PORT = 8085;
 
 module.exports = function( app, passport) {
 
@@ -52,6 +54,38 @@ module.exports = function( app, passport) {
 };
 
 
+var getQNAPInfo = function( cb ) {
+
+	var modelRegex    = /<modelName>.*?CDATA\[(.*?)\].*?<\/modelName>/;
+	var firmwareRegex = /<firmware>.*?CDATA\[(.*?)\].*?<\/version>/;
+
+	var model    = '-';
+	var firmware = '-';
+
+	request({
+		uri:      'http://10.126.140.101:' + QNAP_PORT + '/cgi-bin/sysinfoReq.cgi',
+		timeout:  2*1000
+	}, function( err, res, body) {
+		if (!err && body) {
+
+			var rModel = body.match( modelRegex );
+			if (rModel && rModel[1]) {
+				model = rModel[1];
+			}
+
+			var rFirmware = body.match( firmwareRegex );
+			if ( rFirmware && rFirmware[1] ) {
+				firmware = rFirmware[1];
+			}
+		}
+	 	cb({
+			model:     model,
+			firmware:  firmware
+		});
+	});
+};
+
+
 var getDeviceInfo = function( cb ) {
 
 		if (!cb) return;
@@ -70,13 +104,15 @@ var getDeviceInfo = function( cb ) {
 
 			hostname = os.hostname();
 
-			cb({
-				size:     memSize,
-				used:     memUsed,
-				model:    'Connect over QNAP',
-				name:     hostname + ' ' + subnet,
-				ip:       localIp,
-				version:  '-'
+			getQNAPInfo( function( qnap ) {
+				cb({
+					size:      memSize,
+					used:      memUsed,
+					model:     qnap.model,
+					name:      hostname + ' ' + subnet,
+					ip:        localIp,
+					firmware:  qnap.firmware
+				});
 			});
 		});	
 }
