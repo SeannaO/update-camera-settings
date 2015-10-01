@@ -63,7 +63,7 @@ var getQNAPInfo = function( cb ) {
 	var firmware = '-';
 
 	request({
-		uri:      'http://10.126.140.101:' + QNAP_PORT + '/cgi-bin/sysinfoReq.cgi',
+		uri:      'http://localhost:' + QNAP_PORT + '/cgi-bin/sysinfoReq.cgi',
 		timeout:  2*1000
 	}, function( err, res, body) {
 		if (!err && body) {
