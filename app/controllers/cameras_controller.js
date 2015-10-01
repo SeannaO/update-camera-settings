@@ -216,6 +216,22 @@ CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_id
 	var self = this;
 
 	if (!cam_ids_list) {
+
+		// do not add more files to the queue if it's larger than a certain threshold
+		// this is to reduce the chance of having duplicate files in the queue, 
+		// which would reduce its efficiency
+		if ( self.deletionQueue.length > 50 ) {
+			// console.log('[checkExpiredChunks]  the deletion queue is not empty');
+			setTimeout( 
+				function() {
+					self.periodicallyCheckForExpiredChunks();
+				},
+				millisPeriodicity/2
+			);
+			return;
+		}
+		// - -
+
 		var ids = self.cameras.map( 
 			function(c) {
 				return( c._id );
