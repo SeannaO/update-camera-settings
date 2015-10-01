@@ -1,7 +1,7 @@
 var request = require('request');
 
 var baseUrl = 'http://{user}:{pass}@{ip}';
-var rtspUrl = 'rtsp://{user}:{pass}@{ip}/h264.sdp?res={resolution}&fps={framerate}&qp=32';
+var rtspUrl = 'rtsp://{user}:{pass}@{ip}/h264.sdp?res={resolution}&fps={framerate}&qp={quality}';
 
 function Arecont( cam ){
 
@@ -26,23 +26,17 @@ Arecont.prototype.getRtspUrl = function (profile, cb ) {
 		return;
 	}
 	
-	// var dimensions = profile.resolution.split('x');
-	// var width = dimensions[0];
-	// var height = dimensions[1];
-	
-	var res = '';
-	// if (width > 1000 && height > 600) {
-		res = 'full';
-	// } else {
-	// 	res = 'half';
-	// }
+	var res = profile.resolution || 'half';
+	var fps = profile.framerate || '15';
+	var qp = profile.quality || '32';
 
 	var url = rtspUrl
 		.replace('{user}', this.username || '')
 		.replace('{pass}', this.password || '')
 		.replace('{ip}', this.ip)
 		.replace('{resolution}', res)
-		.replace('{framerate}', profile.framerate);
+		.replace('{framerate}', fps)
+		.replace('{quality}', qp);
 	if(cb) cb(url);
 };
 
