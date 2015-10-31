@@ -22,14 +22,16 @@ var localAuth = require('./helpers/local-auth.js').auth;
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-portChecker.check(8080, function(err, found) {
+var port = process.env.PORT || 8080;
 
-	// exits app if port 8080 is already being used
+portChecker.check(port, function(err, found) {
+
+	// exits app if port is already being used
 	if (err || found) { 
 		if(err)  {
 			console.error('ERROR: ' + err);
 		} else {
-			console.error('ERROR: port 8080 is already being used');
+			console.error('ERROR: port ' + port + ' is already being used');
 		}
 		process.exit(1);
 	}
@@ -476,7 +478,8 @@ portChecker.check(8080, function(err, found) {
 
 
 	app.get('/pos_monitor', passport.authenticate('basic', {session: false}), function(req, res) {
-		var monitor_url = 'https://solink:_tcpdump_wrapper_@localhost:3000/instances';
+		var monitor_port = process.env.LISTENER_PORT || 3000;
+		var monitor_url = 'https://solink:_tcpdump_wrapper_@localhost:' + monitor_port + '/instances';
 		request({
 			url: monitor_url,
 			method: "GET",
@@ -565,7 +568,7 @@ portChecker.check(8080, function(err, found) {
 
 
 	// server.listen(process.env.PORT || 8080);
-	server.listen( 8080 );
+	server.listen( port );
 	var server2 = require('http').createServer(app).listen(4001);
 	var server3 = require('http').createServer(app).listen(4002);
 	var server4 = require('http').createServer(app).listen(4003);
