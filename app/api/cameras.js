@@ -373,7 +373,7 @@ module.exports = function( app, passport, camerasController ) {
 						res.setHeader("Cache-Control", "public, max-age=999999"); 
 						res.sendfile(file);
 					} else {
-						res.end("no thumb " + self.thumb);
+						res.status(404).end("no thumb " + self.thumb);
 					}
 				}); 
 			}

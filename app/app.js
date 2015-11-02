@@ -505,8 +505,6 @@ portChecker.check(port, function(err, found) {
 		var streamId = req.params.stream_id;
 		var file     = req.params.file;
 
-		console.info( file  );
-
 		if (file !== 'live.ts') {
 			tsHandler.deliverTsFile( camId, streamId, file, res );
 		} else {
@@ -515,8 +513,12 @@ portChecker.check(port, function(err, found) {
 				if (err) {
 					console.error("[/cameras/:id/video.m3u8] :");
 					console.error( err ) ;
-					res.json( { error: err } );
-
+					res.status(500).json( { error: err } );
+					return;
+				} else if (!cam) {
+					console.error('camera not found');
+					res.status(404).json({ error: 'camera not found'});
+					return;
 				} else {
 					// if no stream is not specified then just give the first stream
 					if (!cam.streams[streamId]) {
