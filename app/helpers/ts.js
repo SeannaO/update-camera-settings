@@ -37,7 +37,7 @@ function deliverTsFile( camId, streamId, file, res ) {
 				else {
 					console.error("[ts helper]  can't find mpegts file " + fileUriWithDate);
 					res.writeHead(404, { "Content-Type": "text" });
-					res.end("file not found: " + fileUriWithDate);
+					res.end("file not found: " + path.basename(fileUriWithDate) );
 				}
 			});	
         }
