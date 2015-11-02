@@ -2,7 +2,7 @@ var request = require('request');
 var exec    = require('child_process').exec;
 var os      = require('os');
 
-var QNAP_PORT = 8085;
+var QNAP_PORT = process.env.QNAP_PORT || 8085;
 
 module.exports = function( app, passport) {
 
