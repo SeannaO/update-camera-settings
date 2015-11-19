@@ -4,7 +4,7 @@ var path         = require('path');                    // path manipulation util
 var exec         = require('child_process').exec;      // for executing system commands
 var EventEmitter = require('events').EventEmitter;     // for events
 var util         = require('util');                    // for inheritin events class
-var dbus         = require('node-dbus');
+var dbus         = require('../libs/node-dbus');
 
 // record statuses
 var RECORDING = 2,

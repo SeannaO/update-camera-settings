@@ -3,7 +3,7 @@ var path         = require('path');
 var makeThumb    = require('./ffmpeg').makeThumb;
 var EventEmitter = require('events').EventEmitter;
 var util         = require('util');
-var dbus         = require('node-dbus');
+var dbus         = require('../libs/node-dbus');
 
 function Thumbnailer() {
 	
