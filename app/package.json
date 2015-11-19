@@ -1,26 +1,50 @@
 {
-  "engines": {
-    "node": ">= 0.10.0"
+  "name": "vms",
+  "version": "4.0.0",
+  "description": "Connect ======== Contains node scripts such as node.js for Connect",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "devDependencies": {
-    "grunt": "~0.4.5",
-    "grunt-contrib-jshint": "~0.10.0",
-    "grunt-contrib-watch": "~0.6.1",
-    "grunt-contrib-qunit": "~0.5.2",
-    "grunt-contrib-concat": "~0.4.0",
-    "grunt-contrib-uglify": "~0.5.0",
-    "mocha": "~2.2.1",
-    "grunt-mocha-test": "~0.12.7",
-    "load-grunt-config": "~0.16.0",
-    "load-grunt-tasks": "~3.1.0",
-    "time-grunt": "~1.1.0",
-    "grunt-notify": "~0.4.1",
-    "istanbul": "~0.3.8",
-    "grunt-mocha-istanbul": "~2.3.1"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SolinkCorp/vms.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SolinkCorp/vms/issues"
+  },
+  "homepage": "https://github.com/SolinkCorp/vms",
+  "directories": {
+    "test": "tests"
   },
   "dependencies": {
-    "fs-extra": "~0.16.5",
-    "nedb": "~1.1.2",
-    "bcrypt": "~0.8.3"
-  }
+    "bcrypt": "^0.8.3",
+    "async": "^0.9.0",
+    "dblite": "^0.4.1",
+    "ejs": "^0.8.5",
+    "express": "^3.4.6",
+    "findit": "^1.1.0",
+    "fluent-ffmpeg": "^1.5.2",
+    "forever": "^0.14.1",
+    "ip": "^0.3.0",
+    "look": "^0.1.3",
+    "memwatch": "^0.2.2",
+    "moment": "^2.10.2",
+    "nedb": "^0.9.3",
+    "node-dbus": "^0.1.3",
+    "passport": "^0.1.17",
+    "passport-http": "^0.2.2",
+    "react": "^0.13.1",
+    "react-dnd": "^0.9.8",
+    "react-tween-state": "^0.0.5",
+    "request": "^2.36.0",
+    "socket.io": "^0.9.16",
+    "weekly-schedule": "^0.0.1",
+    "rewire": "^2.0.0",
+    "xml2js": "^0.4.0",
+    "simple-lru-cache": "^0.0.1",
+    "sinon": "^1.7.3",
+    "winston": "^0.7.2"
+  },
+  "devDependencies": {}
 }
