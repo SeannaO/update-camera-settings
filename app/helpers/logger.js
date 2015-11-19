@@ -10,8 +10,8 @@ var logs_path = './logs';
 var maxsize  = 5*1024*1024;
 var maxFiles = 10;
 
-var messages_filename = 'webrtc_messages_';
-var errors_filename   = 'webrtc_errors_';
+var messages_filename = 'vms_messages_';
+var errors_filename   = 'vms_errors_';
 /////
 
 // make sure logs folder exists
