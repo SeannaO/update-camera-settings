@@ -68,3 +68,6 @@ console.log = function(msg) {
 console.error = function(msg) {
 	error_logger.error(msg);
 };
+
+
+exports.logger = logger;

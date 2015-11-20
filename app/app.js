@@ -1,6 +1,6 @@
 'use strict';
 
-require('./helpers/logger'); // initialize winston logger
+var logger = require('./helpers/logger').logger; // initialize winston logger
 
 var express           = require('express');                          // express
 var request           = require('request');                          // request
