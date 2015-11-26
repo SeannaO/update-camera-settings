@@ -33,6 +33,13 @@ $(document).ready(function(){
 		}
 	});
 
+	$('#camera-form').keypress(function(e) {
+		if(e.which == 13) {
+			e.preventDefault();
+			return;
+		}
+	});
+
 	// $("#camera-subnet").mask("9?99.9?99.9?99");
 });
 
