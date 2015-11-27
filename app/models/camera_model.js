@@ -90,7 +90,7 @@ function Camera( cam, videosFolder, cb ) {
 
 	var defaultMotionParams = {
 		enabled:      false,
-		threshold:    40,
+		threshold:    120,
 		sensitivity:  50,
 		roi:          "all"
 	};
