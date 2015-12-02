@@ -1,5 +1,6 @@
 'use strict';
 
+var _                  = require('lodash');
 var Datastore          = require('nedb');                           //
 var Camera             = require('./../models/camera_model');       //
 var EventEmitter       = require('events').EventEmitter;            //
@@ -8,7 +9,7 @@ var checkH264          = require('../helpers/ffmpeg.js').checkH264;
 var OrphanFilesChecker = require('../helpers/orphanFiles.js');
 var Thumbnailer        = require('../helpers/thumbnailer.js');
 var SensorData         = require('../models/sensor_model.js');
-var mp4Handler         = require('./mp4_controller.js');     	
+var mp4Handler         = require('./mp4_controller.js');
 
 function CamerasController( cam_db_filename, videosFolder, cb ) {
 
@@ -37,10 +38,13 @@ function CamerasController( cam_db_filename, videosFolder, cb ) {
 	this.mp4Handler = mp4Handler;
 
 	self.deletionQueue = [];
+	self.expiredQueue = [];
 
 	self.checkSnapshotQ();
 	
 	self.periodicallyDeleteChunksOnQueue();
+	self.periodicallyDeleteExpiredChunks();
+
 	self.periodicallyCheckForExpiredChunks();
 
 	self.thumbnailer.on('new_thumb', function(thumb) {
@@ -202,12 +206,17 @@ CamerasController.prototype.getMotion = function(camId, cb) {
 };
 
 
+/**
+ * Periodically and recursively queries each camera for expired chunks,
+ *   adding them to the 'expiredChunks' queue.
+ *   It requests at most 'maxChunksPerCamera' expired files per camera.
+ *
+ * @param { cam_ids_list } array IDs of the cameras, used only for the recursive call;
+ */
 CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_ids_list ) {
 	
-	var maxChunksPerCamera = 100;			// limits query to 100 chunks per camera
-											// to avoid having a large array in memory
-
-	var millisPeriodicity = 1000 * 60 * 10; // checks each 10 minutes
+	var maxChunksPerCamera = 120;  // ~10s/chunk = ~60 chunks/10min/stream
+	var millisPeriodicity  = 1000 * 60 * 10; // checks every 10 minutes
 	
 	if (process.env['NODE_ENV'] === 'development') {
 		millisPeriodicity = 1000 * 10 * 1;		// !! checks each 10s - development only !!
@@ -217,16 +226,15 @@ CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_id
 
 	if (!cam_ids_list) {
 
-		// do not add more files to the queue if it's larger than a certain threshold
-		// this is to reduce the chance of having duplicate files in the queue, 
-		// which would reduce its efficiency
-		if ( self.deletionQueue.length > 50 ) {
-			// console.log('[checkExpiredChunks]  the deletion queue is not empty');
+		// limit size of 'expiredQueue' (deletion queue for expired chunks)
+		// if not empty, check again 1 min later
+		if ( self.expiredQueue.length > 0 ) {
+			console.log('[camerasController.periodicallyCheckForExpiredChunks]  expiredQueue is not empty; will check again in 1 min');
 			setTimeout( 
 				function() {
 					self.periodicallyCheckForExpiredChunks();
 				},
-				millisPeriodicity/2
+				1 * 60 * 1000
 			);
 			return;
 		}
@@ -243,6 +251,7 @@ CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_id
 		return;
 	}
 	
+	// base of recursion
 	if (cam_ids_list.length === 0) {
 		setTimeout( 
 			function() {
@@ -263,12 +272,14 @@ CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_id
 			cam.getExpiredChunks( maxChunksPerCamera, 
 				function( chunks ) {
 
+					// add camera id to the chunk
+					// before pushing it to 'expiredQueue'
 					chunks = chunks.map( function(d) {
 						d.cam_id = cam._id;
 						return d;
 					});
 					
-					self.addChunksToDeletionQueue( chunks );
+					self.addChunksToExpiredQueue( chunks );
 					self.periodicallyCheckForExpiredChunks( cam_ids_list );
 				}
 			);
@@ -279,12 +290,64 @@ CamerasController.prototype.periodicallyCheckForExpiredChunks = function( cam_id
 };
 
 
+/**
+ * Appends an array of chunks to 'expiredQueue'
+ *
+ * @param { chunks_list } array Chunk objects
+ */
+CamerasController.prototype.addChunksToExpiredQueue = function( chunk_list ) {
+
+	var self = this;
+
+	for (var c in chunk_list) {
+		self.expiredQueue.push( chunk_list[c] );
+	}
+};
+
+
 CamerasController.prototype.addChunksToDeletionQueue = function( chunk_list ) {
 
 	var self = this;
 
 	for (var c in chunk_list) {
 		self.deletionQueue.push( chunk_list[c] );
+	}
+};
+
+
+/**
+ * Periodically pops a chunk from expiredQueue and deletes it;
+ *   repeats every 150ms if queue is not empty
+ *   otherwise, waits 5s before checking again
+ */
+CamerasController.prototype.periodicallyDeleteExpiredChunks = function() {
+	
+	var self = this;
+
+	var chunk = self.expiredQueue.shift();
+	
+
+	if (!chunk) {
+		setTimeout( function() {
+			self.periodicallyDeleteExpiredChunks();
+		}, 5000);
+	} else {
+
+		self.deleteChunk( chunk, function(data) {
+
+			if (chunk.cb) {
+				chunk.cb();
+			}
+		});
+
+		// 150ms means ~6 chunks/sec will be deleted;
+		// assuming each stream records 1 chunk/10s,
+		// this would theoretically be able to keep up with 30 cameras with 2 streams each
+		setTimeout( 
+			function() {
+				self.periodicallyDeleteExpiredChunks();
+			}, 150
+		);
 	}
 };
 
@@ -308,10 +371,13 @@ CamerasController.prototype.periodicallyDeleteChunksOnQueue = function() {
 			}
 		});
 
+		// 150ms means ~6 chunks/sec will be deleted;
+		// assuming each stream records 1 chunk/10s,
+		// this would theoretically be able to keep up with 30 cameras with 2 streams each
 		setTimeout( 
 			function() {
 				self.periodicallyDeleteChunksOnQueue();
-			}, 250
+			}, 150
 		);
 	}
 };
@@ -340,7 +406,6 @@ CamerasController.prototype.deleteOldestChunks = function( numChunks, cb ) {
 	var self = this;
 
 	if ( self.deletionQueue.length > 0 ) {
-		// console.log('- deleteOldestChunks: the deletion queue is not empty; i will wait before deleting old chunks');
 		return;
 	}
 
@@ -366,6 +431,17 @@ CamerasController.prototype.getOldestChunksFromCamera = function( numChunks, cam
 };
 
 
+/**
+ * Returns array of 'numChunks' oldest chunks from each camera
+ *
+ *   the returned array is shuffled so that each stream
+ *   will have chunks deleted statistically at the same rate,
+ *   preventing backpressure caused by prioritizing 
+ *   the deletion of older (likely low bitrate) streams
+ *   while recording high bitrate ones
+ *
+ * @param { numChunks } number Max number of oldest chunks per camera
+ */
 CamerasController.prototype.getOldestChunks = function( numChunks, cb ) {
 
 	var self = this;
@@ -380,11 +456,7 @@ CamerasController.prototype.getOldestChunks = function( numChunks, cb ) {
 			oldChunks = oldChunks.concat( data );
 			n++;
 			if (n === self.cameras.length) {
-				oldChunks = oldChunks.sort( function(a, b) {
-					return a.start - b.start;
-				});
-				
-				cb( oldChunks.slice(0, numChunks) );
+				cb( _.shuffle(oldChunks) );
 			}
 		});
 	}
