@@ -182,10 +182,11 @@ Dblite.prototype.getExpiredChunks = function( expirationDate, numberOfChunks, cb
             ['id', 'file', 'start'], 
             function(error, data) {
                 if (error){
+					console.error('[dblite.getExpiredChunks]  ' + error);
                     cb([]);
                 }
-                if (!data || data.length === 0) {
-                     cb( [] );
+				else if (!data || data.length === 0) {
+                     cb([]);
                 } else {
                     cb(data);
                 }
