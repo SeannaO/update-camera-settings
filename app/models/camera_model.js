@@ -702,7 +702,6 @@ Camera.prototype.shouldBeRecording = function() {
 Camera.prototype.daysToMillis = function(days) {
 	
 	return days * 24 * 60 * 60 * 1000;
-	// return days * 1000; // seconds instead of days - !!! tests only !!!
 };
 // end of daysToMillis
 //
@@ -722,7 +721,7 @@ Camera.prototype.getExpiredChunksFromStream = function( streamId, nChunks, cb ) 
 
 	// for safety reasons, avoids non-existing ids
 	if ( !this.streams[streamId] ) {
-		console.error('[error] cameraModel.getExpiredChunksFromStream: no stream with id ' + streamId);
+		console.error('[cameraModel.getExpiredChunksFromStream]  no stream with id ' + streamId);
 		cb([]);
 		return;
 	}
@@ -738,21 +737,9 @@ Camera.prototype.getExpiredChunksFromStream = function( streamId, nChunks, cb ) 
 	var retentionToMillis = self.daysToMillis( stream.retention );	// converts to millis
 	var expirationDate    = Date.now() - retentionToMillis;			// when should it expire?
 
-	// TODO: check if this condition is indeed working and really necessary
-	// try to avoid call to db when we know that there are no expired chunks
-	if ( stream.oldestChunkDate && ( Date.now() - stream.oldestChunkDate < retentionToMillis ) ) {
-		console.log('- no expired chunks');
-		cb([]);
-	} else {
-		stream.db.getExpiredChunks( expirationDate, nChunks, function( data ) {
-			if ( data.length === 0 ) {
-				// we reched the last expired chunk, 
-				// so let's try to avoid hitting the db unnecessarily
-				stream.oldestChunkDate = Date.now() - retentionToMillis;
-			}
-			cb( data );
-		});
-	}
+	stream.db.getExpiredChunks( expirationDate, nChunks, function( data ) {
+		cb( data );
+	});
 };
 // end of getExpiredChunksFromStream
 //
@@ -837,8 +824,9 @@ Camera.prototype.getOldestChunks = function( chunks, streamList, numberOfChunks,
 		chunks         = [];
 	}
 	
-	if (streamList.length === 0) {	// we are done checking all streams
-		cb( chunks );				// ...so let's pass the list of chunks
+	// base of recursion
+	if (streamList.length === 0) {	// done checking all streams
+		cb( chunks );
 
 	} else {
 
@@ -854,7 +842,7 @@ Camera.prototype.getOldestChunks = function( chunks, streamList, numberOfChunks,
 				return d;
 			});
 
-			// appends chunks to our array and recursively proceeds to next stream			
+			// appends chunks the array and recursively proceeds to next stream			
 			self.getOldestChunks( chunks.concat(data), streamList, numberOfChunks, cb );
 		});		
 	}

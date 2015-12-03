@@ -253,8 +253,13 @@ portChecker.check(port, function(err, found) {
 			
 			console.log( "hdd usage: " + usage + "%");
 			console.log('[diskSpaceAgent]  freeing disk space... ');
-			camerasController.deleteOldestChunks( 50 * nStreams, function(data) {
-				// console.log(data);
+			// delete 150 oldest chunks from each stream
+			camerasController.deleteOldestChunks( 150, function(data) {
+				if (data) {
+					console.log('[diskSpaceAgent]  added ' + data.length + ' chunks to deletion queue');
+				} else {
+					console.error('[diskSpaceAgent]  could no retrieve oldest chunks');
+				}
 			});
 		}
 	});
