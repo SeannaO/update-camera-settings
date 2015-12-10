@@ -13,6 +13,12 @@ var CameraGroup = function( id ) {
 
 	this.el.droppable({
 		drop: function(ev, ui) {
+
+			if ( Object.keys(self.cameras).length >= 4 ) {
+				toastr.warning('The spot monitor can only display up to 4 cameras simultaneously');
+				return;
+			}
+
 			var cam_id = ui.draggable.attr("data_id");
 			self.addCamera( new Camera( cameras[cam_id] ), cam_id );
 			self.resize();
@@ -190,6 +196,10 @@ CameraGroup.prototype.show = function() {
 
 	this.el.show();
 	this.resize();
+
+	if ( Object.keys(this.cameras).length > 4 ) {
+		toastr.warning('The spot monitor can only display up to 4 cameras simultaneously');
+	}
 };
 
 
