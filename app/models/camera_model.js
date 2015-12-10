@@ -1089,7 +1089,8 @@ Camera.prototype.getStreamsJSON = function() {
 			name:         s.name,
 			id:           id,
 			latestThumb:  s.latestThumb,
-			camera_no:    s.camera_no
+			camera_no:    s.camera_no,
+			average_bps:  s.bpsAvg
 		}); 
 	}
 
