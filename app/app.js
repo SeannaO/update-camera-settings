@@ -440,6 +440,7 @@ portChecker.check(port, function(err, found) {
 			headers: {
 				'User-Agent': 'nodejs'
 			},
+			timeout: 5000
 		}, function(error, response, body){
 			res.end(body);
 		});

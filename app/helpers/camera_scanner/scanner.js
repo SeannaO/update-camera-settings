@@ -29,7 +29,8 @@ var detectCamByHttpResponse = function( ip, response, cb ) {
 		url: 'http://' + ip,
 		headers: {
 			'User-Agent': 'nodejs'
-		}
+		},
+		timeout: 5000
 	};
 
 	var req = request( options, 

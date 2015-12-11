@@ -65,6 +65,7 @@ Axis.prototype.checkForExistingProfile = function( profileName, cb ) {
 		headers: {
 			'User-Agent': 'nodejs'
 		},
+		timeout: 10000
 	}, function( error, response, body) {
 		if (!error && body) {
 
@@ -107,6 +108,7 @@ Axis.prototype.isProfileH264 = function( profileId, cb ){
 		headers: {
 			'User-Agent': 'nodejs'
 		},
+		timeout: 10000
 	}, function( error, response, body) {
 		if (!error && body) {
 
@@ -132,6 +134,7 @@ Axis.prototype.createNewProfile = function( profile, cb ) {
 		headers: {
 			'User-Agent': 'nodejs'
 		},
+		timeout: 10000
 	}, function( error, response, body) {
 		if (!error && body) {
 			var profileId = body.match(/S\d+/);
@@ -207,7 +210,8 @@ Axis.prototype.updateProfile = function(profileId, profile, cb) {
 		url: url,
 		headers: {
 			'User-Agent': 'nodejs'
-		}
+		},
+		timeout: 10000
 	}, function( error, response, body) {
 		if (!error) {
 			cb( profileId );
@@ -410,6 +414,7 @@ Axis.prototype.getNumberOfSources = function (cb) {
 			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
 			'Authorization': 'Basic ' + digest			
 		},
+		timeout: 10000
 	}, function( error, response, body) {
 		if (!error && body && body.indexOf('nauthorized') > -1) {
 			cb('not authorized', []);
@@ -454,6 +459,7 @@ Axis.prototype.getCameraSourceName = function(camera_no, cb) {
 			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
 			'Authorization': 'Basic ' + digest			
 		},
+		timeout: 10000
 	}, function( error, response, body) {
 		if (!error && body && body.indexOf('nauthorized') > -1) {
 			cb('not authorized', '');
@@ -529,6 +535,7 @@ Axis.prototype.getResolutionOptionsForEncoderCamera = function (camera_no, cb) {
 			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
 			'Authorization': 'Basic ' + digest			
 		},
+		timeout: 10000
 	}, function( error, response, body) {
 		if (!error && body && body.indexOf('nauthorized') > -1) {
 			cb('not authorized', []);
@@ -578,6 +585,7 @@ Axis.prototype.getResolutionOptionsForSingleCamera = function ( cb ) {
 			'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
 			'Authorization': 'Basic ' + digest			
 		},
+		timeout: 10000
 	}, function( error, response, body) {
 		if (!error && body && body.indexOf('nauthorized') > -1) {
 			cb('not authorized', []);
