@@ -34,7 +34,8 @@ var getResolutions = function( ip, username, password, channel, cb ) {
 		url: url,
 		headers: {
 			'User-Agent': 'nodejs'
-		}
+		},
+		timeout: 10000
 	}, function(err, res, body) {
 			if(err) {
 				if (cb) cb(err, []);
