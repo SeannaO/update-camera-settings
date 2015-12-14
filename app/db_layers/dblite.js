@@ -311,6 +311,63 @@ Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
 
 
 /**
+ * Get earliest or latest segment
+ *
+ * @param { which } string  'latest' or 'earliest'
+ * @param { cb } function  Callback, returns segment object
+ */
+Dblite.prototype.getEarliestOrLatestSegment = function( which, cb ) {
+
+	var order = ( which == 'latest' ? 'DESC' : 'ASC' );
+
+	var query = 'SELECT id, file, start FROM videos ORDER BY start ' + order + ' LIMIT 1';
+
+    var fileList = this.db.query(
+        query, 
+        ['id', 'file', 'start', 'end'], 
+        function(err, data) {
+            if (err){
+                console.log('[dblite]  getEarliestOrLatestSegment:');
+                console.log(err);
+				cb( null );
+            } else if (!data || !data.length === 0) {
+                 cb( null );
+            } else {
+                cb( data[0] );
+            }
+        }
+    );
+};
+// - - end of getEarliestOrLatestSegment
+// - - - - - - - - - - - - - - - - - - - -
+
+
+/**
+ * Get earliest and latest segment
+ *
+ * @param { cb } function  Callback, returns object { earliest: <earliest-segment>, latest: <latest-segment> }
+ */
+Dblite.prototype.getEarliestAndLatestSegment = function( cb ) {
+
+	var self = this;
+
+	self.getEarliestOrLatestSegment('earliest', function(earliest) {
+		self.getEarliestOrLatestSegment('latest', function(latest) {
+
+			var latestEarliest = {
+				earliest:  earliest,
+				latest:    latest
+			}
+			if(cb) cb(latestEarliest);
+		});
+	});
+};
+// - - end of getEarliestAndLatestSegment
+// - - - - - - - - - - - - - - - - - - - -
+
+
+
+/**
  * listAll
  *
  */
