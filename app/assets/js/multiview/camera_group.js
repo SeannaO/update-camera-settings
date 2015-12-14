@@ -56,8 +56,9 @@ CameraGroup.prototype.getJSON = function() {
 	for (var i in this.cameras) {
 		var c = this.cameras[i];
 		var cam = {
-			id:      i,
-			pos_id:  c.posId
+			id:         i,
+			pos_id:     c.posId,
+			stream_id:  c.selectedStream
 		};
 		res.push( cam );
 	}
