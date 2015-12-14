@@ -62,7 +62,7 @@ Camera.prototype.getLowestStream = function() {
 	var lowest_bps_stream = streams[0];
 
 	for (var i in streams) {
-		if (streams[i].name && streams[i].name.indexOf('LD')){
+		if (streams[i].name && streams[i].name.indexOf('SD')){
 			return streams[i].id;
 		} 
 
