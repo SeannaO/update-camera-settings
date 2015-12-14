@@ -9,6 +9,7 @@ var tsHandler         = require('./helpers/ts');                     // ts abstr
 var hlsHandler        = require('./controllers/hls_controller');     // hls abstraction
 var CamerasController = require('./controllers/cameras_controller'); // cameras controller
 var fs                = require('fs');                               // for sending files
+var exec              = require('child_process').exec;
 var DiskSpaceAgent    = require('./helpers/diskSpaceAgent.js');      // agent that periodically checks disk space
 
 var passport          = require('passport');
@@ -530,5 +531,15 @@ portChecker.check(port, function(err, found) {
 	var server3 = require('http').createServer(app).listen(4002);
 	var server4 = require('http').createServer(app).listen(4003);
 	var server5 = require('http').createServer(app).listen(4004);
-	
+});
+
+
+/***
+ * handle signal to kill process,
+ * kill rtsp_grabber and thumbnailer before exiting
+ */
+process.on('SIGTERM', function() {
+	exec('killall rtsp_grabber');
+	exec('killall thumbnailer');
+	process.exit();
 });
