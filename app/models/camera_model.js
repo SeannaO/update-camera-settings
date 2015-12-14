@@ -143,8 +143,8 @@ Camera.prototype.addStream = function( stream, cb ) {
 			var latest   = latestEarliest.latest ? latestEarliest.latest.start : null;
 			var earliest = latestEarliest.earliest ? latestEarliest.earliest.start : null;
 
-			stream.latest_segment_date   = parseInt(latest);
-			stream.earliest_segment_date = parseInt(earliest);
+			stream.latestSegmentDate   = parseInt(latest);
+			stream.earliestSegmentDate = parseInt(earliest);
 		});
 
 		if (stream.toBeDeleted) {
@@ -904,11 +904,11 @@ Camera.prototype.addChunk = function( streamId, chunk ) {
 
 	var stream = this.streams[ streamId ];
 
-	if (!stream.earliest_segment_date) {
-		stream.earliest_segment_date = chunk.start
+	if (!stream.earliestSegmentDate) {
+		stream.earliestSegmentDate = chunk.start
 	}
 
-	stream.latest_segment_date = chunk.start
+	stream.latestSegmentDate = chunk.start
 };
 // end of addChunk
 //
@@ -936,11 +936,11 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 
 		var stream = self.streams[ streamId ];
 
-		if (chunk.start > stream.earliest_segment_date) {
-			stream.earliest_segment_date = chunk.start
+		if (chunk.start > stream.earliestSegmentDate) {
+			stream.earliestSegmentDate = chunk.start
 		}
-		if (chunk.start > stream.latest_segment_date) {
-			stream.latest_segment_date = chunk.start
+		if (chunk.start > stream.latestSegmentDate) {
+			stream.latestSegmentDate = chunk.start
 		}
 
 		if ( err && (!rows || rows.length === 0) ) {
@@ -1104,20 +1104,20 @@ Camera.prototype.getStreamsJSON = function() {
 	for (var id in self.streams) {
 		var s = self.streams[id];
 		streams.push({
-			retention:              s.retention,
-			url:                    s.url,
-			rtsp:                   s.rtsp,
-			resolution:             s.resolution,
-			quality:                s.quality,
-			framerate:              s.framerate,
-			bitrate:                s.bitrate,
-			name:                   s.name,
-			id:                     id,
-			latestThumb:            s.latestThumb,
-			camera_no:              s.camera_no,
-			average_bps:            s.bpsAvg,
-			latest_segment_date:    s.latest_segment_date,
-			earliest_segment_date:  s.earliest_segment_date
+			retention:            s.retention,
+			url:                  s.url,
+			rtsp:                 s.rtsp,
+			resolution:           s.resolution,
+			quality:              s.quality,
+			framerate:            s.framerate,
+			bitrate:              s.bitrate,
+			name:                 s.name,
+			id:                   id,
+			latestThumb:          s.latestThumb,
+			camera_no:            s.camera_no,
+			average_bps:          s.bpsAvg,
+			latestSegmentDate:    s.latestSegmentDate,
+			earliestSegmentDate:  s.earliestSegmentDate
 		}); 
 	}
 
