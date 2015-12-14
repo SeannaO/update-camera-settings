@@ -138,6 +138,14 @@ Camera.prototype.addStream = function( stream, cb ) {
 
 	var self = this;
 	stream.db = new Dblite( this.videosFolder + '/db_' + stream.id + '.sqlite', function(db){
+ 
+		db.getEarliestAndLatestSegment( function( latestEarliest ) {
+			var latest   = latestEarliest.latest ? latestEarliest.latest.start : null;
+			var earliest = latestEarliest.earliest ? latestEarliest.earliest.start : null;
+
+			stream.latest_segment_date   = parseInt(latest);
+			stream.earliest_segment_date = parseInt(earliest);
+		});
 
 		if (stream.toBeDeleted) {
 			self.streamsToBeDeleted[stream.id] = stream;
@@ -893,6 +901,14 @@ Camera.prototype.addChunk = function( streamId, chunk ) {
 
 	this.streams[ streamId ].db.insertVideo( chunk );
 	this.streams[ streamId ].latestThumb = chunk.start + "_" + (chunk.end-chunk.start);	
+
+	var stream = this.streams[ streamId ];
+
+	if (!stream.earliest_segment_date) {
+		stream.earliest_segment_date = chunk.start
+	}
+
+	stream.latest_segment_date = chunk.start
 };
 // end of addChunk
 //
@@ -917,6 +933,15 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 	var self = this;
 
 	self.streams[ streamId ].db.deleteVideo( chunk.id, function( err, rows ) {
+
+		var stream = self.streams[ streamId ];
+
+		if (chunk.start > stream.earliest_segment_date) {
+			stream.earliest_segment_date = chunk.start
+		}
+		if (chunk.start > stream.latest_segment_date) {
+			stream.latest_segment_date = chunk.start
+		}
 
 		if ( err && (!rows || rows.length === 0) ) {
 			console.error( "[Camera.deleteChunk]  error removing indexes from db" );
@@ -1079,18 +1104,20 @@ Camera.prototype.getStreamsJSON = function() {
 	for (var id in self.streams) {
 		var s = self.streams[id];
 		streams.push({
-			retention:    s.retention,
-			url:          s.url,
-			rtsp:         s.rtsp,
-			resolution:   s.resolution,
-			quality:      s.quality,
-			framerate:    s.framerate,
-			bitrate:      s.bitrate,
-			name:         s.name,
-			id:           id,
-			latestThumb:  s.latestThumb,
-			camera_no:    s.camera_no,
-			average_bps:  s.bpsAvg
+			retention:              s.retention,
+			url:                    s.url,
+			rtsp:                   s.rtsp,
+			resolution:             s.resolution,
+			quality:                s.quality,
+			framerate:              s.framerate,
+			bitrate:                s.bitrate,
+			name:                   s.name,
+			id:                     id,
+			latestThumb:            s.latestThumb,
+			camera_no:              s.camera_no,
+			average_bps:            s.bpsAvg,
+			latest_segment_date:    s.latest_segment_date,
+			earliest_segment_date:  s.earliest_segment_date
 		}); 
 	}
 
