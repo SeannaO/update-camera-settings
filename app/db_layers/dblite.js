@@ -5,6 +5,7 @@
 //
 
 var dblite     = require('dblite');
+var async      = require('async');
 var format     = require('util').format;
 var path       = require('path');
 var fs         = require('fs');
@@ -308,6 +309,67 @@ Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
 };
 // - - end of searchVideoByTime
 // - - - - - - - - - - - - - - - - - - - -
+
+
+/**
+ * Get earliest or latest segment
+ *
+ * @param { which } string  'latest' or 'earliest'
+ * @param { cb } function  Callback, returns (err, segment object)
+ */
+Dblite.prototype.getEarliestOrLatestSegment = function( which, cb ) {
+
+	var order = ( which == 'latest' ? 'DESC' : 'ASC' );
+
+	var query = 'SELECT id, file, start FROM videos ORDER BY start ' + order + ' LIMIT 1';
+
+    var fileList = this.db.query(
+        query, 
+        ['id', 'file', 'start', 'end'], 
+        function(err, data) {
+            if (err){
+                console.log('[dblite]  getEarliestOrLatestSegment:');
+                console.log(err);
+				cb( err, null );
+            } else if (!data || !data.length === 0) {
+                 cb( null, null );
+            } else {
+                cb( null, data[0] );
+            }
+        }
+    );
+};
+// - - end of getEarliestOrLatestSegment
+// - - - - - - - - - - - - - - - - - - - -
+
+
+/**
+ * Get earliest and latest segment
+ *
+ * @param { cb } function  Callback, returns object { earliest: <earliest-segment>, latest: <latest-segment> }
+ */
+Dblite.prototype.getEarliestAndLatestSegment = function( cb ) {
+
+	var self = this;
+
+	async.parallel({
+		earliest: function(callback) {
+			self.getEarliestOrLatestSegment('earliest', function(err, earliest) {
+				callback(err, earliest);
+			});
+		},
+		latest: function(callback) {
+			self.getEarliestOrLatestSegment('latest', function(err, latest) {
+				callback(err, latest);
+			});
+		}
+	}, function(err, latestEarliest) {
+		if(cb) cb(latestEarliest);
+	});
+};
+// - - end of getEarliestAndLatestSegment
+// - - - - - - - - - - - - - - - - - - - -
+
 
 
 /**
