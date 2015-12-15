@@ -5,6 +5,7 @@
 //
 
 var dblite     = require('dblite');
+var async      = require('async');
 var format     = require('util').format;
 var path       = require('path');
 var fs         = require('fs');
@@ -351,15 +352,19 @@ Dblite.prototype.getEarliestAndLatestSegment = function( cb ) {
 
 	var self = this;
 
-	self.getEarliestOrLatestSegment('earliest', function(err, earliest) {
-		self.getEarliestOrLatestSegment('latest', function(err, latest) {
-
-			var latestEarliest = {
-				earliest:  earliest,
-				latest:    latest
-			}
-			if(cb) cb(latestEarliest);
-		});
+	async.parallel({
+		earliest: function(callback) {
+			self.getEarliestOrLatestSegment('earliest', function(err, earliest) {
+				callback(err, earliest);
+			});
+		},
+		latest: function(callback) {
+			self.getEarliestOrLatestSegment('latest', function(err, latest) {
+				callback(err, latest);
+			});
+		}
+	}, function(err, latestEarliest) {
+		if(cb) cb(latestEarliest);
 	});
 };
 // - - end of getEarliestAndLatestSegment
