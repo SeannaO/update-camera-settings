@@ -1,4 +1,4 @@
-var Camera = function( d, posId ) {
+var Camera = function( d, posId, streamId ) {
 
 	var self = this;
 
@@ -35,6 +35,13 @@ var Camera = function( d, posId ) {
 
 	this.cameraMenu.prepend( xButton );
 
+	this.streamSelector = $('<select>', {
+		id:     'stream-selector-'+ this.cam_data._id,
+		class:  'stream-selector',
+	}).appendTo(this.el);
+
+	this.configureStreams( streamId );
+
 	this.addPlayer();
 
 	this.attachOverlay();
@@ -43,6 +50,55 @@ var Camera = function( d, posId ) {
 		this.connectToPOS( posId );
 	}
 
+};
+
+
+Camera.prototype.getLowestStream = function() {
+
+	var streams = this.cam_data.streams;
+
+	if (!streams || !streams.length) return;
+
+	var lowest_bps_stream = streams[0];
+
+	for (var i in streams) {
+		if (streams[i].name && streams[i].name.indexOf('SD')){
+			return streams[i].id;
+		} 
+
+		if (streams[i].average_bps < lowest_bps_stream.average_bps) {
+			lowest_bps_stream = streams[i];
+		}
+	}
+
+	return lowest_bps_stream.id;
+};
+
+
+Camera.prototype.configureStreams = function( selected_stream ) {
+
+	var self = this;
+
+	var streams      = this.cam_data.streams;
+	var lowestStream = this.getLowestStream();
+
+	this.selectedStream = selected_stream || lowestStream;
+
+	for (var i in streams) {
+		this.streamSelector.append(
+				$('<option/>')
+				.val(streams[i].id)
+				.text(streams[i].name || streams[i].resolution || streams[i].url)
+			);
+	}
+
+	this.streamSelector.val( this.selectedStream );
+
+	this.streamSelector.change(function(e) {
+		self.selectedStream = this.value;
+		self.player.playVideo( self.cam_data._id, this.value );
+		self.group.update(); // save settings
+	});
 };
 
 
@@ -161,7 +217,7 @@ Camera.prototype.remove = function() {
 Camera.prototype.appendTo = function( parentEl ) {
 
 	this.el.appendTo( parentEl ); 
-	this.player.playVideo( this.cam_data._id, this.cam_data.streams[0].id );
+	this.player.playVideo( this.cam_data._id, this.selectedStream );
 	this.parentEl = parentEl;
 
 };
@@ -173,7 +229,6 @@ Camera.prototype.addPlayer = function() {
 	p = Math.round(p);
 	this.player = new Player( this.el, ports[p] );
 	var camId = this.cam_data._id;
-	var streamId = this.cam_data.streams[0].id;
 	var id = $(this.el).attr('id');
 
 
@@ -181,7 +236,7 @@ Camera.prototype.addPlayer = function() {
 		$(this.el).find('.offline-overlay').remove();
 		this.el.append('<div class="offline-overlay" style="width:100%;height:100%; background:rgb(200,200,200);padding: 10px;">camera offline</div>');
 	} else {
-		this.player.playVideo( camId, streamId );
+		this.player.playVideo( camId, this.selectedStream );
 	}
 };
 

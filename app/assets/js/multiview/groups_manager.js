@@ -71,10 +71,12 @@ GroupsManager.prototype.loadGroups = function( cb ) {
 
 			for( var j in data[i].cameras ) {
 				var cam_id = data[i].cameras[j].id;
+				var stream_id = data[i].cameras[j].stream_id;
+
 				var cam = cameras[cam_id];
 				if (cam) {
 					var posId = data[i].cameras[j].pos_id;
-					gr.addCamera( new Camera(cam, posId), cam_id );
+					gr.addCamera( new Camera(cam, posId, stream_id), cam_id, stream_id );
 				}
 			}
 		}
