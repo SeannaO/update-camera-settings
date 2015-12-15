@@ -934,13 +934,11 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 
 	self.streams[ streamId ].db.deleteVideo( chunk.id, function( err, rows ) {
 
+		// TODO: move this logic to deletion queue
 		var stream = self.streams[ streamId ];
 
 		if (chunk.start > stream.earliestSegmentDate) {
 			stream.earliestSegmentDate = chunk.start
-		}
-		if (chunk.start > stream.latestSegmentDate) {
-			stream.latestSegmentDate = chunk.start
 		}
 
 		if ( err && (!rows || rows.length === 0) ) {
