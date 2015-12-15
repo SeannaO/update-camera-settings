@@ -314,7 +314,7 @@ Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
  * Get earliest or latest segment
  *
  * @param { which } string  'latest' or 'earliest'
- * @param { cb } function  Callback, returns segment object
+ * @param { cb } function  Callback, returns (err, segment object)
  */
 Dblite.prototype.getEarliestOrLatestSegment = function( which, cb ) {
 
@@ -329,11 +329,11 @@ Dblite.prototype.getEarliestOrLatestSegment = function( which, cb ) {
             if (err){
                 console.log('[dblite]  getEarliestOrLatestSegment:');
                 console.log(err);
-				cb( null );
+				cb( err, null );
             } else if (!data || !data.length === 0) {
-                 cb( null );
+                 cb( null, null );
             } else {
-                cb( data[0] );
+                cb( null, data[0] );
             }
         }
     );
@@ -351,8 +351,8 @@ Dblite.prototype.getEarliestAndLatestSegment = function( cb ) {
 
 	var self = this;
 
-	self.getEarliestOrLatestSegment('earliest', function(earliest) {
-		self.getEarliestOrLatestSegment('latest', function(latest) {
+	self.getEarliestOrLatestSegment('earliest', function(err, earliest) {
+		self.getEarliestOrLatestSegment('latest', function(err, latest) {
 
 			var latestEarliest = {
 				earliest:  earliest,
