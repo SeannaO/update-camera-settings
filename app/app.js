@@ -21,8 +21,8 @@ var portChecker     = require('./helpers/port_checker.js');
 var scannerNotifier = require('./helpers/camera_scanner/scanner.js').emitter;
 
 var socketioAuth = require('./helpers/socket.io-auth.js');
-
-var localAuth = require('./helpers/local-auth.js').auth;
+var httpsSetup   = require('./helpers/https-setup.js');
+var localAuth    = require('./helpers/local-auth.js').auth;
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
@@ -115,15 +115,26 @@ portChecker.check(port, function(err, found) {
 
 	// - - -
 	// socket.io config 
-	var io = require('socket.io');
+	var socketio = require('socket.io');
 
 	var server = require('http').createServer(app);
-	io = io.listen(server);
+	var io = socketio.listen(server);
 	io.set('log level', 1);
 
 	socketioAuth.setAuth( io, lifelineAuthentication );
 
 	// end of socket.io config
+	// - - -
+
+	// - - -
+	// setup https
+	var io_https     = null;
+	var https_server = null;
+	httpsSetup.setup( app, lifelineAuthentication, function( https_s, io_s ) {
+		io_https = io_s;
+		https_server = https_s;
+		https_server.listen(9080);
+	});
 	// - - -
 
 	app.configure(function() {
