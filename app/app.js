@@ -20,6 +20,8 @@ var Trash           = require('./helpers/trash.js');
 var portChecker     = require('./helpers/port_checker.js');
 var scannerNotifier = require('./helpers/camera_scanner/scanner.js').emitter;
 
+var socketioAuth = require('./helpers/socket.io-auth.js');
+
 var localAuth = require('./helpers/local-auth.js').auth;
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -54,12 +56,10 @@ portChecker.check(port, function(err, found) {
 
 	// - - -
 	// stores machine ip
-	var localIp = "";
 	var hostname = require('os').hostname();
 	var ipModule = require('ip');
 
 	process.env['IP'] = ipModule.address();
-	localIp = process.env['IP'];
 
 	setInterval( function() {
 		var ip = ipModule.address();
@@ -121,46 +121,7 @@ portChecker.check(port, function(err, found) {
 	io = io.listen(server);
 	io.set('log level', 1);
 
-
-	io.configure(function (){
-	  io.set('authorization', function (handshakeData, callback) {
-		// extract the username and password from the handshakedata
-		if (localIp !== handshakeData.address.address){
-			console.log("XDomain SocketIO connection:" + JSON.stringify(handshakeData, null, 4));
-			var re = /Basic (.+)/;
-			var matches = re.exec(handshakeData.headers.authorization);
-			if (matches && matches.length == 2){
-				var buf = new Buffer(matches[1], 'base64');
-				var credentials = buf.toString().split(":");
-
-				if (credentials && credentials.length == 2){
-					lifelineAuthentication(credentials[0],credentials[1], function(err, success){
-						if (!err){
-							console.log("successfully connected through socket.io");
-						} else {
-							console.error("socket.io auth error: ");
-							console.error(err);
-						}
-						callback(err, success);
-					});
-				}
-			} else if (handshakeData.query.username && handshakeData.query.password){
-				console.log("unauthorized: Bad username and password");
-				lifelineAuthentication(handshakeData.query.username,handshakeData.query.password, function(err, success){
-					if (!err){
-						console.log("successfully connected through socket.io");
-					}
-					callback(err, success);
-				});
-			} else{
-				console.log("unauthorized: Specify username and password");
-				callback("unauthorized: Specify username and password", false);
-			}
-		} else{
-			callback(null, true);
-		}
-	  });
-	});
+	socketioAuth.setAuth( io, lifelineAuthentication );
 
 	// end of socket.io config
 	// - - -
