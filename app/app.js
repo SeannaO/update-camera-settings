@@ -24,9 +24,11 @@ var socketioAuth = require('./helpers/socket.io-auth.js');
 var httpsSetup   = require('./helpers/https-setup.js');
 var localAuth    = require('./helpers/local-auth.js').auth;
 
+var config = require('./config');
+
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-var port = process.env.PORT || 8080;
+var port = config.http_ports.main || 8080;
 
 portChecker.check(port, function(err, found) {
 
@@ -134,7 +136,7 @@ portChecker.check(port, function(err, found) {
 		io_https = io_s;
 		io_https.set('log level', 1);
 		https_server = https_s;
-		https_server.listen(9080);
+		https_server.listen(config.https_ports.main);
 	});
 	// - - -
 
@@ -525,10 +527,11 @@ portChecker.check(port, function(err, found) {
 
 	// server.listen(process.env.PORT || 8080);
 	server.listen( port );
-	var server2 = require('http').createServer(app).listen(4001);
-	var server3 = require('http').createServer(app).listen(4002);
-	var server4 = require('http').createServer(app).listen(4003);
-	var server5 = require('http').createServer(app).listen(4004);
+
+	for (var i in config.http_ports.secondary) {
+		var p = config.http_ports.secondary[i];
+		require('http').createServer(app).listen( p );
+	}
 });
 
 
