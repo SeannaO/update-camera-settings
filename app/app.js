@@ -132,6 +132,7 @@ portChecker.check(port, function(err, found) {
 	var https_server = null;
 	httpsSetup.setup( app, lifelineAuthentication, function( https_s, io_s ) {
 		io_https = io_s;
+		io_https.set('log level', 1);
 		https_server = https_s;
 		https_server.listen(9080);
 	});
@@ -249,37 +250,46 @@ portChecker.check(port, function(err, found) {
 	camerasController.on('new_chunk', function( data ) {
 		//console.log("[new_chunk] " + JSON.stringify(data, null, 4));
 		io.of('/main-page').emit( 'newChunk', data );
+		if (io_https) { io_https.of('/main-page').emit( 'newChunk', data ); }
 	});
 
 	camerasController.on('new_thumb', function( data ) {
 		//console.log("[new_thumb] " + JSON.stringify(data, null, 4));
 		io.of('/main-page').emit( 'newThumb', data );
+		if (io_https) { io_https.of('/main-page').emit( 'newThumb', data ); }
 	});
 
 	camerasController.on('motion', function( data ) {
 		//console.log("Emitting Motion Data: " + JSON.stringify(data, null, 4) );
 		io.sockets.emit( 'motion', data );
+		if (io_https) { io_https.sockets.emit( 'motion', data ); }
 	});
 
 	camerasController.on('motionEvent', function( data ) {
 		//console.log("Emitting Motion Event: " + JSON.stringify(data, null, 4) );
 		io.sockets.emit( 'motion', data );
+		if (io_https) { io_https.sockets.emit( 'motion', data ); }
 	});
 
 	camerasController.on('motion_update', function(data) {
 		io.sockets.emit( 'cameraUpdated', data.camera );
+		if (io_https) { io_https.sockets.emit( 'cameraUpdated', data.camera ); }
 	});
 	camerasController.on('schedule_update', function(data) {
 		io.sockets.emit( 'cameraUpdated', data );
+		if (io_https) { io_https.sockets.emit( 'cameraUpdated', data ); }
 	});
 	camerasController.on('create', function(data) {
 		io.sockets.emit( 'cameraCreated', data);
+		if (io_https) { io_https.sockets.emit( 'cameraCreated', data); }
 	});
 	camerasController.on('update', function(data) {
 		io.sockets.emit( 'cameraUpdated', data);
+		if (io_https) { io_https.sockets.emit( 'cameraUpdated', data); }
 	});
 	camerasController.on('delete', function(data) {
 		io.sockets.emit( 'cameraRemoved', data);
+		if (io_https) { io_https.sockets.emit( 'cameraRemoved', data); }
 	});
 
 	camerasController.on('camera_status', function( data ) {
@@ -287,24 +297,30 @@ portChecker.check(port, function(err, found) {
 			console.error("[camera_status] " + data.cam_id + " : " + data.stream_id + " is " + data.status);
 		}
 		io.sockets.emit( 'cameraStatus', data );
+		if (io_https) { io_https.sockets.emit( 'cameraStatus', data ); }
 	});
 
 	camerasController.on('bps', function( data ) {
 		io.of('/main-page').emit('bps', data);
+		if (io_https) { io_https.of('/main-page').emit('bps', data); }
 	});
 
 	camerasController.on('grid', function( data ) {
 		io.of('/motion_grid').emit('grid', data);
+		if (io_https) { io_https.of('/motion_grid').emit('grid', data); }
 	});
 
 	scannerNotifier.on('status', function(data) {
 		io.of('/main-page').emit('scanner_status', data);
+		if (io_https) { io_https.of('/main-page').emit('scanner_status', data); }
 	});
 	scannerNotifier.on('camera', function(data) {
 		io.of('/main-page').emit('scanner_cam', data);
+		if (io_https) { io_https.of('/main-page').emit('scanner_cam', data); }
 	});
 	scannerNotifier.on('progress', function(data) {
 		io.of('/main-page').emit('scanner_progress', data);
+		if (io_https) { io_https.of('/main-page').emit('scanner_progress', data); }
 	});
 	
 	setInterval( function() {
@@ -319,6 +335,15 @@ portChecker.check(port, function(err, found) {
 			string:     time,
 			tz_offset:  tz_offset
 		});
+
+		if (io_https) {
+			io_https.of('/main-page').emit( 'time', {
+				unix:       unixTime,
+				string:     time,
+				tz_offset:  tz_offset
+			});
+		}
+
 	}, 1000);
 	// end of socket.io broadcasts setup
 	// - - -
@@ -494,6 +519,7 @@ portChecker.check(port, function(err, found) {
 
 	app.post('/reload', passport.authenticate('basic', {session: false}), function(req, res) {
 		io.sockets.emit('reload');
+		if (io_https) { io_https.sockets.emit('reload'); }
 	});
 
 
