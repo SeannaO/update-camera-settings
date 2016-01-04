@@ -104,7 +104,8 @@ var posMonitor = new POSMonitor( function(err, instancesArray) {
 		addPOSToList( instance );
 	}
 
-	var socket_1_2 = io_1_2.connect('http://solink:_tcpdump_wrapper_@' + location.hostname + ':3001');
+	// TODO: retrieve tcpdump url from API endpoint (to be implemented)
+	var socket_1_2 = io_1_2.connect('https://solink:_tcpdump_wrapper_@' + location.hostname + ':3000');
 
 
 	setTimeout( function() {

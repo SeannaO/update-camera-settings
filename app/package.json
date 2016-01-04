@@ -35,6 +35,7 @@
     "nedb": "^1.5.0",
     "passport": "^0.1.17",
     "passport-http": "^0.2.2",
+    "pem": "^1.8.1",
     "react": "^0.13.1",
     "react-dnd": "^0.9.8",
     "react-tween-state": "^0.0.5",

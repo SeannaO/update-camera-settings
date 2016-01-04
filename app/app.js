@@ -20,11 +20,15 @@ var Trash           = require('./helpers/trash.js');
 var portChecker     = require('./helpers/port_checker.js');
 var scannerNotifier = require('./helpers/camera_scanner/scanner.js').emitter;
 
-var localAuth = require('./helpers/local-auth.js').auth;
+var socketioAuth = require('./helpers/socket.io-auth.js');
+var httpsSetup   = require('./helpers/https-setup.js');
+var localAuth    = require('./helpers/local-auth.js').auth;
+
+var config = require('./config');
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-var port = process.env.PORT || 8080;
+var port = config.http_ports.main || 8080;
 
 portChecker.check(port, function(err, found) {
 
@@ -54,12 +58,10 @@ portChecker.check(port, function(err, found) {
 
 	// - - -
 	// stores machine ip
-	var localIp = "";
 	var hostname = require('os').hostname();
 	var ipModule = require('ip');
 
 	process.env['IP'] = ipModule.address();
-	localIp = process.env['IP'];
 
 	setInterval( function() {
 		var ip = ipModule.address();
@@ -115,54 +117,27 @@ portChecker.check(port, function(err, found) {
 
 	// - - -
 	// socket.io config 
-	var io = require('socket.io');
+	var socketio = require('socket.io');
 
 	var server = require('http').createServer(app);
-	io = io.listen(server);
+	var io = socketio.listen(server);
 	io.set('log level', 1);
 
-
-	io.configure(function (){
-	  io.set('authorization', function (handshakeData, callback) {
-		// extract the username and password from the handshakedata
-		if (localIp !== handshakeData.address.address){
-			console.log("XDomain SocketIO connection:" + JSON.stringify(handshakeData, null, 4));
-			var re = /Basic (.+)/;
-			var matches = re.exec(handshakeData.headers.authorization);
-			if (matches && matches.length == 2){
-				var buf = new Buffer(matches[1], 'base64');
-				var credentials = buf.toString().split(":");
-
-				if (credentials && credentials.length == 2){
-					lifelineAuthentication(credentials[0],credentials[1], function(err, success){
-						if (!err){
-							console.log("successfully connected through socket.io");
-						} else {
-							console.error("socket.io auth error: ");
-							console.error(err);
-						}
-						callback(err, success);
-					});
-				}
-			} else if (handshakeData.query.username && handshakeData.query.password){
-				console.log("unauthorized: Bad username and password");
-				lifelineAuthentication(handshakeData.query.username,handshakeData.query.password, function(err, success){
-					if (!err){
-						console.log("successfully connected through socket.io");
-					}
-					callback(err, success);
-				});
-			} else{
-				console.log("unauthorized: Specify username and password");
-				callback("unauthorized: Specify username and password", false);
-			}
-		} else{
-			callback(null, true);
-		}
-	  });
-	});
+	socketioAuth.setAuth( io, lifelineAuthentication );
 
 	// end of socket.io config
+	// - - -
+
+	// - - -
+	// setup https
+	var io_https     = null;
+	var https_server = null;
+	httpsSetup.setup( app, lifelineAuthentication, function( https_s, io_s ) {
+		io_https = io_s;
+		io_https.set('log level', 1);
+		https_server = https_s;
+		https_server.listen(config.https_ports.main);
+	});
 	// - - -
 
 	app.configure(function() {
@@ -277,37 +252,46 @@ portChecker.check(port, function(err, found) {
 	camerasController.on('new_chunk', function( data ) {
 		//console.log("[new_chunk] " + JSON.stringify(data, null, 4));
 		io.of('/main-page').emit( 'newChunk', data );
+		if (io_https) { io_https.of('/main-page').emit( 'newChunk', data ); }
 	});
 
 	camerasController.on('new_thumb', function( data ) {
 		//console.log("[new_thumb] " + JSON.stringify(data, null, 4));
 		io.of('/main-page').emit( 'newThumb', data );
+		if (io_https) { io_https.of('/main-page').emit( 'newThumb', data ); }
 	});
 
 	camerasController.on('motion', function( data ) {
 		//console.log("Emitting Motion Data: " + JSON.stringify(data, null, 4) );
 		io.sockets.emit( 'motion', data );
+		if (io_https) { io_https.sockets.emit( 'motion', data ); }
 	});
 
 	camerasController.on('motionEvent', function( data ) {
 		//console.log("Emitting Motion Event: " + JSON.stringify(data, null, 4) );
 		io.sockets.emit( 'motion', data );
+		if (io_https) { io_https.sockets.emit( 'motion', data ); }
 	});
 
 	camerasController.on('motion_update', function(data) {
 		io.sockets.emit( 'cameraUpdated', data.camera );
+		if (io_https) { io_https.sockets.emit( 'cameraUpdated', data.camera ); }
 	});
 	camerasController.on('schedule_update', function(data) {
 		io.sockets.emit( 'cameraUpdated', data );
+		if (io_https) { io_https.sockets.emit( 'cameraUpdated', data ); }
 	});
 	camerasController.on('create', function(data) {
 		io.sockets.emit( 'cameraCreated', data);
+		if (io_https) { io_https.sockets.emit( 'cameraCreated', data); }
 	});
 	camerasController.on('update', function(data) {
 		io.sockets.emit( 'cameraUpdated', data);
+		if (io_https) { io_https.sockets.emit( 'cameraUpdated', data); }
 	});
 	camerasController.on('delete', function(data) {
 		io.sockets.emit( 'cameraRemoved', data);
+		if (io_https) { io_https.sockets.emit( 'cameraRemoved', data); }
 	});
 
 	camerasController.on('camera_status', function( data ) {
@@ -315,24 +299,30 @@ portChecker.check(port, function(err, found) {
 			console.error("[camera_status] " + data.cam_id + " : " + data.stream_id + " is " + data.status);
 		}
 		io.sockets.emit( 'cameraStatus', data );
+		if (io_https) { io_https.sockets.emit( 'cameraStatus', data ); }
 	});
 
 	camerasController.on('bps', function( data ) {
 		io.of('/main-page').emit('bps', data);
+		if (io_https) { io_https.of('/main-page').emit('bps', data); }
 	});
 
 	camerasController.on('grid', function( data ) {
 		io.of('/motion_grid').emit('grid', data);
+		if (io_https) { io_https.of('/motion_grid').emit('grid', data); }
 	});
 
 	scannerNotifier.on('status', function(data) {
 		io.of('/main-page').emit('scanner_status', data);
+		if (io_https) { io_https.of('/main-page').emit('scanner_status', data); }
 	});
 	scannerNotifier.on('camera', function(data) {
 		io.of('/main-page').emit('scanner_cam', data);
+		if (io_https) { io_https.of('/main-page').emit('scanner_cam', data); }
 	});
 	scannerNotifier.on('progress', function(data) {
 		io.of('/main-page').emit('scanner_progress', data);
+		if (io_https) { io_https.of('/main-page').emit('scanner_progress', data); }
 	});
 	
 	setInterval( function() {
@@ -347,6 +337,15 @@ portChecker.check(port, function(err, found) {
 			string:     time,
 			tz_offset:  tz_offset
 		});
+
+		if (io_https) {
+			io_https.of('/main-page').emit( 'time', {
+				unix:       unixTime,
+				string:     time,
+				tz_offset:  tz_offset
+			});
+		}
+
 	}, 1000);
 	// end of socket.io broadcasts setup
 	// - - -
@@ -522,15 +521,17 @@ portChecker.check(port, function(err, found) {
 
 	app.post('/reload', passport.authenticate('basic', {session: false}), function(req, res) {
 		io.sockets.emit('reload');
+		if (io_https) { io_https.sockets.emit('reload'); }
 	});
 
 
 	// server.listen(process.env.PORT || 8080);
 	server.listen( port );
-	var server2 = require('http').createServer(app).listen(4001);
-	var server3 = require('http').createServer(app).listen(4002);
-	var server4 = require('http').createServer(app).listen(4003);
-	var server5 = require('http').createServer(app).listen(4004);
+
+	for (var i in config.http_ports.secondary) {
+		var p = config.http_ports.secondary[i];
+		require('http').createServer(app).listen( p );
+	}
 });
 
 
