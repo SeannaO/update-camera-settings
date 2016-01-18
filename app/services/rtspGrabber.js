@@ -6,6 +6,7 @@ var MemoryMonitors = require('./memory-monitors.js');
 
 
 var grabberProcess          = null,
+	relaunchTimeout         = null,
 	restartRecordingTimeout = null;
 
 
@@ -25,15 +26,20 @@ var launchRtspGrabber = function( cb ) {
 
 		grabberProcess.once('exit', function(code) {
 
-			console.error('[rtspGrabber] rtsp_grabber exited; relaunching...');
-			launchRtspGrabber( cb );
-			console.log('[rtspGrabber] rtsp_grabber relaunched'); 
+			// wait a few ms before relaunching rtsp_grabber
+			clearTimeout( relaunchTimeout );
+			relaunchTimeout = setTimeout( function() {
+				console.error('[rtspGrabber] rtsp_grabber exited; relaunching...');
+				launchRtspGrabber( cb );
+				console.log('[rtspGrabber] rtsp_grabber relaunched'); 
 
-			clearTimeout(restartRecordingTimeout);
-			restartRecordingTimeout = setTimeout( function() {
-				console.log('[app] restarting recorder');
-				if (cb) { cb(); }
-			}, 1000);
+				// call cb, signalling that rtsp_grabber has been loaded
+				clearTimeout(restartRecordingTimeout);
+				restartRecordingTimeout = setTimeout( function() {
+					console.log('[app] restarting recorder');
+					if (cb) { cb(); }
+				}, 1000);
+			}, 100);
 		});
 	});
 };
