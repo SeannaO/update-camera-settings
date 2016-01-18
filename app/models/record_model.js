@@ -262,6 +262,9 @@ RecordModel.prototype.setupDbusListener = function() {
 
 RecordModel.setupRtspGrabberMonitor = function() {
 
+	RecordModel.pingInterval = null;
+	RecordModel.failedPingsCounter = 0;
+
 	if( !RecordModel.rtspGrabberMonitorSignal ) {
 		console.log('setting up RecordModel rtspGrabberMonitorSignal');
 		RecordModel.rtspGrabberMonitorSignal  = Object.create(dbus.DBusMessage, {
@@ -304,6 +307,8 @@ RecordModel.setupRtspGrabberMonitor = function() {
 			
 			var pongResponse, arg1, arg2, arg3;
 
+			clearTimeout( RecordModel.rtspGrabberMonitorTimeout );
+
 			try {
 				pongResponse = JSON.parse( args );
 				if (pongResponse.arg1.trim() != RecordModel.arg1 ||
@@ -312,15 +317,17 @@ RecordModel.setupRtspGrabberMonitor = function() {
 						console.error('[RecordModel: rtspGrabberMonitor]  pong response is different from expected: ');
 						console.error(pongResponse);
 						console.error(RecordModel.arg1 + ' ' + RecordModel.arg2 + ' ' + RecordModel.arg3);
-						exec('killall rtsp_grabber');
+						RecordModel.handlePingError();
+					} else {
+						RecordModel.failedPingsCounter = 0;
 					}
 			} catch(err) {
-				console.error('[RecordModel: rtspGrabberMonitor]  ' + err);
-				exec('killall rtsp_grabber');
+				console.error('[RecordModel: rtspGrabberMonitor]  error when parsing ping response: ' + err);
+				RecordModel.handlePingError();
 			}
 	 
-			clearTimeout( RecordModel.rtspGrabberMonitorTimeout );
-			setTimeout( RecordModel.pingRtspGrabber, 10000 );
+			clearTimeout( RecordModel.pingInterval );
+			RecordModel.pingInterval = setTimeout( RecordModel.pingRtspGrabber, 15*1000 );
 		});
 
 		RecordModel.pingRtspGrabber();
@@ -356,13 +363,29 @@ RecordModel.pingRtspGrabber = function(arg1, arg2, arg3) {
 		arg2 = RecordModel.arg2,
 		arg3 = RecordModel.arg3;
 
-	RecordModel.sendMessage('ping', arg1, arg2, arg3);
-
 	RecordModel.rtspGrabberMonitorTimeout = setTimeout( function() {
-		console.error('[RecordModel:rtspGrabber monitor] rtsp grabber did not respond'); 
+
+		console.error('[RecordModel:rtspGrabber monitor] ping timed out; failCounter = ' + RecordModel.failedPingsCounter); 
+		RecordModel.handlePingError();
+		setTimeout ( RecordModel.pingRtspGrabber, 15*1000 );
+
+	}, 60*1000);
+
+	RecordModel.sendMessage('ping', arg1, arg2, arg3);
+};
+
+
+RecordModel.handlePingError = function() {
+
+	var _maxFailedPings = 3;
+
+	RecordModel.failedPingsCounter++;
+
+	if (RecordModel.failedPingsCounter > _maxFailedPings) {
+		console.error('[RecordModel:rtspGrabber monitor] rtspGrabber did not respond ' + _maxFailedPings + ' times in a row; restarting it...');
+		RecordModel.failedPingsCounter = 0;
 		exec('killall rtsp_grabber');
-		setTimeout ( RecordModel.pingRtspGrabber, 10000 );
-	}, 30000);
+	}
 };
 
 
