@@ -21,7 +21,7 @@ var launchRtspGrabber = function( cb ) {
 		grabberProcess = spawn('./rtsp_grabber');
 		
 		// (re)launch rtsp_grabber mem monitor
-		MemoryMonitors.launchRtspMemMonitor( 50, grabberProcess );
+		MemoryMonitors.launchRtspMemMonitor( 40, grabberProcess );
 
 		grabberProcess.once('exit', function(code) {
 
