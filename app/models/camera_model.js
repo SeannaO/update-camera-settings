@@ -946,25 +946,17 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 			console.error(err);
 			cb( chunk, err );
 		} else { 
-			fs.exists(chunk.file, function(exists) {	// check if file really exists before deleting
-														// it might not be necessary,  
-														// it's only being used now for extra safety reasons
-				if (exists) {
-					fs.unlink( chunk.file, function(err) {
-						if (!err) {
-							// attempts to delete the corresponding thumb
-							// notice that the thumb file has the same name as the chunk file
-							var thumb = path.basename( chunk.file, '.ts' );	
-							var thumb = process.env['BASE_FOLDER'] + '/' + self._id + '/' + streamId + '/thumbs/' + thumb + '.jpg';
-							fs.unlink(thumb, function() {});
-						} else {
-							console.log( err );
-						}
-						cb( chunk );
-					});
+			fs.unlink( chunk.file, function(err) {
+				if (!err) {
+					// attempts to delete the corresponding thumb
+					// notice that the thumb file has the same name as the chunk file
+					var thumb = path.basename( chunk.file, '.ts' );	
+					var thumb = process.env['BASE_FOLDER'] + '/' + self._id + '/' + streamId + '/thumbs/' + thumb + '.jpg';
+					fs.unlink(thumb, function() {});
 				} else {
-					cb( chunk );
-				}	
+					console.log( err );
+				}
+				cb( chunk );
 			});
 		}
 	});	
