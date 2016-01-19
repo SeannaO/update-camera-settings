@@ -1,3 +1,5 @@
+api document is located at http://docs.solinkconnect.apiary.io/#
+
 Connect
 ========
 Contains node scripts such as node.js for Connect
