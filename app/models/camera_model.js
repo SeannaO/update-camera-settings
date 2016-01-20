@@ -8,6 +8,12 @@ var path           = require('path');
 var Streamer       = require('../helpers/live_streamer.js');
 var MotionStreamer = require('../helpers/live_motion.js');
 
+
+// regex to separate basefolder from the other part of a segment's path
+// structure of a segment path:
+// 		<baseFolder>/<camera_id>/<stream_id>/videos/<yyyy-mm-dd>/<1234567890_12345>.ts
+var baseFolderRegex = /(\S+)(\/[\w-]+\/[\w-]+\/videos\/[\d-]+\/\w+\.ts)/;
+
 function Camera( cam, videosFolder, cb ) {
 
     var self = this;
@@ -948,13 +954,39 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 		} else { 
 			fs.unlink( chunk.file, function(err) {
 
-				self.deleteThumbBySegment( chunk.file, streamId );
+				if (!err) {
+					// file was successfully deleted; now delete thumb
+					self.deleteThumbBySegment( chunk.file, streamId );
+					cb( chunk );
+					return;
 
-				if (err) { 
-					console.error( '[camera model]  error unlinking segment: ' + err );
+				} else { 
+					// error when deleting; maybe file is in new folder
+					var newPath = self.toCurrentBaseFolder( chunk.file );
+
+					if (!newPath) {
+						// couldn't parse the path properly; will not proceed
+						console.error('[Camera.deleteChunk]  could not determine new path for segment: ' + chunk.file);
+						cb(chunk);
+						return;
+					}
+
+					fs.unlink( newPath, function(err_2) {
+						
+						if( err_2 ) {
+							// even after retrying with the new path, wasn't able to delete the segment
+							console.error('[Camera.deleteChunk]  error unlinking segment: ' + err + ' ; will retry using current baseFolder');
+							console.error('[Camera.deleteChunk]  error when unlinking segment in new folder: ' + err_2);
+
+						} else {
+							// file in new folder was successfully deleted; now delete thumb using new path
+							self.deleteThumbBySegment( newPath, streamId );
+						}
+
+						cb( chunk );
+						return;
+					});
 				}
-
-				cb( chunk );
 			});
 		}
 	});	
@@ -963,12 +995,45 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 //
 
 
-Camera.prototype.deleteThumbBySegment = function( segment_file, streamId ) {
+/**
+ * Updates a segment path to use current baseFolder
+ *   in case the folder was moved and it's still pointing to the old one
+ *
+ * @param { segment_path } string  full path to a segment 
+ * 		- example: "/home/solink/cameras/camera_id/stream_id/videos/1-1-2016/1231241231_21231.ts"
+ * @return{ string }  updated path if successful, or empty string if regex failed
+ */
+Camera.prototype.toCurrentBaseFolder = function( segment_path ) {
+
+	var re = baseFolderRegex.exec( segment_path );
+
+	if (!re || !re[2]) {
+		console.error('[Camera.toCurrentBaseFolder]  could not parse segment_path');
+		return '';
+	} else {
+		var new_path = path.join(process.env['BASE_FOLDER'], re[2]);
+		return new_path;
+	}
+
+};
+// toCurrentBaseFolder
+//
+
+
+/**
+ * Deletes thumbnail of a given segment
+ *
+ * @param { segment_file } string  full path to a segment 
+ * 		- example: "/home/solink/cameras/camera_id/just_another_stream_id/videos/1-1-2016/1231241231_21231.ts"
+ * @param { stream_id } string  streamId of the given segment
+ * 		- example: "just_another_stream_id"
+ */
+Camera.prototype.deleteThumbBySegment = function( segment_file, stream_id ) {
 
 	// the thumb file has the same name as the segment file
 	var thumb = process.env['BASE_FOLDER'] + '/' + 
 				this._id + '/' + 
-				streamId + '/thumbs/' + 
+				stream_id + '/thumbs/' + 
 				path.basename( segment_file, '.ts') + '.jpg';
 
 	fs.unlink(thumb, function(err) {
@@ -977,6 +1042,8 @@ Camera.prototype.deleteThumbBySegment = function( segment_file, streamId ) {
 		} 
 	});
 };
+// deleteThumbBySegment
+//
 
 
 /**
