@@ -947,15 +947,13 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 			cb( chunk, err );
 		} else { 
 			fs.unlink( chunk.file, function(err) {
-				if (!err) {
-					// attempts to delete the corresponding thumb
-					// notice that the thumb file has the same name as the chunk file
-					var thumb = path.basename( chunk.file, '.ts' );	
-					var thumb = process.env['BASE_FOLDER'] + '/' + self._id + '/' + streamId + '/thumbs/' + thumb + '.jpg';
-					fs.unlink(thumb, function() {});
-				} else {
-					console.log( err );
+
+				self.deleteThumbBySegment( chunk.file, streamId );
+
+				if (err) { 
+					console.error( '[camera model]  error unlinking segment: ' + err );
 				}
+
 				cb( chunk );
 			});
 		}
@@ -963,6 +961,22 @@ Camera.prototype.deleteChunk = function( streamId, chunk, cb ) {
 };
 // deleteChunk
 //
+
+
+Camera.prototype.deleteThumbBySegment = function( segment_file, streamId ) {
+
+	// the thumb file has the same name as the segment file
+	var thumb = process.env['BASE_FOLDER'] + '/' + 
+				this._id + '/' + 
+				streamId + '/thumbs/' + 
+				path.basename( segment_file, '.ts') + '.jpg';
+
+	fs.unlink(thumb, function(err) {
+		if (err) {
+			console.error( '[Camera.deleteThumbBySegment]  error unlinking thumbnail: ' + err );
+		} 
+	});
+};
 
 
 /**
