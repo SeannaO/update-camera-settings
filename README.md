@@ -1,4 +1,4 @@
-api document is located at http://docs.solinkconnect.apiary.io/#
+api document is located at http://docs.solinkvms.apiary.io/#
 
 Connect
 ========
