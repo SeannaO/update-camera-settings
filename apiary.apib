@@ -1,0 +1,342 @@
+FORMAT: 1A
+
+# Solink VMS
+
+## Cameras collection [/cameras.json]
+### List all Cameras [GET] 
++ Response 200 (application/json)
+
+        [
+          {
+            "ip": "192.168.215.78",
+            "_id": "E4dSxNcfLYTga67O",
+            "schedule_enabled": true,
+            "status": "missing camera stream(s)",
+            "type": "onvif",
+            "manufacturer": "unknown",
+            "username": "",
+            "password": "",
+            "motionParams": {
+              "enabled": false,
+              "threshold": 40,
+              "sensitivity": 50,
+              "roi": "all"
+            },
+            "streams": [],
+            "id": "id_0.729847761336714"
+          },
+          {
+            "ip": "192.168.215.140",
+            "_id": "l8jlGR2a9v6zLoIL",
+            "schedule_enabled": true,
+            "status": "missing camera stream(s)",
+            "type": "onvif",
+            "manufacturer": "unknown",
+            "username": "",
+            "password": "",
+            "motionParams": {
+              "enabled": false,
+              "threshold": 40,
+              "sensitivity": 50,
+              "roi": "all"
+            },
+            "streams": [],
+            "id": "id_0.11951890168711543"
+          }
+        ]
+
+### Add a new Camera [POST /cameras/new/]
++ Request (application/json)
+
+        {
+            "id": "id_0.30664379009976983",
+            "ip": "192.168.1.10",
+            "manufacturer": "unknown",
+            "name": "",
+            "password": "pass",
+            "streams": [{id: "", name: "a camera", url: "rtsp://192.168.1.10/stream/", retention: "10"}],
+            "username": "user"
+        }
+
++ Response 201 (application/json)
+
+        {
+          "success": true,
+          "camera": {
+            "name": "",
+            "ip": "192.168.1.10",
+            "_id": "3zfEo5pg0hM60Iyf",
+            "schedule_enabled": true,
+            "status": "ready",
+            "manufacturer": "unknown",
+            "username": "user",
+            "password": "pass",
+            "motionParams": {
+              "enabled": false,
+              "threshold": 40,
+              "sensitivity": 50,
+              "roi": "all"
+            },
+            "streams": [
+              {
+                "retention": "10",
+                "url": "rtsp://192.168.1.10/stream/",
+                "name": "a camera",
+                "id": "0f998d1b-8d7a-4b2e-ebc1-bb83a37a97bf"
+              }
+            ],
+            "id": "id_0.30664379009976983"
+          }
+        }
+
+
+
+## Camera [/cameras/{id}]
+### Update a Camera [PUT]
+
++ Request (application/json)
+
+        {
+            "ip": "10.126.140.108",
+            "name": "axis #1",
+            "password": "admin",
+            "username": "root",
+            "streams": [
+                0: {
+                    "id": "ca65d242-134e-46b4-ded0-f0f2e3bb9073", 
+                    "name": "", 
+                    "resolution": "1600x1200", 
+                    "retention": "90"
+                }
+            ]
+        }
+
+
++ Response 200 (application/json)
+
+        {
+            "ip": "192.168.1.10"
+            "name": "a new name"
+            "password": "pass"
+            "streams": [
+                {
+                    "id": "0f998d1b-8d7a-4b2e-ebc1-bb83a37a97bf", 
+                    "name": "a camera", 
+                    "url": "rtsp://192.168.1.10/stream/"
+                }
+            ]
+            "username": "user"
+        }
+
+
+### Retrieve a Camera  [GET /cameras/{id}/json]
++ Response 200 (application/json)
+
+    + Header
+
+    + Body
+
+            {
+              "success": true,
+              "camera": {
+                "name": "a new name",
+                "ip": "192.168.1.10",
+                "_id": "3zfEo5pg0hM60Iyf",
+                "schedule_enabled": true,
+                "status": "offline",
+                "manufacturer": "unknown",
+                "username": "user",
+                "password": "pass",
+                "motionParams": {
+                  "enabled": false,
+                  "threshold": 40,
+                  "sensitivity": 50,
+                  "roi": "all"
+                },
+                "streams": [
+                  {
+                    "retention": "10",
+                    "url": "rtsp://192.168.1.10/stream/",
+                    "name": "a camera",
+                    "id": "0f998d1b-8d7a-4b2e-ebc1-bb83a37a97bf"
+                  }
+                ],
+                "id": "3zfEo5pg0hM60Iyf"
+              }
+        
+
+### Remove a Camera [DELETE]
++ Response 200
+
+        {
+          "success": true,
+          "_id": "3zfEo5pg0hM60Iyf"
+        }
+
+
+## Video segments [/cameras/{cam_id}/streams/{stream_id}/list_videos{?start}{?end}]
+### list segments from stream [GET]
++ Response 200 (application/json)
+
+    + Header
+
+            X-My-Header: The Value
+
+    + Body
+
+            {
+              "success": true,
+              "offset": {
+                "begin": 22962,
+                "end": -189151,
+                "duration": 3600002
+              },
+              "videos": [
+                    {
+                      "start": "1423571110000",
+                      "end": "1423571122813"
+                    },
+                    {
+                      "start": "1423571123000",
+                      "end": "1423571135813"
+                    },
+                    {
+                      "start": "1423571136000",
+                      "end": "1423571148813"
+                    }
+                ]
+            }
+
+## Thumbnail [/cameras/{cam_id}/streams/{stream_id}/thumb/{timestamp_duration}]
+### request latest thumbnail from stream (?) [GET]
++ Response 200 (application/json)
+
+    + Header
+
+            X-My-Header: The Value
+
+    + Body
+
+            image
+
+## Snapshot [/cameras/{cam_id}/snapshot/{?precision}{?time}{?stream}]
+### request snapshot from camera [GET]
++ Response 200 (application/json)
+
+    + Header
+
+            X-My-Header: The Value
+
+    + Body
+
+            image
+
+## Video download [/cameras/{cam_id}/download{?begin}{?end}{?stream}]
+### download video from camera [GET]
++ Response 200 (application/json)
+
+    + Header
+
+            X-My-Header: The Value
+
+    + Body
+
+            mpegts video file
+
+
+## HLS live video [/cameras/{cam_id}/live.m3u8]
+### download video from camera [GET]
++ Response 200 (application/json)
+
+    + Header
+
+            X-My-Header: The Value
+
+    + Body
+
+            m3u8 live playlist
+            
+## HLS archived video [/cameras/{cam_id}/video.m3u8{?begin}{?end}{?stream}]
+### download video from camera [GET]
++ Response 200 (application/json)
+
+    + Header
+
+            X-My-Header: The Value
+
+    + Body
+
+            m3u8 playlist
+            
+            
+## Device [/device.json]
+### get device info [GET]
++ Response 200 (application/json)
+
+        {
+            "freememory":132198400,
+            "model":"LenovoEMC px2-300d",
+            "signature":"abc",
+            "brandid":"px2-300d",
+            "domainname":"",
+            "id":"I00D0B823F2CB",
+            "name":"hello",
+            "encryptremote":"always",
+            "modelid":"b2a",
+            "version":"4.1.102",
+            "flags":"secure",
+            "ip":"192.168.0.10, 192.168.1.20",
+            "clientmin":16,
+            "usedin":"office",
+            "memory":2084499456,
+            "encryptlocal":"always",
+            "bios":"R00T12",
+            "clientver":16,
+            "description":"Solink Connect 1",
+            "processors":4
+        }
+        
+
+## Timezone [/device/tz.json]
+### get local timezone [GET]
++ Response 200 (application/json)
+
+        {
+          "gmt": "GMT+0400",
+          "tz_name": "MSK",
+          "utc_offset": -240
+        }
+        
+## Motion - socket.io [/motion]
+### listen to motion events [GET]
++ Response 200 (application/json)
+
+        
+        
+## Motion ROI - socket.io [/motion_grid]
+### listen to motion events with ROI [GET]
++ Response 200 (application/json)
+
+        
+        
+## Camera updated - socket.io [/cameraUpdated]
+### listen to camera updated events [GET]
++ Response 200 (application/json)
+
+        
+
+## Camera created - socket.io [/cameraCreated]
+### listen to camera created events [GET]
++ Response 200 (application/json)
+
+        
+            
+## Camera removed - socket.io [/cameraRemoved]
+### listen to camera removed events [GET]
++ Response 200 (application/json)
+
+       
+
+## New chunk - socket.io [/newChunk]
+### listen to new chunk events [GET]
++ Response 200 (application/json)
