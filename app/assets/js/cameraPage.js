@@ -395,15 +395,15 @@ CameraPage.prototype.setupButtons = function() {
 
 	// snapshot button
 	this.buttons.snapshot.click(function() {
-        var click  = self.timeline.currTime;
-        if(!click) {
+        var snapshotTime  = self.timeline.currTime;
+        if(!snapshotTime) {
     			bootbox.alert('Select a frame to snapshot first.');
     			return;
     		}
      var stream = self.inputs.streams.val();
      var url = window.location.protocol + "//" + window.location.host
          + "/cameras/" + self.camId
-         + "/snapshot/?precision=1&time=" + click
+         + "/snapshot/?precision=1&time=" + snapshotTime
          + "&stream=" + stream;
      var w = window.open( url );
 		 window.focus();
