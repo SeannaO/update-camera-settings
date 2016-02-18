@@ -395,6 +395,7 @@ CameraPage.prototype.setupButtons = function() {
 
 	// snapshot button
 	this.buttons.snapshot.click(function() {
+ 
         var snapshotTime  = self.timeline.currTime;
         if(!snapshotTime) {
     			bootbox.alert('Select a frame to snapshot first.');
@@ -405,12 +406,13 @@ CameraPage.prototype.setupButtons = function() {
          + "/cameras/" + self.camId
          + "/snapshot/?precision=1&time=" + snapshotTime
          + "&stream=" + stream;
-     var w = window.open( url );
+     document.getElementById("downloadSnapshot").setAttribute("href",url);
+     //var w = window.open( url, 'Download' );
 		 window.focus();
-		 w.onload = function() {
-			  if (w.document.body.innerHTML.length > 0) {
-        }
-     };
+		 ///w.onload = function() {
+		//	  if (w.document.body.innerHTML.length > 0) {
+    //    }
+    // };
 	});
 
 	// livestream button
