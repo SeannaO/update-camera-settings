@@ -407,12 +407,7 @@ CameraPage.prototype.setupButtons = function() {
          + "/snapshot/?precision=1&time=" + snapshotTime
          + "&stream=" + stream;
      document.getElementById("downloadSnapshot").setAttribute("href",url);
-     //var w = window.open( url, 'Download' );
-		 window.focus();
-		 ///w.onload = function() {
-		//	  if (w.document.body.innerHTML.length > 0) {
-    //    }
-    // };
+     document.getElementById("downloadSnapshot").setAttribute("download", "CAPTURE_" + new Date(snapshotTime) + "_" + self.camId);
 	});
 
 	// livestream button
