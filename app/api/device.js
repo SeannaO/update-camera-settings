@@ -1,6 +1,7 @@
 var request = require('request');
 var exec    = require('child_process').exec;
 var os      = require('os');
+var uptime  = require('../helpers/uptime.js');
 
 var QNAP_PORT = process.env.QNAP_PORT || 8085;
 
@@ -11,6 +12,7 @@ module.exports = function( app, passport) {
 	app.get('/device.json', passport.authenticate('basic', {session: false}), function(req, res) {
 		
 		getDeviceInfo( function(d) {
+			d.uptime_ms = uptime.getUptime();
 			res.status(200).json(d);
 		});
 	});
