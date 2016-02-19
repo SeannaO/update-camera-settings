@@ -444,8 +444,8 @@ var addCamera = function(camera, cb) {
         success: function(data) {
             cb( data.camera );
         },
-		error: function( data ) {
-			console.log(data);
+		error: function( err ) {
+			toastr.error( err.responseJSON.error );
 			cb( null );
 		}
     });
@@ -550,6 +550,7 @@ var updateCamera = function(id, cb) {
             }
         },
 		error: function(err) {
+			toastr.error(err.responseJSON.error);	
 			cb( {error: err} );
 		}
     });
