@@ -632,7 +632,7 @@ module.exports = function( app, passport, camerasController ) {
 var validateCamerasLoaded = function( controller, res ) {
 
 		if ( !controller.loaded ) {
-			res.status(422).json({
+			res.status(503).json({
 				error: 'cameras db is still being loaded'
 			});
 			return false;
