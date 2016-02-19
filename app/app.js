@@ -24,6 +24,8 @@ var socketioAuth = require('./helpers/socket.io-auth.js');
 var httpsSetup   = require('./helpers/https-setup.js');
 var localAuth    = require('./helpers/local-auth.js').auth;
 
+var uptime = require('./helpers/uptime.js');
+
 var config = require('./config');
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -53,8 +55,11 @@ portChecker.check(port, function(err, found) {
 	// launch thumbnailer and rtsp_grabber
 	require('./services/thumbnailer').launch();
 	require('./services/rtspGrabber').launch( function() {
+		uptime.setRtspLaunchTime( Date.now() );
 		camerasController.simplyRestartRecording();
 	});
+
+	uptime.setRtspLaunchTime( Date.now() );
 
 	// - - -
 	// stores machine ip
