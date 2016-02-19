@@ -10,6 +10,7 @@ var OrphanFilesChecker = require('../helpers/orphanFiles.js');
 var Thumbnailer        = require('../helpers/thumbnailer.js');
 var SensorData         = require('../models/sensor_model.js');
 var mp4Handler         = require('./mp4_controller.js');
+var cameraValidator    = require('../helpers/cameraValidator.js');
 
 function CamerasController( cam_db_filename, videosFolder, cb ) {
 
@@ -467,6 +468,12 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 
     var self = this;
 
+	var err = cameraValidator.validate( cam );
+	if (err) {
+		console.error('[camerasController.insertNewCamera]  input error: ' + err);
+		return cb( err );
+	}
+
 	if (typeof cam.username == "undefined") {
 		cam.username = '';
 	}
@@ -687,9 +694,15 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
     var camera = this.findCameraById( cam._id );
 
     if (!camera) {
-        cb( "{error: 'camera not found'}" );
+        cb( 'camera not found' );
         return;
     }
+
+	var err = cameraValidator.validate( cam );
+	if (err) {
+		console.error('[camerasController.updateCamera]  input error: ' + err);
+		return cb( err );
+	}
 
 	var streamsHash = {};
 	if (cam.streams && cam.streams.length > 0) {
@@ -975,4 +988,3 @@ function generateUUID() {
     });
     return uuid;
 }
-
