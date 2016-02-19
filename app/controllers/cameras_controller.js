@@ -15,6 +15,7 @@ function CamerasController( cam_db_filename, videosFolder, cb ) {
 
     var self = this;
 	this.cameras = [];
+	this.loaded = false;
 
 	this.snapshotQ = [];
 
@@ -33,6 +34,8 @@ function CamerasController( cam_db_filename, videosFolder, cb ) {
 			}, 1000);
 
 		} else {
+
+			self.loaded = true;
 
 			setTimeout( function() {
 				self.orphanFilesChecker = new OrphanFilesChecker( self );
