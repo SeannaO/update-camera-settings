@@ -95,20 +95,27 @@
 			<div id = "" class="btn-toolbar" style="float:right; margin-left:20px;">
 
 				<div class = 'btn-group'>
-					<button id = "toggle-motion" class = 'white-bg btn btn-default btn-xs' title='toggle motion on timeline'> <img src = '/img/motion-icon.png'/></button>
+					<button id = "toggle-motion" class = 'white-bg btn btn-default btn-xs' title='Toggle motion on timeline'> <img src = '/img/motion-icon.png'/></button>
 				</div>
-				<div class = 'btn-group'>
-					<button id = "download" class = 'btn btn-xs btn-default white-bg' title = 'download video'>
+        <div class='btn-group'>
+          <a id="downloadSnapshot" download>
+            <button id = "snapshot" class = 'btn btn-xs btn-default white-bg' title = 'Snapshot this frame'>
+						<span class='glyphicon glyphicon-picture'></span>
+					  </button>
+          </a>
+        </div>
+        <div class='btn-group'>
+					<button id = "download" class = 'btn btn-xs btn-default white-bg' title = 'Download video'>
 						<span class='glyphicon glyphicon-download-alt'></span>
 					</button>
 				</div>
 				<div class='btn-group'>
-					<button id = "link-to-timeline" class = 'btn btn-xs btn-default white-bg' title = 'share a link to this timeline'>
+					<button id = "link-to-timeline" class = 'btn btn-xs btn-default white-bg' title = 'Share a link to this timeline'>
 						<span class='glyphicon glyphicon-link'></span>
 					</button>
 					<button id = "cameras-popover" class = 'btn btn-xs btn-default white-bg'
 						disabled='disabled'
-						alt='open timeline in another camera'
+						alt='Open timeline in another camera'
 						data-toggle='popover'
 						title='Open a camera in new tab'
 						>
@@ -194,6 +201,7 @@
 				$('#jump-backward-5').tooltip();
 				$('#jump-forward-5').tooltip();
 				$('#toggle-motion').tooltip();
+				$('#snapshot').tooltip();
 				$('#download').tooltip();
 				$('#link-to-timeline').tooltip();
 				$('#get-livestream').tooltip();

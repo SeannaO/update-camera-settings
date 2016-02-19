@@ -395,6 +395,19 @@ CameraPage.prototype.setupButtons = function() {
 
 	// snapshot button
 	this.buttons.snapshot.click(function() {
+ 
+        var snapshotTime  = self.timeline.currTime;
+        if(!snapshotTime) {
+    			bootbox.alert('Select a frame to snapshot first.');
+    			return;
+    		}
+     var stream = self.inputs.streams.val();
+     var url = window.location.protocol + "//" + window.location.host
+         + "/cameras/" + self.camId
+         + "/snapshot/?precision=1&time=" + snapshotTime
+         + "&stream=" + stream;
+     document.getElementById("downloadSnapshot").setAttribute("href",url);
+     document.getElementById("downloadSnapshot").setAttribute("download", "CAPTURE_" + new Date(snapshotTime) + "_" + self.camId);
 	});
 
 	// livestream button
