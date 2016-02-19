@@ -23,14 +23,26 @@ function CamerasController( cam_db_filename, videosFolder, cb ) {
     this.db = new Datastore({ filename: cam_db_filename });
 
 	self.setup( function(err) {
+
+		if (err) {
+
+			console.error('[CamerasController.setup]  ' + err);
+			setTimeout( function() {
+				console.error('[CamerasController.setup]  error when loading database; exiting...');
+				process.exit();		
+			}, 1000);
+
+		} else {
+
 			setTimeout( function() {
 				self.orphanFilesChecker = new OrphanFilesChecker( self );
 				self.orphanFilesChecker.periodicallyCheckForOrphanFiles( 5 * 60 * 1000 );  // checks for orphan files each 5 minutes
-				
+
 				if (cb) {
 					cb(err);
 				}
 			}, 1000);
+		}
 	});
 
     this.videosFolder = videosFolder;
