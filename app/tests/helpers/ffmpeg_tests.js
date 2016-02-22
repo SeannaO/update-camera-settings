@@ -33,7 +33,7 @@ describe('FFmpeg helper', function() {
 			var file = __dirname + '/../fixtures/files/' + fileName + '.ts';
 			var folder = __dirname + '/../fixtures/videosFolder';
 			var expectedFile = folder + '/' + fileName + '.jpg';
-			fse.deleteSync( expectedFile );
+			fse.removeSync( expectedFile );
 			ffmpeg.makeThumb( file, folder, '', function( out ) {
 				fs.exists( expectedFile, function(exists) {
 					assert.ok(exists);
@@ -48,7 +48,7 @@ describe('FFmpeg helper', function() {
 			var file = __dirname + '/../fixtures/files/' + fileName + '.ts';
 			var folder = __dirname + '/../fixtures/videosFolder';
 			var expectedFile = folder + '/' + fileName + '.jpg';
-			fse.deleteSync( expectedFile );
+			fse.removeSync( expectedFile );
 			ffmpeg.makeThumb( file, folder, '', function( out, error ) {
 				assert.ok(error);
 				done();

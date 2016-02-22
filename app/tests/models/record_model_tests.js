@@ -141,34 +141,6 @@ describe('RecordModel', function() {
 	// end of startRecording tests
 	//
 
-	describe('calcDuration', function() {
-//
-		var recordModel;
-
-		before( function(done) {
-			recordModel = new RecordModel( cam, cam.streams['stream_1'], function() {
-				done();
-			});
-		});
-
-		after( function() {
-			// recordModel.stopRecording();	
-		});
-//
-// 			
-		it('should callback json object with correct file info', function(done) {
-			var fileName = '09.58s_chunk';
-			var file = __dirname + '/../fixtures/files/' + fileName + '.ts';
-			recordModel.calcDuration( file, function(err, d) {
-				assert.equal(d.file, file);	
-				var duration = d.end - d.start;
-				assert.equal(duration, 9580);
-				done();
-			});
-		});
-	});
-
-
 	describe('receiveSignal', function() {
 		var recordModel;
 

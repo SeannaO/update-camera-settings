@@ -97,7 +97,7 @@ describe('SensorDblite', function() {
 			};
 
 			var dbfile = 'tests/fixtures/videosFolder/sensor_dblite_create_video_table_test.sqlite';
-			fse.deleteSync( dbfile );
+			fse.removeSync( dbfile );
 			var db = new SensorDblite(dbfile, function() {
 				db.insert( sensorEvent );
 				console.log('insert?');

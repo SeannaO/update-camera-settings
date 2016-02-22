@@ -18,7 +18,9 @@ describe('CamerasController', function() {
 
 	before( function(done) {
 		fse.removeSync( __dirname + '/../fixtures/cameras_controller_test/*' );
-		controller = new CamerasController( mp4Handler, db_file, videosFolder, function() {
+		fse.ensureDirSync( __dirname + '/../fixtures/cameras_controller_test');
+																		   
+		controller = new CamerasController( db_file, videosFolder, function() {
 			var cam = {
 				ip:            "192.168.215.102",
 				type:          "onvif",
@@ -345,9 +347,15 @@ describe('CamerasController', function() {
 
 			var deletionSpy = sinon.spy( controller, 'addChunksToDeletionQueue' );
 			controller.deleteOldestChunks( 3, function( oldChunks ) {
+				var ok_counter = 0;
 				for (var i = 0; i < 3; i++) {
-					assert.equal(chunks[i].file, oldChunks[i].file);
+					for (var k in oldChunks) {
+						if ( chunks[i].file == oldChunks[k].file ) { 
+							ok_counter++;
+						};
+					}
 				}
+				assert.equal(ok_counter, 3);
 				assert.ok( deletionSpy.calledOnce );
 				done();
 			});
@@ -441,6 +449,47 @@ describe('CamerasController', function() {
 
 	describe('getOldestChunks', function() {
 	});
+
+	describe('loading cam_db', function(done) {
+
+		it('should exit process and not call orphanFilesChecker if file is locked for reading', function(done) {
+			var exitCalled = false;
+			var processExit = process.exit;
+
+			process.exit = function() {
+				exitCalled = true;
+				process.exit = processExit;
+			}
+			var folder =  __dirname + '/../fixtures/cam_db_test';
+			var db_file = folder + '/cam_db_test';
+			fse.ensureFileSync(db_file);
+			fs.chmodSync( db_file, '222' );
+			var controller_cam_db_test = new CamerasController(db_file, folder, function() {
+				assert.ok( exitCalled );
+				assert.ok( !controller_cam_db_test.orphanFilesChecker );
+				fs.unlinkSync( db_file );
+				done();
+			});
+		});
+
+		it('should exit process and not call orphanFilesChecker if file is locked for writing', function(done) {
+			var exitCalled = false;
+			var processExit = process.exit;
+
+			process.exit = function() {
+				exitCalled = true;
+				process.exit = processExit;
+			}
+			var folder =  __dirname + '/../fixtures/cam_db_test';
+			var db_file = folder + '/cam_db_test_2';
+			fse.ensureFileSync(db_file);
+			fs.chmodSync( db_file, '555' );
+			var controller_cam_db_test = new CamerasController(db_file, folder, function() {
+				assert.ok( exitCalled );
+				assert.ok( !controller_cam_db_test.orphanFilesChecker );
+				fs.unlinkSync( db_file );
+				done();
+			});
+		});
+	});
 });
-
-

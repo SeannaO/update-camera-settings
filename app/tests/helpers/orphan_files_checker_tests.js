@@ -20,7 +20,7 @@ describe('OrphanFilesChecker', function() {
 	before( function(done) {
 		process.env['BASE_FOLDER'] = videosFolder;
 		fse.ensureDirSync(videosFolder);
-		camerasController = new CamerasController( mp4Handler, db_file, videosFolder, function() {
+		camerasController = new CamerasController( db_file, videosFolder, function() {
 			clearInterval( camerasController.orphanFilesChecker.checkOrphanFilesInterval );
 			orphanFilesChecker = new OrphanFilesChecker( camerasController );
 			done();
