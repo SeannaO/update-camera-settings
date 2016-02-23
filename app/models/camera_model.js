@@ -1,12 +1,14 @@
-var fs             = require('fs');                     // fs utils
-var WeeklySchedule = require('weekly-schedule');        // scheduler
-var RecordModel    = require('./record_model');         // recorder
-var Dblite         = require('../db_layers/dblite.js'); // sqlite layer
-var util           = require('util');                   // for inheritance
-var EventEmitter   = require('events').EventEmitter;    // events
-var path           = require('path');
-var Streamer       = require('../helpers/live_streamer.js');
-var MotionStreamer = require('../helpers/live_motion.js');
+var fs                  = require('fs');                     // fs utils
+var WeeklySchedule      = require('weekly-schedule');        // scheduler
+var RecordModel         = require('./record_model');         // recorder
+var Dblite              = require('../db_layers/dblite.js'); // sqlite layer
+var util                = require('util');                   // for inheritance
+var EventEmitter        = require('events').EventEmitter;    // events
+var path                = require('path');
+var Streamer            = require('../helpers/live_streamer.js');
+var MotionStreamer      = require('../helpers/live_motion.js');
+var retentionCalculator = require('../helpers/retention_calculator.js');
+var async               = require('async');
 
 
 // regex to separate basefolder from the other part of a segment's path
@@ -1154,6 +1156,67 @@ Camera.prototype.updateRecorder = function() {
 }; 
 // end of updateRecorder
 //
+
+
+Camera.prototype.getRetentionByStream = function( streamId, start, end, cb ) {
+
+	if (!this.streams || !this.streams[streamId] ) {
+		return cb( 'invalid stream' );
+	}
+
+	if ( !start || !end || isNaN( start ) || isNaN( end ) || start > end ) {
+		return cb( 'invalid interval' );
+	}
+
+	if ( end - start > 1000*60*60*48 ) {
+		return cb('interval is too long; it should be less than 48h');
+	}
+
+	var stream = this.streams[streamId];
+
+	// earliestSegmentDate <= start <= now - 30s
+	start = Math.max(start, stream.earliestSegmentDate);
+	start = Math.min(start, Date.now() - 30000);
+
+	// earliestSegmentDate <= end <= now - 30s
+	end = Math.max(end, stream.earliestSegmentDate);
+	end = Math.min(end, Date.now() - 30000);
+
+	stream.db.searchVideosByInterval( start, end, function(err, fileList, offset) {
+        if (err) {
+            cb(err);
+        } else {
+			var retention = retentionCalculator.calcRetention( fileList, start, end );
+            cb(null, retention);
+        }
+    });
+};
+
+
+Camera.prototype.getRetention = function(start, end, cb) {
+
+	var self = this;
+
+	if (!this.streams) {
+		return cb('camera has no streams');
+	}
+
+	var retentionByStream = {};
+	var streams = Object.keys( this.streams );
+
+	async.each( streams, 
+		function(streamId, callback) {
+			self.getRetentionByStream( streamId, start, end, function(err, ret){
+				if (err) { return callback( err ); }
+				retentionByStream[ streamId ] = ret;
+				callback();
+			});
+		},
+		function(err) {
+			cb( err, retentionByStream );
+		}
+	);
+};
 
 
 /**
