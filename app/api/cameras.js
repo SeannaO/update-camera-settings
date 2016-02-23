@@ -594,6 +594,27 @@ module.exports = function( app, passport, camerasController ) {
 			});
 		});
 	// - - -
+	//
+	
+
+	// - - -
+	// retention percentage
+	app.get('/cameras/:id/retention', passport.authenticate('basic', {session: false}), function(req, res) {
+
+		var camId = req.params.id,
+			start = req.query.start,
+			end   = req.query.end;
+
+		camerasController.getRetention( camId, start, end, function(err, ret) {
+			if (err || !ret ) {
+				res.status(422).json({ error: err });
+			} else {
+				res.json( ret );
+			}
+		});
+	});
+	// - - 
+	//
 };
 
 
