@@ -855,6 +855,24 @@ CamerasController.prototype.setROI = function(params, cb) {
 };
 
 
+CamerasController.prototype.getRetention = function( cam_id, start, end, cb ) {
+
+	if (!cb) { return; }
+
+    var self = this;
+    var camera = this.findCameraById( cam_id ).cam;
+    
+	if (!camera) {
+        cb('camera not found');
+        return;
+    }
+
+	camera.getRetention( start, end, function(err, ret) {
+		cb( err, ret );
+	});
+};
+
+
 CamerasController.prototype.updateCameraMotion = function(params, cb) {
 
     var self = this;
