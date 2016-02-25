@@ -84,6 +84,9 @@ function Camera( cam, videosFolder, cb ) {
 				console.log("[cameraModel] stopping camera " + (self.name || self.ip));
 				self.stopRecording();
 			}
+
+			self.periodicallyCheckRetention();
+
 			if (cb) cb(self);
 		});
 		// instantiates streams
@@ -108,8 +111,6 @@ function Camera( cam, videosFolder, cb ) {
 	self.updateMotionParamsInterval = setInterval( function() {
 		self.setMotionParams( self.motionParams );
 	}, 5000);
-
-	this.periodicallyCheckRetention();
 }
 // end of constructor
 //
@@ -1241,8 +1242,8 @@ Camera.prototype.periodicallyCheckRetention = function() {
 
 	this.getRetention( start, end, function(err, retention) {
 
-		if (!err) { self.retentionReport = retention }
-		else { self.retentionReport = { error: err }; }
+		if (!err) { self.retentionStats = retention }
+		else { self.retentionStats = { error: err }; }
 
 		self.updateRetentionTimeout = setTimeout( function() {
 			self.periodicallyCheckRetention();
@@ -1318,7 +1319,7 @@ Camera.prototype.toJSON = function() {
 	info.username         = this.username || '';
 	info.password         = this.password || '';
 	info.motionParams     = this.motionParams;
-	info.retention        = this.retentionReport;
+	info.retentionStats   = this.retentionStats;
 
 	info.streams = this.getStreamsJSON();
 	
