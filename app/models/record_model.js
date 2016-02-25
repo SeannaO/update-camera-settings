@@ -244,6 +244,10 @@ RecordModel.prototype.setupDbusListener = function() {
 			  }
 		});
 
+		RecordModel.dbusMonitorSignal.on('error', function(err) {
+			console.error('[RecordModel.dbusMonitorSignal]  ' + err.message);
+		});
+
 		try {
 			RecordModel.dbusMonitorSignal.addMatch();
 		} catch( e ) {
@@ -464,6 +468,10 @@ RecordModel.sendMessage = function( command, arg1, arg2, arg3 ) {
 						value: dbus.DBUS_MESSAGE_TYPE_SIGNAL
 					  }
 			});
+
+			RecordModel.dbusSignal.on('error', function(err) {
+				console.error('[RecordModel.dbusSignal]  ' + err.message);
+			});
 		}
 		
 		RecordModel.dbusSignal.clearArgs();
@@ -514,6 +522,10 @@ RecordModel.prototype.sendSignal = function( command, url, path ) {
 					  type: {
 						value: dbus.DBUS_MESSAGE_TYPE_SIGNAL
 					  }
+			});
+
+			this.dbusSignal.on('error', function(err) {
+				console.error('[recordModel.dbusSignal]  ' + err.message);
 			});
 		}
 		
