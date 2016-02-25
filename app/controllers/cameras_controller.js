@@ -663,6 +663,7 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 			cam.stopRecording();
 			cam.stopMotionDetection();
 			cam.removeAllListeners();
+			cam.stopRetentionCheck();
 
 			for (var i in cam.streams){
 				cam.removeStream( i );	
