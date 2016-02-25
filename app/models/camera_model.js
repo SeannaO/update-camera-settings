@@ -108,6 +108,8 @@ function Camera( cam, videosFolder, cb ) {
 	self.updateMotionParamsInterval = setInterval( function() {
 		self.setMotionParams( self.motionParams );
 	}, 5000);
+
+	this.periodicallyCheckRetention();
 }
 // end of constructor
 //
@@ -1160,7 +1162,13 @@ Camera.prototype.updateRecorder = function() {
 
 Camera.prototype.getRetentionByStream = function( streamId, start, end, cb ) {
 
-	if (!this.streams || !this.streams[streamId] ) {
+	if (!this.streams) {
+		return cb( 'this camera has no streams' );
+	}
+
+	var stream = this.streams[streamId];
+
+	if ( !stream ) {
 		return cb( 'invalid stream' );
 	}
 
@@ -1172,14 +1180,11 @@ Camera.prototype.getRetentionByStream = function( streamId, start, end, cb ) {
 		return cb('interval is too long; it should be less than 48h');
 	}
 
-	var stream = this.streams[streamId];
 
 	// earliestSegmentDate <= start <= now - 30s
-	start = Math.max(start, stream.earliestSegmentDate);
 	start = Math.min(start, Date.now() - 30000);
 
 	// earliestSegmentDate <= end <= now - 30s
-	end = Math.max(end, stream.earliestSegmentDate);
 	end = Math.min(end, Date.now() - 30000);
 
 	stream.db.searchVideosByInterval( start, end, function(err, fileList, offset) {
@@ -1216,6 +1221,39 @@ Camera.prototype.getRetention = function(start, end, cb) {
 			cb( err, retentionByStream );
 		}
 	);
+};
+
+
+Camera.prototype.periodicallyCheckRetention = function() {
+
+	console.log('[Camera.periodicallyCheckRetention]  checking retention of ' + this._id);
+
+	// update retention every 15 min
+	var periodicity = 15*60*60*1000;
+
+	var self = this;
+
+	clearTimeout( this.updateRetentionTimeout );
+
+	// check retention for past 1h
+	var end   = Date.now(),
+		start = end - 1*60*60*1000;
+
+	this.getRetention( start, end, function(err, retention) {
+
+		if (!err) { self.retentionReport = retention }
+		else { self.retentionReport = { error: err }; }
+
+		self.updateRetentionTimeout = setTimeout( function() {
+			self.periodicallyCheckRetention();
+		}, periodicity );
+	});
+};
+
+
+Camera.prototype.stopRetentionCheck = function() {
+	console.log('[Camera.stopRetentionCheck]  stopping retention check of ' + this._id);
+	clearTimeout( this.updateRetentionTimeout );
 };
 
 
@@ -1280,6 +1318,7 @@ Camera.prototype.toJSON = function() {
 	info.username         = this.username || '';
 	info.password         = this.password || '';
 	info.motionParams     = this.motionParams;
+	info.retention        = this.retentionReport;
 
 	info.streams = this.getStreamsJSON();
 	
