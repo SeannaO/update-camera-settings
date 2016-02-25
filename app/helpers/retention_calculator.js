@@ -2,21 +2,23 @@
 
 var calcRetention = function( chunks, startInterval, endInterval ) {
 
-	var start,
-		end,
+	var start = 0,
+		end = 0,
 		gaps = 0,
+		nGaps = 0,
 		nChunks = 0;
 
 
 	if ( !chunks || !chunks.length) {
 		return {
-			start:                   new Date(startInterval),
-			end:                     new Date(endInterval),
-			nChunks:                 0,
-			totalGapsLength_ms:      0,
-			intervalLength_ms: 		 endInterval - startInterval,
-			totalRecordedLength_ms:  0,
-			retention:               0
+			start:                    startInterval,
+			end:                      endInterval,
+			nChunks:                  0,
+			nGaps:                    0,
+			earliestChunkInInterval:  0,
+			totalRecordedLength_ms:   0,
+			totalRetentionRatio:      0,
+			partialRetentionRatio:    0
 		}
 	}
 
@@ -32,7 +34,10 @@ var calcRetention = function( chunks, startInterval, endInterval ) {
 		else {
 			var gap = c.start - end;
 			gap = gap < 0 ? 0 : gap;
-			if (gap >= 1000) { gaps += gap; }
+			if (gap >= 1000) { 
+				gaps += gap; 
+				nGaps++;
+			}
 		}
 		end = parseInt( c.end );
 	}
@@ -47,15 +52,17 @@ var calcRetention = function( chunks, startInterval, endInterval ) {
 
 	var intervalLength = endInterval - startInterval;
 	var totalLength = intervalLength - gaps;
+	var partialIntervalLength = intervalLength - startGap;
 
 	var report = {
-		start:                   new Date(startInterval),
-		end:                     new Date(endInterval),
-		nChunks:                 nChunks,
-		totalGapsLength_ms:      gaps,
-		intervalLength_ms:       intervalLength,
-		totalRecordedLength_ms:  totalLength,
-		retention:               totalLength / intervalLength
+		start:                    startInterval,
+		end:                      endInterval,
+		nChunks:                  nChunks,
+		nGaps:                    nGaps,
+		earliestChunkInInterval:  start,
+		totalRecordedLength_ms:   totalLength,
+		totalRetentionRatio:      ( totalLength / intervalLength ).toFixed(2),
+		partialRetentionRatio:    ( totalLength / partialIntervalLength ).toFixed(2)
 	};
 
 	return report;
