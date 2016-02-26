@@ -46,26 +46,25 @@ var calcRetention = function( chunks, startInterval, endInterval ) {
 	endInterval   = endInterval ? endInterval : end;
 
 	var startGap = start > startInterval ? (start - startInterval) : 0;
-	var endGap =  end < endInterval ? (endInterval - end) : 0;
+	var endGap   = end < endInterval ? (endInterval - end) : 0;
 
 	gaps = gaps + startGap + endGap;
 
-	var intervalLength = endInterval - startInterval;
-	var totalLength = intervalLength - gaps;
+	var intervalLength        = endInterval - startInterval;
+	var totalLength           = intervalLength - gaps;
 	var partialIntervalLength = intervalLength - startGap;
 
-	var report = {
+	return {
 		start:                    startInterval,
 		end:                      endInterval,
 		nChunks:                  nChunks,
 		nGaps:                    nGaps,
 		earliestChunkInInterval:  start,
 		totalRecordedLength_ms:   totalLength,
-		totalRetentionRatio:      ( totalLength / intervalLength ).toFixed(2),
-		partialRetentionRatio:    ( totalLength / partialIntervalLength ).toFixed(2)
+		totalRetentionRatio:      intervalLength ? ( totalLength / intervalLength ).toFixed(2) : 0,
+		partialRetentionRatio:    partialIntervalLength ? ( totalLength / partialIntervalLength ).toFixed(2) : 0
 	};
 
-	return report;
 };
 
 
