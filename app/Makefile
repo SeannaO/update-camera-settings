@@ -17,9 +17,9 @@ test:
 	rm -rf tests/fixtures/cameras
 	mkdir -p tests/cameras_controller_test
 	mkdir -p tests/fixtures/cameras
-	mocha tests --reporter dot
+	mocha tests --reporter dot --recursive
 
 test-w:
 	touch tests/videosFolder/newTest
 	rm -r tests/videosFolder/*
-	mocha tests --reporter dot --watch
+	mocha tests --recursive --reporter dot --watch 
