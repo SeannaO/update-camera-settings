@@ -1,11 +1,27 @@
 'use strict';
 
+/**
+ * Checks if IP does not contain non-numeric chars
+ *   TODO: perform full validation
+ *
+ * @param { ip } String  IP address
+ * @return { boolean }  false if IP contains non-numeric chars or is not composed of 4 groups of digits; true otherwise 
+ */
 function checkIP( ip ) {
 	var re = /\d+\.\d+\.\d+\.\d+\b/;
 	return re.test( ip );
 }
 
 
+/**
+ * Validate camera;
+ *   checks if camera and streams are objects,
+ *   make sure IPs do not contain non numeric chars,
+ *   as such invalid IPs may cause a segfault on QNAP devices
+ *
+ * @param { cam } Object  camera object
+ * @return { String }  message when there's error, null if no errors were found 
+ */
 function validateCamera( cam ) {
 
 	if (!cam || typeof(cam) !== 'object') {
