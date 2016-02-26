@@ -5,7 +5,7 @@ var exec  = require('child_process').exec;
 var restarting = false;
 
 // var RESTART_DBUS_CMD = 'service dbus restart';  // Debian Wheezy
-var RESTART_DBUS_CMD = '/etc/init.d/avahi restart' // QNAP
+var RESTART_DBUS_CMD = '/etc/init.d/avahi.sh restart' // QNAP
 
 exports.restartDbus = function() {
 
