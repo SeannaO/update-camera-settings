@@ -1,6 +1,6 @@
 var Datastore = require('nedb');                           // nedb datastore
 
-module.exports = function( app, passport, db_file ) {
+module.exports = function( app, passport, db_file, camerasController ) {
 
 	var db = new Datastore({ filename: db_file });
 	db.loadDatabase();

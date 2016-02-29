@@ -517,7 +517,7 @@ portChecker.check(port, function(err, found) {
 
 	var sensors = require('./api/sensors.js');
 
-	require('./api/multiview.js')( app, passport, baseFolder+'/multiview.db' );
+	require('./api/multiview.js')( app, passport, baseFolder+'/multiview.db', camerasController );
 
 	app.get('/cameras/:camera_id/sensors', function(req, res){
 		sensors.getSensorData(baseFolder, req, res);
