@@ -1,12 +1,14 @@
-var fs             = require('fs');                     // fs utils
-var WeeklySchedule = require('weekly-schedule');        // scheduler
-var RecordModel    = require('./record_model');         // recorder
-var Dblite         = require('../db_layers/dblite.js'); // sqlite layer
-var util           = require('util');                   // for inheritance
-var EventEmitter   = require('events').EventEmitter;    // events
-var path           = require('path');
-var Streamer       = require('../helpers/live_streamer.js');
-var MotionStreamer = require('../helpers/live_motion.js');
+var fs                  = require('fs');                     // fs utils
+var WeeklySchedule      = require('weekly-schedule');        // scheduler
+var RecordModel         = require('./record_model');         // recorder
+var Dblite              = require('../db_layers/dblite.js'); // sqlite layer
+var util                = require('util');                   // for inheritance
+var EventEmitter        = require('events').EventEmitter;    // events
+var path                = require('path');
+var Streamer            = require('../helpers/live_streamer.js');
+var MotionStreamer      = require('../helpers/live_motion.js');
+var retentionCalculator = require('../helpers/retention_calculator.js');
+var async               = require('async');
 
 
 // regex to separate basefolder from the other part of a segment's path
@@ -82,6 +84,9 @@ function Camera( cam, videosFolder, cb ) {
 				console.log("[cameraModel] stopping camera " + (self.name || self.ip));
 				self.stopRecording();
 			}
+
+			self.periodicallyCheckRetention();
+
 			if (cb) cb(self);
 		});
 		// instantiates streams
@@ -1157,6 +1162,140 @@ Camera.prototype.updateRecorder = function() {
 
 
 /**
+ * Get retention stats for a specific stream and a given interval
+ * 		- interval should be less than 48h
+ * 		- start, end times should be defined and non-zero
+ * 		- start and end times will be automatically adjusted so that 
+ * 			segments being recorded are always excluded,
+ * 			in order to prevent miscalculations
+ *
+ * @param { streamId } String  id of the stream
+ * @param { start } Number  interval start
+ * @param { end } Number  interval end
+ *
+ * @param { cb } Function callback( err, d )
+ * 		- err (String): error message, null if none
+ * 		- d (Object): stats object, null on error
+ */
+Camera.prototype.getRetentionByStream = function( streamId, start, end, cb ) {
+
+	if (!this.streams) {
+		return cb( 'this camera has no streams' );
+	}
+
+	var stream = this.streams[streamId];
+
+	if ( !stream ) {
+		return cb( 'invalid stream' );
+	}
+
+	if ( !start || !end || isNaN( start ) || isNaN( end ) || start > end ) {
+		return cb( 'invalid interval' );
+	}
+
+	if ( end - start > 1000*60*60*48 ) {
+		return cb('interval is too long; it should be less than 48h');
+	}
+
+	// adjust the interval to excude segments still being recorded
+	start = Math.min(start, Date.now() - 30000);
+	end   = Math.min(end, Date.now() - 30000);
+
+	stream.db.searchVideosByInterval( start, end, function(err, fileList, offset) {
+        if (err) {
+            cb(err);
+        } else {
+			var retention = retentionCalculator.calcRetention( fileList, start, end );
+            cb(null, retention);
+        }
+    });
+};
+
+
+/**
+ * Get retention stats for all streams
+ *
+ * @param { start } Number  interval start
+ * @param { end } Number  interval end
+ *
+ * @param { cb } Function callback( err, d )
+ * 		- err (String): error message, null if none
+ * 		- d (Object): hash of stats object per stream, null on error
+ * 			{ <stream_id>: {retention_stats} }
+ */
+Camera.prototype.getRetention = function(start, end, cb) {
+
+	var self = this;
+
+	if (!this.streams) {
+		return cb('camera has no streams');
+	}
+
+	var retentionByStream = {};
+	var streams = Object.keys( this.streams );
+
+	async.each( streams, 
+		function(streamId, callback) {
+			self.getRetentionByStream( streamId, start, end, function(err, ret){
+				if (err) { return callback( err ); }
+				retentionByStream[ streamId ] = ret;
+				callback();
+			});
+		},
+		function(err) {
+			cb( err, retentionByStream );
+		}
+	);
+};
+
+
+/**
+ * Update in-mem retention stats for the past 60 min, every 15 min
+ *
+ * 		- in-mem stats are stored in 'this.retentionStats',
+ * 			should be included in the camera json
+ *
+ */
+Camera.prototype.periodicallyCheckRetention = function() {
+
+	console.log('[Camera.periodicallyCheckRetention]  checking retention of ' + this._id);
+
+	// update retention every 15 min
+	var periodicity = 15*60*60*1000;
+
+	var self = this;
+
+	clearTimeout( this.updateRetentionTimeout );
+
+	// check retention for past 1h
+	var end   = Date.now(),
+		start = end - 1*60*60*1000;
+
+	this.getRetention( start, end, function(err, retention) {
+
+		if (!err) { self.retentionStats = retention }
+		else { self.retentionStats = { error: err }; }
+
+		self.updateRetentionTimeout = setTimeout( function() {
+			self.periodicallyCheckRetention();
+		}, periodicity );
+	});
+};
+
+
+/**
+ * Stop periodic retention check
+ *
+ * IMPORTANT: must be called when the camera is removed
+ *
+ */
+Camera.prototype.stopRetentionCheck = function() {
+	console.log('[Camera.stopRetentionCheck]  stopping retention check of ' + this._id);
+	clearTimeout( this.updateRetentionTimeout );
+};
+
+
+/**
  * Renders streams info as a json array
  * NOTE: remember to edit this method when changing stream data attributes
  *
@@ -1217,6 +1356,7 @@ Camera.prototype.toJSON = function() {
 	info.username         = this.username || '';
 	info.password         = this.password || '';
 	info.motionParams     = this.motionParams;
+	info.retentionStats   = this.retentionStats;
 
 	info.streams = this.getStreamsJSON();
 	

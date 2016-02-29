@@ -685,6 +685,7 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 			cam.stopRecording();
 			cam.stopMotionDetection();
 			cam.removeAllListeners();
+			cam.stopRetentionCheck();
 
 			for (var i in cam.streams){
 				cam.removeStream( i );	
@@ -880,6 +881,36 @@ CamerasController.prototype.setROI = function(params, cb) {
 	camera.setROI( params.roi );
 
 	self.saveMotionParams( camera, cb );
+};
+
+
+/**
+ * Get retention stats for a specific camera
+ *
+ * @param { cam_id } String  id of the camera
+ * @param { start } Number  interval start
+ * @param { end } Number  interval end
+ *
+ * @param { cb } Function callback( err, d )
+ * 		- err (String): error message, null if none
+ * 		- d (Object): hash of stats object per stream, null on error
+ * 			{ <stream_id>: {retention_stats} }
+ */
+CamerasController.prototype.getRetention = function( cam_id, start, end, cb ) {
+
+	if (!cb) { return; }
+
+    var self = this;
+    var camera = this.findCameraById( cam_id ).cam;
+    
+	if (!camera) {
+        cb('camera not found');
+        return;
+    }
+
+	camera.getRetention( start, end, function(err, ret) {
+		cb( err, ret );
+	});
 };
 
 
