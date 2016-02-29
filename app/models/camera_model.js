@@ -1215,7 +1215,6 @@ Camera.prototype.getRetentionByStream = function( streamId, start, end, cb ) {
 /**
  * Get retention stats for all streams
  *
- * @param { cam_id } String  id of the camera
  * @param { start } Number  interval start
  * @param { end } Number  interval end
  *
