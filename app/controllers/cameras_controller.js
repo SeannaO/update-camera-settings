@@ -856,6 +856,18 @@ CamerasController.prototype.setROI = function(params, cb) {
 };
 
 
+/**
+ * Get retention stats for a specific camera
+ *
+ * @param { cam_id } String  id of the camera
+ * @param { start } Number  interval start
+ * @param { end } Number  interval end
+ *
+ * @param { cb } Function callback( err, d )
+ * 		- err (String): error message, null if none
+ * 		- d (Object): hash of stats object per stream, null on error
+ * 			{ <stream_id>: {retention_stats} }
+ */
 CamerasController.prototype.getRetention = function( cam_id, start, end, cb ) {
 
 	if (!cb) { return; }

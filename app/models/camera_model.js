@@ -1161,6 +1161,22 @@ Camera.prototype.updateRecorder = function() {
 //
 
 
+/**
+ * Get retention stats for a specific stream and a given interval
+ * 		- interval should be less than 48h
+ * 		- start, end times should be defined and non-zero
+ * 		- start and end times will be automatically adjusted so that 
+ * 			segments being recorded are always excluded,
+ * 			in order to prevent miscalculations
+ *
+ * @param { streamId } String  id of the stream
+ * @param { start } Number  interval start
+ * @param { end } Number  interval end
+ *
+ * @param { cb } Function callback( err, d )
+ * 		- err (String): error message, null if none
+ * 		- d (Object): stats object, null on error
+ */
 Camera.prototype.getRetentionByStream = function( streamId, start, end, cb ) {
 
 	if (!this.streams) {
@@ -1181,12 +1197,9 @@ Camera.prototype.getRetentionByStream = function( streamId, start, end, cb ) {
 		return cb('interval is too long; it should be less than 48h');
 	}
 
-
-	// earliestSegmentDate <= start <= now - 30s
+	// adjust the interval to excude segments still being recorded
 	start = Math.min(start, Date.now() - 30000);
-
-	// earliestSegmentDate <= end <= now - 30s
-	end = Math.min(end, Date.now() - 30000);
+	end   = Math.min(end, Date.now() - 30000);
 
 	stream.db.searchVideosByInterval( start, end, function(err, fileList, offset) {
         if (err) {
@@ -1199,6 +1212,18 @@ Camera.prototype.getRetentionByStream = function( streamId, start, end, cb ) {
 };
 
 
+/**
+ * Get retention stats for all streams
+ *
+ * @param { cam_id } String  id of the camera
+ * @param { start } Number  interval start
+ * @param { end } Number  interval end
+ *
+ * @param { cb } Function callback( err, d )
+ * 		- err (String): error message, null if none
+ * 		- d (Object): hash of stats object per stream, null on error
+ * 			{ <stream_id>: {retention_stats} }
+ */
 Camera.prototype.getRetention = function(start, end, cb) {
 
 	var self = this;
@@ -1225,6 +1250,13 @@ Camera.prototype.getRetention = function(start, end, cb) {
 };
 
 
+/**
+ * Update in-mem retention stats for the past 60 min, every 15 min
+ *
+ * 		- in-mem stats are stored in 'this.retentionStats',
+ * 			should be included in the camera json
+ *
+ */
 Camera.prototype.periodicallyCheckRetention = function() {
 
 	console.log('[Camera.periodicallyCheckRetention]  checking retention of ' + this._id);
@@ -1252,6 +1284,12 @@ Camera.prototype.periodicallyCheckRetention = function() {
 };
 
 
+/**
+ * Stop periodic retention check
+ *
+ * IMPORTANT: must be called when the camera is removed
+ *
+ */
 Camera.prototype.stopRetentionCheck = function() {
 	console.log('[Camera.stopRetentionCheck]  stopping retention check of ' + this._id);
 	clearTimeout( this.updateRetentionTimeout );

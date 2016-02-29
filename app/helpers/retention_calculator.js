@@ -1,5 +1,27 @@
 'use strict';
 
+/**
+ * Calculate retention stats given a list of chunks and a time interval
+ *
+ * @param { chunks } Array  list of chunks
+ * 		- each element in the array must contain: 'start', 'end'
+ * 		- if empty or undefined, zeroed stats will be returned
+ *
+ * @param { startInterval } Number  start time (unix ms)
+ * 		- if zero or undefined, the start time of the first chunk in the interval will be used
+ *
+ * @param { endInterval } Number  end time (unix ms)
+ * 		- if zero or undefined, the end time of the last chunk in the interval will be used
+ *
+ * @return{ Object } calculated stats (times in ms, unix)
+ * 		- start, end: time interval (see notes above)
+ * 		- nChunks: number of chunks in interval
+ * 		- nGaps: number of gaps between chunks in interval
+ * 		- earliestChunkInInterval: start time of the first chunk in the interval
+ * 		- totalRecordedLength_ms: self explained
+ * 		- totalRetentionRatio: ratio between recorded and interval lengths
+ * 		- partialIntervalLength: ratio between recorded and partial interval lengths (interval starting on the first segment in interval)
+ */
 var calcRetention = function( chunks, startInterval, endInterval ) {
 
 	var start = 0,
