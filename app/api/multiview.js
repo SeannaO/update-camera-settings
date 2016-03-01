@@ -1,4 +1,8 @@
-var Datastore = require('nedb');                           // nedb datastore
+'use strict';
+
+var Datastore = require('nedb');                          
+var MultiviewCameraGroups = require('../helpers/multiview-groups-generator.js');
+
 
 module.exports = function( app, passport, db_file, camerasController ) {
 
@@ -8,7 +12,22 @@ module.exports = function( app, passport, db_file, camerasController ) {
 	app.get('/multiview/views', passport.authenticate('basic', {session: false}), function(req, res) {
 		
 		db.find({}, function(err, docs ) {
-			res.json(docs);
+			if (err) {
+				return res.status(500).json({error: err});
+			}
+			else if (!docs || !docs.length) {
+
+				var cameras = camerasController.getCameras() || [];
+				cameras = cameras.map( function(item) {
+					return item.toJSON();
+				});
+
+				var groups = new MultiviewCameraGroups( cameras );
+				res.json( groups );
+
+			} else {
+				res.json(docs);
+			}
 		});
 	});
 
