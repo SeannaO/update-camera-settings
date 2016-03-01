@@ -436,6 +436,8 @@ var addCamera = function(camera, cb) {
         camera.id = 'id_'+Math.random(100);
     }
 
+	if (camera.streams) { camera.streams = _.without( camera.streams, null, undefined ); }
+
     $.ajax({
         type: "POST",
         url: "/cameras/new",
