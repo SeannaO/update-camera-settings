@@ -16,8 +16,9 @@ var MultiviewCameraGroups = function( cameras ) {
 
 	if (cameras) { 
 		this.loadCameras( cameras ); 
-		return this.groups;
 	}
+
+	return this.groups;
 };
 
 
@@ -26,7 +27,7 @@ MultiviewCameraGroups.prototype.loadCameras = function( cameras ) {
 	for (var i in cameras) {
 
 		var c = cameras[i];
-		if (!c.streams || !c.streams.length) { continue; }
+		if (!c || !c.streams || !c.streams.length) { continue; }
 
 		for (var k in c.streams) {
 			var s = c.streams[k];
