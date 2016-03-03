@@ -71,8 +71,8 @@ portChecker.check(port, function(err, found) {
 	setInterval( function() {
 		var ip = ipModule.address();
 		if (process.env['IP'] !== ip) {
-			console.error('IP changed; restarting...');
-			process.exit();
+			console.log('IP has changed; new ip is: ' + ip);
+			process.env['IP'] = ip;
 		}
 	}, 10000);
 	// - - -
