@@ -465,19 +465,17 @@ var deleteCamera = function(id) {
 				url: "/cameras/" + id,
 				contentType: 'application/json',
 				success: function(data) {
-					if (data.success) {
-						if (cameras[id]) delete cameras[id];
-						removeOverlayFromPage( function() {
-							toastr.success('Successfully removed camera');
-							$("#camera-item-"+data._id).fadeOut();
-						});
-					} else {
-						removeOverlayFromPage( function() {
-							toastr.error("error: " + data.error);
-						});
-					}
+					if (cameras[id]) { delete cameras[id]; }
+
+					removeOverlayFromPage( function() {
+						toastr.success('Successfully removed camera');
+						$("#camera-item-"+data._id).fadeOut();
+					});
 				},
 				error: function( data ) {
+					removeOverlayFromPage( function() {
+						toastr.error( data.responseJSON.error );
+					});
 					console.log(data);
 				}
 			});

@@ -1,16 +1,17 @@
 'use strict';
 
-var _                  = require('lodash');
-var Datastore          = require('nedb');                           //
-var Camera             = require('./../models/camera_model');       //
-var EventEmitter       = require('events').EventEmitter;            //
-var util               = require('util');                           //
-var checkH264          = require('../helpers/ffmpeg.js').checkH264;
-var OrphanFilesChecker = require('../helpers/orphanFiles.js');
-var Thumbnailer        = require('../helpers/thumbnailer.js');
-var SensorData         = require('../models/sensor_model.js');
-var mp4Handler         = require('./mp4_controller.js');
-var cameraValidator    = require('../helpers/cameraValidator.js');
+var _               = require('lodash');
+var Datastore       = require('nedb');                           //
+var Camera          = require('./../models/camera_model');       //
+var EventEmitter    = require('events').EventEmitter;            //
+var util            = require('util');                           //
+var checkH264       = require('../helpers/ffmpeg.js').checkH264;
+var Thumbnailer     = require('../helpers/thumbnailer.js');
+var SensorData      = require('../models/sensor_model.js');
+var mp4Handler      = require('./mp4_controller.js');
+var cameraValidator = require('../helpers/cameraValidator.js');
+var path            = require('path');
+var fs              = require('fs');
 
 function CamerasController( cam_db_filename, videosFolder, cb ) {
 
@@ -39,9 +40,6 @@ function CamerasController( cam_db_filename, videosFolder, cb ) {
 			self.loaded = true;
 
 			setTimeout( function() {
-				self.orphanFilesChecker = new OrphanFilesChecker( self );
-				self.orphanFilesChecker.periodicallyCheckForOrphanFiles( 5 * 60 * 1000 );  // checks for orphan files each 5 minutes
-
 				if (cb) {
 					cb(err);
 				}
@@ -598,8 +596,40 @@ CamerasController.prototype.pushCamera = function( cam ) {
 
 
 CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
-    
+
 	var self = this;
+
+	var camera = this.findCameraById( camId );
+
+	if (!camera || !camera.cam) {
+		if (cb) { cb( 'camera not found' ); }
+		return;
+	}	
+	camera = camera.cam;
+	if ( !camera.streams || !camera.streams[streamId] ) {
+		if (cb) { cb('stream not found'); }
+		return;
+	}
+
+	var from = path.join( this.videosFolder, camId, streamId );
+	var to   = path.join( this.videosFolder, 'trash', streamId );
+
+	fs.rename( from, to, function( err ) {
+
+		if ( err ) {
+			console.error( '[CamerasController.removeStream]  ' + err );
+			if( cb ) { cb( err ); }
+		} else {
+			self.removeStreamFromDb( camId, streamId, cb );
+		}
+	});
+};
+
+
+CamerasController.prototype.removeStreamFromDb = function( camId, streamId, cb ) {
+    
+    var self = this;
+	
     var camera = this.findCameraById( camId );
 	
     if (!camera || !camera.cam) {
@@ -662,7 +692,42 @@ CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
 
 CamerasController.prototype.removeCamera = function( camId, cb ) {
 
-    var self = this;
+	var self = this;
+
+	var camera = this.findCameraById( camId ).cam;
+	if (!camera) {
+		var err = '[CamerasController.removeCamera]  camera ' + camId + ' not found';
+		console.error( err );
+		if ( cb ) { cb( err ); }
+		return;
+	}
+
+	var from = path.join( this.videosFolder, camId );
+	var to   = path.join( this.videosFolder, 'trash', camId );
+
+	fs.rename( from, to, function(rename_err) {
+
+		if ( rename_err ) {
+			console.error( '[CamerasController.removeCamera]  ' + rename_err );
+			if( cb ) { cb( rename_err ); }
+		} else {
+			self.removeCameraFromDb( camId, cb );
+		}
+	});
+};
+
+
+CamerasController.prototype.removeCameraFromDb = function( camId, cb ) {
+
+	var self = this;
+
+	var camera = this.findCameraById( camId ).cam;
+	if (!camera) {
+		var err = '[CamerasController.removeCamera]  camera ' + camId + ' not found';
+		console.error( err );
+		if ( cb ) { cb( err ); }
+		return;
+	}
 
     self.db.remove({ _id: camId }, {}, function (err, numRemoved) {
         if( err ) {
@@ -703,6 +768,7 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
         }
     });
 };
+
 
 CamerasController.prototype.updateCamera = function(cam, cb) {
 
