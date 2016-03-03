@@ -599,12 +599,12 @@ CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
 
 	var self = this;
 
-    var camera = this.findCameraById( camId );
-	
-    if (!camera || !camera.cam) {
-        if (cb) { cb( 'camera not found' ); }
-        return;
-    }	
+	var camera = this.findCameraById( camId );
+
+	if (!camera || !camera.cam) {
+		if (cb) { cb( 'camera not found' ); }
+		return;
+	}	
 	camera = camera.cam;
 	if ( !camera.streams || !camera.streams[streamId] ) {
 		if (cb) { cb('stream not found'); }
@@ -615,7 +615,7 @@ CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
 	var to   = path.join( this.videosFolder, '/trash', streamId );
 
 	fs.rename( from, to, function( err ) {
-		
+
 		if ( err ) {
 			console.error( '[CamerasController.removeStream]  ' + err );
 			if( cb ) { cb( err ); }
@@ -628,7 +628,7 @@ CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
 
 CamerasController.prototype.removeStreamFromDb = function( camId, streamId, cb ) {
     
-	var self = this;
+    var self = this;
 	
     var camera = this.findCameraById( camId );
 	
@@ -692,7 +692,7 @@ CamerasController.prototype.removeStreamFromDb = function( camId, streamId, cb )
 
 CamerasController.prototype.removeCamera = function( camId, cb ) {
 
-    var self = this;
+	var self = this;
 
 	var camera = this.findCameraById( camId ).cam;
 	if (!camera) {
@@ -706,7 +706,7 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 	var to   = path.join( this.videosFolder, '/trash', camId );
 
 	fs.rename( from, to, function(rename_err) {
-		
+
 		if ( rename_err ) {
 			console.error( '[CamerasController.removeCamera]  ' + rename_err );
 			if( cb ) { cb( rename_err ); }
@@ -719,7 +719,7 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 
 CamerasController.prototype.removeCameraFromDb = function( camId, cb ) {
 
-    var self = this;
+	var self = this;
 
 	var camera = this.findCameraById( camId ).cam;
 	if (!camera) {
