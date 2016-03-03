@@ -625,9 +625,11 @@ CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
 	});
 };
 
+
 CamerasController.prototype.removeStreamFromDb = function( camId, streamId, cb ) {
     
 	var self = this;
+	
     var camera = this.findCameraById( camId );
 	
     if (!camera || !camera.cam) {
@@ -692,7 +694,7 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 
     var self = this;
 
-	var camera = self.findCameraById( camId ).cam;
+	var camera = this.findCameraById( camId ).cam;
 	if (!camera) {
 		var err = '[CamerasController.removeCamera]  camera ' + camId + ' not found';
 		console.error( err );
@@ -708,51 +710,65 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 		if ( rename_err ) {
 			console.error( '[CamerasController.removeCamera]  ' + rename_err );
 			if( cb ) { cb( rename_err ); }
-			return;
+		} else {
+			self.removeCameraFromDb( camId, cb );
 		}
-
-		self.db.remove({ _id: camId }, {}, function (err, numRemoved) {
-			if( err ) {
-				cb( err, numRemoved );
-			} else {
-				var whichCam = self.findCameraById( camId );
-				if (!whichCam) {
-					cb( err, 0 );
-					return;
-				}
-
-				var cam = whichCam.cam;
-				if (!cam) {
-					cb( err, 0 );
-					return;
-				}
-
-				var k = whichCam.index;
-
-				cam.stopRecording();
-				cam.stopMotionDetection();
-				cam.removeAllListeners();
-				cam.stopRetentionCheck();
-
-				for (var i in cam.streams){
-					cam.removeStream( i );	
-				}
-				//
-				// set camera.delete = true
-				//
-
-				self.emit("delete", cam);
-
-				self.cameras.splice(k,1);            
-				refresh( function() {
-					cb( err, numRemoved );
-				});    
-			}
-		});
-
 	});
-
 };
+
+
+CamerasController.prototype.removeCameraFromDb = function( camId, cb ) {
+
+    var self = this;
+
+	var camera = this.findCameraById( camId ).cam;
+	if (!camera) {
+		var err = '[CamerasController.removeCamera]  camera ' + camId + ' not found';
+		console.error( err );
+		if ( cb ) { cb( err ); }
+		return;
+	}
+
+    self.db.remove({ _id: camId }, {}, function (err, numRemoved) {
+        if( err ) {
+            cb( err, numRemoved );
+        } else {
+			var whichCam = self.findCameraById( camId );
+			if (!whichCam) {
+				cb( err, 0 );
+				return;
+			}
+
+			var cam = whichCam.cam;
+			if (!cam) {
+				cb( err, 0 );
+				return;
+			}
+
+			var k = whichCam.index;
+
+			cam.stopRecording();
+			cam.stopMotionDetection();
+			cam.removeAllListeners();
+			cam.stopRetentionCheck();
+
+			for (var i in cam.streams){
+				cam.removeStream( i );	
+			}
+			//
+			// set camera.delete = true
+			//
+
+			self.emit("delete", cam);
+
+			self.cameras.splice(k,1);            
+			refresh( function() {
+				cb( err, numRemoved );
+			});    
+        }
+    });
+};
+
 
 CamerasController.prototype.updateCamera = function(cam, cb) {
 
