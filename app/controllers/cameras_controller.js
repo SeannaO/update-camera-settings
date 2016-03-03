@@ -714,7 +714,22 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
         return;
     }
 
+	// update current camera with new values;
+	// missing streams need to be re-added
+	var curr_camera = camera.cam.toJSON();
+	cam = _.assign( curr_camera, cam );
+
 	var err = cameraValidator.validate( cam );
+
+	// re-add streams that are missing from the request
+	var stream_ids = _.map( cam.streams, 'id' );
+	for (var i in curr_camera.streams) {
+		var stream = curr_camera.streams[i];
+		if ( stream_ids.indexOf( stream.id ) < 0 ) { 
+			cam.streams.push( stream );
+		}
+	}
+	
 	if (err) {
 		console.error('[camerasController.updateCamera]  input error: ' + err);
 		return cb( err );
