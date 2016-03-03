@@ -1,16 +1,17 @@
 'use strict';
 
-var _                  = require('lodash');
-var Datastore          = require('nedb');                           //
-var Camera             = require('./../models/camera_model');       //
-var EventEmitter       = require('events').EventEmitter;            //
-var util               = require('util');                           //
-var checkH264          = require('../helpers/ffmpeg.js').checkH264;
-var OrphanFilesChecker = require('../helpers/orphanFiles.js');
-var Thumbnailer        = require('../helpers/thumbnailer.js');
-var SensorData         = require('../models/sensor_model.js');
-var mp4Handler         = require('./mp4_controller.js');
-var cameraValidator    = require('../helpers/cameraValidator.js');
+var _               = require('lodash');
+var Datastore       = require('nedb');                           //
+var Camera          = require('./../models/camera_model');       //
+var EventEmitter    = require('events').EventEmitter;            //
+var util            = require('util');                           //
+var checkH264       = require('../helpers/ffmpeg.js').checkH264;
+var Thumbnailer     = require('../helpers/thumbnailer.js');
+var SensorData      = require('../models/sensor_model.js');
+var mp4Handler      = require('./mp4_controller.js');
+var cameraValidator = require('../helpers/cameraValidator.js');
+var path            = require('path');
+var fs              = require('fs');
 
 function CamerasController( cam_db_filename, videosFolder, cb ) {
 
@@ -39,9 +40,6 @@ function CamerasController( cam_db_filename, videosFolder, cb ) {
 			self.loaded = true;
 
 			setTimeout( function() {
-				self.orphanFilesChecker = new OrphanFilesChecker( self );
-				self.orphanFilesChecker.periodicallyCheckForOrphanFiles( 5 * 60 * 1000 );  // checks for orphan files each 5 minutes
-
 				if (cb) {
 					cb(err);
 				}
@@ -664,44 +662,66 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 
     var self = this;
 
-    self.db.remove({ _id: camId }, {}, function (err, numRemoved) {
-        if( err ) {
-            cb( err, numRemoved );
-        } else {
-			var whichCam = self.findCameraById( camId );
-			if (!whichCam) {
-				cb( err, 0 );
-				return;
-			}
+	var camera = self.findCameraById( camId ).cam;
+	if (!camera) {
+		var err = '[CamerasController.removeCamera]  camera ' + camId + ' not found';
+		console.error( err );
+		if ( cb ) { cb( err ); }
+		return;
+	}
 
-			var cam = whichCam.cam;
-			if (!cam) {
-				cb( err, 0 );
-				return;
-			}
+	var from = path.join( this.videosFolder, camId );
+	var to   = path.join( this.videosFolder, '/trash', camId );
 
-			var k = whichCam.index;
+	fs.rename( from, to, function(rename_err) {
+		
+		if ( rename_err ) {
+			console.error( '[CamerasController.removeCamera]  ' + rename_err );
+			if( cb ) { cb( rename_err ); }
+			return;
+		}
 
-			cam.stopRecording();
-			cam.stopMotionDetection();
-			cam.removeAllListeners();
-			cam.stopRetentionCheck();
-
-			for (var i in cam.streams){
-				cam.removeStream( i );	
-			}
-			//
-			// set camera.delete = true
-			//
-
-			self.emit("delete", cam);
-
-			self.cameras.splice(k,1);            
-			refresh( function() {
+		self.db.remove({ _id: camId }, {}, function (err, numRemoved) {
+			if( err ) {
 				cb( err, numRemoved );
-			});    
-        }
-    });
+			} else {
+				var whichCam = self.findCameraById( camId );
+				if (!whichCam) {
+					cb( err, 0 );
+					return;
+				}
+
+				var cam = whichCam.cam;
+				if (!cam) {
+					cb( err, 0 );
+					return;
+				}
+
+				var k = whichCam.index;
+
+				cam.stopRecording();
+				cam.stopMotionDetection();
+				cam.removeAllListeners();
+				cam.stopRetentionCheck();
+
+				for (var i in cam.streams){
+					cam.removeStream( i );	
+				}
+				//
+				// set camera.delete = true
+				//
+
+				self.emit("delete", cam);
+
+				self.cameras.splice(k,1);            
+				refresh( function() {
+					cb( err, numRemoved );
+				});    
+			}
+		});
+
+	});
+
 };
 
 CamerasController.prototype.updateCamera = function(cam, cb) {
