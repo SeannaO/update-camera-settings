@@ -1,14 +1,35 @@
-var Datastore = require('nedb');                           // nedb datastore
+'use strict';
 
-module.exports = function( app, passport, db_file ) {
+var Datastore = require('nedb');                          
+var _ = require('lodash');
+var MultiviewCameraGroups = require('../helpers/multiview-groups-generator.js');
+
+
+module.exports = function( app, passport, db_file, camerasController ) {
 
 	var db = new Datastore({ filename: db_file });
 	db.loadDatabase();
 
 	app.get('/multiview/views', passport.authenticate('basic', {session: false}), function(req, res) {
 		
+		var cameras = camerasController.getCameras() || [];
+		cameras = cameras.map( function(d) {
+			return d.toJSON();
+		});
+		cameras = _.indexBy( cameras, '_id' );
+
 		db.find({}, function(err, docs ) {
-			res.json(docs);
+			if (err) {
+				return res.status(500).json({error: err});
+			}
+			else if (!docs || !docs.length) {
+
+				var groups = new MultiviewCameraGroups( cameras );
+				res.json( appendCameraData(groups, cameras) );
+
+			} else {
+				res.json( appendCameraData(docs, cameras) );
+			}
 		});
 	});
 
@@ -44,4 +65,32 @@ module.exports = function( app, passport, db_file ) {
 			db.loadDatabase();
 		});
 	});
+};
+
+
+var appendCameraData = function( views, cameras ) {
+
+	for (var i in views ) {
+
+		var group = views[i];
+		if (!group) { continue; }
+
+		for (var k in group.cameras) {
+
+			var cam = group.cameras[k];
+			if (!cam) { continue; }
+
+			cam.data = _.pick( cameras[ cam.id ], [
+				'_id',
+				'name',
+				'ip',
+				'streams',
+				'status',
+				'manufacturer'
+			]);
+
+		}
+	}
+
+	return views;
 };
