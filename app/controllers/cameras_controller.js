@@ -612,7 +612,7 @@ CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
 	}
 
 	var from = path.join( this.videosFolder, camId, streamId );
-	var to   = path.join( this.videosFolder, '/trash', streamId );
+	var to   = path.join( this.videosFolder, 'trash', streamId );
 
 	fs.rename( from, to, function( err ) {
 
@@ -703,7 +703,7 @@ CamerasController.prototype.removeCamera = function( camId, cb ) {
 	}
 
 	var from = path.join( this.videosFolder, camId );
-	var to   = path.join( this.videosFolder, '/trash', camId );
+	var to   = path.join( this.videosFolder, 'trash', camId );
 
 	fs.rename( from, to, function(rename_err) {
 
