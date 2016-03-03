@@ -150,8 +150,8 @@ module.exports = function( app, passport, camerasController ) {
 		var cam = camerasController.findCameraById( req.params.id ).cam;
 		
 		if (!cam) { 
-			console.error("******* camera already deleted");
-			res.json({success:false, error: 'camera already deleted; please refresh the page'});
+			console.error("[api/cameras.delete]  camera not found");
+			res.status(422).json({error: 'camera not found'});
 			return;
 		}
 
