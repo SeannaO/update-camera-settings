@@ -1261,7 +1261,7 @@ Camera.prototype.periodicallyCheckRetention = function() {
 	console.log('[Camera.periodicallyCheckRetention]  checking retention of ' + this._id);
 
 	// update retention every 15 min
-	var periodicity = 15*60*60*1000;
+	var periodicity = 15*60*1000;
 
 	var self = this;
 
