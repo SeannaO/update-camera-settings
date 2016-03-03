@@ -596,6 +596,36 @@ CamerasController.prototype.pushCamera = function( cam ) {
 
 
 CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
+
+	var self = this;
+
+    var camera = this.findCameraById( camId );
+	
+    if (!camera || !camera.cam) {
+        if (cb) { cb( 'camera not found' ); }
+        return;
+    }	
+	camera = camera.cam;
+	if ( !camera.streams || !camera.streams[streamId] ) {
+		if (cb) { cb('stream not found'); }
+		return;
+	}
+
+	var from = path.join( this.videosFolder, camId, streamId );
+	var to   = path.join( this.videosFolder, '/trash', streamId );
+
+	fs.rename( from, to, function( err ) {
+		
+		if ( err ) {
+			console.error( '[CamerasController.removeStream]  ' + err );
+			if( cb ) { cb( err ); }
+		} else {
+			self.removeStreamFromDb( camId, streamId, cb );
+		}
+	});
+};
+
+CamerasController.prototype.removeStreamFromDb = function( camId, streamId, cb ) {
     
 	var self = this;
     var camera = this.findCameraById( camId );
@@ -610,62 +640,50 @@ CamerasController.prototype.removeStream = function( camId, streamId, cb ) {
 		return;
 	}
 
-	var from = path.join( this.videosFolder, camId, streamId );
-	var to   = path.join( this.videosFolder, '/trash', streamId );
+	var streamsHash;
 
-	fs.rename( from, to, function(rename_err) {
-		
-		if ( rename_err ) {
-			console.error( '[CamerasController.removeStream]  ' + rename_err );
-			if( cb ) { cb( rename_err ); }
-			return;
-		}
+	self.db.find({ _id : camId  }, function(err, docs ) {
 
-		var streamsHash;
+		if (!err) {
 
-		self.db.find({ _id : camId  }, function(err, docs ) {
-
-			if (!err) {
-
-				if (!docs[0]) {
-					console.error('[CamerasController.removeStream] camera ' + camId + ' not found on db');
-					if(cb) cb('camera not found');
-					return;
-				}
-
-				streamsHash = docs[0].streams;	
-
-				if (!streamsHash || !streamsHash[streamId]) {
-					console.error('[CamerasController.removeStream] stream ' + streamId + ' not found on db');
-					if(cb) cb('stream not found');
-					return;
-				}
-
-				// streamsHash[streamId].toBeDeleted = true;
-				delete streamsHash[streamId];
-
-				self.db.update({ _id : camId  }, { 
-					$set: { 
-						streams: streamsHash
-					} 
-				}, { multi: false }, function (err, numReplaced) {
-					if (err) {
-						console.error('[camerasController]  update camera db error: ');
-						console.error(err);
-						cb(err);
-					} else {
-						camera.removeStream( streamId );
-						self.db.loadDatabase();
-						self.emit('update', camera);
-						cb();
-					}
-				});
-
-			} else {
-				cb('camera not found on db');		
+			if (!docs[0]) {
+				console.error('[CamerasController.removeStream] camera ' + camId + ' not found on db');
+				if(cb) cb('camera not found');
 				return;
 			}
-		});
+
+			streamsHash = docs[0].streams;	
+
+			if (!streamsHash || !streamsHash[streamId]) {
+				console.error('[CamerasController.removeStream] stream ' + streamId + ' not found on db');
+				if(cb) cb('stream not found');
+				return;
+			}
+
+			// streamsHash[streamId].toBeDeleted = true;
+			delete streamsHash[streamId];
+
+			self.db.update({ _id : camId  }, { 
+				$set: { 
+					streams: streamsHash
+				} 
+			}, { multi: false }, function (err, numReplaced) {
+				if (err) {
+					console.error('[camerasController]  update camera db error: ');
+					console.error(err);
+					cb(err);
+				} else {
+					camera.removeStream( streamId );
+					self.db.loadDatabase();
+					self.emit('update', camera);
+					cb();
+				}
+			});
+
+		} else {
+			cb('camera not found on db');		
+			return;
+		}
 	});
 };
 
