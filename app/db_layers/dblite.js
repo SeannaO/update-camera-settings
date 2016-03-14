@@ -300,8 +300,8 @@ Dblite.prototype.searchVideoByTime = function( startTime, cb ) {
 						cb('', 0);
 						return;
 					}
-					if (startTime > data[k].end - 100 ) {
-						offset = (data[k].end - data[k].start - 100)/1000.0;
+					if (startTime > data[k].end - 1200 ) { 
+						offset = (data[k].end - data[k].start - 1200)/1000.0;
 					} 
                     cb(data[k].file, offset);
                 }
