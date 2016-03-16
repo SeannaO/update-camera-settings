@@ -1,7 +1,34 @@
 var ffmpeg = require('./../helpers/ffmpeg');
 var fs = require('fs');
+var path = require('path');
 
 var spawn = require('child_process').spawn;
+
+// regex to extract basefolder from a segment's path
+// structure of a segment path:
+// 		<baseFolder>/<camera_id>/<stream_id>/videos/<yyyy-mm-dd>/<1234567890_12345>.ts
+var baseFolderRegex = /(\S+)(\/[\w-]+\/[\w-]+\/videos\/[\d-]+\/\w+\.ts)/;
+
+/**
+ * Updates a segment path to use current baseFolder
+ *   in case the folder was moved and the string contains the old path
+ *
+ * @param { segment_path } string  full path of a segment 
+ * 		- example: "/home/solink/cameras/camera_id/stream_id/videos/1-1-2016/1231241231_21231.ts"
+ * @return{ string }  updated path if successful, or empty string if regex failed
+ */
+var toCurrentBaseFolder = function( segment_path ) {
+
+	var re = baseFolderRegex.exec( segment_path );
+
+	if (!re || !re[2]) {
+		console.error('[VideoDowload.toCurrentBaseFolder]  could not parse segment_path');
+		return '';
+	} else {
+		var new_path = path.join(process.env['BASE_FOLDER'], re[2]);
+		return new_path;
+	}
+};
 
 
 function inMemorySnapshot( file, offset, precision, res, options, cb) {
@@ -109,7 +136,7 @@ function inMemoryMp4Video( db, cam, begin, end, req, res ) {
 		}
 		else {
 			var fileList = videoList.map( function(video) {
-				return video.file;
+				return toCurrentBaseFolder(video.file);
 			});
 
 			ffmpeg.inMemoryStitch( fileList, offset, req, res );
