@@ -59,10 +59,11 @@ module.exports = function( app, passport) {
 
 		request({
 			uri:      'http://localhost:' + CONNECT_PORT + '/api/config/checkin/api/registration',
-			timeout:  200
+			timeout:  200,
+			json: true
 		}, function( err, resp, body) {
 			if (!err && body) {
-				deviceId = JSON.parse(body).deviceId;
+				deviceId = body.deviceId;
 			}
 		 	res.status(200).json(deviceId);
 		});
