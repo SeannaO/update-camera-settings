@@ -4,6 +4,7 @@ var os      = require('os');
 var uptime  = require('../helpers/uptime.js');
 
 var QNAP_PORT = process.env.QNAP_PORT || 8085;
+var CONNECT_PORT = process.env.CONNECT_PORT || 8000;
 
 module.exports = function( app, passport) {
 
