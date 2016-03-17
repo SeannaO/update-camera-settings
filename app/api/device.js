@@ -53,6 +53,19 @@ module.exports = function( app, passport) {
 		res.json( data );
 	});
 
+	app.get('/id', passport.authenticate('basic', {session: false}), function(req, res) {
+		var deviceId = '';
+
+		request({
+			uri:      'http://localhost:' + CONNECT_PORT + '/api/config/checkin/api/registration',
+			timeout:  200
+		}, function( err, resp, body) {
+			if (!err && body) {
+				deviceId = body.deviceId;
+			}
+		 	res.status(200).json(deviceId);
+		});
+	});
 };
 
 
