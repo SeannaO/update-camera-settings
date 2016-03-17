@@ -62,7 +62,7 @@ module.exports = function( app, passport) {
 			timeout:  200
 		}, function( err, resp, body) {
 			if (!err && body) {
-				deviceId = body.deviceId;
+				deviceId = JSON.parse(body).deviceId;
 			}
 		 	res.status(200).json(deviceId);
 		});
