@@ -55,6 +55,11 @@ var getResolutions = function( ip, username, password, channel, cb ) {
 				var fpsData = [];
 				var bitrates = {};
 				
+				if (!data) {
+					if(cb) { cb('could not parse response', []); }
+					return;
+				}
+
 				if (!data.StreamingChannel) {
 					if(cb) cb('invalid response: no StreamingChannel tag', []);
 					return;
@@ -163,6 +168,11 @@ Hik.prototype.getRtspUrl = function ( profile, cb ) {
 	self.getResolutionOptions( function() {
 
 		var channel = self.resolution2channel[ profile.resolution ];
+
+		if ( isNaN(channel) ) {
+			channel = 1; // default channel
+		}
+
 		var width   = resolution[0];
 		var height  = resolution[1];
 		var fps     = profile.framerate || 15;
