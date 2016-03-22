@@ -617,10 +617,11 @@ RecordModel.prototype.launchMonitor = function() {
 				}
 				// send dbus signal to restart recording
 				self.rtsp = rtsp_url || self.rtsp;
-				self.sendSignal( 'restart', self.rtsp, self.folder + "/videos/tmp" );
-
-				console.log('[RecordModel.monitor]  no new chunks in a while, will restart recording');
 			});
+
+			console.log('[RecordModel.monitor]  no new chunks in a while, sending signal to restart recording');
+			self.sendSignal( 'restart', self.rtsp, self.folder + "/videos/tmp" );
+
 		}
 	}, 5000);	// the monitor will check back after 5s
 };
