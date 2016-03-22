@@ -606,6 +606,43 @@ Camera.prototype.emitPendingMotion = function(chunk) {
 
 
 /**
+ * Refresh rtsp url
+ *  	
+ * @param {int} streamId - ID of the stream
+ * @param {Function} cb( err, rtsp )
+ * 			called when done generating corresponding rtsp url		
+ * 			err {String}
+ * 			rtsp {String}: rtsp url, null if none
+ */
+Camera.prototype.refreshRtspUrl = function( streamId, cb ) {
+	var self = this;
+
+	if ( !this.streams[streamId] ) {
+		if (cb) { cb('no stream ' + streamId); }
+		return;
+	}
+
+	var stream = this.streams[ streamId ];
+
+	this.api.getRtspUrl({
+		resolution:     stream.resolution,
+		framerate:      stream.framerate,
+		quality:        stream.quality,
+		bitrate:        stream.bitrate,
+		suggested_url:  stream.url,
+		camera_no:      stream.camera_no
+	}, function(url) {
+
+		var err = null;  // TODO: return err from getRtspUrl
+		self.streams[streamId].url = url;
+		self.streams[streamId].rtsp = url;
+
+		if (cb) { cb(err, url); }
+	});
+};
+
+
+/**
  * Restarts a stream
  *	by stopping and deleting the corresponding recordModel,
  *	refreshing the rtsp url,
