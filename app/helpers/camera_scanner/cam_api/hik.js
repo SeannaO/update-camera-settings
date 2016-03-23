@@ -165,11 +165,16 @@ Hik.prototype.getRtspUrl = function ( profile, cb ) {
 
 	var resolution = profile.resolution.split('x');
 
-	self.getResolutionOptions( function() {
+	self.getResolutionOptions( function(err) {
+
+		if (err) { 
+			console.error('[HIK.getRtspUrl]  error when getting resolutions from camera: ' + err);
+		}
 
 		var channel = self.resolution2channel[ profile.resolution ];
 
 		if ( isNaN(channel) ) {
+			console.error('[HIK.getRtspUrl]  could not determine a channel, using default 1');
 			channel = 1; // default channel
 		}
 
@@ -194,7 +199,11 @@ Hik.prototype.getRtspUrl = function ( profile, cb ) {
 			}
 		}
 
-		fps = minFps;
+		if (minFps) { 
+			fps = minFps; 
+		} else { 
+			console.error('[HIK.getRtspUrl]  could not resolve fps, using ' + fps); 
+		}
 
 		var url = rtsp_url
 			.replace('{ip}', self.ip)
