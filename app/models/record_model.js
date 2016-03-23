@@ -609,12 +609,19 @@ RecordModel.prototype.launchMonitor = function() {
 
 			self.lastChunkTime = Date.now();	// refreshes timer
 
-			// send dbus signal to restart recording
+			// refresh rtsp url
+			// necessary for cameras like HIK, where the rtsp url can't be pre-generated
+			self.camera.refreshRtspUrl( self.stream.id, function(err, rtsp_url) {
+				if (err || !rtsp_url) {
+					console.error('[RecordModel.monitor]  ' + err);
+				}
+				// send dbus signal to restart recording
+				self.rtsp = rtsp_url || self.rtsp;
+			});
+
+			console.log('[RecordModel.monitor]  no new chunks in a while, sending signal to restart recording');
 			self.sendSignal( 'restart', self.rtsp, self.folder + "/videos/tmp" );
 
-		    // this.status = RECORDING;
-	
-			console.log('[RecordModel] monitor: no new chunks in a while, will attempt to stop/start recording');
 		}
 	}, 5000);	// the monitor will check back after 5s
 };
