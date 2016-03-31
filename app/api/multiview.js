@@ -75,6 +75,8 @@ var appendCameraData = function( views, cameras ) {
 		var group = views[i];
 		if (!group) { continue; }
 
+		group.cameras = _.isArray( group.cameras ) ? group.cameras : [];
+
 		for (var k = group.cameras.length - 1; k >= 0; k--) {
 
 			var cam = group.cameras[k];
