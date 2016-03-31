@@ -75,20 +75,24 @@ var appendCameraData = function( views, cameras ) {
 		var group = views[i];
 		if (!group) { continue; }
 
-		for (var k in group.cameras) {
+		for (var k = group.cameras.length - 1; k >= 0; k--) {
 
 			var cam = group.cameras[k];
 			if (!cam) { continue; }
 
-			cam.data = _.pick( cameras[ cam.id ], [
-				'_id',
-				'name',
-				'ip',
-				'streams',
-				'status',
-				'manufacturer'
-			]);
-
+			if ( cameras[ cam.id ] ) {
+				cam.data = _.pick( cameras[ cam.id ], [
+					'_id',
+					'name',
+					'ip',
+					'streams',
+					'status',
+					'manufacturer'
+				]);
+			} else {
+				// exclude deleted camera from json respose
+				group.cameras.splice(k, 1);
+			}
 		}
 	}
 
