@@ -13,6 +13,9 @@ var RECORDING = 2,
     ERROR     = -1,
 	CREATED   = 3;
 
+// min acceptable segment size (in bytes)
+var MIN_FILE_SIZE_B = 500; 
+
 function RecordModel( camera, stream, cb) {
 
     var self = this;
@@ -397,22 +400,19 @@ RecordModel.prototype.receiveSignal = function( msg_info, args ) {
 
 	var self = this;
 
-
 	if (self.status == STOPPING || self.status == STOPPED) {
 		this.lastChunkTime = Date.now();	// resets timer 
 		return;
 	}
-	// -- 
 	
-	// var new_chunk = JSON.parse( arguments[1] );
 	var new_chunk = JSON.parse( args );
 	new_chunk.id = new_chunk.id.trim();
 	
-	if ( new_chunk.id === self.stream.id ) { // && self.lastIdReceived != parseInt( new_chunk.file_id) ) {
+	if ( new_chunk.id === self.stream.id ) {
 
 		self.lastIdReceived = parseInt( new_chunk.file_id );
 
-		video = {
+		var video = {
 			cam:       self.camId,
 			cam_name:  self.camera.cameraName(),
 			stream:    self.stream.id,         // appends stream id to the chunk
@@ -421,19 +421,33 @@ RecordModel.prototype.receiveSignal = function( msg_info, args ) {
 			file:      new_chunk.file_id + '.ts'
 		};
 
-		if (self.status != RECORDING) {
-			self.emit('camera_status', {status: 'connected', stream_id: self.stream.id});
-		}
+		var file = self.folder + '/videos/tmp/' + path.basename( video.file );
 
-		self.status = RECORDING;
+		self.isNonEmpty( file, function(err, nonEmpty) {
 
-		self.moveFile( video, function( err, v ) {
-			if ( !err ) {
-				self.lastChunkTime = Date.now();
-
-				self.emit('camera_status', {status: 'online', stream_id: self.stream.id});
-				self.emit( 'new_chunk', v );
+			if (err || !nonEmpty) {
+				console.error('[RecordModel.receiveSignal]  incoming segment file is empty');
+				console.error( video );
+				fs.unlink( file, function(err) {
+					if (err) console.log('[RecordModel.receiveSignal]  error when removing empty file ' + err);
+				});
+				return;
 			}
+
+			if (self.status != RECORDING) {
+				self.emit('camera_status', {status: 'connected', stream_id: self.stream.id});
+			}
+
+			self.status = RECORDING;
+
+			self.moveFile( video, function( err, v ) {
+				if ( !err ) {
+					self.lastChunkTime = Date.now();
+
+					self.emit('camera_status', {status: 'online', stream_id: self.stream.id});
+					self.emit( 'new_chunk', v );
+				}
+			});
 		});
 	}
 };
@@ -644,6 +658,38 @@ RecordModel.prototype.setupFolderSync = function(folder) {
     }
 };
 // end of setupFolderSync
+//
+
+
+/**
+ * Checks if file is non-empty
+ *  
+ *  @param { String } file
+ *  @param { function } cb( err, nonEmpty )
+ *  		- { String } err  'null' if no errors
+ *  		- { bool } nonEmpty  'true' if non-empty, 'false' if empty, undefined on error
+ */
+RecordModel.prototype.isNonEmpty = function( file, cb ) {
+
+	var self = this;
+
+	if (!file) {
+		console.error('[RecordModel.isNonEmpty]  cannot stat video file since it is undefined');
+		if (cb) cb('cannot stat file since it is undefined');
+		return;
+	}
+
+	fs.stat( file, function(err, stats) {
+		if (err || !stats) {
+			console.error('[RecordModel.isNonEmpty] error when stating file: ' + err);
+			if (cb) cb( err );
+		} else {
+			var nonEmpty = stats.size > MIN_FILE_SIZE_B;
+			if (cb) cb( null, nonEmpty );
+		}
+	});
+};
+// end of isNonEmpty
 //
 
 
