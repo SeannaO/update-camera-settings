@@ -400,18 +400,15 @@ RecordModel.prototype.receiveSignal = function( msg_info, args ) {
 
 	var self = this;
 
-
 	if (self.status == STOPPING || self.status == STOPPED) {
 		this.lastChunkTime = Date.now();	// resets timer 
 		return;
 	}
-	// -- 
 	
-	// var new_chunk = JSON.parse( arguments[1] );
 	var new_chunk = JSON.parse( args );
 	new_chunk.id = new_chunk.id.trim();
 	
-	if ( new_chunk.id === self.stream.id ) { // && self.lastIdReceived != parseInt( new_chunk.file_id) ) {
+	if ( new_chunk.id === self.stream.id ) {
 
 		self.lastIdReceived = parseInt( new_chunk.file_id );
 
