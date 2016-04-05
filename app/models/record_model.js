@@ -671,7 +671,7 @@ RecordModel.prototype.setupFolderSync = function(folder) {
  */
 RecordModel.prototype.isNonEmpty = function( file, cb ) {
 
-    var self = this;
+	var self = this;
 
 	if (!file) {
 		console.error('[RecordModel.isNonEmpty]  cannot stat video file since it is undefined');
