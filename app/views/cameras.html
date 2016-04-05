@@ -521,6 +521,7 @@
 			page_socket.on('newThumb', function(data) {
 				var t = lastThumbRequestTimePerCamera[ data.cam ];
 				if (!t || Date.now() - t > 30000) {
+					if (Math.random() > 0.7) { return; }
 					setTimeout( function() {
 						updateThumb( data );
 					}, 5000);
