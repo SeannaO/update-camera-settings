@@ -43,13 +43,19 @@ function generateFinitePlaylist( db, camId, streamId, begin, end, cb ) {
 }
 
 
-function generateLivePlaylist( streamId, cb ) {
-	hls.generateLivePlaylist( streamId, function(playlist) {
+function generateLivePlaylistPipe( streamId, cb ) {
+	hls.generateLivePlaylistPipe( streamId, function(playlist) {
+		if (cb) cb(playlist);
+	});
+}
+
+function generateLivePlaylistStandard( streamId, latest, counter, length, cb ) {
+	hls.generateLivePlaylistStandard( streamId, latest, counter, length, function(playlist) {
 		if (cb) cb(playlist);
 	});
 }
 
 
-exports.generateFinitePlaylist = generateFinitePlaylist;
-exports.generateLivePlaylist = generateLivePlaylist;
-
+exports.generateFinitePlaylist       = generateFinitePlaylist;
+exports.generateLivePlaylistStandard = generateLivePlaylistStandard;
+exports.generateLivePlaylistPipe     = generateLivePlaylistPipe;

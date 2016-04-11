@@ -530,6 +530,8 @@ module.exports = function( app, passport, camerasController ) {
 
 		var camId = req.params.id;
 		var streamId = req.query.stream;
+		var type = req.query.type;
+		var length = isNaN(req.query.length) ? 1 : req.query.length;
 
 		camerasController.getCamera( camId, function(err, cam) {
 
@@ -547,14 +549,31 @@ module.exports = function( app, passport, camerasController ) {
 					}
 				}
 
-				hlsHandler.generateLivePlaylist( streamId, function( playlist ) {
-					res.writeHead(200, {
-						'Content-Type':    'application/x-mpegURL',
-						'Content-Length':  Buffer.byteLength(playlist),
-						'Cache-Control':   'public, max-age=3600'
-					});
-					res.end(playlist);    
-				});
+				switch (type) {
+
+					case 'standard': 
+						hlsHandler.generateLivePlaylistStandard( streamId, cam.streams[streamId].latestChunks, cam.streams[streamId].cc,length, function( playlist ) {
+							res.writeHead(200, {
+								'Content-Type':    'application/x-mpegURL',
+								'Content-Length':  Buffer.byteLength(playlist),
+								'Cache-Control':   'public, max-age=5'
+							});
+							res.end(playlist);    
+						});
+					break;
+
+					case 'pipe':
+					default:
+						hlsHandler.generateLivePlaylistPipe( streamId, function( playlist ) {
+							res.writeHead(200, {
+								'Content-Type':    'application/x-mpegURL',
+								'Content-Length':  Buffer.byteLength(playlist),
+								'Cache-Control':   'public, max-age=5'
+							});
+							res.end(playlist);    
+						});
+						break;
+				} 
 			}
 		});
 	});
