@@ -957,6 +957,20 @@ Camera.prototype.addChunk = function( streamId, chunk ) {
 	}
 
 	stream.latestSegmentDate = chunk.start
+	stream.latestChunks = stream.latestChunks || [];
+
+	while (stream.latestChunks.length >= 2) {
+		stream.latestChunks.shift();
+	}
+
+	stream.latestChunks.push({
+		name:      chunk.start + '_' + (chunk.end - chunk.start) + '.ts',
+		start:     chunk.start,
+		duration:  chunk.end - chunk.start
+	});
+
+	var cc = stream.cc || 0;
+	stream.cc = ++cc;
 };
 // end of addChunk
 //
