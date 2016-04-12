@@ -394,6 +394,7 @@
         <script>
 
 			var camMotion = new CameraMotion( cameras ); 
+			var lastThumbRequestTimePerCamera = {};
 
             var default_subnet = "";
             $.ajax({
@@ -446,6 +447,7 @@
 					width: "100%",
 					height: "100%"
 				}).load(function(){
+					lastThumbRequestTimePerCamera[ data.cam ] = Date.now();
 					$("#thumb-"+data.cam).html( $(this) );
 				}).error(function(){
 					console.log("unable to load image")
@@ -513,7 +515,13 @@
 			}
 
 			page_socket.on('newThumb', function(data) {
-				updateThumb( data );
+				var t = lastThumbRequestTimePerCamera[ data.cam ];
+				if (!t || Date.now() - t > 30000) {
+					if (t && Math.random() > 0.7) { return; }
+					setTimeout( function() {
+						updateThumb( data );
+					}, 5000);
+				}
 			});
 
             page_socket.on('newChunk', function (data) {
