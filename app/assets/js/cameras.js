@@ -748,7 +748,7 @@ var populateResolutionFields = function(data) {
 		for (idx in data.resolutions) {
 			// remove duplicate resolution (HIK)
 			// TODO: handle same resolution on different channels
-			$(".camera-stream-resolution-select option[value='"+data.resolutions[idx].value+"']").remove();
+			$(self).find("option[value='"+data.resolutions[idx].value+"']").remove();
 			self.append($('<option>', {
 				value: data.resolutions[idx].value,
 				text: data.resolutions[idx].name
