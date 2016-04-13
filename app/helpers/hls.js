@@ -8,7 +8,7 @@ var path = require('path');
 var ffmpeg = require('./ffmpeg');
 
 
-var generateLivePlaylist = function( streamId, cb ) {
+var generateLivePlaylistPipe = function( streamId, cb ) {
 
     var content = "#EXTM3U\n" +
                   "#EXT-X-VERSION:3\n" +         
@@ -18,6 +18,35 @@ var generateLivePlaylist = function( streamId, cb ) {
 	var duration = 1;
 	content = content + "#EXTINF:1,\n";
 	content = content + "ts/" + streamId + "/live.ts\n";
+    
+    cb( content );
+};
+
+var generateLivePlaylistStandard = function( streamId, latestChunks, counter, length, cb ) {
+
+	latestChunks = latestChunks || [];
+	counter = counter || 0;
+
+    var content = "#EXTM3U\n" +
+                  "#EXT-X-VERSION:3\n" +         
+                  "#EXT-X-TARGETDURATION:{TARGETDURATION}\n" +
+                  "#EXT-X-MEDIA-SEQUENCE:{MEDIASEQUENCE}\n";
+
+	var targetDuration = 0;
+	var list = "";
+
+	for (var i in latestChunks) {
+		var c = latestChunks[i];
+		list = list + "#EXTINF:" + (c.duration/1000) + ",\n";
+		list = list + "ts/" + streamId + "/" + c.name + "\n";
+		if (c.duration > targetDuration) { targetDuration = c.duration; }
+	}
+
+	targetDuration = targetDuration ? Math.round( targetDuration/1000.0 ) + 5 : 0;
+
+	content = content.replace('{TARGETDURATION}', targetDuration);
+	content = content.replace('{MEDIASEQUENCE}', counter);
+	content += list;
     
     cb( content );
 };
@@ -129,7 +158,8 @@ var calculateLengths = function( files, cb ) {
 
 // exports
 exports.generatePlaylist = generatePlaylist;
-exports.generateLivePlaylist = generateLivePlaylist;
+exports.generateLivePlaylistStandard = generateLivePlaylistStandard;
+exports.generateLivePlaylistPipe = generateLivePlaylistPipe;
 exports.calculateLengths = calculateLengths;
 
 
