@@ -3,12 +3,21 @@
 var Datastore = require('nedb');                          
 var _ = require('lodash');
 var MultiviewCameraGroups = require('../helpers/multiview-groups-generator.js');
+var fs = require('fs');
 
 
 module.exports = function( app, passport, db_file, camerasController ) {
 
 	var db = new Datastore({ filename: db_file });
-	db.loadDatabase();
+	db.loadDatabase( function(err) {
+		if (err) { 
+			console.error('[multiview]  ' + err); 
+			console.error('[multiview]  removing file and creating blank db');
+			fs.unlink(db_file, function() {
+				db.loadDatabase();
+			});
+		}
+	});
 
 	app.get('/multiview/views', passport.authenticate('basic', {session: false}), function(req, res) {
 		
