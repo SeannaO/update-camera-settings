@@ -58,10 +58,12 @@ module.exports = function( app, passport) {
 
 	app.get('/id', passport.authenticate('basic', {session: false}), function(req, res) {
 		fs.readJson(path.join(CHECKIN_DATA_DIR, 'Registration.json'), function (err, reg) {
-			if (err)
+			if (err) {
 				res.status(503).json(err.message);
-			else
+			}
+			else {
 				res.status(200).json(reg.deviceId);
+			}
 		});
 	});
 };
