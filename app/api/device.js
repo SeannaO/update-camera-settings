@@ -1,10 +1,12 @@
 var request = require('request');
 var exec    = require('child_process').exec;
 var os      = require('os');
+var path    = require('path');
+var fs      = require('fs-extra');
 var uptime  = require('../helpers/uptime.js');
 
 var QNAP_PORT = process.env.QNAP_PORT || 8085;
-var CONNECT_PORT = process.env.CONNECT_PORT || 8000;
+var CHECKIN_DATA_DIR = process.env.CHECKIN_DATA_DIR || '/share/CACHEDEV1_DATA/SolinkConnect/data/checkin/db';
 
 module.exports = function( app, passport) {
 
@@ -55,17 +57,13 @@ module.exports = function( app, passport) {
 	});
 
 	app.get('/id', passport.authenticate('basic', {session: false}), function(req, res) {
-		var deviceId = '';
-
-		request({
-			uri:      'http://localhost:' + CONNECT_PORT + '/api/config/checkin/api/registration',
-			timeout:  200,
-			json: true
-		}, function( err, resp, body) {
-			if (!err && body) {
-				deviceId = body.deviceId;
+		fs.readJson(path.join(CHECKIN_DATA_DIR, 'Registration.json'), function (err, reg) {
+			if (err) {
+				res.status(503).json(err.message);
 			}
-		 	res.status(200).json(deviceId);
+			else {
+				res.status(200).json(reg.deviceId);
+			}
 		});
 	});
 };
