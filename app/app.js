@@ -1,5 +1,37 @@
 'use strict';
 
+(function() {
+	var fs = require('fs');
+
+	// - - - - -
+	// sets base folder from the command line
+	// usage:  node app.js /my/folder
+	var baseFolder;
+
+	if ( process.argv.length > 2 ) {
+		baseFolder = process.argv[2];
+		if ( baseFolder.slice(-1) === '/' ) {
+			baseFolder = baseFolder.substr(0, baseFolder.length-1);
+		}
+		console.log('* * * baseFolder: ' + baseFolder);
+		if ( !fs.existsSync( baseFolder ) ) {
+			console.log('the folder ' + baseFolder + ' doesn\'t exist; create that folder before starting the server');
+			process.exit();
+		}
+	} else {
+		console.log('you need to provide a base folder where the files are going to be stored');
+		process.exit();
+	}
+	// - - -
+	process.env['BASE_FOLDER'] = baseFolder;
+
+	require('connect-backup-restore').vms.restore(baseFolder)
+	.then(main)
+	.catch(function(err) { console.log(err) })
+})();
+
+function main() {
+
 var logger = require('./helpers/logger').logger; // initialize winston logger
 
 var express           = require('express');                          // express
@@ -166,26 +198,7 @@ portChecker.check(port, function(err, found) {
 
 
 	// - - - - -
-	// sets base folder from the command line
-	// usage:  node app.js /my/folder
-	var baseFolder;
-
-	if ( process.argv.length > 2 ) {
-		baseFolder = process.argv[2];
-		if ( baseFolder.slice(-1) === '/' ) {
-			baseFolder = baseFolder.substr(0, baseFolder.length-1);
-		}
-		console.log('* * * baseFolder: ' + baseFolder);
-		if ( !fs.existsSync( baseFolder ) ) {
-			console.log('the folder ' + baseFolder + ' doesn\'t exist; create that folder before starting the server');
-			process.exit();
-		}
-	} else {
-		console.log('you need to provide a base folder where the files are going to be stored');
-		process.exit();
-	}
-	// - - -
-	process.env['BASE_FOLDER'] = baseFolder;
+	var baseFolder = process.env['BASE_FOLDER'];
 
 	var trashFolder = baseFolder + '/trash';
 	var trash = new Trash( trashFolder, 10 * 60 * 1000 );
@@ -549,3 +562,5 @@ process.on('SIGTERM', function() {
 	exec('killall thumbnailer');
 	process.exit();
 });
+
+} // main
