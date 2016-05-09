@@ -1,6 +1,6 @@
 'use strict';
 
-var path = requre('path');
+var path = require('path');
 var fs = require('fs');
 
 var all = {
