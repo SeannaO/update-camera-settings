@@ -1,9 +1,14 @@
 'use strict';
 
+var fs = require('fs');
+
 var all = {
 
+  https_private_key: fs.readFileSync(process.cwd() + '/assets/private.pem'),
+  https_public_key: fs.readFileSync(process.cwd() + '/assets/public.pem'),
+
 	http_ports: {
-		main: process.env.PORT || 8080,
+		main: process.env.HTTP_PORT || 9080,
 		secondary: [
 			4001,
 			4002,
@@ -14,7 +19,7 @@ var all = {
 
 	// HTTPS does not have multiple ports for now
 	https_ports: {
-		main: process.env.HTTPS_PORT || 9080
+		main: process.env.PORT || 8080
 	},
 };
 
