@@ -1,11 +1,12 @@
 'use strict';
 
+var path = requre('path');
 var fs = require('fs');
 
 var all = {
 
-  https_private_key: fs.readFileSync(process.cwd() + '/assets/private.pem'),
-  https_public_key: fs.readFileSync(process.cwd() + '/assets/public.pem'),
+  https_private_key: fs.readFileSync(path.join(process.cwd(), 'assets/private.pem')),
+  https_public_key: fs.readFileSync(path.join(process.cwd(), 'assets/public.pem')),
 
 	http_ports: {
 		main: process.env.HTTP_PORT || 9080,
