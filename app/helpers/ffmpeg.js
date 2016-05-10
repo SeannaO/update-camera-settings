@@ -42,44 +42,48 @@ var inMemoryStitch = function( files, offset, req, res ) {
     var fileList = files.join('|');
     fileList = "concat:" + fileList;
 
-	var child = spawn('./ffmpeg', [
-			'-y', 
-			'-i', fileList, 
-			'-ss', offset.begin/1000, 
-			'-t', offset.duration/1000,
-			// '-fflags', '+igndts',
-			'-loglevel', 'quiet',
-			'-c', 'copy', 
-			// '-f', 'mp4',
-			// '-bsf', 'h264_mp4toannexb',
-			// '-flags' ,'+global_header',
-			// '-bsv', 'dump_extra',
-			'-f', 'mpegts',
-			// '-frag_duration', '3600', 
-			'-']);
+	var format = (req.query.format == 'mp4') ? 'mp4' : 'ts';
+
+	var opts = [
+		'-y', 
+		'-i', fileList, 
+		'-ss', offset.begin/1000, 
+		'-t', offset.duration/1000,
+		'-loglevel', 'quiet',
+		'-c', 'copy', 
+	];
+
+	if (format == 'mp4') {
+		opts.push(
+			'-f', 'mp4',
+			'-movflags', 'empty_moov+frag_keyframe+default_base_moof'
+		);
+	} else {
+		opts.push(
+			'-f', 'mpegts'
+		);
+	}
+
+	opts.push('-');
+
+	var child = spawn('./ffmpeg', opts);
 
 	var begin = parseInt( req.query.begin, 10 );
 	var end = parseInt( req.query.end, 10 );
 	var camId = req.params.id;
 	var streamId = req.query.stream;
 
-	var filename = 'solinkVms_' + camId + '_' + begin + '_' + end + '.ts';
+	var filename = 'solinkVms_' + camId + '_' + begin + '_' + end + '.' + format;
+	var contentType = (format == 'mp4') ? 'video/mp4' : 'video/MP2T';
 
 	res.writeHead(200, {
-		// 'Content-Type': 'video/mp4',
-		'Content-Type': 'video/MP2T',
+		'Content-Type': contentType,
 		'Content-disposition': 'attachment; filename=' + filename
 	});
 	
-	//var vData = new Buffer(50000000);
-	//var l = 0;
-
 	child.stdout.pipe( res );
-
 	child.stderr.on('data', function(data) {
-		
 	});
-
 	
 	child.stdout.on('data', function(data) {
 	});
