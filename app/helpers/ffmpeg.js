@@ -9,6 +9,13 @@ var spawn = require('child_process').spawn;
 var exec  = require('child_process').exec;
 
 
+var TIMESCALE_BYTE_OFFSET = 16,
+	DURATION_BYTE_OFFSET = 20,
+	DURATION_BYTE_LENGTH = 4;
+
+var MVHD_HEADER = [ 0x6D, 0x76, 0x68, 0x64 ];
+
+
 /**
  * makeThumb
  *
@@ -32,12 +39,57 @@ var makeThumb = function ( file, folder, resolution, cb ) {
 
 
 /**
+ * getTotalDuration
+ *
+ */
+var getTotalDuration = function( files, cb ) {
+
+    var fileList = files.join('|');
+    fileList = "concat:" + fileList;
+
+	var opts = [
+		'-y', 
+		'-i', fileList, 
+		'-codec', 'copy',
+		'-an',
+		'-fflags', '+igndts',
+		'-f', 'mpegts',
+		'/dev/null'
+	];
+
+	var child = spawn('./ffmpeg', opts);
+
+	var durationRe = /time=(\d+):(\d+):(\d+).(\d+)/;
+
+	var done = false;
+	var buffer = '';
+
+	child.stdout.on('end', function() {
+		if (!done) {
+			done = true;
+			var m = durationRe.exec( buffer );
+			if (!m || m.length < 5) {
+				cb( 'could not parse duration');
+			} else {
+				var duration = ( m[1]*60*60 + m[2]*60 + 1*m[3] ) * 1000 + 1*m[4];
+				cb( null, duration );
+			}
+		}
+	});
+	
+	child.stderr.on('data', function(d) {
+		buffer += d.toString();
+	});
+};
+// - - end of getTotalDuration
+// - - - - - - - - - - - - - - - - - - - -
+
+
+/**
  * inMemoryStitch
  *
  */
 var inMemoryStitch = function( files, offset, req, res ) {
-
-    var spawn = require('child_process').spawn;
 
     var fileList = files.join('|');
     fileList = "concat:" + fileList;
@@ -81,23 +133,65 @@ var inMemoryStitch = function( files, offset, req, res ) {
 		'Content-disposition': 'attachment; filename=' + filename
 	});
 	
-	child.stdout.pipe( res );
-	child.stderr.on('data', function(data) {
+	var got_duration = false;
+
+	child.stdout.on('data', function(d) {
+
+		if (got_duration) {
+			return res.write(d);
+		}
+
+		var duration = offset.duration;
+
+		for (var i = 0; i < d.length; i++) {
+
+			if (got_duration) {
+				i = d.length + 1;
+				continue;
+			}
+
+			if (
+				d[i + 0] == MVHD_HEADER[0] && 
+				d[i + 1] == MVHD_HEADER[1] &&
+				d[i + 2] == MVHD_HEADER[2] &&
+				d[i + 3] == MVHD_HEADER[3] 
+			) {
+				got_duration = true;
+				
+				var timescale = ( d[TIMESCALE_BYTE_OFFSET + i + 0] << 24 ) +
+								( d[TIMESCALE_BYTE_OFFSET + i + 1] << 16 ) +
+								( d[TIMESCALE_BYTE_OFFSET + i + 2] << 8 ) +
+								( d[TIMESCALE_BYTE_OFFSET + i + 3] << 0 );
+
+				duration = Math.round( duration * (timescale / 1000.0) );
+				duration = duration.toString(16);
+
+				if (duration.length > 2*DURATION_BYTE_LENGTH) {
+					console.error('[ffmpeg.inMemoryStitch]  duration is greater than ' + 8*DURATION_BYTE_LENGTH + ' bits');
+					return res.status(500).end('duration is more than ' + 8 * DURATION_BYTE_LENGTH + ' bits: ' + duration);
+				}
+
+				while(duration.length < 2*DURATION_BYTE_LENGTH) {
+					duration = '0' + duration;
+				}
+
+				var dur = new Buffer( duration, 'hex' );
+				console.log(dur.toString('hex'));
+
+				for (var k = 0; k < DURATION_BYTE_LENGTH; k++) {
+					d[DURATION_BYTE_OFFSET + i + k] = dur[k];
+				}
+			}		
+		}
+		res.write(d);
 	});
-	
-	child.stdout.on('data', function(data) {
+
+	child.stdout.on('end', function() {
+		res.end();
 	});
 };
 // - - end of inMemStitch
 // - - - - - - - - - - - - - - - - - - - -
-
-
-/**
- * calcDurations
- *
- */
-function calcDurationOfMultipleFiles(list, cb) {
-}
 
 
 /**
@@ -178,8 +272,28 @@ var checkH264 = function( url, cb ) {
 // - - - - - - - - - - - - - - - - - - - -
 
 
+/**
+ * getDurationAndStitch
+ *
+ */
+var getDurationAndStitch = function( files, offset, req, res ) {
+
+	getTotalDuration( files, function(err, totalDuration) {
+		if (err) {
+			console.error('[ffmpeg.getDurationAndStitch]  ' + err);
+			return res.status(500).end('error when determining duration');
+		}
+
+		offset.duration = totalDuration - offset.begin;
+		inMemoryStitch( files, offset, req, res );
+	});
+};
+// - - end of getDurationAndStitch
+// - - - - - - - - - - - - - - - - - - - -
+
+
 // exports
 exports.calcDuration = calcDuration;
 exports.makeThumb = makeThumb;
-exports.inMemoryStitch = inMemoryStitch;
+exports.inMemoryStitch = getDurationAndStitch;
 exports.checkH264 = checkH264;
