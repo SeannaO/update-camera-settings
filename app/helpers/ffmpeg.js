@@ -143,11 +143,10 @@ var inMemoryStitch = function( files, offset, req, res ) {
 
 		var duration = offset.duration;
 
-		for (var i = 0; i < d.length; i++) {
+		for (var i = 0; i < d.length - MVHD_HEADER.length; i++) {
 
 			if (got_duration) {
-				i = d.length + 1;
-				continue;
+				break;
 			}
 
 			if (
