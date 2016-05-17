@@ -10,8 +10,8 @@ var exec  = require('child_process').exec;
 
 
 var TIMESCALE_BYTE_OFFSET = 16,
-	DURATION_BYTE_OFFSET = 20,
-	DURATION_BYTE_LENGTH = 4;
+    DURATION_BYTE_OFFSET = 20,
+    DURATION_BYTE_LENGTH = 4;
 
 var MVHD_HEADER = [ 0x6D, 0x76, 0x68, 0x64 ];
 
@@ -181,9 +181,9 @@ var inMemoryStitch = function( files, offset, req, res ) {
 				got_duration = true;
 				
 				var timescale = ( d[TIMESCALE_BYTE_OFFSET + i + 0] << 24 ) +
-								( d[TIMESCALE_BYTE_OFFSET + i + 1] << 16 ) +
-								( d[TIMESCALE_BYTE_OFFSET + i + 2] << 8 ) +
-								( d[TIMESCALE_BYTE_OFFSET + i + 3] << 0 );
+					            ( d[TIMESCALE_BYTE_OFFSET + i + 1] << 16 ) +
+					            ( d[TIMESCALE_BYTE_OFFSET + i + 2] << 8 ) +
+					            ( d[TIMESCALE_BYTE_OFFSET + i + 3] << 0 );
 
 				// according to mp4 specs:
 				// duration_mvhd = duration_seconds * timescale
