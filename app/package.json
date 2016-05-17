@@ -3,6 +3,7 @@
   "version": "4.0.0",
   "description": "Connect ======== Contains node scripts such as node.js for Connect",
   "main": "app.js",
+  "engine": "node 0.10.25",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -20,6 +21,7 @@
   "dependencies": {
     "async": "^0.9.0",
     "bcrypt": "^0.8.3",
+    "connect-backup-restore": "git+ssh://git@github.com/SolinkCorp/connect-backup-restore-npm.git#master",
     "dblite": "^0.4.1",
     "ejs": "^0.8.5",
     "express": "^3.4.6",
