@@ -152,6 +152,7 @@ var inMemoryStitch = function( files, offset, req, res ) {
 	});
 	
 	var got_duration = false;
+	var done = false;
 
 	child.stdout.on('data', function(d) {
 
@@ -192,7 +193,10 @@ var inMemoryStitch = function( files, offset, req, res ) {
 
 				if (duration.length > 2*DURATION_BYTE_LENGTH) {
 					console.error('[ffmpeg.inMemoryStitch]  duration is greater than ' + 8*DURATION_BYTE_LENGTH + ' bits');
-					return res.status(500).end('duration is more than ' + 8*DURATION_BYTE_LENGTH + ' bits: ' + duration);
+					if (!done) {
+						done = true;
+						return res.status(500).end('duration is more than ' + 8*DURATION_BYTE_LENGTH + ' bits: ' + duration);
+					}
 				}
 
 				// fill with 0s to make sure duration has exactly DURATION_BYTE_LENGTH bytes
@@ -211,7 +215,10 @@ var inMemoryStitch = function( files, offset, req, res ) {
 	});
 
 	child.stdout.on('end', function() {
-		res.end();
+		if (!done) {
+			done = true;
+			res.end();
+		}
 	});
 };
 // - - end of inMemStitch
