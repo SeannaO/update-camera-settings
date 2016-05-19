@@ -182,9 +182,9 @@ var inMemoryStitch = function( files, offset, req, res ) {
 				got_duration = true;
 				
 				var timescale = ( d[TIMESCALE_BYTE_OFFSET + i + 0] << 24 ) +
-					            ( d[TIMESCALE_BYTE_OFFSET + i + 1] << 16 ) +
-					            ( d[TIMESCALE_BYTE_OFFSET + i + 2] << 8 ) +
-					            ( d[TIMESCALE_BYTE_OFFSET + i + 3] << 0 );
+					        ( d[TIMESCALE_BYTE_OFFSET + i + 1] << 16 ) +
+					        ( d[TIMESCALE_BYTE_OFFSET + i + 2] << 8 ) +
+					        ( d[TIMESCALE_BYTE_OFFSET + i + 3] << 0 );
 
 				// according to mp4 specs:
 				// duration_mvhd = duration_seconds * timescale
