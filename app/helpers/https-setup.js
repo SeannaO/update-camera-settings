@@ -11,7 +11,10 @@ var socketioAuth = require('./socket.io-auth');
 exports.setup = function(app, auth, cb) {
   var server = https.createServer({
     key: config.https_private_key,
-    cert: config.https_public_key
+    cert: config.https_public_key,
+    ca: [
+        config.https_ca_key
+    ]
   }, app);
 
   var io = socketio.listen(server);
