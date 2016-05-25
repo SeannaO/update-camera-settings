@@ -9,6 +9,13 @@ var spawn = require('child_process').spawn;
 var exec  = require('child_process').exec;
 
 
+var TIMESCALE_BYTE_OFFSET = 16,
+    DURATION_BYTE_OFFSET = 20,
+    DURATION_BYTE_LENGTH = 4;
+
+var MVHD_HEADER = [ 0x6D, 0x76, 0x68, 0x64 ];
+
+
 /**
  * makeThumb
  *
@@ -32,12 +39,75 @@ var makeThumb = function ( file, folder, resolution, cb ) {
 
 
 /**
+ * getTotalDuration
+ *
+ * return total duration of ts files concatenation
+ * by piping the concatenation to /dev/null
+ * and parsing the total duration
+ *
+ * @param { array } files  array of files to be concatenated, full path
+ * @param { Function } cb  callback( err, duration )
+ * 		- err (String):  error message, null if none
+ * 		- duration (Number):  total duration in millis
+ */
+var getTotalDuration = function( files, cb ) {
+
+    var fileList = files.join('|');
+    fileList = "concat:" + fileList;
+
+	var opts = [
+		'-y', 
+		'-i', fileList, 
+		'-codec', 'copy',
+		'-an',
+		'-fflags', '+igndts',
+		'-f', 'mpegts',
+		'/dev/null'
+	];
+
+	var child = spawn('./ffmpeg', opts);
+
+	var durationRe = /time=(\d+):(\d+):(\d+).(\d+)/;
+
+	var done = false;
+	var buffer = '';
+
+	child.stdout.on('end', function() {
+		if (!done) {
+			done = true;
+			var m = durationRe.exec( buffer );
+			if (!m || m.length < 5) {
+				cb( 'could not parse duration');
+			} else {
+				var duration = ( m[1]*60*60 + m[2]*60 + m[3]*1 ) * 1000 + m[4]*1;
+				cb( null, duration );
+			}
+		}
+	});
+	
+	child.stderr.on('data', function(d) {
+		buffer += d.toString();
+	});
+};
+// - - end of getTotalDuration
+// - - - - - - - - - - - - - - - - - - - -
+
+
+/**
  * inMemoryStitch
  *
+ * stitch TS files on the fly, piping the resulting stream to the response;
+ * the resulting file can be either ts or fragmented mp4.
+ *
+ * for better compatibility with different players, the duration is being injected
+ * in the mp4 mvhd header, making any timescale adjustment if necessary.
+ *
+ * @param { array } files  array of files to be concatenated, full path
+ * @param { object } offset  contains total '.duration' of concatenated files and '.begin' offset, all in unix_ms
+ * @param { object } req  request object // TODO: pass request params instead of request
+ * @param { object } res  response object // TODO: use a callback instead of passing response directly
  */
 var inMemoryStitch = function( files, offset, req, res ) {
-
-    var spawn = require('child_process').spawn;
 
     var fileList = files.join('|');
     fileList = "concat:" + fileList;
@@ -81,23 +151,78 @@ var inMemoryStitch = function( files, offset, req, res ) {
 		'Content-disposition': 'attachment; filename=' + filename
 	});
 	
-	child.stdout.pipe( res );
-	child.stderr.on('data', function(data) {
+	var got_duration = false;
+	var done = false;
+
+	child.stdout.on('data', function(d) {
+
+		// only inject duration if output format is mp4 
+		// and duration hasn't been injected yet
+		if (got_duration || format == 'ts') {
+			return res.write(d);
+		}
+
+		// total duration, millis
+		var duration = offset.duration;
+
+		for (var i = 0; i < d.length - MVHD_HEADER.length; i++) {
+
+			// duration has been injected, 
+			// terminate loop
+			if (got_duration) {
+				break;
+			}
+
+			if (
+				d[i + 0] == MVHD_HEADER[0] && 
+				d[i + 1] == MVHD_HEADER[1] &&
+				d[i + 2] == MVHD_HEADER[2] &&
+				d[i + 3] == MVHD_HEADER[3] 
+			) {
+				got_duration = true;
+				
+				var timescale = ( d[TIMESCALE_BYTE_OFFSET + i + 0] << 24 ) +
+					        ( d[TIMESCALE_BYTE_OFFSET + i + 1] << 16 ) +
+					        ( d[TIMESCALE_BYTE_OFFSET + i + 2] << 8 ) +
+					        ( d[TIMESCALE_BYTE_OFFSET + i + 3] << 0 );
+
+				// according to mp4 specs:
+				// duration_mvhd = duration_seconds * timescale
+				duration = Math.round( duration * (timescale / 1000.0) );
+				duration = duration.toString(16);
+
+				if (duration.length > 2*DURATION_BYTE_LENGTH) {
+					console.error('[ffmpeg.inMemoryStitch]  duration is greater than ' + 8*DURATION_BYTE_LENGTH + ' bits');
+					if (!done) {
+						done = true;
+						return res.status(500).end('duration is more than ' + 8*DURATION_BYTE_LENGTH + ' bits: ' + duration);
+					}
+				}
+
+				// fill with 0s to make sure duration has exactly DURATION_BYTE_LENGTH bytes
+				while(duration.length < 2*DURATION_BYTE_LENGTH) {
+					duration = '0' + duration;
+				}
+
+				var dur = new Buffer( duration, 'hex' );
+
+				for (var k = 0; k < DURATION_BYTE_LENGTH; k++) {
+					d[DURATION_BYTE_OFFSET + i + k] = dur[k];
+				}
+			}		
+		}
+		res.write(d);
 	});
-	
-	child.stdout.on('data', function(data) {
+
+	child.stdout.on('end', function() {
+		if (!done) {
+			done = true;
+			res.end();
+		}
 	});
 };
 // - - end of inMemStitch
 // - - - - - - - - - - - - - - - - - - - -
-
-
-/**
- * calcDurations
- *
- */
-function calcDurationOfMultipleFiles(list, cb) {
-}
 
 
 /**
@@ -178,8 +303,30 @@ var checkH264 = function( url, cb ) {
 // - - - - - - - - - - - - - - - - - - - -
 
 
+/**
+ * getDurationAndStitch
+ *
+ */
+var getDurationAndStitch = function( files, offset, req, res ) {
+
+	getTotalDuration( files, function(err, totalDuration) {
+		if (err) {
+			console.error('[ffmpeg.getDurationAndStitch]  ' + err);
+			return res.status(500).end('error when determining duration');
+		}
+
+		// calculate duration of video to be downloaded
+		offset.duration = totalDuration - offset.begin;
+
+		inMemoryStitch( files, offset, req, res );
+	});
+};
+// - - end of getDurationAndStitch
+// - - - - - - - - - - - - - - - - - - - -
+
+
 // exports
 exports.calcDuration = calcDuration;
 exports.makeThumb = makeThumb;
-exports.inMemoryStitch = inMemoryStitch;
+exports.inMemoryStitch = getDurationAndStitch;
 exports.checkH264 = checkH264;

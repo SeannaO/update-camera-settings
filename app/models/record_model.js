@@ -590,6 +590,14 @@ RecordModel.prototype.restart = function() {
 	var self = this;
 	self.lastChunkTime = Date.now();	// refreshes timer
 	self.sendSignal( 'restart', self.rtsp, self.folder + "/videos/tmp" );
+
+	// stream is being restarted, so emit disconnected/offline event
+	if ( self.status !== ERROR ) {								
+		self.emit('camera_status', { status: 'disconnected' });
+		self.status = ERROR;
+	} else {
+		self.emit('camera_status', { status: 'offline' });
+	}
 };
 
 
