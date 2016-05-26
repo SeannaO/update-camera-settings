@@ -21,7 +21,7 @@ var all = {
 
     // HTTPS does not have multiple ports for now
     https_ports: {
-        main: process.env.HTTPS_PORT || 8080
+        main: process.env.PORT || 8080
     },
 };
 
