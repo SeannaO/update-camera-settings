@@ -210,6 +210,28 @@ module.exports = function( app, passport, camerasController ) {
 	
 	// - - 
 	// 
+	app.get('/cameras/schedule', passport.authenticate('basic', {session: false}), function(req, res) {
+
+            if ( !validateCamerasLoaded(camerasController, res) ) { return; }
+
+            var schedules = {};
+
+            for( var i in camerasController.cameras ) {
+
+                var cam = camerasController.cameras[i];
+
+                schedules[cam._id] = {}
+                schedules[cam._id].schedule = cam.schedule.toJSON();    
+                schedules[cam._id].enabled = cam.schedule_enabled;    
+            }
+
+            res.json( schedules );
+	});
+	// - - -
+
+
+	// - - 
+	// 
 	app.get('/cameras/:id/schedule.json', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		if ( !validateCamerasLoaded(camerasController, res) ) { return; }
