@@ -121,11 +121,6 @@ var getDeviceInfo = function( cb ) {
 
 			hostname = os.hostname();
 
-			var portsConfig = _.cloneDeep(config);
-			delete portsConfig.https_ca_key;
-			delete portsConfig.https_private_key;
-			delete portsConfig.https_public_key;
-
 			getQNAPInfo( function( qnap ) {
 				cb({
 					size:      memSize,
@@ -134,7 +129,11 @@ var getDeviceInfo = function( cb ) {
 					name:      hostname + ' ' + subnet,
 					ip:        localIp,
 					firmware:  qnap.firmware,
-					ports:     portsConfig
+					ports:     _.pick(config, [
+						'http_ports',
+						'https_ports',
+						'https_supported'
+					])
 				});
 			});
 		});	
