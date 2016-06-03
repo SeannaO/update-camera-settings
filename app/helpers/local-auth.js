@@ -18,7 +18,7 @@ var initUsersSync = function() {
 		genDefaultUserSync();
 		return;
 	}
-	
+
 	var data = fs.readFileSync( authFile );
 	if (!data) {
 		console.error('[init authentication]  empty auth file; unsing default crentials');
@@ -27,7 +27,7 @@ var initUsersSync = function() {
 	}
 
 	try {
-		data = data.toString(); 
+		data = data.toString();
 		data = data.split('\n')[0];
 
 		var creds = data.split(' ');
