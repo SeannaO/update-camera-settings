@@ -3,7 +3,9 @@ var exec    = require('child_process').exec;
 var os      = require('os');
 var path    = require('path');
 var fs      = require('fs-extra');
+var _       = require('lodash');
 var uptime  = require('../helpers/uptime.js');
+var config  = require('../config');
 
 var QNAP_PORT = process.env.QNAP_PORT || 8085;
 var CHECKIN_DATA_DIR = process.env.CHECKIN_DATA_DIR || '/share/CACHEDEV1_DATA/SolinkConnect/data/checkin/db';
@@ -119,6 +121,11 @@ var getDeviceInfo = function( cb ) {
 
 			hostname = os.hostname();
 
+			var portsConfig = _.cloneDeep(config);
+			delete portsConfig.https_ca_key;
+			delete portsConfig.https_private_key;
+			delete portsConfig.https_public_key;
+
 			getQNAPInfo( function( qnap ) {
 				cb({
 					size:      memSize,
@@ -126,7 +133,8 @@ var getDeviceInfo = function( cb ) {
 					model:     qnap.model,
 					name:      hostname + ' ' + subnet,
 					ip:        localIp,
-					firmware:  qnap.firmware
+					firmware:  qnap.firmware,
+					ports:     portsConfig
 				});
 			});
 		});	
