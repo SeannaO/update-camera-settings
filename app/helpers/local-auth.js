@@ -5,8 +5,8 @@ var path   = require('path');
 var bcrypt = require('bcrypt');
 
 var authFile    = path.resolve('./config/auth');
-var defaultUser = 'a';
-var defaultPass = 'a';
+var defaultUser = 'solink-local';
+var defaultPass = '__connect__';
 
 var users = {};
 
@@ -18,7 +18,7 @@ var initUsersSync = function() {
 		genDefaultUserSync();
 		return;
 	}
-	
+
 	var data = fs.readFileSync( authFile );
 	if (!data) {
 		console.error('[init authentication]  empty auth file; unsing default crentials');
@@ -27,7 +27,7 @@ var initUsersSync = function() {
 	}
 
 	try {
-		data = data.toString(); 
+		data = data.toString();
 		data = data.split('\n')[0];
 
 		var creds = data.split(' ');
@@ -60,15 +60,14 @@ var genHash = function(s, cb) {
 
 
 var auth = function(username, password, cb) {
-    cb(null, true);
-	// if (!users[username]) {
-	// 	cb( null, false);
-	// 	return;
-	// }
+	if (!users[username]) {
+		cb( null, false);
+		return;
+	}
 
-	// bcrypt.compare( password, users[username], function(err, ok) {
-	// 	cb(err, ok);
-	// });
+	bcrypt.compare( password, users[username], function(err, ok) {
+		cb(err, ok);
+	});
 };
 
 initUsersSync();
