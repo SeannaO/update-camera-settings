@@ -6,7 +6,7 @@ Contains node scripts such as node.js for Connect
 
 Requirements
 --------
-1. Node
+1. Node 0.10.45
 2. x86_64 Linux (preferably Debian)
 
 ## How to Launch
