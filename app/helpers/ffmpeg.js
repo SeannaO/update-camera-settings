@@ -94,6 +94,29 @@ var getTotalDuration = function( files, cb ) {
 
 
 /**
+ * genSubtitles
+ *
+ * generate formatted timestamp subtitles given a list of segments
+ *
+ * @param { array } files  array of segments to be processed, full path
+ * @param { String } filename  name of output subtitle srt file in the http response
+ * @param { object } res  response object
+ */
+var genSubtitles = function( files, filename, res ) {
+
+    var child = spawn('./gensubs', files);
+
+    // TODO: handle errors from gensubs and modify header accordingly
+    res.writeHead( 200, {
+        'Content-Type':         'text',
+        'Content-disposition':  'attachment; filename=' + filename
+    });
+
+    child.stdout.pipe( res );
+};
+
+
+/**
  * inMemoryStitch
  *
  * stitch TS files on the fly, piping the resulting stream to the response;
@@ -117,7 +140,7 @@ var inMemoryStitch = function( files, offset, req, res ) {
 	var opts = [
 		'-y', 
 		'-i', fileList, 
-		'-ss', offset.begin/1000, 
+		// '-ss', offset.begin/1000, removing -ss for now to prevent subtitle syncing issues
 		'-t', offset.duration/1000,
 		'-loglevel', 'quiet',
 		'-c', 'copy', 
@@ -138,9 +161,9 @@ var inMemoryStitch = function( files, offset, req, res ) {
 
 	var child = spawn('./ffmpeg', opts);
 
-	var begin = parseInt( req.query.begin, 10 );
-	var end = parseInt( req.query.end, 10 );
-	var camId = req.params.id;
+	var begin    = parseInt( req.query.begin, 10 );
+	var end      = parseInt( req.query.end, 10 );
+	var camId    = req.params.id;
 	var streamId = req.query.stream;
 
 	var filename = 'solinkVms_' + camId + '_' + begin + '_' + end + '.' + format;
@@ -272,6 +295,7 @@ function calcDuration(input, cb) {
  *
  */
 var checkH264 = function( url, cb ) {
+
 	var self = this;
 	var timeout = 20000;
 
@@ -326,7 +350,8 @@ var getDurationAndStitch = function( files, offset, req, res ) {
 
 
 // exports
-exports.calcDuration = calcDuration;
-exports.makeThumb = makeThumb;
+exports.calcDuration   = calcDuration;
+exports.makeThumb      = makeThumb;
 exports.inMemoryStitch = getDurationAndStitch;
-exports.checkH264 = checkH264;
+exports.checkH264      = checkH264;
+exports.getSubs        = genSubtitles;
