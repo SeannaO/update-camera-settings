@@ -133,7 +133,7 @@ var getDeviceInfo = function( cb ) {
 						'http_ports',
 						'https_ports'
 					]),
-                    isHttpsSupported: config.https_supported
+                    isHttpsSupported: true
 				});
 			});
 		});	
