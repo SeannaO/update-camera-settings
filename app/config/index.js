@@ -18,8 +18,6 @@ var all = {
         ]
     },
 
-    https_supported: true,
-
     // HTTPS does not have multiple ports for now
     https_ports: {
         main: process.env.HTTPS_PORT || 9080

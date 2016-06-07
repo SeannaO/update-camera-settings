@@ -131,9 +131,9 @@ var getDeviceInfo = function( cb ) {
 					firmware:  qnap.firmware,
 					ports:     _.pick(config, [
 						'http_ports',
-						'https_ports',
-						'https_supported'
-					])
+						'https_ports'
+					]),
+                    isHttpsSupported: true
 				});
 			});
 		});	
