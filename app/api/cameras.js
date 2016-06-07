@@ -469,107 +469,21 @@ module.exports = function( app, passport, camerasController ) {
 	// - - -
 
 
+	// - - -
+	// subtitles downloads
 	app.get('/cameras/:id/subtitles', passport.authenticate('basic', {session: false}), function(req, res) {
 
-            var camId  = req.params.id;
-            var begin  = parseInt( req.query.begin, 10 );
-            var end    = parseInt( req.query.end, 10 );
-            var stream = req.query.stream;
-
-            if (!begin || !end || !camId) {
-                res.status(422).json( { error: 'invalid request' } );
-                return;
-            }
-            if (begin > end ) {
-                res.status(422).json({error:'begin time greater than end time'});
-                return;
-            }
-            if ( end - begin > 5 * 60 * 60 * 1000 ) {
-                res.status(422).json({error:'video requested is too long ( > 5h )'});
-                console.error('[api/subtitles] attempt to download subtitles for video longer than 5h');
-                return;
-            }
-
-            var self = this;	
-            self.stream = stream;
-
-            camerasController.getCamera( camId, function(err, cam) {
-                if (err || !cam) {
-                    err = err || 'camera  ' + camId + ' not found';
-                    console.error("[api/subtitles]: " + err);
-                    res.status(404).json({ error: err });
-                } else {
-                    if ( cam.streams.length == 0 ) {
-                        console.error("[api/subtitles]  camera does not have any streams");
-                        res.status(422).json({ error: 'camera does not have any streams' });
-                        return;
-                    }
-                    // in case the streamId is invalid or not specified
-                    if ( !self.stream || !cam.streams[self.stream] ) {
-                        console.error("[/cameras/:id/download]  no such stream ");
-                        for (var s in cam.streams){
-                            self.stream = s;
-                            break;
-                        }
-                    }
-
-                    // enforce subtitle format
-                    req.query.format = 'srt';
-                    camerasController.mp4Handler.inMemoryMp4Video( cam.streams[self.stream].db, cam, begin, end, req, res );
-                }
-            });
+            req.query.format = 'srt';
+            handleVideoDownloadRequest( req, res );
 	});
 	// - - -
 
+
 	// - - -
-	// gets inMem mp4 video
+	// video/subtitles downloads
 	app.get('/cameras/:id/download', passport.authenticate('basic', {session: false}), function(req, res) {
-		//	res.end('feature under construction');
 
-		var camId = req.params.id;
-		var begin = parseInt( req.query.begin, 10 );
-		var end = parseInt( req.query.end, 10 );
-		var stream = req.query.stream;
-
-		if (!begin || !end || !camId) {
-			res.status(422).json( { error: 'invalid request' } );
-			return;
-		}
-		if (begin > end ) {
-			res.status(422).json({error:'begin time greater than end time'});
-			return;
-		}
-		if ( end - begin > 5 * 60 * 60 * 1000 ) {
-			res.status(422).json({error:'video requested is too long ( > 5h )'});
-			console.error('[download] attempt to download video longer than 5h');
-			return;
-		}
-	
-		var self = this;	
-		self.stream = stream;
-
-		camerasController.getCamera( camId, function(err, cam) {
-			if (err) {
-				console.error("[/cameras/:id/download]  getCamera within mp4 inMem download: ");
-				console.error( err );
-				res.json( { error: err } );
-			} else {
-				if ( cam.streams.length == 0 ) {
-					console.error("[/cameras/:id/download]  camera does not have any streams");
-					res.status(422).json({ error: 'camera does not have any streams' });
-				}
-				// in case the streamId is invalid or not specified
-				if ( !self.stream || !cam.streams[self.stream] ) {
-					console.error("[/cameras/:id/download]  no such stream ");
-					for (var s in cam.streams){
-						self.stream = s;
-						break;
-					}
-				}
-
-				camerasController.mp4Handler.inMemoryMp4Video( cam.streams[self.stream].db, cam, begin, end, req, res );
-			}
-		});
+            handleVideoDownloadRequest( req, res );
 	});
 	// - - -
 
@@ -716,6 +630,59 @@ module.exports = function( app, passport, camerasController ) {
 	});
 	// - - 
 	//
+
+    var handleVideoDownloadRequest = function(req, res) {
+
+        var camId  = req.params.id;
+        var begin  = parseInt( req.query.begin, 10 );
+        var end    = parseInt( req.query.end, 10 );
+        var stream = req.query.stream;
+
+        if (!begin || !end || !camId) {
+            res.status(422).json( { error: 'invalid request' } );
+            return;
+        }
+        if (begin > end ) {
+            res.status(422).json({error:'begin time greater than end time'});
+            return;
+        }
+        if ( end - begin > 5 * 60 * 60 * 1000 ) {
+            res.status(422).json({error:'video requested is too long ( > 5h )'});
+            console.error('[api/cameras download] attempt to download video/subs longer than 5h');
+            return;
+        }
+
+        camerasController.getCamera( camId, function(err, cam) {
+
+            if (err || !cam) {
+                err = err || 'camera ' + camId + ' not found';
+                console.error("[api/cameras download]  " + err);
+                res.status(422).json( { error: err } );
+                return;
+            }
+
+            if ( cam.streams.length == 0 ) {
+                console.error("[api/cameras download]  camera does not have any streams");
+                res.status(422).json({ error: 'camera does not have any streams' });
+                return;
+            }
+
+            // use first stream if streamId is invalid or not specified
+            if ( !stream || !cam.streams[stream] ) {
+                console.error("[api/cameras download]  no such stream ");
+                for (var s in cam.streams){
+                    stream = s;
+                    break;
+                }
+            }
+
+            camerasController.mp4Handler.inMemoryMp4Video( 
+                    cam.streams[stream].db, cam, 
+                    begin, end, 
+                    req, res 
+                );
+        });
+    };
 };
 
 
