@@ -112,7 +112,6 @@ function inMemorySnapshot( file, offset, precision, res, options, cb) {
 }	
 
 
-
 function inMemoryMp4Video( db, cam, begin, end, req, res ) {
     var camId = cam._id;
     
@@ -139,7 +138,12 @@ function inMemoryMp4Video( db, cam, begin, end, req, res ) {
 				return toCurrentBaseFolder(video.file);
 			});
 
-			ffmpeg.inMemoryStitch( fileList, offset, req, res );
+                        if ( req.query.format == 'srt' ) {
+                            var filename = 'solinkVms_' + camId + '_' + begin + '_' + end + '.srt';
+                            ffmpeg.getSubs( fileList, filename, res );
+                        } else {
+                            ffmpeg.inMemoryStitch( fileList, offset, req, res );
+                        }
 		}
 	});    
 }
