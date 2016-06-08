@@ -344,7 +344,7 @@ var getDurationAndStitch = function( files, offset, req, res ) {
 		}
 
 		// calculate duration of video to be downloaded
-		offset.duration = totalDuration - offset.begin;
+		offset.duration = totalDuration;
 
 		inMemoryStitch( files, offset, req, res );
 	});
