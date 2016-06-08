@@ -75,7 +75,11 @@ var getTotalDuration = function( files, cb ) {
 	child.stdout.on('end', function() {
 		if (!done) {
 			done = true;
+
+                        // we're only interested in the last occurrence of 'time'
+                        buffer = buffer.substring( buffer.lastIndexOf('time='), buffer.length );
 			var m = durationRe.exec( buffer );
+
 			if (!m || m.length < 5) {
 				cb( 'could not parse duration');
 			} else {
