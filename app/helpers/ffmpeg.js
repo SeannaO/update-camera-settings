@@ -170,7 +170,9 @@ var inMemoryStitch = function( files, offset, req, res ) {
 	var camId    = req.params.id;
 	var streamId = req.query.stream;
 
-	var filename = 'solinkVms_' + camId + '_' + begin + '_' + end + '.' + format;
+        req.query.filename = req.query.filename ? req.query.filename + '.' + format : null;
+
+	var filename = req.query.filename || 'solinkVms_' + camId + '_' + begin + '_' + end + '.' + format;
 	var contentType = (format == 'mp4') ? 'video/mp4' : 'video/MP2T';
 
 	res.writeHead(200, {

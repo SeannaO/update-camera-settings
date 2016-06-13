@@ -139,7 +139,9 @@ function inMemoryMp4Video( db, cam, begin, end, req, res ) {
 			});
 
                         if ( req.query.format == 'srt' ) {
-                            var filename = 'solinkVms_' + camId + '_' + begin + '_' + end + '.srt';
+                            req.query.filename = req.query.filename ? req.query.filename + '.srt' : null;
+                            var filename = req.query.filename || 'solinkVms_' + camId + '_' + begin + '_' + end + '.srt';
+
                             ffmpeg.getSubs( fileList, filename, res );
                         } else {
                             ffmpeg.inMemoryStitch( fileList, offset, req, res );
