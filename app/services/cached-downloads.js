@@ -243,7 +243,7 @@ var prepareVideo = function( fileList, format, embed_subs, cb ) {
 
     var ffmpegProcess = spawn('./ffmpeg', args);
 
-    var err_msg = "";
+    var err_msg = '';
 
     ffmpegProcess.stderr.on('data', function(d) {
         err_msg += d.toString();
