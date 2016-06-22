@@ -277,8 +277,9 @@ var triggerCleanDirTimeout = function( t ) {
     clearTimeout( cleanTimeout );
 
     cleanTimeout = setTimeout( function() {
-       cleanDir(); 
-       state = States.READY;
+       cleanDir( function() {
+           state = States.READY;
+       }); 
     }, t);
 };
 
