@@ -97,7 +97,7 @@ var cleanDir = function( cb ) {
 
     resetCachedRequest();
 
-    console.log('[cached-downloads : clearnDir ]  cleaning folder ' + TMP_DIR);
+    console.log('[cached-downloads : cleanDir ]  cleaning folder ' + TMP_DIR);
     fs.unlink( VIDEO_FILE, function(err) {
         if (err) { console.error( '[cached-downloads : cleanDir]  ' + err ); }
         fs.unlink( SRT_FILE, function(err) {
