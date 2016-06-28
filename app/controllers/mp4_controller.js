@@ -2,6 +2,8 @@ var ffmpeg = require('./../helpers/ffmpeg');
 var fs = require('fs');
 var path = require('path');
 
+var cachedDownloadManager = require('../services/cached-downloads');
+
 var spawn = require('child_process').spawn;
 
 // regex to extract basefolder from a segment's path
@@ -143,6 +145,16 @@ function inMemoryMp4Video( db, cam, begin, end, req, res ) {
                             var filename = req.query.filename || 'solinkVms_' + camId + '_' + begin + '_' + end + '.srt';
 
                             ffmpeg.getSubs( fileList, filename, res );
+
+                        } else if ( req.query.format == 'avi' || req.query.format == 'mp4_subs') {
+                            // currently only avi and mp4
+                            var format = req.query.format == 'avi' ? 'avi' : 'mp4';
+
+                            req.query.filename = req.query.filename ? req.query.filename + '.' + format : null;
+                            var filename = req.query.filename || 'solinkVms_' + camId + '_' + begin + '_' + end + '.' + format;
+
+                            cachedDownloadManager.getVideo( fileList, filename, format, res );
+
                         } else {
                             ffmpeg.inMemoryStitch( fileList, offset, req, res );
                         }
