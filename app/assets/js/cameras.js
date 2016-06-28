@@ -1252,9 +1252,16 @@ var removeStreamFieldOverlay = function() {
 	$('.stream-field-overlay').remove();
 };
 
-var addStream = function( stream, cb ) {
+var addStream = function( stream, opts, cb ) {
 
-	if ( typeof stream === 'function' ) cb = stream;
+	if ( typeof stream === 'function' ) {
+            cb = stream;
+        } else if ( typeof opts === 'function' ) {
+            cb = opts;
+            opts = stream;
+        }
+
+        console.info( JSON.stringify(opts,'',4) );
 
 	addStreamFieldset( function(fieldset, current_stream_id) {
 		var idx = current_number_of_streams-1;
