@@ -9,6 +9,7 @@ var Streamer            = require('../helpers/live_streamer.js');
 var MotionStreamer      = require('../helpers/live_motion.js');
 var retentionCalculator = require('../helpers/retention_calculator.js');
 var async               = require('async');
+var spotMonitorHelper   = require('../helpers/spot-monitor.js');
 
 
 // regex to separate basefolder from the other part of a segment's path
@@ -42,6 +43,7 @@ function Camera( cam, videosFolder, cb ) {
     this.videosFolder = videosFolder + "/" + this._id;
 
     this.streams            = {};
+    this.spotMonitorStreams = {};
     this.streamsToBeDeleted = {};
     this.schedule_enabled   = cam.schedule_enabled;
     this.recording          = false;					// is the camera recording?
@@ -74,6 +76,14 @@ function Camera( cam, videosFolder, cb ) {
 			streams.push(cam.streams[i]);
 		}
 
+                // //
+                // spot monitor
+                var spotMonitorStreams = []
+		for (var i in cam.spotMonitorStreams){
+                    spotMonitorStreams.push( cam.spotMonitorStreams[i] );
+		}
+                // //
+
 		this.addAllStreams(streams, function(){
 			if (!self.recording && self.shouldBeRecording()) {
 				console.log("[cameraModel] starting camera " + (self.name || self.ip));
@@ -86,6 +96,17 @@ function Camera( cam, videosFolder, cb ) {
 			}
 
 			self.periodicallyCheckRetention();
+
+                        // //
+                        // spot monitor
+                        spotMonitorHelper.addAllSpotMonitorStreams( self, spotMonitorStreams, function( err ) {
+                            if (err) { 
+                                console.error('[cameraModel : constructor]  error adding spot monitor streams: ' + err); 
+                            } else {
+                                console.log('[cameraModel : constructor]  done adding spot monitor streams of camera ' + cam._id);
+                            }
+                        });
+                        // //
 
 			if (cb) cb(self);
 		});
@@ -421,66 +442,62 @@ Camera.prototype.motionHandler = function( motionGrid ) {
  */
 Camera.prototype.updateAllStreams = function( new_streams, cb ) {
 
-	if (!new_streams) {
-		if (cb) cb();
-		return;
-	}
+    if (!new_streams) {
+        if (cb) cb();
+        return;
+    }
 
-	var self = this;
+    if ( new_streams.length == 0 ) {
+        // nothing to add/update
+        if (cb) { cb(); }
+        return;
+    }
 
-	this.api.setCameraParams({
-		ip:        self.ip,
-		password:  self.password,
-		username:  self.username
-	});
+    var self = this;
 
+    this.api.setCameraParams({
+        ip:        self.ip,
+        password:  self.password,
+        username:  self.username
+    });
 
-	var total = new_streams.length;
+    var total = new_streams.length,
+        done  = false;
 
-	for ( var s in new_streams ) {
-		var stream = new_streams[s];
+    for ( var s in new_streams ) {
+        var stream = new_streams[s];
 
-		if ( !stream.id || !self.streams[ stream.id ] ) { 
-			self.addStream( stream, function() {
-				total--;
-				if (total <= 0 && cb) cb(); 
-			});		// adds new stream if 'id' is blank or doesn't match
-		} else {
-			self.updateStream( stream, function() {
-				total--;
-				if (total == 0 && cb) cb();
-			});	// ...or updates exiting stream otherwise
-		}
-	}
-
-	// checks for streams to be deleted
-	var ids = [];
-	if (new_streams) {
-		// creates an array of the new streams ids
-		ids = new_streams.map( function(s) {
-			return s.id;
-		});
-	}
-
-	for ( var streamId in self.streams ) {
-		// removes streams that are not in the array
-		if (streamId && ids.indexOf( streamId ) === -1) {
-			self.removeStream( streamId );
-			total--;
-			if (total <= 0 && cb) cb();
-		}
-	}
+        if ( !stream.id || !self.streams[ stream.id ] ) { 
+            self.addStream( stream, function() {
+                total--;
+                if (total <= 0 && !done && cb) { 
+                    done = true;
+                    cb(); 
+                }
+            });	 // add new stream if 'id' is blank or doesn't match
+        } else {
+            self.updateStream( stream, function() {
+                total--;
+                if (total <= 0 && !done && cb) {
+                    done = true;
+                    cb();
+                }
+            });	// ...or update stream
+        }
+    }
 };
 // end of updateAllStreams
 //
 
 
 /**
- * Removes stream
+ * removeStream
  *
- * @param { streamId } string
+ * remove stream from memory (does not touch db)
+ *
+ * @param { String } streamId
  */
-Camera.prototype.removeStream  = function( streamId ) {
+Camera.prototype.removeStream = function( streamId ) {
 
 	var self = this;
 
@@ -577,6 +594,13 @@ Camera.prototype.restartAllStreams = function() {
 	for (var i in self.streams) {
 		self.restartStream(i);
 	}
+
+        // //
+        // spot monitor
+	for (var i in self.spotMonitorStreams) {
+            spotMonitorHelper.restartSpotMonitorStream(self, i);
+	}
+        // //
 };
 // end of restartAllStreams
 //
@@ -1396,21 +1420,22 @@ Camera.prototype.getStreamsJSON = function() {
  */
 Camera.prototype.toJSON = function() {
     var info = {};
-    
-	info.name             = this.name;
-	info.ip               = this.ip;
-	info._id              = this._id;
-	info.schedule_enabled = this.schedule_enabled;
-	info.status           = this.status;
-	info.type             = this.type;
-	info.manufacturer     = this.manufacturer;
-	info.username         = this.username || '';
-	info.password         = this.password || '';
-	info.motionParams     = this.motionParams;
-	info.retentionStats   = this.retentionStats;
 
-	info.streams = this.getStreamsJSON();
-	
+    info.name             = this.name;
+    info.ip               = this.ip;
+    info._id              = this._id;
+    info.schedule_enabled = this.schedule_enabled;
+    info.status           = this.status;
+    info.type             = this.type;
+    info.manufacturer     = this.manufacturer;
+    info.username         = this.username || '';
+    info.password         = this.password || '';
+    info.motionParams     = this.motionParams;
+    info.retentionStats   = this.retentionStats;
+
+    info.streams = this.getStreamsJSON();
+    info.spotMonitorStreams = spotMonitorHelper.getSpotMonitorStreamsJSON( this );
+
     if (this.id) {
         info.id = this.id;
     } else {
