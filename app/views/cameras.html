@@ -247,7 +247,6 @@
 
 								<!--input name="camera[ip_address]" type="hidden" id="camera-ip">
 								<input name="camera[manufacturer]" type="hidden" id="camera-manufacturer"-->
-								<!-- TEMPORARY, DEVELOPMENT ONLY -->
 								<div class="form-group  col-xs-6">
 									<label for="camera-manufacturer">manufacturer</label>
 									<select id = 'camera-manufacturer' name="camera[manufacturer]" class="form-control" >
@@ -263,7 +262,6 @@
 									<input type="text" class="form-control" id="camera-ip" placeholder="camera ip" name="camera[ip]">
 									<div id="ip-error" style="display:none; font-size: 10pt; color:rgba(255,90,0,0.7)">warning: invalid ip</div>
 								</div>
-								<!-- end of TEMPORARY, DEVELOPMENT ONLY -->
 
 
 								<div class="form-group  col-xs-4">
@@ -285,6 +283,7 @@
                             <div id="camera-streams-tabs" style = 'width: 100%;'>
 								
 								<button type="button" class="btn btn-default btn-sm" id="add-stream">add stream</button>
+								<button type="button" class="btn btn-default btn-sm" id="add-spot-monitor-stream">add spot-monitor stream</button>
 								<br><br>
 								<!-- stream tabs -->
 								<ul id = 'stream-tabs' class="nav nav-tabs" data-tabs='tabs'>
@@ -616,8 +615,11 @@
             });            
 
 
-            var addStreamForm = function(){
-                addStream( function(id) {
+            var addStreamForm = function( opts ){
+
+                opts = opts || {};
+
+                addStream( opts, function(id) {
                     //addStreamFieldOverlay( '#' + id );
                 });
 
@@ -642,6 +644,11 @@
 
             $("#add-stream").click(function(){
                 addStreamForm();
+            })
+            $("#add-spot-monitor-stream").click(function(){
+                addStreamForm({
+                    type: 'spot-monitor'
+                });
             })
 
             $("#camera-ip").change(function(){
