@@ -52,9 +52,9 @@ var addAllSpotMonitorStreams = function( camera, spotMonitorStreams, cb ) {
  * - doesn't touch the cameras database
  * - stream object should have an ID already
  *
- * @param { Camera object } camera    camera object
- * @param { object } stream   stream object
- * @param { function } cb(err, stream)    callback function
+ * @param { Camera object } camera      camera object
+ * @param { object } stream             stream object
+ * @param { function } cb(err, stream)  callback function
  *          - { String } err      'null' if no errors
  *          - { object } stream   stream object
  */
@@ -493,13 +493,13 @@ exports.isValidCamera     = isValidCamera;
 exports.isValidController = isValidController;
 exports.validateCallback  = validateCallback;
 
-exports.addSpotMonitorStream           = addSpotMonitorStream;
-exports.removeSpotMonitorStream        = removeSpotMonitorStream;
-exports.updateSpotMonitorStream        = updateSpotMonitorStream;
-exports.restartSpotMonitorStream       = restartSpotMonitorStream;
-exports.addAllSpotMonitorStreams       = addAllSpotMonitorStreams;
-exports.getSpotMonitorStreamsJSON      = getSpotMonitorStreamsJSON;
-exports.updateAllSpotMonitorStreams    = updateAllSpotMonitorStreams;
+exports.addSpotMonitorStream        = addSpotMonitorStream;
+exports.removeSpotMonitorStream     = removeSpotMonitorStream;
+exports.updateSpotMonitorStream     = updateSpotMonitorStream;
+exports.restartSpotMonitorStream    = restartSpotMonitorStream;
+exports.addAllSpotMonitorStreams    = addAllSpotMonitorStreams;
+exports.getSpotMonitorStreamsJSON   = getSpotMonitorStreamsJSON;
+exports.updateAllSpotMonitorStreams = updateAllSpotMonitorStreams;
 
 exports.generateIDForNewStreams        = generateIDForNewStreams;
 exports.reAddMissingSpotMonitorStreams = reAddMissingSpotMonitorStreams;
