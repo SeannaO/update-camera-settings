@@ -365,8 +365,8 @@ module.exports = function( app, passport, camerasController ) {
 
             camerasController.getCamera( camId, function(err, cam) {
 
-                if (err) {
-                    return res.status(422).json( { error: err } );
+                if (err || !cam) {
+                    return res.status(422).json( { error: err || 'that camera does not exist'} );
                 }
 
                 for ( var i in cam.streams ) {
