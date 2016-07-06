@@ -208,6 +208,37 @@ module.exports = function( app, passport, camerasController ) {
 	// - - -
 
 	
+	app.delete('/cameras/:camera_id/spot_monitor_streams/:stream_id', passport.authenticate('basic', {session: false}), function(req, res) {
+
+		if ( !validateCamerasLoaded(camerasController, res) ) { return; }
+
+		var camId    = req.params.camera_id;
+		var streamId = req.params.stream_id;
+
+		var cam = camerasController.findCameraById( camId ).cam;
+		if (!cam) {
+			console.error('[api/cameras]  DELETE Stream: camera ' + camId + ' not found: ');
+			res.json({success: false, error: 'camera not found'});
+			return;
+		} 
+
+		var stream = cam.spotMonitorStreams[ streamId ];
+		if (!stream) {
+			console.error('[api/cameras]  DELETE Stream: stream ' + streamId + ' not found: ');
+			res.json({success: false, error: 'stream not found'});
+			return;
+		}
+
+		camerasController.removeSpotMonitorStream( camId, streamId, function( err ) {
+			if (err) {
+				console.error('[api/cameras]  removeSpotMonitorStream error: ');
+				console.error( err ) ;
+				res.json({success: false, error: err});
+			} else if (cam) {
+				res.json({success: true, _id: req.params.id});
+			}
+		});
+	});
 	// - - 
 	// 
 	app.get('/cameras/schedule', passport.authenticate('basic', {session: false}), function(req, res) {
