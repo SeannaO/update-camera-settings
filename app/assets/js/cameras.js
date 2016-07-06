@@ -437,6 +437,7 @@ var addCamera = function(camera, cb) {
     }
 
     if (camera.streams) { camera.streams = _.without( camera.streams, null, undefined ); }
+    if (camera.spotMonitorStreams) { camera.spotMonitorStreams = _.without( camera.spotMonitorStreams, null, undefined ); }
 
     $.ajax({
         type: "POST",
@@ -525,9 +526,16 @@ var updateCamera = function(id, cb) {
     var current_camera = cameras[id];
     var manufacturer = params.camera.manufacturer || $("#camera-manufacturer").val();
     var enable_motion = false;
-    if ((typeof current_camera.streams == 'undefined' || current_camera.streams.length == 0) && params.camera.streams.length > 0 && typeof manufacturer !== 'undefined' && manufacturer !== 'unknown'){
+    if (
+        (!current_camera.streams == 'undefined' || current_camera.streams.length == 0) && 
+        params.camera && params.camera.streams && params.camera.streams.length > 0 && 
+         typeof manufacturer !== 'undefined' && manufacturer !== 'unknown'
+    ){
         enable_motion = true;
     }
+
+    if (params.camera.spotMonitorStreams) { params.camera.spotMonitorStreams = _.without( params.camera.spotMonitorStreams, null, undefined ); }
+    if (params.camera.streams) { params.camera.streams = _.without( params.camera.streams, null, undefined ); }
 
     cameras[id].updatedOn = Date.now();
 
@@ -651,9 +659,20 @@ var editCamera = function(camId) {
                             addStreamFieldOverlay( '#' + id );
                         });
                     }
-                }else{
+                }else if (
+                    !data.camera.spotMonitorStreams || 
+                    !data.camera.spotMonitorStreams.length
+                ) {
                     addStream(function(id) {
                         addStreamFieldOverlay( '#' + id );						
+                    });
+                }
+
+                for (var i in data.camera.spotMonitorStreams) {
+                    var stream = data.camera.spotMonitorStreams[i];
+                    stream.camId = camId;
+                    addStream( stream, { type: 'spot-monitor' }, function(id) {
+                        addStreamFieldOverlay( '#' + id );
                     });
                 }
 
@@ -1022,16 +1041,32 @@ var generateScheduleTable = function() {
 };
 
 
-var addStreamFieldset = function( cb ) {
+var addStreamFieldset = function( opts, cb ) {
+
+    if ( typeof opts === 'function' ) {
+        cb = opts;
+        opts = {};
+    }
+
+    var isSpotMonitorStream = ( opts.type == 'spot-monitor' );
+    var fieldType = isSpotMonitorStream ? 'spotMonitorStreams' : 'streams';
 
     var current_stream_id = current_number_of_streams;
 
     //
+    // hidden spot-monitor field
+    var camera_stream_spot_monitor = $('<input>', {
+        type: 'hidden',
+        id: 'camera-streams-' + current_stream_id + '-spot-monitor',
+        name: 'camera[' + fieldType + '][' + current_stream_id + '][spotMonitor]'
+    });
+    //
+
     // hidden id field
     var camera_stream_id = $('<input>', {
         type: 'hidden',
         id: 'camera-streams-' + current_stream_id + '-id',
-        name: 'camera[streams][' + current_stream_id + '][id]'
+        name: 'camera['+fieldType+'][' + current_stream_id + '][id]'
     });
     // end of hidden id field
     //
@@ -1052,7 +1087,7 @@ var addStreamFieldset = function( cb ) {
         type: 'string',
         class: 'form-control',
         id: 'camera-streams-' + current_stream_id + '-name',
-        name: 'camera[streams][' + current_stream_id + '][name]'
+        name: 'camera['+fieldType+'][' + current_stream_id + '][name]'
     });
 
     camera_stream_name_group.append( camera_stream_name );
@@ -1069,7 +1104,7 @@ var addStreamFieldset = function( cb ) {
         min: 0,
         class: 'form-control camera-streams-retention',
         id: 'camera-streams-' + current_stream_id + '-retention',
-        name: 'camera[streams][' + current_stream_id + '][retention]'
+        name: 'camera['+fieldType+'][' + current_stream_id + '][retention]'
     });
     camera_stream_retention_info = $("<span id='retention-info-" + current_stream_id + "' class='retention-info'>recording until disk is full</span>");
     camera_stream_retention_unit = $("<span class='retention-unit'>days</span>");
@@ -1111,7 +1146,7 @@ var addStreamFieldset = function( cb ) {
             type: 'text',
             class: 'form-control',
             id: 'camera-streams-' + current_stream_id + '-url',
-            name: 'camera[streams][' + current_stream_id + '][url]',
+            name: 'camera['+fieldType+'][' + current_stream_id + '][url]',
             value: rtsp_uri
         });	
         camera_stream_rtsp_group.append( camera_stream_rtsp );
@@ -1119,7 +1154,6 @@ var addStreamFieldset = function( cb ) {
         fieldset.append( camera_stream_id );
         fieldset.append( camera_stream_name_group );		
         fieldset.append( camera_stream_rtsp_group );
-        fieldset.append( camera_stream_retention_group );
 
     } else{
         //
@@ -1132,7 +1166,7 @@ var addStreamFieldset = function( cb ) {
         var camera_stream_resolution = $('<select>', {
             class: 'form-control camera-stream-resolution-select',
             id: 'camera-streams-' + current_stream_id + '-resolution',
-            name: 'camera[streams][' + current_stream_id + '][resolution]'
+            name: 'camera['+fieldType+'][' + current_stream_id + '][resolution]'
         });
 
         var camera_stream_source_group = $('<div>', {
@@ -1143,7 +1177,7 @@ var addStreamFieldset = function( cb ) {
         var camera_stream_source = $('<select>', {
             class: 'form-control camera-stream-camera_no-select',
             id: 'camera-streams-' + current_stream_id + '-camera_no',
-            name: 'camera[streams][' + current_stream_id + '][camera_no]'
+            name: 'camera['+fieldType+'][' + current_stream_id + '][camera_no]'
         });
 
         camera_stream_source_group.append( camera_stream_source );
@@ -1164,7 +1198,7 @@ var addStreamFieldset = function( cb ) {
             max: 30,
             class: 'form-control camera-stream-framerate-input',
             id: 'camera-streams-' + current_stream_id + '-framerate',
-            name: 'camera[streams][' + current_stream_id + '][framerate]'
+            name: 'camera['+fieldType+'][' + current_stream_id + '][framerate]'
         });
 
         camera_stream_framerate_group.append( camera_stream_framerate );
@@ -1184,7 +1218,7 @@ var addStreamFieldset = function( cb ) {
             max: 30,
             class: 'form-control camera-stream-quality-input',
             id: 'camera-streams-' + current_stream_id + '-quality',
-            name: 'camera[streams][' + current_stream_id + '][quality]'
+            name: 'camera['+fieldType+'][' + current_stream_id + '][quality]'
         });
 
         camera_stream_quality_group.append( camera_stream_quality );
@@ -1202,7 +1236,7 @@ var addStreamFieldset = function( cb ) {
         var camera_stream_bitrate = $('<select>', {
             class: 'form-control camera-stream-bitrate-select',
             id: 'camera-streams-' + current_stream_id + '-bitrate',
-            name: 'camera[streams][' + current_stream_id + '][bitrate]'
+            name: 'camera['+fieldType+'][' + current_stream_id + '][bitrate]'
         });
 
         camera_stream_bitrate_group.append( camera_stream_bitrate );
@@ -1217,7 +1251,13 @@ var addStreamFieldset = function( cb ) {
         fieldset.append( camera_stream_framerate_group );
         fieldset.append( camera_stream_quality_group );
         fieldset.append( camera_stream_bitrate_group );
+    }
+
+    if (!isSpotMonitorStream) {
         fieldset.append( camera_stream_retention_group );
+    } else {
+        camera_stream_spot_monitor.val( true );
+        fieldset.append( camera_stream_spot_monitor );
     }
 
     fieldset.find("#remove-stream-" + current_stream_id).click(function(){
@@ -1256,14 +1296,16 @@ var addStream = function( stream, opts, cb ) {
 
     if ( typeof stream === 'function' ) {
         cb = stream;
+        opts = {};
     } else if ( typeof opts === 'function' ) {
         cb = opts;
         opts = stream;
     }
 
-    console.info( JSON.stringify(opts,'',4) );
+    var isSpotMonitorStream = ( opts.type == 'spot-monitor' );
+    stream.spotMonitor = isSpotMonitorStream;
 
-    addStreamFieldset( function(fieldset, current_stream_id) {
+    addStreamFieldset( opts, function(fieldset, current_stream_id) {
         var idx = current_number_of_streams-1;
 
         $('div.active').removeClass('active').removeClass('in');
@@ -1276,8 +1318,11 @@ var addStream = function( stream, opts, cb ) {
 
         var new_stream_tab_id = 'new-stream-' + current_stream_id;
 
-
-        $('#stream-tabs').append('<li style="max-width:200px; max-height:35px;overflow:hidden"><a href="#' + new_stream_tab_id + '" data-toggle="tab" id="tab_'+new_stream_tab_id+'">' + stream_name + '</a></li>');
+        if (!isSpotMonitorStream) {
+            $('#stream-tabs').append('<li style="max-width:200px; max-height:35px;overflow:hidden"><a href="#' + new_stream_tab_id + '" data-toggle="tab" id="tab_'+new_stream_tab_id+'">' + stream_name + '</a></li>');
+        } else {
+            $('#stream-tabs').append('<li style="max-width:200px; max-height:35px;overflow:hidden"><a href="#' + new_stream_tab_id + '" data-toggle="tab" id="tab_'+new_stream_tab_id+'" style="background:#f5f5f5">' + stream_name + '</a></li>');
+        }
 
         $('#stream-panes').append('<div class="tab-pane" id="' + new_stream_tab_id + '"></div>');
 
@@ -1308,6 +1353,10 @@ var addStream = function( stream, opts, cb ) {
             id: 'check-stream-status-' + current_stream_id,
             class: 'check-stream-status'
         });        
+
+        if (isSpotMonitorStream) {
+            $('#'+new_stream_tab_id).prepend('<div id = "spot-monitor-warn"> spot monitor only </div>'); 
+        }
 
         // $('#'+new_stream_tab_id).append(check_stream_button);                  
         $('#'+new_stream_tab_id).append(remove_stream_button); 
@@ -1355,9 +1404,48 @@ var removeStreamFromUI = function( stream ) {
 };
 
 
+var removeSpotMonitorStream = function( stream ) {
+
+    bootbox.confirm('are you sure you want spot monitor stream <b>' + (stream.name || stream.url) + '</b> ?', function(ok) {
+
+        if( !ok ) {
+            return;
+        }
+
+        addOverlayToPage('removing spot monitor stream...');
+
+        $.ajax({
+            type: 'DELETE',
+            url: '/cameras/' + stream.camId + '/spot_monitor_streams/' + stream.id,
+            success: function(data) {
+                if (data.error) {
+                    removeOverlayFromPage( function() {
+                        toastr.error(data.error);
+                    });
+                } else {
+                    removeOverlayFromPage( function() {
+                        location.reload();
+                    });
+                }
+            }
+        });
+    });
+};
+
+
+
 var removeStream = function( stream ) {
 
-    bootbox.confirm("are you sure you want to remove this stream?", function(ok) {
+    if (!stream.id) {
+        console.log(stream);
+        return;
+    }
+
+    if (stream.spotMonitor) {
+        return removeSpotMonitorStream( stream );
+    }
+
+    bootbox.confirm('are you sure you want to remove stream <b>' + (stream.name || stream.url) + '</b> ?', function(ok) {
 
         if( ok ) {
             addOverlayToPage('removing stream...');
@@ -1368,9 +1456,7 @@ var removeStream = function( stream ) {
                 success: function(data) {
                     if (data.error) {
                         removeOverlayFromPage( function() {
-                            // location.reload();		
-                            removeStreamFromUI();
-                            toastr.success("Camera was successfully removed");
+                            toastr.error(data.error);
                         });
                     } else {
                         removeOverlayFromPage( function() {
