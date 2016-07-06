@@ -319,3 +319,10 @@ input.switch:checked ~ label:after
 .unknown #check-stream-container .btn.check-stream{
 	margin-left:  10px;
 }
+
+#spot-monitor-warn {
+    text-align:  center;
+    background:  #f5f5f5;
+    color:       #5a5a5a;
+    padding:     5px;
+}
