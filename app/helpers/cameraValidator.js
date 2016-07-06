@@ -50,6 +50,21 @@ function validateCamera( cam ) {
 			}
 		}
 	}
+
+	if (cam.spotMonitorStreams && cam.spotMonitorStreams.length > 0) {
+		for (var s in cam.spotMonitorStreams) {
+
+			if (!cam.spotMonitorStreams[s] || typeof(cam.spotMonitorStreams[s]) !== 'object') { 
+				return 'invalid spotMonitorStream object'
+			}
+
+			var rtsp_url = cam.spotMonitorStreams[s].url;
+			
+			if ( rtsp_url && !checkIP( rtsp_url ) ) {
+				return 'invalid IP in rtsp url: ' + rtsp_url;
+			}
+		}
+	}
 }
 
 exports.validate = validateCamera;
