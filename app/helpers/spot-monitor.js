@@ -347,6 +347,8 @@ var restartSpotMonitorStream = function( camera, streamId, cb ) {
 
 
 /**
+ * getSpotMonitorStreamsJSON
+ *
  * Return spot monitor streams data as a json array
  * NOTE: update this method when changing spot monitor stream data attributes
  *

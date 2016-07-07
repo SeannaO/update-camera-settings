@@ -95,11 +95,12 @@ describe('addAllSpotMonitorStreams', function() {
             s.id = 'stream_' + i;
             streams.push( s );
         }
-        // getRtspUrlSpy = sinon.spy(cameraWithoutStreams.api, 'getRtspUrl');
+        getRtspUrlSpy = sinon.spy(cameraWithoutStreams.api, 'getRtspUrl');
         
         spotMonitorHelper.addAllSpotMonitorStreams( cameraWithoutStreams, streams, function(err) {
             assert.ok(!err);
-            // assert.equal(getRtspUrlSpy.callCount, streams.length);
+            assert.equal(getRtspUrlSpy.callCount, streams.length);
+            cameraWithoutStreams.api.getRtspUrl.restore();
             done();
         });
     });
@@ -340,6 +341,7 @@ describe('updateAllSpotMonitorStreams', function() {
                 spotMonitorHelper.updateAllSpotMonitorStreams( 'x', new_streams, function(err) {
                     assert.equal(err, 'invalid camera');
                     spotMonitorHelper.updateAllSpotMonitorStreams( {}, new_streams, function(err) {
+                        assert.equal(err, 'invalid camera');
                         spotMonitorHelper.updateAllSpotMonitorStreams( [], new_streams, function(err) {
                             assert.equal(err, 'invalid camera');
                             done();
@@ -498,3 +500,270 @@ describe('updateAllSpotMonitorStreams', function() {
 /* end of updateAllSpotMonitorStreams */
 
 
+/**
+ * updateSpotMonitorStream
+ *
+ * add array of spot monitor streams to given a camera
+ *
+ * @param { Camera object } camera  camera object
+ * @param { object } stream         new stream attributes
+ * @param { function } cb(err)      callback function
+ */
+describe('updateSpotMonitorStream', function() {
+
+    var camera = _.clone( _cameraWithoutStreams );
+    var new_streams = [];
+    for (var i = 0; i < 5; i++) {
+        var s = _.clone( _stream );
+        s.id = 'stream_' + i;
+        new_streams.push(s);
+    }
+
+    it('should reject invalid camera params', function(done) {
+
+        spotMonitorHelper.updateSpotMonitorStream( null, new_streams, function(err) {
+            assert.equal(err, 'invalid params');
+            spotMonitorHelper.updateSpotMonitorStream( undefined, new_streams, function(err) {
+                assert.equal(err, 'invalid params');
+                spotMonitorHelper.updateSpotMonitorStream( 'x', new_streams, function(err) {
+                    assert.equal(err, 'invalid params');
+                    spotMonitorHelper.updateSpotMonitorStream( {}, new_streams, function(err) {
+                        assert.equal(err, 'invalid params');
+                        spotMonitorHelper.updateSpotMonitorStream( [], new_streams, function(err) {
+                            assert.equal(err, 'invalid params');
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+
+    it ('should reject invalid stream param', function(done) {
+
+        spotMonitorHelper.updateSpotMonitorStream( camera, 'x', function(err) {
+            assert.equal(err, 'invalid params');
+            spotMonitorHelper.updateSpotMonitorStream( camera, null, function(err) {
+                assert.equal(err, 'invalid params');
+                spotMonitorHelper.updateSpotMonitorStream( camera, undefined, function(err) {
+                    assert.equal(err, 'invalid params');
+                    done();
+                });
+            });
+        });
+    });
+
+    it ('should reject streams with invalid IDs', function(done) {
+        camera.spotMonitorStreams = {
+            'stream_1': {
+                id: 'stream_1',
+            }
+        };
+
+        var stream = {
+            id: 'x'
+        };
+
+        spotMonitorHelper.updateSpotMonitorStream( camera, stream, function(err) {
+            assert.equal(err, 'invalid stream ID');
+            delete stream.id;
+            spotMonitorHelper.updateSpotMonitorStream( camera, stream, function(err) {
+                assert.equal(err, 'invalid stream ID');
+                done();
+            });
+        });
+    });
+
+
+    it('should restart stream (update url) only when certain params are updated', function(done) {
+        var camera_1 = _.clone( _cameraWithoutStreams );
+        camera_1.spotMonitorStreams = {
+            'stream_1': {
+                id: 'stream_1',
+                url: 'old_url_1',
+                quality: 'old_quality_1'
+            },
+            'stream_2': {
+                id: 'stream_2',
+                url: 'old_url_2',
+                framerate: 'old_framerate_2'
+            }
+        };
+
+        var stream_1 = {
+            id: 'stream_1',
+            quality: 'new_quality_1'
+        }
+
+        var stream_2 = {
+            id: 'stream_2',
+            something_else: 'new_quality_1'
+        }
+
+        spotMonitorHelper.updateSpotMonitorStream( camera_1, stream_1, function(err) {
+            assert.ok(!err);
+            assert.equal(camera_1.spotMonitorStreams['stream_1'].url, 'fake_url');
+            assert.equal(camera_1.spotMonitorStreams['stream_1'].quality, 'new_quality_1');
+            spotMonitorHelper.updateSpotMonitorStream( camera_1, stream_2, function(err) {
+                assert.ok(!err);
+                assert.equal(camera_1.spotMonitorStreams['stream_2'].url, 'old_url_2');
+                done();
+            });
+        });
+    });
+});
+/* end of updateSpotMonitorStream */
+
+
+/**
+ * restartSpotMonitorStream
+ *
+ * setup camera when necessary, retrieve and update rtsp url
+ *
+ * @param { Camera object } camera      camera object
+ * @param { array } streamId 
+ * @param { function } cb(err)          callback function
+ */
+describe('restartSpotMonitorStream', function() {
+
+    var camera = _.clone( _cameraWithoutStreams );
+
+    camera.spotMonitorStreams = {
+        'stream_1': {
+            id: 'stream_1'
+        }
+    };
+
+    it('should reject invalid camera params', function(done) {
+
+        spotMonitorHelper.restartSpotMonitorStream( null, 'stream_1', function(err) {
+            assert.equal(err, 'invalid params');
+            spotMonitorHelper.restartSpotMonitorStream( undefined, 'stream_1', function(err) {
+                assert.equal(err, 'invalid params');
+                spotMonitorHelper.restartSpotMonitorStream( 'x', 'stream_1', function(err) {
+                    assert.equal(err, 'invalid params');
+                    spotMonitorHelper.restartSpotMonitorStream( {}, 'stream_1', function(err) {
+                        assert.equal(err, 'invalid params');
+                        spotMonitorHelper.restartSpotMonitorStream( [], 'stream_1', function(err) {
+                            assert.equal(err, 'invalid params');
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    
+    it('should reject invalid streamId', function(done) {
+        spotMonitorHelper.restartSpotMonitorStream( camera, null, function(err) {
+            assert.equal(err, 'invalid params');
+            spotMonitorHelper.restartSpotMonitorStream( camera, 'x', function(err) {
+                done();
+            });
+        });
+    });
+});
+/* end of restartSpotMonitorStream */
+
+
+/**
+ * getSpotMonitorStreamsJSON
+ *
+ * Return spot monitor streams data as a json array
+ * NOTE: update this method when changing spot monitor stream data attributes
+ *
+ * @param { Camera object } camera    camera object
+ * @return { array } Json array containing all spot monitor streams object
+ */
+describe('getSpotMonitorStreamsJSON', function() {
+
+    it('should reject invalid camera params', function() {
+
+        var r = spotMonitorHelper.getSpotMonitorStreamsJSON( null );
+        assert.equal(r, null);
+
+        var r = spotMonitorHelper.getSpotMonitorStreamsJSON( undefined );
+        assert.equal(r, null);
+
+        var r = spotMonitorHelper.getSpotMonitorStreamsJSON( 'x' );
+        assert.equal(r, null);
+
+        var r = spotMonitorHelper.getSpotMonitorStreamsJSON( {} );
+        assert.equal(r, null);
+
+        var r = spotMonitorHelper.getSpotMonitorStreamsJSON( [] );
+        assert.equal(r, null);
+    });
+
+
+    it('should return empty array when there are no streams', function() {
+
+        var camera = _.clone( _cameraWithoutStreams );
+        camera.spotMonitorStreams = {};
+
+        var r = spotMonitorHelper.getSpotMonitorStreamsJSON( camera );
+        assert.ok( _.isEqual(r, []) );
+    });
+
+
+    it('should return array with streams data', function() {
+
+        var camera = _.clone( _cameraWithoutStreams );
+        camera.spotMonitorStreams = {
+            'stream_1': {
+                id: 'stream_1',
+                url: 'url_1',
+                quality: 'quality_1'
+            },
+            'stream_2': {
+                id: 'stream_2',
+                name: 'name_2',
+            }
+        };
+
+        var r = spotMonitorHelper.getSpotMonitorStreamsJSON( camera );
+        assert.equal( r.length, 2 );
+
+        assert.equal( r[0].id, 'stream_1' );
+        assert.equal( r[0].url, 'url_1' );
+        assert.equal( r[0].quality, 'quality_1' );
+        assert.ok( !r[0].bitrate );
+
+        assert.equal( r[1].id, 'stream_2' );
+        assert.ok( !r[1].url);
+        assert.equal( r[1].name, 'name_2' );
+    });
+});
+/* end of getSpotMonitorStreamsJSON */
+
+
+/**
+ * removeSpotMonitorStream
+ *
+ * remove spot monitor from camera
+ *
+ * @param { CamerasController object } camerasController    camera object
+ * @param { String } camId      camera ID
+ * @param { String } streamId   stream ID
+ * @param { function } cb       callback function
+ */
+describe('removeSpotMonitorStream', function() {
+
+    it('should reject invalid cameraController param', function(done) {
+
+        spotMonitorHelper.removeSpotMonitorStream( null, 'cam_1', 'stream_1', function(err) {
+            assert.equal(err, 'invalid CamerasController object');
+            spotMonitorHelper.removeSpotMonitorStream( undefined, 'cam_1', 'stream_1', function(err) {
+                assert.equal(err, 'invalid CamerasController object');
+                spotMonitorHelper.removeSpotMonitorStream( 'x', 'cam_1', 'stream_1', function(err) {
+                    assert.equal(err, 'invalid CamerasController object');
+                    done();
+                });
+            });
+        });
+    });
+
+});
+/* end of removeSpotMonitorStream */
