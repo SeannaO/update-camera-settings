@@ -214,13 +214,16 @@ var updateAllSpotMonitorStreams = function( camera, new_streams, cb ) {
     for ( var s in new_streams ) {
 
         var stream = new_streams[s];
-        if ( !isValidStream(stream) || !stream.id ) { continue; }
+        if ( !isValidStream(stream) || !stream.id ) { 
+            total--;
+            continue; 
+        }
 
         // add a new stream
         if ( !camera.spotMonitorStreams[ stream.id ] ) { 
             addSpotMonitorStream( camera, stream, function() {
                 total--;
-                if (total <= 0 && !done && cb) {
+                if (total <= 0 && !done) {
                     done = true;
                     cb(); 
                 }
@@ -228,12 +231,17 @@ var updateAllSpotMonitorStreams = function( camera, new_streams, cb ) {
         } else {  // or update a stream if it already exists
             updateSpotMonitorStream( camera, stream, function() {
                 total--;
-                if (total <= 0 && !done && cb) {
+                if (total <= 0 && !done) {
                     done = true;
                     cb();
                 }
             });
         }
+    }
+
+    if (total <= 0 && !done) {
+        done = true;
+        cb();
     }
 };
 /* end of updateAllSpotMonitorStreams */
