@@ -23,13 +23,19 @@ var addAllSpotMonitorStreams = function( camera, spotMonitorStreams, cb ) {
 
     if (
         !isValidCamera( camera ) ||
-        !isValidStream( spotMonitorStreams ) 
+        !spotMonitorStreams || 
+        !Array.isArray( spotMonitorStreams )
     ) {
         return cb('invalid params');
     }
 
     var nStreams = spotMonitorStreams.length,
         counter  = 0;
+
+    if (!nStreams) {
+        // nothing to be done
+        return cb();
+    }
 
     // TODO: async parallel
     for (var i in spotMonitorStreams) {
@@ -98,10 +104,18 @@ var addSpotMonitorStream = function( camera, stream, cb ) {
  * compare two camera objects, 
  * adding spot monitor streams from the first one that are missing in the second one
  *
- * @param { object } curr_camera    camera object (reference)
- * @param { object } cam            camera object (to be updated with missing streams)
+ * @param { object } curr_camera    camera json object (current state)
+ * @param { object } cam            camera json object (to be updated with missing streams)
  */
 var reAddMissingSpotMonitorStreams = function( curr_camera, cam ) {
+
+    if (
+        !isValidCamera( curr_camera ) ||
+        !isValidCamera( cam )
+    ) {
+        console.error('[spot-monitor-helper : reAddMissingSpotMonitorStreams ]  invalid params');
+        return 'invalid params';
+    }
 
     var spotMonitorStream_ids = _.map( cam.spotMonitorStreams, 'id' );
 
@@ -124,16 +138,23 @@ var reAddMissingSpotMonitorStreams = function( curr_camera, cam ) {
  * go through spot monitor streams in a camera object, generating ID if necessary (eg. new stream)
  * returns hash of the streams by ID
  *
- * @param { object } cam    camera object
+ * @param { object } cam    camera json object
+ *                          - this is the object coming from the request;
+ *                            it has an array of spotMonitorStreams
+ *                            instead of a hash
  * @return { object }       spot monitor streams hashed by ID
  */
 var generateIDForNewStreams = function( cam ) {
+
+    if ( !isValidCamera(cam) ) {
+        return {};
+    }
 
     var spotMonitorStreamsHash = {};
 
     for (var s in cam.spotMonitorStreams) {
 
-        if (!cam.spotMonitorStreams[s]) { continue; }
+        if ( !isValidStream(cam.spotMonitorStreams[s]) ) { continue; }
 
         if (
             typeof cam.spotMonitorStreams[s].id == 'undefined' || 
@@ -172,7 +193,7 @@ var updateAllSpotMonitorStreams = function( camera, new_streams, cb ) {
         return cb('invalid camera');
     }
 
-    if ( !new_streams ) {
+    if ( !new_streams || !Array.isArray(new_streams) ) {
         return cb('invalid streams');
     }
 
