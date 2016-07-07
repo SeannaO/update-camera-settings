@@ -96,7 +96,7 @@ var addSpotMonitorStream = function( camera, stream, cb ) {
  * reAddMissingSpotMonitorStreams
  *
  * compare two camera objects, 
- * adding spot monitor streams from the first that are missing in the second
+ * adding spot monitor streams from the first one that are missing in the second one
  *
  * @param { object } curr_camera    camera object (reference)
  * @param { object } cam            camera object (to be updated with missing streams)
@@ -121,8 +121,8 @@ var reAddMissingSpotMonitorStreams = function( curr_camera, cam ) {
 /**
  * generateIDForNewStreams
  *
- * go through spot monitor streams in a camera object, generating ID for new ones
- * returns hash of the streams (used to update db)
+ * go through spot monitor streams in a camera object, generating ID if necessary (eg. new stream)
+ * returns hash of the streams by ID
  *
  * @param { object } cam    camera object
  * @return { object }       spot monitor streams hashed by ID
@@ -154,10 +154,11 @@ var generateIDForNewStreams = function( cam ) {
 /**
  * updateAllSpotMonitorStreams
  *
- * add/update spot monitor stream to camera, setting up camera and retrieving rtsp url if necessary
- * this doesn't change the cameras database
- *  - if a stream has an ID and already exists, it will be updated
- *  - otherwise, it will be added as a new stream
+ * add/update spot monitor streams to/from a given camera object, 
+ * setting up camera device and retrieving rtsp url if necessary
+ *  - doesn't touch the cameras database
+ *  - if a stream has an ID and already exists, it will be updated;
+ *    otherwise, it will be added as a new stream
  *
  * @param { Camera object } camera  camera object
  * @param { Array } new_streams     array of streams to be added/updated
@@ -171,7 +172,7 @@ var updateAllSpotMonitorStreams = function( camera, new_streams, cb ) {
         return cb('invalid camera');
     }
 
-    if (!new_streams) {
+    if ( !new_streams ) {
         return cb('invalid streams');
     }
 
@@ -190,10 +191,12 @@ var updateAllSpotMonitorStreams = function( camera, new_streams, cb ) {
         done  = false;
 
     for ( var s in new_streams ) {
+
         var stream = new_streams[s];
+        if ( !isValidStream(stream) || !stream.id ) { continue; }
 
         // add a new stream
-        if ( !stream.id || !camera.spotMonitorStreams[ stream.id ] ) { 
+        if ( !camera.spotMonitorStreams[ stream.id ] ) { 
             addSpotMonitorStream( camera, stream, function() {
                 total--;
                 if (total <= 0 && !done && cb) {
@@ -226,7 +229,7 @@ var updateAllSpotMonitorStreams = function( camera, new_streams, cb ) {
  */
 var updateSpotMonitorStream = function( camera, stream, cb ) {
 
-    validateCallback( cb );
+    cb = validateCallback( cb );
 
     if (
         !isValidCamera( camera ) ||
@@ -235,8 +238,15 @@ var updateSpotMonitorStream = function( camera, stream, cb ) {
         return cb('invalid params');
     }
 
-    var id = stream.id;
-    var need_restart = false;
+    var id = stream.id,
+        need_restart = false;
+
+    if (
+        !id || 
+        !camera.spotMonitorStreams[id]
+    ) { 
+        return cb('invalid stream ID'); 
+    }
 
     camera.spotMonitorStreams[id].name = stream.name;
 
@@ -244,7 +254,7 @@ var updateSpotMonitorStream = function( camera, stream, cb ) {
     var restartParams = ['resolution', 'framerate', 'quality', 'url', 'ip', 'camera_no', 'bitrate'];
 
     // iterates through restart params, checks if any of them changed, 
-    // sets restarting if needed
+    // restarting stream if needed
     for (var i in restartParams) {
 
         var param = restartParams[i];
@@ -277,7 +287,7 @@ var updateSpotMonitorStream = function( camera, stream, cb ) {
  */
 var restartSpotMonitorStream = function( camera, streamId, cb ) {
 
-    validateCallback( cb );
+    cb = validateCallback( cb );
 
     if (
         !isValidCamera( camera ) ||
@@ -369,11 +379,11 @@ var removeSpotMonitorStream = function( camerasController, camId, streamId, cb )
 
     camera = camera.cam;
 
-    if ( !camera.spotMonitorStreams || !camera.spotMonitorStreams[streamId] ) {
+    if ( !camera.spotMonitorStreams[streamId] ) {
         return cb('stream not found');
     }
 
-    camerasController.db.find({ _id : camId  }, function(err, docs ) {
+    camerasController.db.find({ _id : camId  }, function(err, docs) {
 
         if (err) {
             return cb('camera not found in db');
