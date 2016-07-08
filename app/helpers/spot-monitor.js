@@ -79,6 +79,10 @@ var addSpotMonitorStream = function( camera, stream, cb ) {
         return cb('stream contains no ID');
     }
 
+    if (camera.spotMonitorStreams[stream.id]) {
+        return cb('stream already exists');
+    }
+
     camera.api.getRtspUrl({
 
         resolution:     stream.resolution,
@@ -211,6 +215,9 @@ var updateAllSpotMonitorStreams = function( camera, new_streams, cb ) {
     var total = new_streams.length,
         done  = false;
 
+    var addedCount = 0,
+        updatedCount = 0;
+
     for ( var s in new_streams ) {
 
         var stream = new_streams[s];
@@ -223,17 +230,19 @@ var updateAllSpotMonitorStreams = function( camera, new_streams, cb ) {
         if ( !camera.spotMonitorStreams[ stream.id ] ) { 
             addSpotMonitorStream( camera, stream, function() {
                 total--;
+                addedCount++;
                 if (total <= 0 && !done) {
                     done = true;
-                    cb(); 
+                    cb(null, { added: addedCount, updated: updatedCount }); 
                 }
             });
         } else {  // or update a stream if it already exists
             updateSpotMonitorStream( camera, stream, function() {
                 total--;
+                updatedCount++;
                 if (total <= 0 && !done) {
                     done = true;
-                    cb();
+                    cb(null, { added: addedCount, updated: updatedCount });
                 }
             });
         }
@@ -241,7 +250,7 @@ var updateAllSpotMonitorStreams = function( camera, new_streams, cb ) {
 
     if (total <= 0 && !done) {
         done = true;
-        cb();
+        cb(null, { added: addedCount, updated: updatedCount }); 
     }
 };
 /* end of updateAllSpotMonitorStreams */
@@ -417,7 +426,9 @@ var removeSpotMonitorStream = function( camerasController, camId, streamId, cb )
     camerasController.db.find({ _id : camId  }, function(err, docs) {
 
         if (err) {
-            return cb('camera not found in db');
+            console.error('[spot-monitor-helper : removeSpotMonitorStream]  db error:');
+            console.error( err );
+            return cb('db error');
         }
 
         if ( !docs || !docs[0] ) {
