@@ -443,7 +443,7 @@ Camera.prototype.motionHandler = function( motionGrid ) {
 Camera.prototype.updateAllStreams = function( new_streams, cb ) {
 
     if (!new_streams) {
-        if (cb) cb();
+        if (cb) cb('invalid params');
         return;
     }
 
@@ -464,25 +464,42 @@ Camera.prototype.updateAllStreams = function( new_streams, cb ) {
     var total = new_streams.length,
         done  = false;
 
+    var addedCounter = 0,
+        updatedCounter = 0;
+
     for ( var s in new_streams ) {
         var stream = new_streams[s];
 
-        if ( !stream.id || !self.streams[ stream.id ] ) { 
+        // skip invalid streams
+        if (!stream || typeof(stream) !== 'object' || !stream.id) { 
+            console.error('[Camera : updateAllStreams]  skipping invalid stream in array');
+            total--;
+            if (total <= 0 && !done && cb) { 
+                done = true;
+                cb(null, {added: addedCounter, updated: updatedCounter}); 
+            }
+
+        // add new stream if it doesnt exist yet
+        } else if ( !self.streams[ stream.id ] ) { 
             self.addStream( stream, function() {
+                addedCounter++;
                 total--;
                 if (total <= 0 && !done && cb) { 
                     done = true;
-                    cb(); 
+                    cb(null, {added: addedCounter, updated: updatedCounter}); 
                 }
-            });	 // add new stream if 'id' is blank or doesn't match
+            });
+
+        // or update stream if it already exists
         } else {
             self.updateStream( stream, function() {
+                updatedCounter++;
                 total--;
                 if (total <= 0 && !done && cb) {
                     done = true;
-                    cb();
+                    cb(null, {added: addedCounter, updated: updatedCounter}); 
                 }
-            });	// ...or update stream
+            });
         }
     }
 };
