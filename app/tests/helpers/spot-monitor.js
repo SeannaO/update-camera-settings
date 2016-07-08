@@ -2,7 +2,7 @@ var assert = require('assert');
 var sinon  = require('sinon');
 var _      = require('lodash');
 var async  = require('async');
-var fs     = require('fs');
+var fs     = require('fs-extra');
 
 var spotMonitorHelper = require('../../helpers/spot-monitor');
 
@@ -836,12 +836,13 @@ describe('removeSpotMonitorStream', function() {
 
     var CamerasController = require('../../controllers/cameras_controller');
 
-    var db_file = __dirname + '/../fixtures/files/cam_db_' + Date.now();
+    var db_file = __dirname + '/../tmp/spot-monitor-cam_db_' + Date.now();
     try{
         fs.unlinkSync( db_file );
     } catch(err) {}
 
-    var videosFolder = __dirname + '/../fixtures/cameras_controller_test';
+    var videosFolder = __dirname + '/../tmp/spot-monitor-tests';
+    fs.ensureDirSync( videosFolder );
 
     var camerasController,
         camera;
