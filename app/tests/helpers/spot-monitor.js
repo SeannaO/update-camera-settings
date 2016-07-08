@@ -2,6 +2,7 @@ var assert = require('assert');
 var sinon  = require('sinon');
 var _      = require('lodash');
 var async  = require('async');
+var fs     = require('fs');
 
 var spotMonitorHelper = require('../../helpers/spot-monitor');
 
@@ -54,7 +55,7 @@ describe('addAllSpotMonitorStreams', function() {
 
     it('should reject invalid spotMonitorStreams', function( done ) {
 
-        var cameraWithoutStreams = _.clone( _cameraWithoutStreams );
+        var cameraWithoutStreams = _.cloneDeep( _cameraWithoutStreams );
         spotMonitorHelper.addAllSpotMonitorStreams( cameraWithoutStreams, 'x', function(err) {
             assert.equal(err, 'invalid params');
 
@@ -72,7 +73,7 @@ describe('addAllSpotMonitorStreams', function() {
    
     it('should handle empty array of spotMonitorStreams', function( done ) {
 
-        var cameraWithoutStreams = _.clone( _cameraWithoutStreams );
+        var cameraWithoutStreams = _.cloneDeep( _cameraWithoutStreams );
         spotMonitorHelper.addAllSpotMonitorStreams( cameraWithoutStreams, [], function(err) {
             assert.ok(!err);
             done();
@@ -82,16 +83,16 @@ describe('addAllSpotMonitorStreams', function() {
 
 
     it('should handle undefined callback', function() {
-        var cameraWithoutStreams = _.clone( _cameraWithoutStreams );
+        var cameraWithoutStreams = _.cloneDeep( _cameraWithoutStreams );
         spotMonitorHelper.addAllSpotMonitorStreams( cameraWithoutStreams, [] );
     });
 
     
     it('should call addSpotMonitorStream once for each valid stream in the array', function(done) {
-        var cameraWithoutStreams = _.clone( _cameraWithoutStreams );
+        var cameraWithoutStreams = _.cloneDeep( _cameraWithoutStreams );
         var streams = [];
         for (var i = 0; i < 10; i++) {
-            var s = _.clone( _stream );
+            var s = _.cloneDeep( _stream );
             s.id = 'stream_' + i;
             streams.push( s );
         }
@@ -121,7 +122,82 @@ describe('addAllSpotMonitorStreams', function() {
  *          - { String } err      'null' if no errors
  *          - { object } stream   stream object
  */
+describe('addSpotMonitorStream', function() {
 
+    it('should reject invalid camera objects', function( done ) {
+        var stream = _.cloneDeep( _stream );
+
+        spotMonitorHelper.addSpotMonitorStream( 'string', stream, function(err) {
+            assert.equal(err, 'invalid params');
+
+            spotMonitorHelper.addSpotMonitorStream( null, stream, function(err) {
+                assert.equal(err, 'invalid params');
+
+                spotMonitorHelper.addSpotMonitorStream( {x:'y'}, stream, function(err) {
+                    assert.equal(err, 'invalid params');
+                        done();
+                });
+            });
+        });
+    });
+
+
+    it('should reject invalid spotMonitorStreams', function( done ) {
+
+        var cameraWithoutStreams = _.cloneDeep( _cameraWithoutStreams );
+        spotMonitorHelper.addSpotMonitorStream( cameraWithoutStreams, 'x', function(err) {
+            assert.equal(err, 'invalid params');
+
+            spotMonitorHelper.addSpotMonitorStream( cameraWithoutStreams, {x:'y'}, function(err) {
+                assert.equal(err, 'stream contains no ID');
+
+                spotMonitorHelper.addSpotMonitorStream( cameraWithoutStreams, null, function(err) {
+                    assert.equal(err, 'invalid params');
+                        done();
+                });
+            });
+        });
+    });
+
+    it('should not add stream if it already exists', function(done) {
+        var camera = _.cloneDeep( _cameraWithoutStreams );
+        var stream = {
+            id: 'stream_1',
+            name: 'name_1',
+            framerate: 'framerate_1'
+        };
+        camera.spotMonitorStreams[ stream.id ] = stream;
+        var new_stream = {
+            id: 'stream_1',
+            name: 'new_name_1',
+        };
+
+        spotMonitorHelper.addSpotMonitorStream( camera, new_stream, function(err) {
+            var s = camera.spotMonitorStreams[ 'stream_1' ];
+            assert.equal( s.id, 'stream_1' );
+            assert.equal( s.name, 'name_1' );
+            assert.equal( s.framerate, 'framerate_1' );
+
+            assert.equal( err, 'stream already exists' );
+            done();
+        });
+    });
+
+    it('should successfully add stream and update url', function(done) {
+        var camera = _.cloneDeep( _cameraWithoutStreams );
+        var stream = {
+            id: 'stream_1',
+            name: 'name_1',
+            framerate: 'framerate_1',
+            url: 'some_url'
+        };
+
+        spotMonitorHelper.addSpotMonitorStream( camera, stream, function(err) {
+            assert.equal(err, null);
+            done();
+        });
+    });
+});
 /* end of addSpotMonitorStream */
 
 
@@ -146,30 +222,30 @@ describe('reAddMissingSpotMonitorStreams', function() {
 
     it('should add missing streams and preserve the other ones', function() {
 
-        var curr_camera = _.clone( _cameraWithoutStreams );
+        var curr_camera = _.cloneDeep( _cameraWithoutStreams );
         curr_camera.spotMonitorStreams = [];
         var curr_camera_streams_orig = [];
 
-        var cam = _.clone( _cameraWithoutStreams );
+        var cam = _.cloneDeep( _cameraWithoutStreams );
         cam.spotMonitorStreams = [];
         var cam_streams_orig = [];
 
         for (var i = 0; i < 5; i++) {
-            var s = _.clone( _stream );
+            var s = _.cloneDeep( _stream );
             s.id = 'curr_stream_' + i;
             curr_camera.spotMonitorStreams.push( s );
             curr_camera_streams_orig.push( s );
         }
 
         for (var i = 0; i < 3; i++) {
-            var s = _.clone( _stream );
+            var s = _.cloneDeep( _stream );
             s.id = 'new_stream_' + i;
             cam.spotMonitorStreams.push( s );
             cam_streams_orig.push( s );
         }
 
         for (var i = 0; i < 2; i++) {
-            var s = _.clone( _stream );
+            var s = _.cloneDeep( _stream );
             s.id = 'common_stream_' + i;
 
             curr_camera.spotMonitorStreams.push( s );
@@ -233,7 +309,7 @@ describe('generateIDForNewStreams', function() {
 
     it('should not generate new IDs only if not already present and return hash of streams by ID', function() {
        
-        var cam = _.clone( _cameraWithoutStreams );
+        var cam = _.cloneDeep( _cameraWithoutStreams );
         cam.spotMonitorStreams = [
             {
                 id: 'stream_1'
@@ -274,7 +350,7 @@ describe('generateIDForNewStreams', function() {
 
     it( 'should not break when there is invalid streams in the array', function() {
        
-        var cam = _.clone( _cameraWithoutStreams );
+        var cam = _.cloneDeep( _cameraWithoutStreams );
         cam.spotMonitorStreams = [
             {
                 id: 'stream_1'
@@ -324,10 +400,10 @@ describe('generateIDForNewStreams', function() {
  */
 describe('updateAllSpotMonitorStreams', function() {
 
-    var camera = _.clone( _cameraWithoutStreams );
+    var camera = _.cloneDeep( _cameraWithoutStreams );
     var new_streams = [];
     for (var i = 0; i < 5; i++) {
-        var s = _.clone( _stream );
+        var s = _.cloneDeep( _stream );
         s.id = 'stream_' + i;
         new_streams.push(s);
     }
@@ -385,8 +461,8 @@ describe('updateAllSpotMonitorStreams', function() {
 
 
     it ('should handle invalid streams in array', function(done) {
-        var camera_1 = _.clone( _cameraWithoutStreams ),
-            camera_2 = _.clone( _cameraWithoutStreams );
+        var camera_1 = _.cloneDeep( _cameraWithoutStreams ),
+            camera_2 = _.cloneDeep( _cameraWithoutStreams );
 
         var streams_1 = [
             null,
@@ -400,11 +476,15 @@ describe('updateAllSpotMonitorStreams', function() {
             null,
             'x'
         ];
-        spotMonitorHelper.updateAllSpotMonitorStreams(camera_1, streams_1, function(err) {
+        spotMonitorHelper.updateAllSpotMonitorStreams(camera_1, streams_1, function(err, stats) {
             assert.ok(!err);
-            assert.ok( camera.spotMonitorStreams['spot_1'] );
-            spotMonitorHelper.updateAllSpotMonitorStreams(camera_2, streams_2, function(err) {
+            assert.equal(stats.added, 1);
+            assert.equal(stats.updated, 0);
+            assert.ok( camera_1.spotMonitorStreams['spot_1'] );
+            spotMonitorHelper.updateAllSpotMonitorStreams(camera_2, streams_2, function(err, stats) {
                 assert.ok(!err);
+                assert.equal(stats.added, 0);
+                assert.equal(stats.updated, 0);
                 done();
             });
         });
@@ -412,7 +492,7 @@ describe('updateAllSpotMonitorStreams', function() {
 
     it ('should update stream if it already exists', function(done) {
         
-        var camera_1 = _.clone( _cameraWithoutStreams );
+        var camera_1 = _.cloneDeep( _cameraWithoutStreams );
         camera_1.spotMonitorStreams = {
             'stream_1': {
                 id: 'stream_1',
@@ -464,8 +544,11 @@ describe('updateAllSpotMonitorStreams', function() {
             },
         ];
         
-        spotMonitorHelper.updateAllSpotMonitorStreams( camera_1, streams, function(err) {
+        spotMonitorHelper.updateAllSpotMonitorStreams( camera_1, streams, function(err, stats) {
             assert.ok(!err);
+            assert.equal(stats.added, 1);
+            assert.equal(stats.updated, 3);
+
             var spotStreams = camera_1.spotMonitorStreams;
 
             //TODO: cleanup repetition
@@ -511,10 +594,10 @@ describe('updateAllSpotMonitorStreams', function() {
  */
 describe('updateSpotMonitorStream', function() {
 
-    var camera = _.clone( _cameraWithoutStreams );
+    var camera = _.cloneDeep( _cameraWithoutStreams );
     var new_streams = [];
     for (var i = 0; i < 5; i++) {
-        var s = _.clone( _stream );
+        var s = _.cloneDeep( _stream );
         s.id = 'stream_' + i;
         new_streams.push(s);
     }
@@ -577,7 +660,7 @@ describe('updateSpotMonitorStream', function() {
 
 
     it('should restart stream (update url) only when certain params are updated', function(done) {
-        var camera_1 = _.clone( _cameraWithoutStreams );
+        var camera_1 = _.cloneDeep( _cameraWithoutStreams );
         camera_1.spotMonitorStreams = {
             'stream_1': {
                 id: 'stream_1',
@@ -627,7 +710,7 @@ describe('updateSpotMonitorStream', function() {
  */
 describe('restartSpotMonitorStream', function() {
 
-    var camera = _.clone( _cameraWithoutStreams );
+    var camera = _.cloneDeep( _cameraWithoutStreams );
 
     camera.spotMonitorStreams = {
         'stream_1': {
@@ -700,7 +783,7 @@ describe('getSpotMonitorStreamsJSON', function() {
 
     it('should return empty array when there are no streams', function() {
 
-        var camera = _.clone( _cameraWithoutStreams );
+        var camera = _.cloneDeep( _cameraWithoutStreams );
         camera.spotMonitorStreams = {};
 
         var r = spotMonitorHelper.getSpotMonitorStreamsJSON( camera );
@@ -710,7 +793,7 @@ describe('getSpotMonitorStreamsJSON', function() {
 
     it('should return array with streams data', function() {
 
-        var camera = _.clone( _cameraWithoutStreams );
+        var camera = _.cloneDeep( _cameraWithoutStreams );
         camera.spotMonitorStreams = {
             'stream_1': {
                 id: 'stream_1',
@@ -751,6 +834,52 @@ describe('getSpotMonitorStreamsJSON', function() {
  */
 describe('removeSpotMonitorStream', function() {
 
+    var CamerasController = require('../../controllers/cameras_controller');
+
+    var db_file = __dirname + '/../fixtures/files/cam_db_' + Date.now();
+    try{
+        fs.unlinkSync( db_file );
+    } catch(err) {}
+
+    var videosFolder = __dirname + '/../fixtures/cameras_controller_test';
+
+    var camerasController,
+        camera;
+    
+    after( function() {
+        try{
+            fs.unlinkSync( db_file );
+        } catch(err) {}
+    });
+
+    before( function(done) {
+        camerasController = new CamerasController( db_file, videosFolder, function() {
+            var cam = {
+                ip:            "192.168.215.102",
+                type:          "onvif",
+                status:        "missing camera stream(s)",
+                manufacturer:  "unknown",
+                id:            Math.random(),
+                spotMonitorStreams: {
+                    'stream_1': {
+                        id: 'stream_1'
+                    },
+                    'stream_2': {
+                        id: 'stream_2'
+                    },
+                    'stream_3': {
+                        id: 'stream_3'
+                    }
+                }
+            };
+            camerasController.insertNewCamera( cam, function(err, cam ) {
+                camera = cam;
+                done();      
+            });
+        });
+    });
+
+
     it('should reject invalid cameraController param', function(done) {
 
         spotMonitorHelper.removeSpotMonitorStream( null, 'cam_1', 'stream_1', function(err) {
@@ -765,5 +894,77 @@ describe('removeSpotMonitorStream', function() {
         });
     });
 
+    
+    it('should reject invalid camera', function(done) {
+        spotMonitorHelper.removeSpotMonitorStream( camerasController, null, 'y', function(err) {
+            assert.equal(err, 'camera not found');
+            spotMonitorHelper.removeSpotMonitorStream( camerasController, 'x', 'y', function(err) {
+                done();
+            });
+        });
+    });
+
+
+    it('should reject invalid stream', function(done) {
+        spotMonitorHelper.removeSpotMonitorStream( camerasController, camera._id, null, function(err) {
+            assert.equal(err, 'stream not found');
+            spotMonitorHelper.removeSpotMonitorStream( camerasController, camera._id, 'y', function(err) {
+                assert.equal(err, 'stream not found');
+                done();
+            });
+        });
+    });
+
+    
+    it ('should remove stream from memory', function(done) {
+
+        assert.ok( camera.spotMonitorStreams['stream_2'] );
+
+        spotMonitorHelper.removeSpotMonitorStream( camerasController, camera._id, 'stream_2', function(err) {
+            assert.ok(!err);
+            assert.ok( !camera.spotMonitorStreams['stream_2'] );
+            assert.ok( camera.spotMonitorStreams['stream_1'] );
+            assert.ok( camera.spotMonitorStreams['stream_3'] );
+            done();
+        });
+    });
+
+
+    it('should handle abnormal case where camera is in memory but in db', function(done) {
+        var cam = _.cloneDeep( _cameraWithoutStreams );
+        cam._id = 'cam_not_in_db_1';
+        cam.spotMonitorStreams['stream_2'] = {
+            id: 'stream_2'
+        };
+
+        camerasController.cameras.push( cam );
+        spotMonitorHelper.removeSpotMonitorStream( camerasController, cam._id, 'stream_2', function(err) {
+            assert.equal( err, 'camera not found' );
+            _.remove( camerasController.cameras, function(d) {
+                d._id === cam._id;
+            });
+            done();
+        });
+    });
+
+
+    it('should handle abnormal case where stream is in memory but not in db', function(done) {
+
+        camera.spotMonitorStreams['not_in_db'] = {
+            id: 'not_in_db'
+        };
+        spotMonitorHelper.removeSpotMonitorStream( camerasController, camera._id, 'not_in_db', function(err) {
+            assert.equal( err, 'stream not found' );
+            delete camera.spotMonitorStreams['not_in_db'];
+            done();
+        });
+    });
+
+    it('should handle errors in db', function(done) {
+        // TODO
+        done();
+    });
 });
 /* end of removeSpotMonitorStream */
+
+
