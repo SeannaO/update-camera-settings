@@ -781,6 +781,12 @@ CamerasController.prototype.removeCameraFromDb = function( camId, cb ) {
 CamerasController.prototype.updateCamera = function(cam, cb) {
 
     var self = this;
+
+    if (!cam || typeof(cam) !== 'object') {
+        console.error('[CamerasController : updateCamera]  invalid params');
+        return cb('invalid params');
+    }
+
     var camera = this.findCameraById( cam._id );
 
     if (!camera) {
