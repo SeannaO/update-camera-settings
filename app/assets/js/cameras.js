@@ -1427,6 +1427,11 @@ var removeSpotMonitorStream = function( stream ) {
                         location.reload();
                     });
                 }
+            },
+            error: function(err) {
+                removeOverlayFromPage( function() {
+                    toastr.error( err.responseJSON.error );
+                });
             }
         });
     });

@@ -218,14 +218,14 @@ module.exports = function( app, passport, camerasController ) {
 		var cam = camerasController.findCameraById( camId ).cam;
 		if (!cam) {
 			console.error('[api/cameras]  DELETE spot-monitor: camera ' + camId + ' not found: ');
-			res.json({success: false, error: 'camera not found'});
+			res.status(404).json({error: 'camera not found'});
 			return;
 		} 
 
 		var stream = cam.spotMonitorStreams[ streamId ];
 		if (!stream) {
 			console.error('[api/cameras]  DELETE spot-monitor: stream ' + streamId + ' not found: ');
-			res.json({success: false, error: 'stream not found'});
+			res.status(404).json({error: 'stream not found'});
 			return;
 		}
 
