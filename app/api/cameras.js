@@ -366,17 +366,17 @@ module.exports = function( app, passport, camerasController ) {
             camerasController.getCamera( camId, function(err, cam) {
 
                 if (err || !cam) {
-                    return res.status(422).json( { error: err || 'that camera does not exist'} );
+                    return res.status(422).json( { error: err || 'camera does not exist'} );
                 }
 
                 for ( var i in cam.streams ) {
+
                     var stream = cam.streams[i];
-                    if (!stream.previousThumb) { continue; }
-                    if (stream.previousThumb) {
-                        var thumbsPath = path.resolve( process.env['BASE_FOLDER'], camId, stream.id, 'thumbs' );
-                        var thumbFile = path.resolve( thumbsPath, stream.previousThumb + '.jpg' );
-                        return res.sendfile( thumbFile );
-                    }
+                    if (!stream || !stream.previousThumb) { continue; }
+
+                    var thumbsPath = path.resolve( process.env['BASE_FOLDER'], camId, stream.id, 'thumbs' );
+                    var thumbFile = path.resolve( thumbsPath, stream.previousThumb + '.jpg' );
+                    return res.sendfile( thumbFile );
                 }
 
                 res.status(404).json({
