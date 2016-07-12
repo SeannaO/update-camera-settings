@@ -79,33 +79,41 @@ module.exports = function( app, passport, db_file, camerasController ) {
 
 var appendCameraData = function( views, cameras ) {
 
-	for (var i in views ) {
+    for (var i in views ) {
 
-		var group = views[i];
-		if (!group || group.length == 0) { continue; }
+        var group = views[i];
+        if (!group || group.length == 0) { continue; }
 
-		group.cameras = _.isArray( group.cameras ) ? group.cameras : [];
+        group.cameras = _.isArray( group.cameras ) ? group.cameras : [];
 
-		for (var k = group.cameras.length - 1; k >= 0; k--) {
+        for (var k = group.cameras.length - 1; k >= 0; k--) {
 
-			var cam = group.cameras[k];
-			if (!cam) { continue; }
+            var cam = group.cameras[k];
+            if (!cam) { continue; }
 
-			if ( cameras[ cam.id ] ) {
-				cam.data = _.pick( cameras[ cam.id ], [
-					'_id',
-					'name',
-					'ip',
-					'streams',
-					'status',
-					'manufacturer'
-				]);
-			} else {
-				// exclude deleted camera from json respose
-				group.cameras.splice(k, 1);
-			}
-		}
-	}
+            if ( cameras[ cam.id ] ) {
+                cam.data = _.pick( cameras[ cam.id ], [
+                        '_id',
+                        'name',
+                        'ip',
+                        'streams',
+                        'status',
+                        'manufacturer'
+                    ]);
 
-	return views;
+                var spotMonitorStreams = cameras[cam.id].spotMonitorStreams || [];
+                cam.data.streams = cam.data.streams || [];
+
+                for (var i in spotMonitorStreams) {
+                    spotMonitorStreams[i].spotMonitorOnly = true;
+                    cam.data.streams.push( spotMonitorStreams[i] );
+                }
+            } else {
+                // exclude deleted camera from json respose
+                group.cameras.splice(k, 1);
+            }
+        }
+    }
+
+    return views;
 };
