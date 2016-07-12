@@ -949,9 +949,9 @@ Camera.prototype.addChunk = function( streamId, chunk ) {
 
 	var stream = this.streams[ streamId ];
 
-	stream.db.insertVideo( chunk );
+        stream.db.insertVideo( chunk );
         stream.previousThumb = stream.latestThumb;                          // this thumbnail is ready for sure
-	stream.latestThumb = chunk.start + "_" + (chunk.end-chunk.start);   // this may not be ready yet
+        stream.latestThumb = chunk.start + "_" + (chunk.end-chunk.start);   // this may not be ready yet
 
 	if (!stream.earliestSegmentDate) {
 		stream.earliestSegmentDate = chunk.start
