@@ -1254,21 +1254,21 @@ Camera.prototype.getRetentionByStream = function( streamId, start, end, cb ) {
 	end   = Math.min(end, Date.now() - 30000);
 
 	stream.db.searchVideosByInterval( start, end, function(err, fileList, offset) {
-        if (err) {
-            cb(err);
-        } else {
-            
-            // initialize previousThumb and latestThumb
-            if (!stream.latestThumb && fileList && fileList.length) {
-                var lastChunkFile = fileList[ fileList.length - 1 ].file;
-                var lastThumbName = path.basename( lastChunkFile ).replace('.ts', '');
-                stream.previousThumb = stream.latestThumb = lastThumbName;
-            }
+            if (err) {
+                cb(err);
+            } else {
+                
+                // initialize previousThumb and latestThumb
+                if (!stream.latestThumb && fileList && fileList.length) {
+                    var lastChunkFile = fileList[ fileList.length - 1 ].file;
+                    var lastThumbName = path.basename( lastChunkFile ).replace('.ts', '');
+                    stream.previousThumb = stream.latestThumb = lastThumbName;
+                }
 
-            var retention = retentionCalculator.calcRetention( fileList, start, end );
-            cb(null, retention);
-        }
-    });
+                var retention = retentionCalculator.calcRetention( fileList, start, end );
+                cb(null, retention);
+            }
+        });
 };
 
 
