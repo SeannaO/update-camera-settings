@@ -99,7 +99,7 @@ Camera.prototype.configureStreams = function( selected_stream ) {
 
     for (var i in spotMonitorStreams) {
 
-        var name = streams[i].name || streams[i].resolution || streams[i].url;
+        var name = spotMonitorStreams[i].name || spotMonitorStreams[i].resolution || spotMonitorStreams[i].url;
         name += ' (spot-monitor)';
 
         this.streamSelector.append(
