@@ -36,6 +36,7 @@ MultiviewCameraGroups.prototype.loadCameras = function( cameras ) {
             if (s.url) {
                 this.add( c._id, s.id );
                 done = true;
+                break;
             }
         }
 
