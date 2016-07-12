@@ -49,15 +49,15 @@ var newCam_1 = {
 var newCam_2 = {
     ip: '2.2.2.2',
     manufacturer: 'generic',
-    spotMonitor: [
-    {
-        name: 'spot_stream_1',
-        url: 'rtsp://127.0.0.1/spot_1'
-    },
-    {
-        name: 'spot_stream_2',
-        url: 'rtsp://127.0.0.1/spot_2'
-    }
+    spotMonitorStreams: [
+        {
+            name: 'spot_stream_1',
+            url: 'rtsp://127.0.0.1/spot_1'
+        },
+        {
+            name: 'spot_stream_2',
+            url: 'rtsp://127.0.0.1/spot_2'
+        }
     ]
 };
 
@@ -65,7 +65,7 @@ var newCam_3 = {
     ip: '3.3.3.3',
     name: 'cam_3',
     manufacturer: 'generic',
-    spotMonitor: [
+    spotMonitorStreams: [
         {
             name: 'spot_stream_3',
             url: 'rtsp://127.0.0.1/spot_3'
@@ -84,7 +84,7 @@ var newCam_4 = {
     ip: '4.4.4.4',
     name: 'cam_4',
     manufacturer: 'generic',
-    spotMonitor: [
+    spotMonitorStreams: [
         {
             name: 'spot_stream_1',
             url: 'rtsp://127.0.0.1/spot_1'
@@ -142,20 +142,20 @@ describe('CamerasController', function() {
                 }
             };
 
-            controller.insertNewCamera( newCam_1, function(err, c) {
+            controller.insertNewCamera( _.cloneDeep(newCam_1), function(err, c) {
                 assert.equal(err, null);
                 var cam = controller.findCameraById( c._id );
 
                 testStreams( cam );
 
-                controller.insertNewCamera( newCam_2, function(err, c) {
+                controller.insertNewCamera( _.cloneDeep(newCam_2), function(err, c) {
                     assert.equal(err, null);
                     var cam = controller.findCameraById( c._id );
 
                     testStreams( cam );
                     testSpotMonitorStreams( cam );
 
-                    controller.insertNewCamera( newCam_2, function(err, c) {
+                    controller.insertNewCamera( _.cloneDeep(newCam_2), function(err, c) {
                         assert.equal(err, null);
                         var cam = controller.findCameraById( c._id );
                         var k = 0;
@@ -185,7 +185,8 @@ describe('CamerasController', function() {
         before( function(done) {
             createCamerasController( function(err, c) {
                 controller = c;
-                controller.insertNewCamera( newCam_4, function(err) {
+                controller.insertNewCamera( _.cloneDeep(newCam_4), function(err) {
+                    assert.equal( Object.keys(controller.cameras[0].spotMonitorStreams).length, 2 );
                     assert.equal( err, null );
                     done();
                 });
@@ -230,8 +231,11 @@ describe('CamerasController', function() {
                 spotMonitorStreams = controller.cameras[0].spotMonitorStreams;
 
             controller.updateCamera( newSettings, function(err) {
+
                 assert.equal(err, null);
-                
+                assert.equal(Object.keys(streams).length, 2);
+                assert.equal(Object.keys(spotMonitorStreams).length, 2);
+
                 var k = 0;
 
                 for(var i in streams) {
@@ -250,7 +254,7 @@ describe('CamerasController', function() {
                     k++;
                     assert.equal( i, spotMonitorStreams[i].id );
                     assert.equal(spotMonitorStreams[i].name, 'spot_stream_'+k);
-                    assert.equal( streams[i].url, 'rtsp://127.0.0.1/spot_stream_'+k );
+                    assert.equal( spotMonitorStreams[i].url, 'rtsp://127.0.0.1/spot_'+k );
                 }
 
                 done();
@@ -271,32 +275,87 @@ describe('CamerasController', function() {
                         id: stream_id,
                         name: 'new_spot_stream_1'
                     }
+                ],
+                streams: [
                 ]
             };
 
             controller.updateCamera( newSettings, function(err) {
-                assert.equal(err, null);
-                
-                var k = 0;
+                // updateCamera calls back when the done with updating streams,
+                // and does not wait for the spotMonitorStreams update,
+                // hence the timeout
+                setTimeout( function() {
+                    assert.equal(err, null);
+                    
+                    var k = 0;
 
-                for(var i in streams) {
-                    k++;
-                    assert.equal( i, streams[i].id );
-                    assert.equal( streams[i].url, 'rtsp://127.0.0.1/stream_'+k );
-                }
-
-                k = 0;
-                for(var i in spotMonitorStreams) {
-                    k++;
-                    assert.equal( i, spotMonitorStreams[i].id );
-                    if (i == stream_id) {
-                        assert.equal(spotMonitorStreams[i].name, 'new_spot_stream_'+k);
-                    } else {
-                        assert.equal(spotMonitorStreams[i].name, 'spot_stream_'+k);
+                    for(var i in streams) {
+                        k++;
+                        assert.equal( i, streams[i].id );
+                        assert.equal( streams[i].url, 'rtsp://127.0.0.1/stream_'+k );
                     }
-                    assert.equal( streams[i].url, 'rtsp://127.0.0.1/spot_stream_'+k );
-                }
 
+                    k = 0;
+                    for(var i in spotMonitorStreams) {
+                        k++;
+                        assert.equal( i, spotMonitorStreams[i].id );
+                        if (i == stream_id) {
+                            assert.equal(spotMonitorStreams[i].name, 'new_spot_stream_'+k);
+                        } else {
+                            assert.equal(spotMonitorStreams[i].name, 'spot_stream_'+k);
+                        }
+                        assert.equal( spotMonitorStreams[i].url, 'rtsp://127.0.0.1/spot_'+k );
+                    }
+
+                    done();
+                }, 100);
+            });
+        });
+    });
+
+
+    /**
+    * removeSpotMonitorStream
+    *
+    * a wrapper to spot-monitor-helper function of same name
+    *
+    * @param { String } camId    
+    * @param { String } streamId
+    * @param { function } cb  callback function
+    */
+    describe('removeSpotMonitorStream', function() {
+
+        var controller,
+            camera;
+
+        before( function(done) {
+
+            createCamerasController( function(err, newController) {
+                controller = newController;
+                controller.insertNewCamera( _.cloneDeep(newCam_4), function(err) {
+                    camera = controller.cameras[0];
+
+                    assert.equal( err, null );
+                    assert.equal( Object.keys( camera.spotMonitorStreams ).length, 2 );
+
+                    done();
+                });
+            });
+        });
+
+        it('should remove spot monitor streams', function(done) {
+            
+            var camera = controller.cameras[0];
+
+            var spotMonitorStreamsIDs = Object.keys( camera.spotMonitorStreams ),
+                streamsIDs = Object.keys( camera.streams );
+
+            // assert.equal( spotMonitorStreamsIDs.length, 2 );
+            assert.equal( streamsIDs.length, 2 );
+
+            controller.removeSpotMonitorStream( camera._id, spotMonitorStreamsIDs[0], function(err) {
+                // assert.equal( spotMonitorStreamIDs.length, 2 );
+                assert.equal( streamsIDs.length, 2 );
                 done();
             });
         });
