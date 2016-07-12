@@ -6,6 +6,18 @@ var Camera = function( d, posId, streamId ) {
 	this.player;
 	this.cam_data = d;
 	this.textLines = [];
+        this.spotMonitorStreams = {};
+        this.streams = {};
+
+        for (var i in d.streams) {
+            var s = d.streams[i];
+            this.streams[s.id] = s;
+        }
+
+        for (var i in d.spotMonitorStreams) {
+            var s = d.spotMonitorStreams[i];
+            this.spotMonitorStreams[s.id] = s;
+        }
 
 	posId = parseInt( posId );
 	
@@ -92,7 +104,7 @@ Camera.prototype.configureStreams = function( selected_stream ) {
 
         this.streamSelector.append(
                 $('<option/>')
-                .val(streams[i].id)
+                .val(spotMonitorStreams[i].id)
                 .text( name )
             );
     }
@@ -113,7 +125,13 @@ Camera.prototype.configureStreams = function( selected_stream ) {
 
     this.streamSelector.change(function(e) {
         self.selectedStream = this.value;
-        self.player.playVideo( self.cam_data._id, this.value );
+
+        if (self.spotMonitorStreams[this.value]) {
+            // TODO: overlay thumbnail or play a normal stream
+            console.log('spot monitor only');
+        } else {
+            self.player.playVideo( self.cam_data._id, this.value );
+        }
         self.group.update(); // save settings
     });
 };
