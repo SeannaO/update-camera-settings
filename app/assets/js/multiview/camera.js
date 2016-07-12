@@ -77,28 +77,45 @@ Camera.prototype.getLowestStream = function() {
 
 Camera.prototype.configureStreams = function( selected_stream ) {
 
-	var self = this;
+    var self = this;
 
-	var streams      = this.cam_data.streams;
-	var lowestStream = this.getLowestStream();
+    var streams            = this.cam_data.streams,
+        spotMonitorStreams = this.cam_data.spotMonitorStreams,
+        lowestStream       = this.getLowestStream();
 
-	this.selectedStream = selected_stream || lowestStream;
+    this.selectedStream = selected_stream || lowestStream;
 
-	for (var i in streams) {
-		this.streamSelector.append(
-				$('<option/>')
-				.val(streams[i].id)
-				.text(streams[i].name || streams[i].resolution || streams[i].url)
-			);
-	}
+    for (var i in spotMonitorStreams) {
 
-	this.streamSelector.val( this.selectedStream );
+        var name = streams[i].name || streams[i].resolution || streams[i].url;
+        name += ' (spot-monitor)';
 
-	this.streamSelector.change(function(e) {
-		self.selectedStream = this.value;
-		self.player.playVideo( self.cam_data._id, this.value );
-		self.group.update(); // save settings
-	});
+        this.streamSelector.append(
+                $('<option/>')
+                .val(streams[i].id)
+                .text( name )
+            );
+    }
+
+    if (Object.keys(spotMonitorStreams).length) {
+        this.streamSelector.append('<option disabled>──────────</option>');
+    }
+
+    for (var i in streams) {
+        this.streamSelector.append(
+                $('<option/>')
+                .val(streams[i].id)
+                .text(streams[i].name || streams[i].resolution || streams[i].url)
+            );
+    }
+
+    this.streamSelector.val( this.selectedStream );
+
+    this.streamSelector.change(function(e) {
+        self.selectedStream = this.value;
+        self.player.playVideo( self.cam_data._id, this.value );
+        self.group.update(); // save settings
+    });
 };
 
 
