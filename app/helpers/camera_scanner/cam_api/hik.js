@@ -156,6 +156,38 @@ Hik.prototype.updateProfile = function(profileId, profile, cb) {
 };
 
 
+Hik.prototype.getNumberOfChannels = function( cb ) {
+
+    if (!cb || typeof(cb) !== 'function') { cb = function() {}; }
+
+    var url = 'http://' + username + ':' + password + '@' + ip + '/streaming/channels';
+
+    request({
+        url: url,
+        headers: {
+            'User-Agent': 'nodejs'
+        },
+        timeout: 10000
+    }, function(err, res, body) {
+
+        if ( err ) {
+            return cb(err);
+        } else if ( !body ) {
+            return cb('empty response');
+        } else if ( 
+            body.indexOf('Invalid Operation') >= 0 ||
+            body.indexOf('Unauthorized') >= 0 
+        ) {
+            return cb('not authorized');
+        }
+
+        var nChannels = (body.match(/<StreamingChannel /g) || []).length;
+        
+        cb( null, nChannels );
+    });
+};
+
+
 Hik.prototype.getRtspUrl = function ( profile, cb ) {
 	
 	var self = this;
