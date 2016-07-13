@@ -133,9 +133,10 @@ var Hik = function() {
 	this.username;
 	this.ip;
 
-	this.resolution2channel   = {};
-	this.fpsOptionsPerChannel = {};
-	this.bitrateOptionsPerChannel = {};
+	this.resolution2channel          = {};
+	this.fpsOptionsPerChannel        = {};
+	this.bitrateOptionsPerChannel    = {};
+	this.resolutionOptionsPerChannel = {};
 };
 
 Hik.prototype.apiName = function() {
@@ -309,6 +310,7 @@ Hik.prototype.getResolutionOptions = function(cb) {
 
 			self.addFpsOptions( 1, fpsData );
 			self.addBitrateOptions( 1, bitrates );
+                        self.addResolutionOptions( 1, res );
 		}
 		error = error || err;
 		getResolutions(self.ip, self.username, self.password, 2, function(err, res, fpsData, bitrates) {
@@ -322,6 +324,7 @@ Hik.prototype.getResolutionOptions = function(cb) {
 
 			self.addFpsOptions( 2, fpsData );
 			self.addBitrateOptions( 1, bitrates );
+                        self.addResolutionOptions( 2, res );
 
 			error = error || err;
 			if( res.length == 0 && error ) {
@@ -333,6 +336,15 @@ Hik.prototype.getResolutionOptions = function(cb) {
 	});
 };
 
+
+Hik.prototype.addResolutionOptions = function( channel, resolutionData ) {
+    var self = this;
+
+    self.resolutionOptionsPerChannel[channel] = [];
+    for(var i in resolutionData) {
+        self.resolutionOptionsPerChannel[channel].push( resolutionData[i] );
+    }
+};
 
 Hik.prototype.addFpsOptions = function( channel, fpsData ) {
 	var self = this;
