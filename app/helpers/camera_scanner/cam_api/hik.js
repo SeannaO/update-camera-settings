@@ -1,5 +1,6 @@
-var request     = require('request');
-var xml2js      = require('xml2js').parseString;
+var request = require('request');
+var xml2js  = require('xml2js').parseString;
+var async   = require('async');
 
 
 var requestXML = 
@@ -161,7 +162,7 @@ Hik.prototype.getNumberOfChannels = function( cb ) {
 
     if (!cb || typeof(cb) !== 'function') { cb = function() {}; }
 
-    var url = 'http://' + username + ':' + password + '@' + ip + '/streaming/channels';
+    var url = 'http://' + this.username + ':' + this.password + '@' + this.ip + '/streaming/channels';
 
     request({
         url: url,
@@ -204,12 +205,17 @@ Hik.prototype.getRtspUrl = function ( profile, cb ) {
 			console.error('[HIK.getRtspUrl]  error when getting resolutions from camera: ' + err);
 		}
 
-		var channel = self.resolution2channel[ profile.resolution ];
+		var channel = profile.channel || self.resolution2channel[ profile.resolution ];
 
 		if ( isNaN(channel) ) {
 			console.error('[HIK.getRtspUrl]  could not determine a channel, using default 1');
 			channel = 1; // default channel
 		}
+
+                if (channel < 1 || channel > self.nChannels) {
+                    console.error('[HIK.getRtspUrl]  invalid channel: ' + channel + '; using default 1');
+                    channel = 1;
+                }
 
 		var width   = resolution[0];
 		var height  = resolution[1];
@@ -297,43 +303,83 @@ Hik.prototype.getResolutionOptions = function(cb) {
 	
 	var currentResolutions = {};
 
-	var resolutions = [];
+	var resolutions = [],
+            bitrates;
+
 	var error; 
 
-	getResolutions(this.ip, this.username, this.password, 1, function(err, res, fpsData, bitrates) {
-		for (var i in res) {
-			if (!currentResolutions[res[i].name]) {
-				currentResolutions[res[i].name] = true;
-				self.resolution2channel[ res[i].value ] = 1;
-				resolutions.push( res[i] );
-			}
+        this.getNumberOfChannels( function( err, nChannels ) {
 
-			self.addFpsOptions( 1, fpsData );
-			self.addBitrateOptions( 1, bitrates );
-                        self.addResolutionOptions( 1, res );
-		}
-		error = error || err;
-		getResolutions(self.ip, self.username, self.password, 2, function(err, res, fpsData, bitrates) {
-			for (var i in res) {
-				if (!currentResolutions[res[i].name]) {
-					currentResolutions[res[i].name] = true;
-					self.resolution2channel[ res[i].value ] = 2;
-					resolutions.push( res[i] );
-				}
-			}
+            if (err) {
+                return cb(err, []);
+            }
 
-			self.addFpsOptions( 2, fpsData );
-			self.addBitrateOptions( 1, bitrates );
+            if (nChannels == 0) {
+                return cb('0 channels');
+            }
+
+            self.nChannels = nChannels;
+
+            async.parallel([
+
+                function(callback) {
+
+                    getResolutions(self.ip, self.username, self.password, 1, function(err, res, fpsData, bps) {
+
+                        for (var i in res) {
+                            if (!currentResolutions[res[i].name]) {
+                                currentResolutions[res[i].name] = true;
+                                self.resolution2channel[ res[i].value ] = 1;
+                                resolutions.push( res[i] );
+                            }
+
+                            self.addFpsOptions( 1, fpsData );
+                            self.addBitrateOptions( 1, bps );
+                            self.addResolutionOptions( 1, res );
+                        }
+
+                        bitrates = bps; // TODO: merge
+                        callback(err);
+                    });
+                },
+
+                function(callback) {
+
+                    getResolutions(self.ip, self.username, self.password, 2, function(err, res, fpsData, bps) {
+
+                        for (var i in res) {
+                            if (!currentResolutions[res[i].name]) {
+                                currentResolutions[res[i].name] = true;
+                                self.resolution2channel[ res[i].value ] = 2;
+                                resolutions.push( res[i] );
+                            }
+                        }
+
+                        self.addFpsOptions( 2, fpsData );
+                        self.addBitrateOptions( 2, bps );
                         self.addResolutionOptions( 2, res );
+                        
+                        bitrates = bps; // TODO: merge
+                        callback(err);
+                    });
+                }
+            ], 
 
-			error = error || err;
-			if( res.length == 0 && error ) {
-				cb(error, []);
-			} else {
-				cb( null, resolutions, bitrates );
-			}
-		});
-	});
+            function( err ) {
+
+                    if( err ) {
+                        cb(error, []);
+                    } else {
+                        cb( null, resolutions, bitrates, {
+                            nChannels:              self.nChannels,
+                            resolutionsPerChannel:  self.resolutionOptionsPerChannel,
+                            frameratePerChannel:    self.fpsOptionsPerChannel,
+                            bitratesPerChannel:     self.bitrateOptionsPerChannel
+                        });
+                    }
+                }
+            );
+        });
 };
 
 
