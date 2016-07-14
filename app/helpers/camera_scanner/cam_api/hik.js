@@ -6,7 +6,7 @@ var async   = require('async');
 var requestXML = 
 	'<?xml version:"1.0" encoding="UTF-8"?><StreamingChannel xmlns="urn:psialliance-org" version="1.0">'
 	+ '<id>{channel}</id>'
-	+ '<channelName>Solink 01</channelName>'
+	+ '<channelName>Solink 01</channelName>'   // TODO: test if ok to have empty name
 	+ '<enabled>true</enabled>'
 	+ ' <Video>'
 	+	'<enabled>true</enabled>'
@@ -15,13 +15,18 @@ var requestXML =
 	+ 	'<videoResolutionWidth>{width}</videoResolutionWidth>'
 	+ 	'<videoResolutionHeight>{height}</videoResolutionHeight>'
 	+ 	'<videoQualityControlType>vbr</videoQualityControlType>'
-	+ 	'<constantBitRate>{bitrate}</constantBitRate>'
 	+ 	'<vbrUpperCap>{bitrate}</vbrUpperCap>'
 	+ 	'<vbrLowerCap>32</vbrLowerCap>'
 	+ 	'<fixedQuality>60</fixedQuality>'
 	+ 	'<maxFrameRate>{fps}</maxFrameRate>'
 	+ 	'</Video>'
 	+ 	'</StreamingChannel>';
+
+        //TODO: GOP Interval
+        // <GovLength>12</GovLength>
+        //
+        // GOP capabilities:
+        // <GovLength min="1" max="400">12</GovLength>
 
 var configURL = 'http://{username}:{password}@{ip}/PSIA/Streaming/Channels/{channel}';
 
