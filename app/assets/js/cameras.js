@@ -659,12 +659,12 @@ var editCamera = function(camId) {
                             addStreamFieldOverlay( '#' + id );
                         });
                     }
-                }else if (
+                } else if (
                     !data.camera.spotMonitorStreams || 
                     !data.camera.spotMonitorStreams.length
                 ) {
                     addStream(function(id) {
-                        addStreamFieldOverlay( '#' + id );						
+                        addStreamFieldOverlay( '#' + id );
                     });
                 }
 
@@ -740,28 +740,37 @@ var populateChannelFields = function( optionsPerChannel ) {
         );
     }
 
-    $('.camera-stream-channel-select').change( function() {
-        var channel = $(this).val();
+    $('.camera-stream-channel-select').each( function(idx) {
+        $(this).change( function() {
+            var channel = $(this).val();
 
-        if ( optionsPerChannel.resolutionsPerChannel && optionsPerChannel.resolutionsPerChannel[channel] ) {
-            var d = {
-                resolutions: optionsPerChannel.resolutionsPerChannel[channel]
-            };
-            populateResolutionFields( d );
-        }
+            if ( optionsPerChannel.resolutionsPerChannel && optionsPerChannel.resolutionsPerChannel[channel] ) {
+                var d = {
+                    resolutions: optionsPerChannel.resolutionsPerChannel[channel]
+                };
+                populateResolutionFields( d, idx );
+            }
 
-        if ( optionsPerChannel.bitratesPerChannel && optionsPerChannel.bitratesPerChannel[channel] ) {
-            var bitrates = optionsPerChannel.bitratesPerChannel[channel];
-            populateBitrateFields( bitrates );
-        }
+            console.log(optionsPerChannel.bitratesPerChannel[channel]);
+            if ( optionsPerChannel.bitratesPerChannel && optionsPerChannel.bitratesPerChannel[channel] ) {
+                var bitrates = optionsPerChannel.bitratesPerChannel[channel];
+                populateBitrateFields( bitrates, idx );
+            }
+        });
+
+        var channel = $(this).attr('data-channel') || 1;
+        console.log('setting channel to ' + channel);
+        $(this).val( channel );
     });
 
+
+    // $('.camera-stream-channel-group').val( channel );
     $('.camera-stream-channel-group').show(); 
     $('.camera-stream-channel-select').change();
 };
 
 
-var populateBitrateFields = function(bitrates) {
+var populateBitrateFields = function(bitrates, idx) {
 
     // TODO: also handle list of bitrates instead of just range
     if (!bitrates || !bitrates.min || !bitrates.max) { 
@@ -770,6 +779,28 @@ var populateBitrateFields = function(bitrates) {
 
     var min = parseInt( bitrates.min );
     var max = parseInt( bitrates.max );
+
+    if ( !isNaN(idx) ) {
+
+        var el = $( $('.camera-stream-bitrate-select')[idx] );
+
+        var default_val = '512';
+        var current_val = el.val() || el.attr('data-bitrate') || default_val;
+
+        el.html('');
+        for (var i = min; i <= max; i*=2) {
+            el.append($('<option>', {
+                value:  i,
+                text:   i
+            }));
+        };
+
+        el.val(current_val);
+
+        $('.camera-stream-bitrate-group').show();
+
+        return;
+    }
 
     $('.camera-stream-bitrate-select').each(function(){
         var self = $(this);
@@ -791,7 +822,25 @@ var populateBitrateFields = function(bitrates) {
 };
 
 
-var populateResolutionFields = function(data) {
+var populateResolutionFields = function(data, idx) {
+
+    if ( !isNaN(idx) ) {
+
+        var el = $( $('.camera-stream-resolution-select')[idx] );
+
+        var first_val = data.resolutions[0] ? data.resolutions[0].value : 0;
+        var current_val = el.val() || el.attr('data-resolution') || first_val;
+
+        el.html('');
+        for (idx in data.resolutions) {
+            el.append($('<option>', {
+                value: data.resolutions[idx].value,
+                text: data.resolutions[idx].name
+            }));
+        }
+        el.val(current_val);
+        return;
+    }
 
     $('.camera-stream-resolution-select').each(function(){
         var self = $(this);
@@ -801,9 +850,6 @@ var populateResolutionFields = function(data) {
 
         self.html('');
         for (idx in data.resolutions) {
-            // remove duplicate resolution (HIK)
-            // TODO: handle same resolution on different channels
-            $(self).find("option[value='"+data.resolutions[idx].value+"']").remove();
             self.append($('<option>', {
                 value: data.resolutions[idx].value,
                 text: data.resolutions[idx].name
