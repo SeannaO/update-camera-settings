@@ -88,6 +88,7 @@ var addSpotMonitorStream = function( camera, stream, cb ) {
         resolution:     stream.resolution,
         framerate:      stream.framerate,
         quality:        stream.quality,
+        channel:        stream.channel,
         suggested_url:  stream.url,
         bitrate:        stream.bitrate,
         camera_no:      stream.camera_no
@@ -289,7 +290,7 @@ var updateSpotMonitorStream = function( camera, stream, cb ) {
     camera.spotMonitorStreams[id].name = stream.name;
 
     // these are the parameters that require restarting the stream / re-configuring the camera
-    var restartParams = ['resolution', 'framerate', 'quality', 'url', 'ip', 'camera_no', 'bitrate'];
+    var restartParams = ['resolution', 'framerate', 'quality', 'url', 'ip', 'camera_no', 'bitrate', 'channel'];
 
     // iterates through restart params, checks if any of them changed, 
     // restarting stream if needed
@@ -341,6 +342,7 @@ var restartSpotMonitorStream = function( camera, streamId, cb ) {
         resolution:     stream.resolution,
         framerate:      stream.framerate,
         quality:        stream.quality,
+        channel:        stream.channel,
         bitrate:        stream.bitrate,
         suggested_url:  stream.url,
         camera_no:      stream.camera_no
@@ -380,6 +382,7 @@ var getSpotMonitorStreamsJSON = function( camera ) {
             rtsp:        s.rtsp,
             resolution:  s.resolution,
             quality:     s.quality,
+            channel:     s.channel,
             framerate:   s.framerate,
             bitrate:     s.bitrate,
             name:        s.name,
