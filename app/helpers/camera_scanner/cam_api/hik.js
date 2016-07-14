@@ -291,6 +291,32 @@ Hik.prototype.configCamera = function(params, cb) {
 		});
 };
 
+var getResolutionAsyncHelper = function( hik, channel, d ) {
+                
+    var r = function(callback) {
+
+        getResolutions(hik.ip, hik.username, hik.password, channel, function(err, res, fpsData, bps) {
+
+            for (var i in res) {
+                if ( !d.currentResolutions[ res[i].name ] ) {
+                    d.currentResolutions[ res[i].name ] = true;
+                    hik.resolution2channel[ res[i].value ] = 1;
+                    d.resolutions.push( res[i] );
+                }
+
+            }
+
+            hik.addFpsOptions( channel, fpsData );
+            hik.addBitrateOptions( channel, bps );
+            hik.addResolutionOptions( channel, res );
+
+            d.bitrates = bps; // TODO: merge
+            callback(err);
+        });
+    };
+
+    return r;
+};
 
 Hik.prototype.getResolutionOptions = function(cb) {
 
@@ -320,52 +346,20 @@ Hik.prototype.getResolutionOptions = function(cb) {
 
             self.nChannels = nChannels;
 
-            async.parallel([
+            var tasks = [];
+            for (var ch = 1; ch <= nChannels; ch++) {
+                tasks.push(
+                    getResolutionAsyncHelper( self, ch, {
+                        currentResolutions:  currentResolutions,
+                        resolutions:         resolutions,
+                        bitrates:            bitrates
+                    })
+                );
+            }
 
-                function(callback) {
-
-                    getResolutions(self.ip, self.username, self.password, 1, function(err, res, fpsData, bps) {
-
-                        for (var i in res) {
-                            if (!currentResolutions[res[i].name]) {
-                                currentResolutions[res[i].name] = true;
-                                self.resolution2channel[ res[i].value ] = 1;
-                                resolutions.push( res[i] );
-                            }
-
-                            self.addFpsOptions( 1, fpsData );
-                            self.addBitrateOptions( 1, bps );
-                            self.addResolutionOptions( 1, res );
-                        }
-
-                        bitrates = bps; // TODO: merge
-                        callback(err);
-                    });
-                },
-
-                function(callback) {
-
-                    getResolutions(self.ip, self.username, self.password, 2, function(err, res, fpsData, bps) {
-
-                        for (var i in res) {
-                            if (!currentResolutions[res[i].name]) {
-                                currentResolutions[res[i].name] = true;
-                                self.resolution2channel[ res[i].value ] = 2;
-                                resolutions.push( res[i] );
-                            }
-                        }
-
-                        self.addFpsOptions( 2, fpsData );
-                        self.addBitrateOptions( 2, bps );
-                        self.addResolutionOptions( 2, res );
-                        
-                        bitrates = bps; // TODO: merge
-                        callback(err);
-                    });
-                }
-            ], 
-
-            function( err ) {
+            async.parallel( 
+                tasks, 
+                function( err ) {
 
                     if( err ) {
                         cb(error, []);
