@@ -118,7 +118,7 @@ CamerasController.prototype.checkSnapshotQ = function() {
 	}
 };
 
-
+// TODO: this doesnt seem to be used 
 CamerasController.prototype.getCameraOptions = function(params, cb){
     var self = this;
     var camId = params._id;

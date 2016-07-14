@@ -159,7 +159,7 @@ Camera.prototype.addAllStreams = function( streams, cb ) {
  *	and starts recording stream if camera should be recording
  *
  * @param {stream} obj 
- *     stream should contain: { resolution, framerate, quality, bitrate}
+ *     stream should contain: { resolution, framerate, quality, bitrate, channel (optional) }
  */
 Camera.prototype.addStream = function( stream, cb ) {
 
@@ -185,12 +185,14 @@ Camera.prototype.addStream = function( stream, cb ) {
 			return;
 		}
 
+                // TODO: channel
 		self.api.getRtspUrl({
 			resolution:     stream.resolution,
 			framerate:      stream.framerate,
 			quality:        stream.quality,
 			suggested_url:  stream.url,
 			bitrate:        stream.bitrate,
+                        channel:        stream.channel,
 			camera_no:      stream.camera_no
 		}, function(url) {
 
@@ -567,7 +569,7 @@ Camera.prototype.updateStream = function( stream, cb ) {
 
 	// these are the parameters that requires restarting the recorder when they change,
 	// because the rtsp url changes.
-	var restartParams = ['resolution', 'framerate', 'quality', 'url', 'ip', 'camera_no', 'bitrate'];
+	var restartParams = ['resolution', 'framerate', 'quality', 'url', 'ip', 'camera_no', 'bitrate', 'channel'];
 
 	// iterates through restart params, checks if any of them changed, 
 	// sets restarting if needed
@@ -665,11 +667,13 @@ Camera.prototype.refreshRtspUrl = function( streamId, cb ) {
 
 	var stream = this.streams[ streamId ];
 
+        // TODO: channel
 	this.api.getRtspUrl({
 		resolution:     stream.resolution,
 		framerate:      stream.framerate,
 		quality:        stream.quality,
 		bitrate:        stream.bitrate,
+                channel:        stream.channel,
 		suggested_url:  stream.url,
 		camera_no:      stream.camera_no
 	}, function(url) {
@@ -702,12 +706,14 @@ Camera.prototype.restartStream = function( streamId, cb ) {
 
 	var oldRecordModel = self.streams[streamId].recordModel;
 
+        // TODO: channel
 	// refreshes rtsp url
 	self.api.getRtspUrl({
 		resolution:     stream.resolution,
 		framerate:      stream.framerate,
 		quality:        stream.quality,
 		bitrate:        stream.bitrate,
+                channel:        stream.channel,
 		suggested_url:  self.streams[streamId].url,
 		camera_no:      stream.camera_no
 	}, function(url) {
@@ -1414,6 +1420,7 @@ Camera.prototype.getStreamsJSON = function() {
 			framerate:            s.framerate,
 			bitrate:              s.bitrate,
 			name:                 s.name,
+                        channel:              s.channel,
 			id:                   id,
 			latestThumb:          s.latestThumb,
 			camera_no:            s.camera_no,
