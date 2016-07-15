@@ -190,8 +190,10 @@ Hik.prototype.getNumberOfChannels = function( cb ) {
         }
 
         var nChannels = (body.match(/<StreamingChannel /g) || []).length;
+
         if (!nChannels) {
             console.error('[HIK : getNumberOfChannels]  could not parse number of channels');
+            return cb('could not parse number of channels');
         }
         
         cb( null, nChannels );
