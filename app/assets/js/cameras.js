@@ -527,7 +527,7 @@ var updateCamera = function(id, cb) {
     var manufacturer = params.camera.manufacturer || $("#camera-manufacturer").val();
     var enable_motion = false;
     if (
-        (!current_camera.streams == 'undefined' || current_camera.streams.length == 0) && 
+        (typeof current_camera.streams == 'undefined' || current_camera.streams.length == 0) && 
         params.camera && params.camera.streams && params.camera.streams.length > 0 && 
          typeof manufacturer !== 'undefined' && manufacturer !== 'unknown'
     ){
