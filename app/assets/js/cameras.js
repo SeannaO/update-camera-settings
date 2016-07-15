@@ -1523,7 +1523,7 @@ var checkH264 = function(new_stream_id ) {
             } else {
                 stream_status.removeClass('stream-ok')
         stream_status.addClass('stream-error');
-    stream_status.html("invalid h264 stream");
+        stream_status.html("invalid h264 stream");
             }
 
             spinner.fadeOut( function() {
