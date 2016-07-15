@@ -30,7 +30,7 @@ function Camera( cam, videosFolder, cb ) {
     } 
 
     this.motion = null;
-	this.lastMotion = 0;
+    this.lastMotion = 0;
 
     this.name         = cam.name;
     this.ip           = cam.ip;
@@ -53,85 +53,85 @@ function Camera( cam, videosFolder, cb ) {
     this.password = this.password ? this.password : '';
     this.username = this.username ? this.username : '';
 
-	this.api.setCameraParams({
-		id:        this._id,
-		ip:        this.ip,
-		password:  this.password,
-		username:  this.username
-	});
-		
-	if ( !cam.deleted ) {	// starts camera if it's not being deleted
-		this.schedule = new WeeklySchedule(cam.schedule);
-		
-		if ( !fs.existsSync( this.videosFolder) ){
-			fs.mkdirSync( this.videosFolder );
-		}
+    this.api.setCameraParams({
+        id:        this._id,
+        ip:        this.ip,
+        password:  this.password,
+        username:  this.username
+    });
 
-		if ( !fs.existsSync( this.videosFolder + "/sensor") ){
-			fs.mkdirSync( this.videosFolder + "/sensor");
-		}		
+    if ( !cam.deleted ) {	// starts camera if it's not being deleted
+        this.schedule = new WeeklySchedule(cam.schedule);
 
-		var streams = []
-		for (var i in cam.streams){
-			streams.push(cam.streams[i]);
-		}
+        if ( !fs.existsSync( this.videosFolder) ){
+            fs.mkdirSync( this.videosFolder );
+        }
 
-                // //
-                // spot monitor
-                var spotMonitorStreams = []
-		for (var i in cam.spotMonitorStreams){
-                    spotMonitorStreams.push( cam.spotMonitorStreams[i] );
-		}
-                // //
+        if ( !fs.existsSync( this.videosFolder + "/sensor") ){
+            fs.mkdirSync( this.videosFolder + "/sensor");
+        }		
 
-		this.addAllStreams(streams, function(){
-			if (!self.recording && self.shouldBeRecording()) {
-				console.log("[cameraModel] starting camera " + (self.name || self.ip));
-				// setTimeout( function() {
-					self.startRecording();
-				// }, 5000);
-			} else {
-				console.log("[cameraModel] stopping camera " + (self.name || self.ip));
-				self.stopRecording();
-			}
+        var streams = []
+            for (var i in cam.streams){
+                streams.push(cam.streams[i]);
+            }
 
-			self.periodicallyCheckRetention();
+        // //
+        // spot monitor
+        var spotMonitorStreams = []
+            for (var i in cam.spotMonitorStreams){
+                spotMonitorStreams.push( cam.spotMonitorStreams[i] );
+            }
+        // //
 
-                        // //
-                        // spot monitor
-                        spotMonitorHelper.addAllSpotMonitorStreams( self, spotMonitorStreams, function( err ) {
-                            if (err) { 
-                                console.error('[cameraModel : constructor]  error adding spot monitor streams: ' + err); 
-                            } else {
-                                console.log('[cameraModel : constructor]  done adding spot monitor streams of camera ' + cam._id);
-                            }
-                        });
-                        // //
+        this.addAllStreams(streams, function(){
+            if (!self.recording && self.shouldBeRecording()) {
+                console.log("[cameraModel] starting camera " + (self.name || self.ip));
+                // setTimeout( function() {
+                self.startRecording();
+                // }, 5000);
+            } else {
+                console.log("[cameraModel] stopping camera " + (self.name || self.ip));
+                self.stopRecording();
+            }
 
-			if (cb) cb(self);
-		});
-		// instantiates streams
-	} else {	
-		// nothing to be done
-		if (cb) cb(self);
-	}
+            self.periodicallyCheckRetention();
 
-	self.pendingMotion = [];
+            // //
+            // spot monitor
+            spotMonitorHelper.addAllSpotMonitorStreams( self, spotMonitorStreams, function( err ) {
+                if (err) { 
+                    console.error('[cameraModel : constructor]  error adding spot monitor streams: ' + err); 
+                } else {
+                    console.log('[cameraModel : constructor]  done adding spot monitor streams of camera ' + cam._id);
+                }
+            });
+            // //
 
-	self.lowestBitrateStream = {};
+            if (cb) cb(self);
+        });
+        // instantiates streams
+    } else {	
+        // nothing to be done
+        if (cb) cb(self);
+    }
 
-	var defaultMotionParams = {
-		enabled:      false,
-		threshold:    120,
-		sensitivity:  50,
-		roi:          "all"
-	};
+    self.pendingMotion = [];
 
-	self.motionParams = cam.motionParams || defaultMotionParams;
+    self.lowestBitrateStream = {};
 
-	self.updateMotionParamsInterval = setInterval( function() {
-		self.setMotionParams( self.motionParams );
-	}, 5000);
+    var defaultMotionParams = {
+        enabled:      false,
+        threshold:    120,
+        sensitivity:  50,
+        roi:          "all"
+    };
+
+    self.motionParams = cam.motionParams || defaultMotionParams;
+
+    self.updateMotionParamsInterval = setInterval( function() {
+        self.setMotionParams( self.motionParams );
+    }, 5000);
 }
 // end of constructor
 //
@@ -347,88 +347,88 @@ Camera.prototype.stopMotionDetection = function() {
 
 Camera.prototype.motionHandler = function( motionGrid ) {
 
-	var self = this;
+    var self = this;
 
-	if (!self.motionParams.enabled) return;
+    if (!self.motionParams.enabled) return;
 
-	if (!motionGrid || motionGrid.length < 100) {
-		return;
-	}
+    if (!motionGrid || motionGrid.length < 100) {
+        return;
+    }
 
-	var isThereMotion = false;
+    var isThereMotion = false;
 
-	if (self.motionParams.roi && self.motionParams.roi.length == 100) { 
-		for (var i in motionGrid) {
-			var val = motionGrid.charCodeAt(i);
-			if (val > 5 && self.motionParams.roi[i] == '1') {
-				isThereMotion = true;
-				break;
-			}
-		}
-		if(!isThereMotion) return;
-	}
+    if (self.motionParams.roi && self.motionParams.roi.length == 100) { 
+        for (var i in motionGrid) {
+            var val = motionGrid.charCodeAt(i);
+            if (val > 5 && self.motionParams.roi[i] == '1') {
+                isThereMotion = true;
+                break;
+            }
+        }
+        if(!isThereMotion) return;
+    }
 
-	data = {};
+    data = {};
 
-	var timestamp = Date.now();
+    var timestamp = Date.now();
 
-	var motion_data = data;
+    var motion_data = data;
 
-	motion_data.id        = self._id;
-	motion_data.start     = timestamp || Date.now();
-	motion_data.timestamp = timestamp;
-	motion_data.name      = self.cameraName();
+    motion_data.id        = self._id;
+    motion_data.start     = timestamp || Date.now();
+    motion_data.timestamp = timestamp;
+    motion_data.name      = self.cameraName();
 
-	if (Date.now() - self.lastMotion > 7000) {
-		// self.emit("motion", motion_data);
-		self.pendingMotion.push(motion_data);
-		while(self.pendingMotion.length > 10) {
-			self.pendingMotion.shift();
-		}
-		self.lastMotion = Date.now();
-	}
-	// check to see if the camera already has a motion event
-	if (self.motion == null){
+    if (Date.now() - self.lastMotion > 7000) {
+        // self.emit("motion", motion_data);
+        self.pendingMotion.push(motion_data);
+        while(self.pendingMotion.length > 10) {
+            self.pendingMotion.shift();
+        }
+        self.lastMotion = Date.now();
+    }
+    // check to see if the camera already has a motion event
+    if (self.motion == null){
 
-		self.motion = {
-			id:        self._id,
-			start:     timestamp,
-			duration:  0,
-			ip:        self.ip,
-			status:    'start',
-			name:      self.cameraName(),
-			motion:    {}
-		};
+        self.motion = {
+            id:        self._id,
+            start:     timestamp,
+            duration:  0,
+            ip:        self.ip,
+            status:    'start',
+            name:      self.cameraName(),
+            motion:    {}
+        };
 
-		self.motion.motion[timestamp] = motion_data;
+        self.motion.motion[timestamp] = motion_data;
 
-		if ( !self.recording ) {
-			self.startRecording();
-		}
-		self.emit("motionEvent", self.motion);
+        if ( !self.recording ) {
+            self.startRecording();
+        }
+        self.emit("motionEvent", self.motion);
 
-	} else {
+    } else {
 
-		self.motion.status = 'open';
-		self.motion.duration = timestamp - self.motion.start;
-		self.motion.motion[timestamp] = data;
-		if (self.stopRecordingTimeout) {
-			clearTimeout( self.stopRecordingTimeout );
-		}
-	}
+        self.motion.status = 'open';
+        self.motion.duration = timestamp - self.motion.start;
+        self.motion.motion[timestamp] = data;
+        if (self.stopRecordingTimeout) {
+            clearTimeout( self.stopRecordingTimeout );
+        }
+    }
 
 
-	self.stopRecordingTimeout = setTimeout (function() {
-		var result = self.motion; 
-		self.motion = null;
-		if (!self.shouldBeRecording() ) {	
-			self.stopRecording();
-		}
-		result.status = 'end';
-		result.duration = Date.now() - result.start;
-		// Broadcast that motion has ended with the duration, camera name, ID, and timestamp
-		self.emit( 'motionEvent', result);
-	}, 20000); // was 30000
+    self.stopRecordingTimeout = setTimeout (function() {
+        var result = self.motion; 
+        self.motion = null;
+        if (!self.shouldBeRecording() ) {	
+            self.stopRecording();
+        }
+        result.status = 'end';
+        result.duration = Date.now() - result.start;
+        // Broadcast that motion has ended with the duration, camera name, ID, and timestamp
+        self.emit( 'motionEvent', result);
+    }, 20000); // was 30000
 };
 
 
@@ -479,7 +479,7 @@ Camera.prototype.updateAllStreams = function( new_streams, cb ) {
                 cb(null, {added: addedCounter, updated: updatedCounter}); 
             }
 
-        // add new stream if it doesnt exist yet
+            // add new stream if it doesnt exist yet
         } else if ( !self.streams[ stream.id ] ) { 
             self.addStream( stream, function() {
                 addedCounter++;
@@ -490,7 +490,7 @@ Camera.prototype.updateAllStreams = function( new_streams, cb ) {
                 }
             });
 
-        // or update stream if it already exists
+            // or update stream if it already exists
         } else {
             self.updateStream( stream, function() {
                 updatedCounter++;
@@ -599,25 +599,25 @@ Camera.prototype.updateStream = function( stream, cb ) {
  *
  */
 Camera.prototype.restartAllStreams = function() {
-	
-	var self = this;
 
-	this.api.setCameraParams({
-		ip:        self.ip,
-		password:  self.password,
-		username:  self.username
-	});
-	
-	for (var i in self.streams) {
-		self.restartStream(i);
-	}
+    var self = this;
 
-        // //
-        // spot monitor
-	for (var i in self.spotMonitorStreams) {
-            spotMonitorHelper.restartSpotMonitorStream(self, i);
-	}
-        // //
+    this.api.setCameraParams({
+        ip:        self.ip,
+        password:  self.password,
+        username:  self.username
+    });
+
+    for (var i in self.streams) {
+        self.restartStream(i);
+    }
+
+    // //
+    // spot monitor
+    for (var i in self.spotMonitorStreams) {
+        spotMonitorHelper.restartSpotMonitorStream(self, i);
+    }
+    // //
 };
 // end of restartAllStreams
 //
@@ -1394,36 +1394,36 @@ Camera.prototype.stopRetentionCheck = function() {
  * @return { array } Json array containing all streams object
  */
 Camera.prototype.getStreamsJSON = function() {
-	
-	var self = this;
-	
-	// array with all streams ids
-	var streamIds = Object.keys(self.streams);
 
-	// json array to be returned
-	var streams = [];
+    var self = this;
 
-	for (var id in self.streams) {
-		var s = self.streams[id];
-		streams.push({
-			retention:            s.retention,
-			url:                  s.url,
-			rtsp:                 s.rtsp,
-			resolution:           s.resolution,
-			quality:              s.quality,
-			framerate:            s.framerate,
-			bitrate:              s.bitrate,
-			name:                 s.name,
-			id:                   id,
-			latestThumb:          s.latestThumb,
-			camera_no:            s.camera_no,
-			average_bps:          s.bpsAvg,
-			latestSegmentDate:    s.latestSegmentDate,
-			earliestSegmentDate:  s.earliestSegmentDate
-		}); 
-	}
+    // array with all streams ids
+    var streamIds = Object.keys(self.streams);
 
-	return streams;
+    // json array to be returned
+    var streams = [];
+
+    for (var id in self.streams) {
+        var s = self.streams[id];
+        streams.push({
+            retention:            s.retention,
+            url:                  s.url,
+            rtsp:                 s.rtsp,
+            resolution:           s.resolution,
+            quality:              s.quality,
+            framerate:            s.framerate,
+            bitrate:              s.bitrate,
+            name:                 s.name,
+            id:                   id,
+            latestThumb:          s.latestThumb,
+            camera_no:            s.camera_no,
+            average_bps:          s.bpsAvg,
+            latestSegmentDate:    s.latestSegmentDate,
+            earliestSegmentDate:  s.earliestSegmentDate
+        }); 
+    }
+
+    return streams;
 }; 
 // end of getStreamsJSON
 //
