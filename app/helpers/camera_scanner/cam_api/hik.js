@@ -73,7 +73,7 @@ var getResolutions = function( ip, username, password, channel, cb ) {
 
 				data = data.StreamingChannel;
 				if (!data.Video) {
-					if(cb) cb('invalid response no Video tag', []);
+					if(cb) cb('invalid response: no Video tag', []);
 					return;
 				}
 
@@ -83,12 +83,13 @@ var getResolutions = function( ip, username, password, channel, cb ) {
 					if(cb) cb('invalid response: no videoResolutionWidth tag', []);
 					return;
 				}
+                                //TODO: check videoResolutionHeight
 
 				// bitrate range
 				if (!data.constantBitRate || !data.constantBitRate[0] || !data.constantBitRate[0]['$']) {
 					console.error('[Hik]  no bitrate options found, using default 512');
 					bitrates.min = '512';
-					bitrate.max  = '512';
+					bitrates.max  = '512';
 				} else {
 					bitrates.min = data.constantBitRate[0]['$'].min || '512';
 					bitrates.max = data.constantBitRate[0]['$'].max || '512';
@@ -96,12 +97,12 @@ var getResolutions = function( ip, username, password, channel, cb ) {
 
 				// fps options
 				if (!data.maxFrameRate || !data.maxFrameRate[0]) {
-					data.fpsData.push( '1500' );
+					fpsData.push( '1500' );
 				}
 				else {
 					var fpsOpts = data.maxFrameRate[0]['$'];
 					if(!fpsOpts || !fpsOpts.opt) {
-						data.fpsData.push('1500');
+						fpsData.push('1500');
 					} else {
 						fpsOpts = fpsOpts.opt;
 						fpsOpts = fpsOpts.split(',');
@@ -189,6 +190,9 @@ Hik.prototype.getNumberOfChannels = function( cb ) {
         }
 
         var nChannels = (body.match(/<StreamingChannel /g) || []).length;
+        if (!nChannels) {
+            console.error('[HIK : getNumberOfChannels]  could not parse number of channels');
+        }
         
         cb( null, nChannels );
     });
