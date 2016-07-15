@@ -443,5 +443,6 @@ Hik.prototype.startListeningForMotionDetection = function(cam, cb){
 Hik.prototype.stopListeningForMotionDetection = function(){
 };
 
+Hik.getResolutions = getResolutions;
 
 module.exports = Hik;
