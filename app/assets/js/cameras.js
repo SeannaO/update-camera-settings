@@ -527,12 +527,12 @@ var updateCamera = function(id, cb) {
     var manufacturer = params.camera.manufacturer || $("#camera-manufacturer").val();
     var enable_motion = false;
     if (
-        (typeof current_camera.streams == 'undefined' || current_camera.streams.length == 0) && 
-        params.camera && params.camera.streams && params.camera.streams.length > 0 && 
-         typeof manufacturer !== 'undefined' && manufacturer !== 'unknown'
-    ){
-        enable_motion = true;
-    }
+            (typeof current_camera.streams == 'undefined' || current_camera.streams.length == 0) && 
+            params.camera && params.camera.streams && params.camera.streams.length > 0 && 
+            typeof manufacturer !== 'undefined' && manufacturer !== 'unknown'
+       ){
+           enable_motion = true;
+       }
 
     if (params.camera.spotMonitorStreams) { params.camera.spotMonitorStreams = _.without( params.camera.spotMonitorStreams, null, undefined ); }
     if (params.camera.streams) { params.camera.streams = _.without( params.camera.streams, null, undefined ); }
@@ -660,13 +660,13 @@ var editCamera = function(camId) {
                         });
                     }
                 }else if (
-                    !data.camera.spotMonitorStreams || 
-                    !data.camera.spotMonitorStreams.length
-                ) {
-                    addStream(function(id) {
-                        addStreamFieldOverlay( '#' + id );						
-                    });
-                }
+                        !data.camera.spotMonitorStreams || 
+                        !data.camera.spotMonitorStreams.length
+                        ) {
+                            addStream(function(id) {
+                                addStreamFieldOverlay( '#' + id );						
+                            });
+                        }
 
                 for (var i in data.camera.spotMonitorStreams) {
                     var stream = data.camera.spotMonitorStreams[i];
