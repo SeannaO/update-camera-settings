@@ -988,10 +988,11 @@ Camera.prototype.addChunk = function( streamId, chunk ) {
 		return;
 	}
 
-	this.streams[ streamId ].db.insertVideo( chunk );
-	this.streams[ streamId ].latestThumb = chunk.start + "_" + (chunk.end-chunk.start);	
-
 	var stream = this.streams[ streamId ];
+
+        stream.db.insertVideo( chunk );
+        stream.previousThumb = stream.latestThumb;                          // this thumbnail is ready for sure
+        stream.latestThumb = chunk.start + "_" + (chunk.end-chunk.start);   // this may not be ready yet
 
 	if (!stream.earliestSegmentDate) {
 		stream.earliestSegmentDate = chunk.start
@@ -1294,13 +1295,21 @@ Camera.prototype.getRetentionByStream = function( streamId, start, end, cb ) {
 	end   = Math.min(end, Date.now() - 30000);
 
 	stream.db.searchVideosByInterval( start, end, function(err, fileList, offset) {
-        if (err) {
-            cb(err);
-        } else {
-			var retention = retentionCalculator.calcRetention( fileList, start, end );
-            cb(null, retention);
-        }
-    });
+            if (err) {
+                cb(err);
+            } else {
+                
+                // initialize previousThumb and latestThumb
+                if (!stream.latestThumb && fileList && fileList.length) {
+                    var lastChunkFile = fileList[ fileList.length - 1 ].file;
+                    var lastThumbName = path.basename( lastChunkFile ).replace('.ts', '');
+                    stream.previousThumb = stream.latestThumb = lastThumbName;
+                }
+
+                var retention = retentionCalculator.calcRetention( fileList, start, end );
+                cb(null, retention);
+            }
+        });
 };
 
 

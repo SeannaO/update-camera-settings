@@ -386,7 +386,40 @@ module.exports = function( app, passport, camerasController ) {
 
 
 	// - - -
-	// gets most recent thumb
+	// get recent (not necessarily the latest) thumb image (jpg);
+	app.get('/cameras/:cam_id/thumb.jpg', passport.authenticate('basic', {session: false}), function(req, res) {
+
+            if ( !validateCamerasLoaded(camerasController, res) ) { return; }
+
+            var camId = req.params.cam_id;
+
+
+            camerasController.getCamera( camId, function(err, cam) {
+
+                if (err || !cam) {
+                    return res.status(422).json( { error: err || 'camera does not exist'} );
+                }
+
+                for ( var i in cam.streams ) {
+
+                    var stream = cam.streams[i];
+                    if (!stream || !stream.previousThumb) { continue; }
+
+                    var thumbsPath = path.resolve( process.env['BASE_FOLDER'], camId, stream.id, 'thumbs' );
+                    var thumbFile = path.resolve( thumbsPath, stream.previousThumb + '.jpg' );
+                    return res.sendfile( thumbFile );
+                }
+
+                res.status(404).json({
+                    error: 'this camera does not have any thumbnail yet'
+                });
+            });
+	});
+	// - - -
+
+
+	// - - -
+	// get most recent thumb data (json)
 	app.get('/cameras/:cam_id/streams/:id/thumb.json', passport.authenticate('basic', {session: false}), function(req, res) {
 
 		if ( !validateCamerasLoaded(camerasController, res) ) { return; }
