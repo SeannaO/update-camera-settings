@@ -12,6 +12,9 @@ var mp4Handler      = require('./mp4_controller.js');
 var cameraValidator = require('../helpers/cameraValidator.js');
 var path            = require('path');
 var fs              = require('fs');
+var uuid            = require('../helpers/uuid');
+
+var spotMonitorHelper = require('../helpers/spot-monitor.js');
 
 function CamerasController( cam_db_filename, videosFolder, cb ) {
 
@@ -512,7 +515,7 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 				continue;
 			}
 			if (!cam.streams[s].id) {
-				cam.streams[s].id = generateUUID();
+				cam.streams[s].id = uuid.generateUUID();
 			}
 			streamsHash[ cam.streams[s].id ] = cam.streams[s];
 		}
@@ -521,6 +524,11 @@ CamerasController.prototype.insertNewCamera = function( cam, cb ) {
 	}else{
 		cam.status = 'missing camera stream(s)';
 	}
+
+        ////
+        // spot monitor streams
+        cam.spotMonitorStreams = spotMonitorHelper.generateIDForNewStreams( cam );
+        //
 
 	self.db.insert( cam, function( err, newDoc ) {
 		if (err) {
@@ -772,7 +780,13 @@ CamerasController.prototype.removeCameraFromDb = function( camId, cb ) {
 
 CamerasController.prototype.updateCamera = function(cam, cb) {
 
-	var self = this;
+    var self = this;
+
+    if (!cam || typeof(cam) !== 'object') {
+        console.error('[CamerasController : updateCamera]  invalid params');
+        return cb('invalid params');
+    }
+
     var camera = this.findCameraById( cam._id );
 
     if (!camera) {
@@ -785,27 +799,28 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 	var curr_camera = camera.cam.toJSON();
 	cam = _.assign( curr_camera, cam );
 
-	var err = cameraValidator.validate( cam );
+	var err = cameraValidator.validate( cam ) || cameraValidator.validate( curr_camera );
+	if (err) {
+            console.error('[camerasController.updateCamera]  input error: ' + err);
+            return cb( err );
+	}
 
 	// re-add streams that are missing from the request
 	var stream_ids = _.map( cam.streams, 'id' );
 	for (var i in curr_camera.streams) {
 		var stream = curr_camera.streams[i];
+                if (!stream) { continue; }
 		if ( stream_ids.indexOf( stream.id ) < 0 ) { 
 			cam.streams.push( stream );
 		}
 	}
 	
-	if (err) {
-		console.error('[camerasController.updateCamera]  input error: ' + err);
-		return cb( err );
-	}
-
 	var streamsHash = {};
 	if (cam.streams && cam.streams.length > 0) {
 		for (var s in cam.streams) {
+                    if (!cam.streams[s]) { continue; }
 			if (typeof cam.streams[s].id == 'undefined' || !cam.streams[s].id || cam.streams[s].id.length <= 0) {
-				cam.streams[s].id = generateUUID();
+				cam.streams[s].id = uuid.generateUUID();
 			}
 			streamsHash[ cam.streams[s].id ] = cam.streams[s];
 		}
@@ -813,6 +828,12 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 	} else {
 		cam.status = 'missing camera stream(s)';
 	}
+
+        ////
+        // re-add missing spot monitor streams and generate ID for new ones
+        spotMonitorHelper.reAddMissingSpotMonitorStreams( curr_camera, cam );
+        var spotMonitorStreamsHash = spotMonitorHelper.generateIDForNewStreams( cam );
+        //
 
 	if (typeof cam.username == "undefined") {
 		cam.username = camera.cam.username	|| '';
@@ -830,6 +851,7 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 	        username     : cam.username,
 	        password     : cam.password,
 	        streams      : streamsHash,
+                spotMonitorStreams: spotMonitorStreamsHash,
 	        status       : cam.status
 	    } 
 	}, { multi: true }, function (err, numReplaced) {
@@ -882,8 +904,29 @@ CamerasController.prototype.updateCamera = function(cam, cb) {
 				self.emit("update", camera.cam);
 				cb(err, camera.cam);
 			});
+
+                        spotMonitorHelper.updateAllSpotMonitorStreams( camera.cam, cam.spotMonitorStreams, function(err) {
+                            if (err) {
+                                console.error('[CamerasController : updateCamera]  ' + err);
+                            }
+                        });
 	    }
 	});
+};
+/* end of updateCamera */
+
+
+/**
+ * removeSpotMonitorStream
+ *
+ * a wrapper to spot-monitor-helper function of same name
+ *
+ * @param { String } camId    
+ * @param { String } streamId
+ * @param { function } cb  callback function
+ */
+CamerasController.prototype.removeSpotMonitorStream = function( camId, streamId, cb ) {
+    spotMonitorHelper.removeSpotMonitorStream( this, camId, streamId, cb );
 };
 
 
@@ -893,7 +936,7 @@ CamerasController.prototype.updateCameraSchedule = function(params, cb) {
     var camera = this.findCameraById( params._id );
     
 	if (!camera) {
-        cb("{error: 'camera not found'}");
+        cb('camera not found');
         return;
     }
 	
@@ -1104,14 +1147,3 @@ CamerasController.prototype.restartRecording = function() {
 
 
 module.exports = CamerasController;
-
-
-function generateUUID() {
-    var d = new Date().getTime();
-    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = (d + Math.random()*16)%16 | 0;
-        d = Math.floor(d/16);
-        return (c=='x' ? r : (r&0x7|0x8)).toString(16);
-    });
-    return uuid;
-}
