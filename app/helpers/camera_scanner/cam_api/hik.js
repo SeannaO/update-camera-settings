@@ -34,7 +34,7 @@ var rtsp_url = 'rtsp://{username}:{password}@{ip}/Streaming/Channels/{channel}';
 
 var getResolutions = function( ip, username, password, channel, cb ) {
 
-	var url = 'http://' + username + ':' + password + '@' + ip + '/streaming/channels/'+channel+'/capabilities';
+	var url = 'http://' + username + ':' + password + '@' + ip + '/streaming/channels/' + channel + '/capabilities';
 
 	request({
 		url: url,
@@ -62,32 +62,32 @@ var getResolutions = function( ip, username, password, channel, cb ) {
 				var bitrates = {};
 				
 				if (!data) {
-					if(cb) { cb('could not parse response', []); }
+					if(cb) { cb('could not parse response from channel ' + channel, []); }
 					return;
 				}
 
 				if (!data.StreamingChannel) {
-					if(cb) cb('invalid response: no StreamingChannel tag', []);
+					if(cb) cb('invalid response from channel ' + channel+ ': no StreamingChannel tag', []);
 					return;
 				}
 
 				data = data.StreamingChannel;
 				if (!data.Video) {
-					if(cb) cb('invalid response: no Video tag', []);
+					if(cb) cb('invalid response from channel ' + channel + ': no Video tag', []);
 					return;
 				}
 
 				// resolutions
 				data = data.Video[0];
 				if (!data.videoResolutionWidth || !data.videoResolutionWidth[0]) {
-					if(cb) cb('invalid response: no videoResolutionWidth tag', []);
+					if(cb) cb('invalid response from channel ' + channel + ': no videoResolutionWidth tag', []);
 					return;
 				}
                                 //TODO: check videoResolutionHeight
 
 				// bitrate range
 				if (!data.constantBitRate || !data.constantBitRate[0] || !data.constantBitRate[0]['$']) {
-					console.error('[Hik]  no bitrate options found, using default 512');
+					console.error('[Hik]  no bitrate options found for channel ' + channel + ', using default 512');
 					bitrates.min = '512';
 					bitrates.max  = '512';
 				} else {
@@ -115,7 +115,7 @@ var getResolutions = function( ip, username, password, channel, cb ) {
 
 				data = data.videoResolutionWidth[0]['$'];
 				if (!data || !data.opt) {
-					if(cb) cb('invalid response: no opt tag', []);
+					if(cb) cb('invalid response from channel ' + channel + ': no opt tag', []);
 					return;
 				}
 
@@ -373,7 +373,7 @@ Hik.prototype.getResolutionOptions = function(cb) {
                 function( err ) {
 
                     if( err ) {
-                        cb(error, []);
+                        cb(err, []);
                     } else {
                         cb( null, resolutions, bitrates, {
                             nChannels:              self.nChannels,

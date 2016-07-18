@@ -81,7 +81,7 @@ describe('Hik', function() {
                 response: '<broken-xml> badbs<asjlqb>alnasad </<>'
             }, function(port) {
                 Hik.getResolutions( 'localhost:' + port, USER, PASS, 1, function(err, resolutions, fps, bitrates) {
-                    assert.equal(err, 'could not parse response');
+                    assert.equal(err, 'could not parse response from channel 1');
                     server.close();
                     done();
                 });
@@ -94,7 +94,7 @@ describe('Hik', function() {
                 response: 'asdbalskhdweuoqwfliqh qwdibw:w'
             }, function(port) {
                 Hik.getResolutions( 'localhost:' + port, USER, PASS, 1, function(err, resolutions, fps, bitrates) {
-                    assert.equal(err, 'could not parse response');
+                    assert.equal(err, 'could not parse response from channel 1');
                     server.close();
                     done();
                 });
@@ -107,7 +107,7 @@ describe('Hik', function() {
                 response: XML_TAG + '<a><b></a></b>'
             }, function(port) {
                 Hik.getResolutions( 'localhost:' + port, USER, PASS, 1, function(err, resolutions, fps, bitrates) {
-                    assert.equal(err, 'could not parse response');
+                    assert.equal(err, 'could not parse response from channel 1');
                     server.close();
                     done();
                 });
@@ -120,7 +120,7 @@ describe('Hik', function() {
                 response: '<?xml version="1.0" encoding="UTF-8"?><hello version="1.0" xmlns="http://www.hikvision.com/ver10/XMLSchema"></hello>'
             }, function(port) {
                 Hik.getResolutions( 'localhost:' + port, USER, PASS, 1, function(err, resolutions, fps, bitrates) {
-                    assert.equal(err, 'invalid response: no StreamingChannel tag');
+                    assert.equal(err, 'invalid response from channel 1: no StreamingChannel tag');
                     server.close();
                     done();
                 });
@@ -132,7 +132,7 @@ describe('Hik', function() {
                 response: '<?xml version="1.0" encoding="UTF-8"?><StreamingChannel version="1.0" xmlns="http://www.hikvision.com/ver10/XMLSchema"></StreamingChannel>'
             }, function(port) {
                 Hik.getResolutions( 'localhost:' + port, USER, PASS, 1, function(err, resolutions, fps, bitrates) {
-                    assert.equal(err, 'invalid response: no Video tag');
+                    assert.equal(err, 'invalid response from channel 1: no Video tag');
                     server.close();
                     done();
                 });
@@ -151,7 +151,7 @@ describe('Hik', function() {
                 response: response
             }, function(port) {
                 Hik.getResolutions( 'localhost:' + port, USER, PASS, 1, function(err, resolutions, fps, bitrates) {
-                    assert.equal(err, 'invalid response: no videoResolutionWidth tag');
+                    assert.equal(err, 'invalid response from channel 1: no videoResolutionWidth tag');
                     server.close();
                     done();
                 });
@@ -241,7 +241,7 @@ describe('Hik', function() {
                 response: response
             }, function(port) {
                 Hik.getResolutions( 'localhost:' + port, USER, PASS, 1, function(err, resolutions, fps, bitrates) {
-                    assert.equal(err, 'invalid response: no opt tag');
+                    assert.equal(err, 'invalid response from channel 1: no opt tag');
                     server.close();
                     done();
                 });
@@ -285,7 +285,7 @@ describe('Hik', function() {
                 });
 
                 hik.getNumberOfChannels(function(err, nChannels) {
-                    assert.equal(err.code, 'ETIMEDOUT');
+                    assert.ok(err.code.indexOf('TIMEDOUT') >= 0);
                     done();
                 });
             });
@@ -336,19 +336,207 @@ describe('Hik', function() {
 
             var hik = new Hik();
 
+            hik.setCameraParams({
+                username: 'invalid_user',
+                password: 'invalid_pass',
+                ip: VALID_HIK_IP
+            });
+
+            hik.getNumberOfChannels(function(err, nChannels) {
+                assert.equal(err, 'not authorized');
+                done();
+            });
+        });
+
+        it('should callback with error if unable to parse number of channels', function(done) {
+
+            var hik = new Hik();
+
             var server = new Server({
-                response: null
+                response: 'broken_response'
             }, function(port) {
                 hik.setCameraParams({
-                    username: 'invalid_user',
-                    password: 'invalid_pass',
-                    ip: VALID_HIK_IP
+                    ip: 'localhost:' + port
                 });
 
                 hik.getNumberOfChannels(function(err, nChannels) {
-                    assert.equal(err, 'not authorized');
+                    assert.equal(err, 'could not parse number of channels');
                     done();
                 });
+            });
+        });
+
+        it('should successfully parse number of channels', function(done) {
+
+            var hik = new Hik();
+
+            hik.setCameraParams({
+                username: USER,
+                password: PASS,
+                ip: VALID_HIK_IP
+            });
+
+            hik.getNumberOfChannels(function(err, nChannels) {
+
+                assert.ok(!err);
+                assert.equal(nChannels, 3);
+
+                done();
+            });
+        });
+
+        it('should handle empty callback', function() {
+
+            var hik = new Hik();
+
+            hik.setCameraParams({
+                username: USER,
+                password: PASS,
+                ip: VALID_HIK_IP
+            });
+
+            hik.getNumberOfChannels();
+        });
+    });
+
+    
+    describe('configCamera', function() {
+
+        it('should send a PUT request with the correct params', function(done) {
+
+            var xml = '<?xml version:"1.0" encoding="UTF-8"?><StreamingChannel xmlns="urn:psialliance-org" version="1.0"><id>1</id><channelName>Solink 01</channelName><enabled>true</enabled> <Video><enabled>true</enabled><videoInputChannelID>1</videoInputChannelID><videoCodecType>H.264</videoCodecType><videoResolutionWidth>800</videoResolutionWidth><videoResolutionHeight>600</videoResolutionHeight><videoQualityControlType>vbr</videoQualityControlType><vbrUpperCap>1024</vbrUpperCap><vbrLowerCap>32</vbrLowerCap><fixedQuality>60</fixedQuality><maxFrameRate>30</maxFrameRate></Video></StreamingChannel>';
+
+            var done_counter = 0;
+
+            var hik = new Hik();
+
+            var server = new Server({
+                response: null,
+                onData: function(d) {
+                    assert.equal( d.body, xml );
+                    assert.equal( d.method, 'PUT' );
+                    done_counter++;
+                    if (done_counter == 2) { done(); }
+                }
+            }, function(port) {
+                hik.setCameraParams({
+                    username: USER,
+                    password: PASS,
+                    ip: 'localhost:' + port
+                });
+
+                hik.configCamera({
+                    channel:  1,
+                    width:    800,
+                    height:   600,
+                    fps:      30,
+                    bitrate:  1024,
+                }, function(err, body) {
+                    assert.ok(!err);
+                    done_counter++;
+                    if (done_counter == 2) { done(); }
+                });
+            });
+        });
+
+        //TODO: test configuring actual camera
+    });
+
+    describe('getResolutionOptions', function() {
+        
+        var channelsResponseXML = 
+            '<StreamingChannel ></StreamingChannel>' +
+            '<StreamingChannel ></StreamingChannel>' +
+            '<StreamingChannel ></StreamingChannel>';
+
+        var capabilitiesResponseXML = '<?xml version="1.0" encoding="UTF-8"?>\
+            <StreamingChannel version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">\
+            <id opt="1,2,3">102</id>\
+            <Video>\
+                <videoResolutionWidth opt="352*240,640*480,704*480">640</videoResolutionWidth>\
+                <maxFrameRate>3000</maxFrameRate>\
+            </Video>\
+            </StreamingChannel>';
+
+        it('should cb with error when IP has not been set yet', function(done) {
+           var hik = new Hik();
+
+           hik.getResolutionOptions( function(err) {
+               assert.equal(err, 'no ip');
+               done();
+           });
+        });
+
+        it('should cb with error when unable to connect to camera', function(done) {
+
+           var hik = new Hik();
+
+           hik.setCameraParams({
+               username:  USER,
+               password:  PASS,
+               ip:        'localhost:1000'
+           });
+
+           hik.getResolutionOptions( function(err) {
+               assert.equal(err.code, 'ECONNREFUSED');
+               done();
+           });
+        });
+        // TODO: test other scenarios of camera connection issues
+
+        it('should callback with error when failed querying one of the channels', function(done) {
+
+            var channelRequests = {};
+
+            var hik = new Hik();
+            var server = new Server({
+                responseFunction: function(req, cb) {
+
+                    if (req.url == '/streaming/channels') {
+                        return cb( channelsResponseXML );
+                    } 
+
+                    if ( req.url.indexOf('channels/1') >= 0 ) {
+                        channelRequests[1] = true;
+                        return cb(capabilitiesResponseXML);
+                    } else if ( req.url.indexOf('channels/2') >= 0) {
+                        channelRequests[2] = true;
+                        return cb('_broken_response_');
+                    } else if ( req.url.indexOf('channels/3') >= 0) {
+                        channelRequests[3] = true;
+                        return cb(capabilitiesResponseXML);
+                    }                
+                }
+            }, function(port) {
+                hik.setCameraParams({
+                    ip: 'localhost:' + port
+                });
+
+                hik.getResolutionOptions( function(err) {
+                    assert.ok( channelRequests[1] );
+                    assert.ok( channelRequests[2] );
+                    assert.ok( channelRequests[3] );
+                    assert.equal(err, 'could not parse response from channel 2');
+                    done();
+                });
+            });
+        });
+
+        it('should callback with correct params when querying an actual camera', function(done) {
+            var hik = new Hik();
+
+            hik.setCameraParams({
+                username:  USER,
+                password:  PASS,
+                ip:        VALID_HIK_IP
+            });
+
+            hik.getResolutionOptions(function(err, resolutions, bitrates, configsPerChannel) {
+
+                // assert.ok(!err);
+                assert.equal(configsPerChannel.nChannels, 3);
+
+                done();
             });
         });
     });
@@ -369,9 +557,27 @@ var Server = function( opts, cb ) {
     this.port = port;
 
     this.server = http.createServer( function(req, res) {
-        // console.log( opts.response );
+
+        var buffer = '';
+        req.on('data', function(d) {
+            buffer += d.toString();
+        });
+        req.on('end', function() {
+            if (!opts.onData) { return; }
+            opts.onData( {
+                method:  req.method,
+                body:    buffer
+            });
+        });
+
         setTimeout( function() {
-            res.end( opts.response );
+            if (opts.responseFunction) {
+                opts.responseFunction( req, function( d ) {
+                    res.end( d );
+                });
+            } else {
+                res.end( opts.response );
+            }
         }, opts.timeout );
     });
 
