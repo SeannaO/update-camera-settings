@@ -286,6 +286,7 @@ describe('Hik', function() {
 
                 hik.getNumberOfChannels(function(err, nChannels) {
                     assert.ok(err.code.indexOf('TIMEDOUT') >= 0);
+                    server.close();
                     done();
                 });
             });
@@ -307,6 +308,7 @@ describe('Hik', function() {
 
                 hik.getNumberOfChannels(function(err, nChannels) {
                     assert.equal(err.code, 'ENETUNREACH');
+                    server.close();
                     done();
                 });
             });
@@ -327,6 +329,7 @@ describe('Hik', function() {
 
                 hik.getNumberOfChannels(function(err, nChannels) {
                     assert.equal(err, 'empty response');
+                    server.close();
                     done();
                 });
             });
@@ -361,6 +364,7 @@ describe('Hik', function() {
 
                 hik.getNumberOfChannels(function(err, nChannels) {
                     assert.equal(err, 'could not parse number of channels');
+                    server.close();
                     done();
                 });
             });
@@ -416,7 +420,10 @@ describe('Hik', function() {
                     assert.equal( d.body, xml );
                     assert.equal( d.method, 'PUT' );
                     done_counter++;
-                    if (done_counter == 2) { done(); }
+                    if (done_counter == 2) { 
+                        server.close();
+                        done(); 
+                    }
                 }
             }, function(port) {
                 hik.setCameraParams({
@@ -434,7 +441,10 @@ describe('Hik', function() {
                 }, function(err, body) {
                     assert.ok(!err);
                     done_counter++;
-                    if (done_counter == 2) { done(); }
+                    if (done_counter == 2) { 
+                        server.close();
+                        done(); 
+                    }
                 });
             });
         });
@@ -517,6 +527,8 @@ describe('Hik', function() {
                     assert.ok( channelRequests[2] );
                     assert.ok( channelRequests[3] );
                     assert.equal(err, 'could not parse response from channel 2');
+
+                    server.close();
                     done();
                 });
             });
@@ -537,6 +549,146 @@ describe('Hik', function() {
                 assert.equal(configsPerChannel.nChannels, 3);
 
                 done();
+            });
+        });
+    });
+
+    describe('getRtspUrl', function() {
+
+        var channelsResponseXML = '<StreamingChannel ></StreamingChannel>';
+
+        var capabilitiesResponseXML = '<?xml version="1.0" encoding="UTF-8"?>\
+            <StreamingChannel version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">\
+            <id opt="1">102</id>\
+            <Video>\
+                <videoResolutionWidth opt="352*240,640*480,704*480">640</videoResolutionWidth>\
+                <maxFrameRate opt="3000,2500,2200,2000,1800,1600,1500,1200,1000,800,600,400,200,100,50,25,12,6">1500</maxFrameRate>\
+            </Video>\
+            </StreamingChannel>';
+
+        it('should handle mising data in profile', function(done) {
+
+            var hik = new Hik();
+
+            var server = new Server({
+                responseFunction: function(req, cb) {
+
+                    if (req.url == '/streaming/channels') {
+                        return cb( channelsResponseXML );
+                    } else if ( req.url.indexOf('channels/1') >= 0 ) {
+                        return cb(capabilitiesResponseXML);
+                    } else {
+                        assert.equal(req.method, 'PUT');
+                        assert.ok(req.url.indexOf('Channels/1') >= 0);
+                        return cb('');
+                    }
+                },
+                onData: function(d) {
+                    // assert.equal( d.method, 'PUT' );
+                    if (d.method !== 'PUT') { return; }
+                    assert.ok(
+                        d.body.indexOf('<videoResolutionWidth>800</videoResolutionWidth><videoResolutionHeight>600</videoResolutionHeight>') >= 0
+                    );
+                }
+            }, function(port) {
+                hik.setCameraParams({
+                    username: 'user',
+                    password: 'pass',
+                    ip: 'localhost:' + port
+                });
+
+                hik.getRtspUrl({
+                }, function(url) {
+                    assert.equal(url, 'rtsp://user:pass@localhost:' + port + '/Streaming/Channels/1');
+                    server.close();
+                    done();
+                });
+            });
+        });
+
+
+        it('should handle invalid responses from camera', function(done) {
+
+            var hik = new Hik();
+
+            var server = new Server({
+                responseFunction: function(req, cb) {
+
+                    if (req.url == '/streaming/channels') {
+                        return cb( channelsResponseXML );
+                    } else if ( req.url.indexOf('channels/1') >= 0 ) {
+                        return cb( 'broken_response' );
+                    } else {
+                        assert.equal(req.method, 'PUT');
+                        assert.ok(req.url.indexOf('Channels/1') >= 0);
+                        return cb('');
+                    }
+                },
+                onData: function(d) {
+                    // assert.equal( d.method, 'PUT' );
+                    if (d.method !== 'PUT') { return; }
+                    assert.ok(
+                        d.body.indexOf('<videoResolutionWidth>800</videoResolutionWidth><videoResolutionHeight>600</videoResolutionHeight>') >= 0
+                    );
+                }
+            }, function(port) {
+                hik.setCameraParams({
+                    username: 'user',
+                    password: 'pass',
+                    ip: 'localhost:' + port
+                });
+
+                hik.getRtspUrl({
+                }, function(url) {
+                    assert.equal(url, 'rtsp://user:pass@localhost:' + port + '/Streaming/Channels/1');
+                    server.close();
+                    done();
+                });
+            });
+        });
+
+        it('should handle invalid channel in profile and approximate fps to the nearest supported value', function(done) {
+
+            var hik = new Hik();
+
+            var server = new Server({
+                responseFunction: function(req, cb) {
+
+                    if (req.url == '/streaming/channels') {
+                        return cb( channelsResponseXML );
+                    } else if ( req.url.indexOf('channels/1') >= 0 ) {
+                        return cb(capabilitiesResponseXML);
+                    } else {
+                        assert.equal(req.method, 'PUT');
+                        assert.ok(req.url.indexOf('Channels/1') >= 0);
+                        return cb('');
+                    }
+                },
+                onData: function(d) {
+                    if (d.method !== 'PUT') { return; }
+                    console.log(d);
+                    assert.ok(
+                        d.body.indexOf('<videoResolutionWidth>800</videoResolutionWidth><videoResolutionHeight>600</videoResolutionHeight>') >= 0
+                    );
+                    assert.ok(
+                        d.body.indexOf('<maxFrameRate>22000</maxFrameRate>') >= 0
+                    );
+                }
+            }, function(port) {
+                hik.setCameraParams({
+                    username: 'user',
+                    password: 'pass',
+                    ip: 'localhost:' + port
+                });
+
+                hik.getRtspUrl({
+                    channel:    2,
+                    framerate:  23
+                }, function(url) {
+                    assert.equal(url, 'rtsp://user:pass@localhost:' + port + '/Streaming/Channels/1');
+                    server.close();
+                    done();
+                });
             });
         });
     });
