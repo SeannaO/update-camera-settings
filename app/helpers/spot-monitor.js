@@ -94,7 +94,9 @@ var addSpotMonitorStream = function( camera, stream, cb ) {
 
     }, function(url) {
 
-        stream.url = url;
+        stream.url  = url;
+        stream.rtsp = url;
+
         camera.spotMonitorStreams[stream.id] = stream;
         cb( null, stream );
     });
@@ -377,7 +379,7 @@ var getSpotMonitorStreamsJSON = function( camera ) {
         var s = camera.spotMonitorStreams[id];
         streams.push({
             url:         s.url,
-            rtsp:        s.rtsp,
+            rtsp:        s.rtsp || s.url,
             resolution:  s.resolution,
             quality:     s.quality,
             framerate:   s.framerate,

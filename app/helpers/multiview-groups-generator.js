@@ -24,19 +24,32 @@ var MultiviewCameraGroups = function( cameras ) {
 
 MultiviewCameraGroups.prototype.loadCameras = function( cameras ) {
 
-	for (var i in cameras) {
+    for (var i in cameras) {
 
-		var c = cameras[i];
-		if (!c || !c.streams || !c.streams.length) { continue; }
+        var done = false;
 
-		for (var k in c.streams) {
-			var s = c.streams[k];
-			if (s.url) {
-				this.add( c._id, s.id );
-				break;
-			}
-		}
-	}
+        var c = cameras[i];
+        if (!c || !c.streams || !c.streams.length) { continue; }
+
+        for (var k in c.spotMonitorStreams) {
+            var s = c.spotMonitorStreams[k];
+            if (s.url) {
+                this.add( c._id, s.id );
+                done = true;
+                break;
+            }
+        }
+
+        if (done) { continue; }
+
+        for (var k in c.streams) {
+            var s = c.streams[k];
+            if (s.url) {
+                this.add( c._id, s.id );
+                break;
+            }
+        }
+    }
 };
 
 
