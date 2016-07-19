@@ -185,15 +185,14 @@ Camera.prototype.addStream = function( stream, cb ) {
 			return;
 		}
 
-                // TODO: channel
 		self.api.getRtspUrl({
-			resolution:     stream.resolution,
-			framerate:      stream.framerate,
-			quality:        stream.quality,
-			suggested_url:  stream.url,
-			bitrate:        stream.bitrate,
+                        resolution:     stream.resolution,
+                        framerate:      stream.framerate,
+                        quality:        stream.quality,
+                        suggested_url:  stream.url,
+                        bitrate:        stream.bitrate,
                         channel:        stream.channel,
-			camera_no:      stream.camera_no
+                        camera_no:      stream.camera_no
 		}, function(url) {
 
 			stream.url = url;
