@@ -704,16 +704,15 @@ Camera.prototype.restartStream = function( streamId, cb ) {
 
 	var oldRecordModel = self.streams[streamId].recordModel;
 
-        // TODO: channel
 	// refreshes rtsp url
 	self.api.getRtspUrl({
-		resolution:     stream.resolution,
-		framerate:      stream.framerate,
-		quality:        stream.quality,
-		bitrate:        stream.bitrate,
-                channel:        stream.channel,
-		suggested_url:  self.streams[streamId].url,
-		camera_no:      stream.camera_no
+              resolution:     stream.resolution,
+              framerate:      stream.framerate,
+              quality:        stream.quality,
+              bitrate:        stream.bitrate,
+              channel:        stream.channel,
+              suggested_url:  self.streams[streamId].url,
+              camera_no:      stream.camera_no
 	}, function(url) {
 
 		// self.streams[streamId].recordModel.stopRecording();
