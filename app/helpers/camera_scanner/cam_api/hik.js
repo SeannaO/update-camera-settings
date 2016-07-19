@@ -333,60 +333,60 @@ var getResolutionAsyncHelper = function( hik, channel, d ) {
 
 Hik.prototype.getResolutionOptions = function(cb) {
 
-	var self = this;
+    var self = this;
 
-	if (!this.ip) {
-		if(cb) cb('no ip');
-		return;
-	}
-	
-	var currentResolutions = {};
+    if (!this.ip) {
+            if(cb) cb('no ip');
+            return;
+    }
+    
+    var currentResolutions = {};
 
-          var resolutions = [],
-            bitrates;
+    var resolutions = [],
+        bitrates;
 
-          var error; 
+    var error; 
 
-        this.getNumberOfChannels( function( err, nChannels ) {
+    this.getNumberOfChannels( function( err, nChannels ) {
 
-            if (err) {
-                return cb(err, []);
-            }
+        if (err) {
+            return cb(err, []);
+        }
 
-            if (nChannels == 0) {
-                return cb('0 channels');
-            }
+        if (nChannels == 0) {
+            return cb('0 channels');
+        }
 
-            self.nChannels = nChannels;
+        self.nChannels = nChannels;
 
-            var tasks = [];
-            for (var ch = 1; ch <= nChannels; ch++) {
-                tasks.push(
-                    getResolutionAsyncHelper( self, ch, {
-                        currentResolutions:  currentResolutions,
-                        resolutions:         resolutions,
-                        bitrates:            bitrates
-                    })
-                );
-            }
-
-            async.parallel( 
-                tasks, 
-                function( err ) {
-
-                    if( err ) {
-                        cb(err, []);
-                    } else {
-                        cb( null, resolutions, bitrates, {
-                            nChannels:              self.nChannels,
-                            resolutionsPerChannel:  self.resolutionOptionsPerChannel,
-                            frameratePerChannel:    self.fpsOptionsPerChannel,
-                            bitratesPerChannel:     self.bitrateOptionsPerChannel
-                        });
-                    }
-                }
+        var tasks = [];
+        for (var ch = 1; ch <= nChannels; ch++) {
+            tasks.push(
+                getResolutionAsyncHelper( self, ch, {
+                    currentResolutions:  currentResolutions,
+                    resolutions:         resolutions,
+                    bitrates:            bitrates
+                })
             );
-        });
+        }
+
+        async.parallel( 
+            tasks, 
+            function( err ) {
+
+                if( err ) {
+                    cb(err, []);
+                } else {
+                    cb( null, resolutions, bitrates, {
+                        nChannels:              self.nChannels,
+                        resolutionsPerChannel:  self.resolutionOptionsPerChannel,
+                        frameratePerChannel:    self.fpsOptionsPerChannel,
+                        bitratesPerChannel:     self.bitrateOptionsPerChannel
+                    });
+                }
+            }
+        );
+    });
 };
 
 
