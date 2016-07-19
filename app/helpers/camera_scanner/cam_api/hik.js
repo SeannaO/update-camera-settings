@@ -1,6 +1,7 @@
 var request = require('request');
 var xml2js  = require('xml2js').parseString;
 var async   = require('async');
+var _       = require('lodash');
 
 
 var requestXML = 
@@ -124,6 +125,7 @@ var getResolutions = function( ip, username, password, channel, cb ) {
 				for(var i in values) {
 					if (!values[i]) continue;
 					values[i] = values[i].replace('*', 'x');
+                                                  values[i] = _.trim( values[i] );
 					resolutions.push({
 						name:   values[i] + ' - ch ' + channel,
 						value:  values[i]
@@ -207,6 +209,7 @@ Hik.prototype.getRtspUrl = function ( profile, cb ) {
 
 	// insert dummy resolution to handle empty resolution response during camera setup
 	profile.resolution = profile.resolution || '800x600';
+          profile.resolution = _.trim( profile.resolution );
 
 	var resolution = profile.resolution.split('x');
 
@@ -311,10 +314,9 @@ var getResolutionAsyncHelper = function( hik, channel, d ) {
             for (var i in res) {
                 if ( !d.currentResolutions[ res[i].name ] ) {
                     d.currentResolutions[ res[i].name ] = true;
-                    hik.resolution2channel[ res[i].value ] = 1;
+                    hik.resolution2channel[ res[i].value ] = channel;
                     d.resolutions.push( res[i] );
                 }
-
             }
 
             hik.addFpsOptions( channel, fpsData );
