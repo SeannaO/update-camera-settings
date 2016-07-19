@@ -666,15 +666,14 @@ Camera.prototype.refreshRtspUrl = function( streamId, cb ) {
 
 	var stream = this.streams[ streamId ];
 
-        // TODO: channel
 	this.api.getRtspUrl({
-		resolution:     stream.resolution,
-		framerate:      stream.framerate,
-		quality:        stream.quality,
-		bitrate:        stream.bitrate,
-                channel:        stream.channel,
-		suggested_url:  stream.url,
-		camera_no:      stream.camera_no
+              resolution:     stream.resolution,
+              framerate:      stream.framerate,
+              quality:        stream.quality,
+              bitrate:        stream.bitrate,
+              channel:        stream.channel,
+              suggested_url:  stream.url,
+              camera_no:      stream.camera_no
 	}, function(url) {
 
 		var err = null;  // TODO: return err from getRtspUrl
