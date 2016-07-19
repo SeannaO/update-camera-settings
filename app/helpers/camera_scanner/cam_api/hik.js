@@ -30,8 +30,8 @@ var requestXML =
         // <GovLength min="1" max="400">12</GovLength>
 
 var configURL = 'http://{username}:{password}@{ip}/PSIA/Streaming/Channels/{channel}';
-
 var rtsp_url = 'rtsp://{username}:{password}@{ip}/Streaming/Channels/{channel}';
+
 
 var getResolutions = function( ip, username, password, channel, cb ) {
 
@@ -137,6 +137,7 @@ var getResolutions = function( ip, username, password, channel, cb ) {
     );
 };
 
+
 var Hik = function() {
     this.password;
     this.username;
@@ -148,9 +149,11 @@ var Hik = function() {
     this.resolutionOptionsPerChannel = {};
 };
 
+
 Hik.prototype.apiName = function() {
     return 'hik';
 };
+
 
 Hik.prototype.checkForExistingProfile = function( profileName, cb ) {
 };
@@ -305,6 +308,7 @@ Hik.prototype.configCamera = function(params, cb) {
     });
 };
 
+
 var getResolutionAsyncHelper = function( hik, channel, d ) {
                 
     var r = function(callback) {
@@ -330,6 +334,7 @@ var getResolutionAsyncHelper = function( hik, channel, d ) {
 
     return r;
 };
+
 
 Hik.prototype.getResolutionOptions = function(cb) {
 
@@ -399,6 +404,7 @@ Hik.prototype.addResolutionOptions = function( channel, resolutionData ) {
     }
 };
 
+
 Hik.prototype.addFpsOptions = function( channel, fpsData ) {
     var self = this;
 
@@ -418,6 +424,7 @@ Hik.prototype.addBitrateOptions = function( channel, bitrateData ) {
     };
 };
 
+
 Hik.prototype.setCameraParams = function(params) {
 
     this.password = params.password || this.password;
@@ -426,14 +433,15 @@ Hik.prototype.setCameraParams = function(params) {
 };
 
 
-
 Hik.prototype.getFrameRateRange = function() {
     return 0;
 };
 
+
 Hik.prototype.getVideoQualityRange = function() {
     return 0;
 };
+
 
 Hik.prototype.setMotionParams = function(params){
 
@@ -451,6 +459,8 @@ Hik.prototype.startListeningForMotionDetection = function(cam, cb){
 Hik.prototype.stopListeningForMotionDetection = function(){
 };
 
+
 Hik.getResolutions = getResolutions;
+
 
 module.exports = Hik;
