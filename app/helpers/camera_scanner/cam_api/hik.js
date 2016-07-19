@@ -5,23 +5,23 @@ var _       = require('lodash');
 
 
 var requestXML = 
-	'<?xml version:"1.0" encoding="UTF-8"?><StreamingChannel xmlns="urn:psialliance-org" version="1.0">'
-	+ '<id>{channel}</id>'
-	+ '<channelName>Solink 01</channelName>'   // TODO: test if ok to have empty name
-	+ '<enabled>true</enabled>'
-	+ ' <Video>'
-	+	'<enabled>true</enabled>'
-	+	'<videoInputChannelID>1</videoInputChannelID>'
-	+	'<videoCodecType>H.264</videoCodecType>'
-	+ 	'<videoResolutionWidth>{width}</videoResolutionWidth>'
-	+ 	'<videoResolutionHeight>{height}</videoResolutionHeight>'
-	+ 	'<videoQualityControlType>vbr</videoQualityControlType>'
-	+ 	'<vbrUpperCap>{bitrate}</vbrUpperCap>'
-	+ 	'<vbrLowerCap>32</vbrLowerCap>'
-	+ 	'<fixedQuality>60</fixedQuality>'
-	+ 	'<maxFrameRate>{fps}</maxFrameRate>'
-	+ 	'</Video>'
-	+ 	'</StreamingChannel>';
+        '<?xml version:"1.0" encoding="UTF-8"?><StreamingChannel xmlns="urn:psialliance-org" version="1.0">'
+        + '<id>{channel}</id>'
+        + '<channelName>Solink 01</channelName>'   // TODO: test if ok to have empty name
+        + '<enabled>true</enabled>'
+        + ' <Video>'
+        +   '<enabled>true</enabled>'
+        +   '<videoInputChannelID>1</videoInputChannelID>'
+        +   '<videoCodecType>H.264</videoCodecType>'
+        +       '<videoResolutionWidth>{width}</videoResolutionWidth>'
+        +       '<videoResolutionHeight>{height}</videoResolutionHeight>'
+        +       '<videoQualityControlType>vbr</videoQualityControlType>'
+        +       '<vbrUpperCap>{bitrate}</vbrUpperCap>'
+        +       '<vbrLowerCap>32</vbrLowerCap>'
+        +       '<fixedQuality>60</fixedQuality>'
+        +       '<maxFrameRate>{fps}</maxFrameRate>'
+        +   '</Video>'
+        +   '</StreamingChannel>';
 
         //TODO: GOP Interval
         // <GovLength>12</GovLength>
@@ -35,121 +35,121 @@ var rtsp_url = 'rtsp://{username}:{password}@{ip}/Streaming/Channels/{channel}';
 
 var getResolutions = function( ip, username, password, channel, cb ) {
 
-	var url = 'http://' + username + ':' + password + '@' + ip + '/streaming/channels/' + channel + '/capabilities';
+    var url = 'http://' + username + ':' + password + '@' + ip + '/streaming/channels/' + channel + '/capabilities';
 
-	request({
-		url: url,
-		headers: {
-			'User-Agent': 'nodejs'
-		},
-		timeout: 10000
-	}, function(err, res, body) {
-			if(err) {
-				if (cb) cb(err, []);
-				return;
-			}
-			if(!body) {
-				if(cb)	cb('empty response', []);
-				return;
-			}
-			xml2js(body, function(err, data){
-				if (body.indexOf('Invalid Operation') >= 0
-					|| body.indexOf('Unauthorized') >= 0) {
-					if(cb) cb('not authorized', []);
-					return;
-				}
-				var resolutions = [];
-				var fpsData = [];
-				var bitrates = {};
-				
-				if (!data) {
-					if(cb) { cb('could not parse response from channel ' + channel, []); }
-					return;
-				}
+    request({
+        url: url,
+        headers: {
+            'User-Agent': 'nodejs'
+        },
+        timeout: 10000
+    }, function(err, res, body) {
+        if(err) {
+            if (cb) cb(err, []);
+            return;
+        }
+        if(!body) {
+            if(cb)	cb('empty response', []);
+            return;
+        }
+        xml2js(body, function(err, data){
+            if (body.indexOf('Invalid Operation') >= 0
+                || body.indexOf('Unauthorized') >= 0) {
+                    if(cb) cb('not authorized', []);
+                    return;
+                }
+            var resolutions = [];
+            var fpsData = [];
+            var bitrates = {};
 
-				if (!data.StreamingChannel) {
-					if(cb) cb('invalid response from channel ' + channel+ ': no StreamingChannel tag', []);
-					return;
-				}
+            if (!data) {
+                if(cb) { cb('could not parse response from channel ' + channel, []); }
+                return;
+            }
 
-				data = data.StreamingChannel;
-				if (!data.Video) {
-					if(cb) cb('invalid response from channel ' + channel + ': no Video tag', []);
-					return;
-				}
+            if (!data.StreamingChannel) {
+                if(cb) cb('invalid response from channel ' + channel+ ': no StreamingChannel tag', []);
+                return;
+            }
 
-				// resolutions
-				data = data.Video[0];
-				if (!data.videoResolutionWidth || !data.videoResolutionWidth[0]) {
-					if(cb) cb('invalid response from channel ' + channel + ': no videoResolutionWidth tag', []);
-					return;
-				}
-                                //TODO: check videoResolutionHeight
+            data = data.StreamingChannel;
+            if (!data.Video) {
+                if(cb) cb('invalid response from channel ' + channel + ': no Video tag', []);
+                return;
+            }
 
-				// bitrate range
-				if (!data.constantBitRate || !data.constantBitRate[0] || !data.constantBitRate[0]['$']) {
-					console.error('[Hik]  no bitrate options found for channel ' + channel + ', using default 512');
-					bitrates.min = '512';
-					bitrates.max  = '512';
-				} else {
-					bitrates.min = data.constantBitRate[0]['$'].min || '512';
-					bitrates.max = data.constantBitRate[0]['$'].max || '512';
-				}
+            // resolutions
+            data = data.Video[0];
+            if (!data.videoResolutionWidth || !data.videoResolutionWidth[0]) {
+                if(cb) cb('invalid response from channel ' + channel + ': no videoResolutionWidth tag', []);
+                return;
+            }
+            //TODO: check videoResolutionHeight
 
-				// fps options
-				if (!data.maxFrameRate || !data.maxFrameRate[0]) {
-					fpsData.push( '1500' );
-				}
-				else {
-					var fpsOpts = data.maxFrameRate[0]['$'];
-					if(!fpsOpts || !fpsOpts.opt) {
-						fpsData.push('1500');
-					} else {
-						fpsOpts = fpsOpts.opt;
-						fpsOpts = fpsOpts.split(',');
-						for(var i in fpsOpts) {
-							fpsData.push( parseInt( fpsOpts[i] ) );
-						}
-					}
-				}
-				// --
+            // bitrate range
+            if (!data.constantBitRate || !data.constantBitRate[0] || !data.constantBitRate[0]['$']) {
+                console.error('[Hik]  no bitrate options found for channel ' + channel + ', using default 512');
+                bitrates.min = '512';
+                bitrates.max  = '512';
+            } else {
+                bitrates.min = data.constantBitRate[0]['$'].min || '512';
+                bitrates.max = data.constantBitRate[0]['$'].max || '512';
+            }
 
-				data = data.videoResolutionWidth[0]['$'];
-				if (!data || !data.opt) {
-					if(cb) cb('invalid response from channel ' + channel + ': no opt tag', []);
-					return;
-				}
+            // fps options
+            if (!data.maxFrameRate || !data.maxFrameRate[0]) {
+                fpsData.push( '1500' );
+            }
+            else {
+                var fpsOpts = data.maxFrameRate[0]['$'];
+                if(!fpsOpts || !fpsOpts.opt) {
+                    fpsData.push('1500');
+                } else {
+                    fpsOpts = fpsOpts.opt;
+                    fpsOpts = fpsOpts.split(',');
+                    for(var i in fpsOpts) {
+                        fpsData.push( parseInt( fpsOpts[i] ) );
+                    }
+                }
+            }
+            // --
 
-				var values = data.opt;
-				values = values.split(',');
-				for(var i in values) {
-					if (!values[i]) continue;
-					values[i] = values[i].replace('*', 'x');
-                                                  values[i] = _.trim( values[i] );
-					resolutions.push({
-						name:   values[i] + ' - ch ' + channel,
-						value:  values[i]
-					});
-				}
-				if (cb) cb(null, resolutions, fpsData, bitrates);
-			});
-		}
-	);
+            data = data.videoResolutionWidth[0]['$'];
+            if (!data || !data.opt) {
+                if(cb) cb('invalid response from channel ' + channel + ': no opt tag', []);
+                return;
+            }
+
+            var values = data.opt;
+            values = values.split(',');
+            for(var i in values) {
+                if (!values[i]) continue;
+                values[i] = values[i].replace('*', 'x');
+                values[i] = _.trim( values[i] );
+                resolutions.push({
+                    name:   values[i] + ' - ch ' + channel,
+                    value:  values[i]
+                });
+            }
+            if (cb) cb(null, resolutions, fpsData, bitrates);
+        });
+    }
+    );
 };
 
 var Hik = function() {
-	this.password;
-	this.username;
-	this.ip;
+    this.password;
+    this.username;
+    this.ip;
 
-	this.resolution2channel          = {};
-	this.fpsOptionsPerChannel        = {};
-	this.bitrateOptionsPerChannel    = {};
-	this.resolutionOptionsPerChannel = {};
+    this.resolution2channel          = {};
+    this.fpsOptionsPerChannel        = {};
+    this.bitrateOptionsPerChannel    = {};
+    this.resolutionOptionsPerChannel = {};
 };
 
 Hik.prototype.apiName = function() {
-	return 'hik';
+    return 'hik';
 };
 
 Hik.prototype.checkForExistingProfile = function( profileName, cb ) {
@@ -279,30 +279,30 @@ Hik.prototype.getRtspUrl = function ( profile, cb ) {
 
 Hik.prototype.configCamera = function(params, cb) {
 
-	var xml = requestXML
-		.replace('{channel}', 	params.channel)
-		.replace('{width}', 	params.width)
-		.replace('{height}', 	params.height)
-		.replace(/{bitrate}/g, 	params.bitrate)
-		.replace('{fps}', 		params.fps);
+    var xml = requestXML
+        .replace('{channel}', 	params.channel)
+        .replace('{width}', 	params.width)
+        .replace('{height}', 	params.height)
+        .replace(/{bitrate}/g, 	params.bitrate)
+        .replace('{fps}', 		params.fps);
 
-	var url = configURL
-		.replace('{username}', 	this.username)
-		.replace('{password}', 	this.password)
-		.replace('{ip}', 		this.ip)
-		.replace('{channel}', 	params.channel);
-		
+    var url = configURL
+        .replace('{username}', 	this.username)
+        .replace('{password}', 	this.password)
+        .replace('{ip}', 		this.ip)
+        .replace('{channel}', 	params.channel);
+
     request({ 
-            method: 'PUT', 
-			body: xml,
-			headers: {
-				'Content-Type': "text/xml; charset=utf-8",
-			},
-			uri: url,
-            timeout: 5000
-        }, function (error, response, body) {
-			if(cb) cb( error, body );
-		});
+        method: 'PUT', 
+        body: xml,
+        headers: {
+            'Content-Type': "text/xml; charset=utf-8",
+        },
+        uri: url,
+        timeout: 5000
+    }, function (error, response, body) {
+        if(cb) cb( error, body );
+    });
 };
 
 var getResolutionAsyncHelper = function( hik, channel, d ) {
@@ -342,10 +342,10 @@ Hik.prototype.getResolutionOptions = function(cb) {
 	
 	var currentResolutions = {};
 
-	var resolutions = [],
+          var resolutions = [],
             bitrates;
 
-	var error; 
+          var error; 
 
         this.getNumberOfChannels( function( err, nChannels ) {
 
@@ -400,39 +400,39 @@ Hik.prototype.addResolutionOptions = function( channel, resolutionData ) {
 };
 
 Hik.prototype.addFpsOptions = function( channel, fpsData ) {
-	var self = this;
+    var self = this;
 
-	self.fpsOptionsPerChannel[channel] = [];
-	for(var i in fpsData) {
-		self.fpsOptionsPerChannel[channel].push( fpsData[i] );
-	}
+    self.fpsOptionsPerChannel[channel] = [];
+    for(var i in fpsData) {
+        self.fpsOptionsPerChannel[channel].push( fpsData[i] );
+    }
 };
 
 
 Hik.prototype.addBitrateOptions = function( channel, bitrateData ) {
-	if (!bitrateData) { return; }
+    if (!bitrateData) { return; }
 
-	this.bitrateOptionsPerChannel[channel] = {
-		min:  bitrateData.min,
-		max:  bitrateData.max
-	};
+    this.bitrateOptionsPerChannel[channel] = {
+        min:  bitrateData.min,
+        max:  bitrateData.max
+    };
 };
 
 Hik.prototype.setCameraParams = function(params) {
 
-	this.password = params.password || this.password;
-	this.username = params.username || this.username;
-	this.ip       = params.ip || this.ip;
+    this.password = params.password || this.password;
+    this.username = params.username || this.username;
+    this.ip       = params.ip || this.ip;
 };
 
 
 
 Hik.prototype.getFrameRateRange = function() {
-	return 0;
+    return 0;
 };
 
 Hik.prototype.getVideoQualityRange = function() {
-	return 0;
+    return 0;
 };
 
 Hik.prototype.setMotionParams = function(params){
