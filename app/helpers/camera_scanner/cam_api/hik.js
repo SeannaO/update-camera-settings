@@ -204,76 +204,76 @@ Hik.prototype.getNumberOfChannels = function( cb ) {
 
 
 Hik.prototype.getRtspUrl = function ( profile, cb ) {
-	
+
 	var self = this;
 
-	// insert dummy resolution to handle empty resolution response during camera setup
-	profile.resolution = profile.resolution || '800x600';
-          profile.resolution = _.trim( profile.resolution );
+    // insert dummy resolution to handle empty resolution response during camera setup
+    profile.resolution = profile.resolution || '800x600';
+    profile.resolution = _.trim( profile.resolution );
 
-	var resolution = profile.resolution.split('x');
+    var resolution = profile.resolution.split('x');
 
-	self.getResolutionOptions( function(err) {
+    self.getResolutionOptions( function(err) {
 
-		if (err) { 
-			console.error('[HIK.getRtspUrl]  error when getting resolutions from camera: ' + err);
-		}
+        if (err) { 
+            console.error('[HIK.getRtspUrl]  error when getting resolutions from camera: ' + err);
+        }
 
-		var channel = profile.channel || self.resolution2channel[ profile.resolution ];
+        var channel = profile.channel || self.resolution2channel[ profile.resolution ];
 
-		if ( isNaN(channel) ) {
-			console.error('[HIK.getRtspUrl]  could not determine a channel, using default 1');
-			channel = 1; // default channel
-		}
+        if ( isNaN(channel) ) {
+            console.error('[HIK.getRtspUrl]  could not determine a channel, using default 1');
+            channel = 1; // default channel
+        }
 
-                if (channel < 1 || channel > self.nChannels) {
-                    console.error('[HIK.getRtspUrl]  invalid channel: ' + channel + '; using default 1');
-                    channel = 1;
-                }
+        if (channel < 1 || channel > self.nChannels) {
+            console.error('[HIK.getRtspUrl]  invalid channel: ' + channel + '; using default 1');
+            channel = 1;
+        }
 
-		var width   = resolution[0];
-		var height  = resolution[1];
-		var fps     = profile.framerate || 15;
-		var bitrate = profile.bitrate || 512;
+        var width   = resolution[0];
+        var height  = resolution[1];
+        var fps     = profile.framerate || 15;
+        var bitrate = profile.bitrate || 512;
 
-		fps *= 100;
+        fps *= 100;
 
-		var minDiff,
-			minFps;
+        var minDiff,
+            minFps;
 
-		var fpsOpts = self.fpsOptionsPerChannel[channel];
+        var fpsOpts = self.fpsOptionsPerChannel[channel];
 
-		for (var i in fpsOpts) {
-			var diff = Math.abs( fps - fpsOpts[i] );
+        for (var i in fpsOpts) {
+            var diff = Math.abs( fps - fpsOpts[i] );
 
-			if (isNaN(minDiff) || diff < minDiff) {
-				minFps  = fpsOpts[i];
-				minDiff = diff;
-			}
-		}
+            if (isNaN(minDiff) || diff < minDiff) {
+                minFps  = fpsOpts[i];
+                minDiff = diff;
+            }
+        }
 
-		if (minFps) { 
-			fps = minFps; 
-		} else { 
-			console.error('[HIK.getRtspUrl]  could not resolve fps, using ' + fps); 
-		}
+        if (minFps) { 
+            fps = minFps; 
+        } else { 
+            console.error('[HIK.getRtspUrl]  could not resolve fps, using ' + fps); 
+        }
 
-		var url = rtsp_url
-			.replace('{ip}', self.ip)
-			.replace('{channel}', channel)
-			.replace('{username}', self.username)
-			.replace('{password}', self.password);
+        var url = rtsp_url
+            .replace('{ip}', self.ip)
+            .replace('{channel}', channel)
+            .replace('{username}', self.username)
+            .replace('{password}', self.password);
 
-		self.configCamera({
-			channel:  channel,
-			width:    width,
-			height:   height,
-			bitrate:  bitrate,
-			fps:      fps
-		}, function(err, body) {
-			if(cb) cb(url);
-		});
-	});
+        self.configCamera({
+            channel:  channel,
+            width:    width,
+            height:   height,
+            bitrate:  bitrate,
+            fps:      fps
+        }, function(err, body) {
+            if(cb) cb(url);
+        });
+    });
 };
 
 
