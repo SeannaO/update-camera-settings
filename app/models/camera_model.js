@@ -1409,21 +1409,21 @@ Camera.prototype.getStreamsJSON = function() {
 	for (var id in self.streams) {
 		var s = self.streams[id];
 		streams.push({
-			retention:            s.retention,
-			url:                  s.url,
-			rtsp:                 s.rtsp,
-			resolution:           s.resolution,
-			quality:              s.quality,
-			framerate:            s.framerate,
-			bitrate:              s.bitrate,
-			name:                 s.name,
+                        retention:            s.retention,
+                        url:                  s.url,
+                        rtsp:                 s.rtsp,
+                        resolution:           s.resolution,
+                        quality:              s.quality,
+                        framerate:            s.framerate,
+                        bitrate:              s.bitrate,
+                        name:                 s.name,
                         channel:              s.channel,
-			id:                   id,
-			latestThumb:          s.latestThumb,
-			camera_no:            s.camera_no,
-			average_bps:          s.bpsAvg,
-			latestSegmentDate:    s.latestSegmentDate,
-			earliestSegmentDate:  s.earliestSegmentDate
+                        id:                   id,
+                        latestThumb:          s.latestThumb,
+                        camera_no:            s.camera_no,
+                        average_bps:          s.bpsAvg,
+                        latestSegmentDate:    s.latestSegmentDate,
+                        earliestSegmentDate:  s.earliestSegmentDate
 		}); 
 	}
 
