@@ -182,6 +182,31 @@ describe('Hik', function() {
             });
         });
 
+        it('should callback with 512 bitrate if bitrate tag is present but attributes are not', function(done) {
+            var response = '<?xml version="1.0" encoding="UTF-8"?>\
+                <StreamingChannel version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">\
+                <id opt="1,2,3">102</id>\
+                <Video>\
+                    <constantBitRate x="0">512</constantBitRate>\
+                    <videoResolutionWidth opt="352*240,640*480,704*480">640</videoResolutionWidth>\
+                    <maxFrameRate opt="3000,2500,2200,2000,1800,1600,1500,1200,1000,800,600,400,200,100,50,25,12,6">3000</maxFrameRate>\
+                </Video>\
+                </StreamingChannel>';
+
+            var server = new Server({
+                response: response
+            }, function(port) {
+                Hik.getResolutions( 'localhost:' + port, USER, PASS, 1, function(err, resolutions, fps, bitrates) {
+                    assert.ok(!err);
+                    assert.equal(bitrates.min, 512);
+                    assert.equal(bitrates.max, 512);
+
+                    server.close();
+                    done();
+                });
+            });
+        });
+
         it('should callback with 1500 fps if maxFrameRate tag is not present', function(done) {
             var response = '<?xml version="1.0" encoding="UTF-8"?>\
                 <StreamingChannel version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">\
@@ -577,9 +602,9 @@ describe('Hik', function() {
             .replace('{resolutions}', '352*240,640*480,800*600')
             .replace('{framerates}', '3000,2500,2200,2000,1800,1600,1500,1200,1000,800,600,400,200,100,50,25,12,6');
 
-
+        // including duplicate and empty resolution values to increase coverage
         var capabilitiesResponseXML_1 = capabilitiesResponseTemplate
-            .replace('{resolutions}', '1280*1024, 1280*720, 800*600')
+            .replace('{resolutions}', '1280*1024, 1280*720, 1280*720,,800*600')  
             .replace('{framerates}', '3000,2500,2200,2000,1800,1600,1500,1200,1000,800,600,400,200,100,50,25,12,6');
         var capabilitiesResponseXML_2 = capabilitiesResponseTemplate
             .replace('{resolutions}', '800*600, 640*480')
@@ -761,6 +786,34 @@ describe('Hik', function() {
                     done();
                 });
             });
+        });
+    });
+
+
+    describe('setCameraParams', function() {
+
+        it('should not override current settings if attributes being passed are undefined', function() {
+            
+            var hik = new Hik();
+
+            hik.setCameraParams({
+                password: 'pass',
+                username: 'user',
+                ip: 'my-ip'
+            });
+
+            assert.equal( hik.password, 'pass' );
+            assert.equal( hik.username , 'user' );
+            assert.equal( hik.ip, 'my-ip' );
+
+            hik.setCameraParams({
+                password: null,
+                ip: ''
+            });
+
+            assert.equal( hik.password, 'pass' );
+            assert.equal( hik.username, 'user' );
+            assert.equal( hik.ip, 'my-ip' );
         });
     });
 });
