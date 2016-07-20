@@ -487,14 +487,20 @@ describe('Hik', function() {
             '<StreamingChannel ></StreamingChannel>' +
             '<StreamingChannel ></StreamingChannel>';
 
-        var capabilitiesResponseXML = '<?xml version="1.0" encoding="UTF-8"?>\
+        var capabilitiesResponseXML_template = '<?xml version="1.0" encoding="UTF-8"?>\
             <StreamingChannel version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">\
             <id opt="1,2,3">102</id>\
             <Video>\
-                <videoResolutionWidth opt="352*240,640*480,704*480">640</videoResolutionWidth>\
+                <videoResolutionWidth opt="{resolutions}">640</videoResolutionWidth>\
                 <maxFrameRate>3000</maxFrameRate>\
             </Video>\
             </StreamingChannel>';
+
+        var capabilitiesResponseXML = capabilitiesResponseXML_template.replace('{resolutions}', '352*240,640*480,704*480');
+        
+        var capabilitiesResponseXML_1 = capabilitiesResponseXML_template.replace('{resolutions}', '2000*2000,1500*1500,800*600, 500*500');
+        var capabilitiesResponseXML_2 = capabilitiesResponseXML_template.replace('{resolutions}', '800*600, 500*500, 300*300');
+        var capabilitiesResponseXML_3 = capabilitiesResponseXML_template.replace('{resolutions}', '300*300,100*100');
 
         it('should cb with error when IP has not been set yet', function(done) {
            var hik = new Hik();
@@ -551,12 +557,63 @@ describe('Hik', function() {
                 });
 
                 hik.getResolutionOptions( function(err) {
-                    assert.ok( channelRequests[1] );
-                    assert.ok( channelRequests[2] );
-                    assert.ok( channelRequests[3] );
+                    // TODO: verify if these assertions are necessary
+                    // assert.ok( channelRequests[1] );
+                    // assert.ok( channelRequests[2] );
+                    // assert.ok( channelRequests[3] );
                     assert.equal(err, 'could not parse response from channel 2');
 
                     server.close();
+                    done();
+                });
+            });
+        });
+
+        it('should correctly map resolutions to channels, prioritizing channel 2', function(done) {
+
+            var hik = new Hik();
+
+            var server = new Server({
+                responseFunction: function(req, cb) {
+
+                    if (req.url == '/streaming/channels') {
+                        return cb( channelsResponseXML );
+                    } 
+
+                    if ( req.url.indexOf('channels/1') >= 0 ) {
+                        return setTimeout(function() {
+                            cb(capabilitiesResponseXML_1);
+                        }, 500);
+                    } else if ( req.url.indexOf('channels/2') >= 0) {
+                        return setTimeout(function() {
+                            cb(capabilitiesResponseXML_2);
+                        }, 100);
+                    } else if ( req.url.indexOf('channels/3') >= 0) {
+                        return setTimeout(function() {
+                            cb(capabilitiesResponseXML_3);
+                        }, 1000);
+                    }                
+                }
+            }, function(port) {
+                hik.setCameraParams({
+                    ip: 'localhost:' + port
+                });
+
+                hik.getResolutionOptions(function(err, resolutions, bitrates, configsPerChannel) {
+
+                    assert.ok(!err);
+
+                    assert.equal(Object.keys(hik.resolution2channel).length, 6); 
+
+                    assert.equal( hik.resolution2channel['2000x2000'], 1 );
+                    assert.equal( hik.resolution2channel['1500x1500'], 1 );
+
+                    assert.equal( hik.resolution2channel['800x600'], 2 );
+                    assert.equal( hik.resolution2channel['500x500'], 2 );
+                    assert.equal( hik.resolution2channel['300x300'], 2 );
+
+                    assert.equal( hik.resolution2channel['100x100'], 3 );
+
                     done();
                 });
             });
@@ -645,8 +702,9 @@ describe('Hik', function() {
                 });
 
                 hik.getRtspUrl({
-                }, function(url) {
+                }, function(url, channel) {
                     assert.equal(url, 'rtsp://user:pass@localhost:' + port + '/Streaming/Channels/1');
+                    assert.equal( channel, 1 );
                     server.close();
                     done();
                 });
@@ -686,8 +744,9 @@ describe('Hik', function() {
                 });
 
                 hik.getRtspUrl({
-                }, function(url) {
+                }, function(url, channel) {
                     assert.equal(url, 'rtsp://user:pass@localhost:' + port + '/Streaming/Channels/1');
+                    assert.equal(channel, 1);
                     server.close();
                     done();
                 });
@@ -731,8 +790,9 @@ describe('Hik', function() {
                 hik.getRtspUrl({
                     channel:    2,
                     framerate:  23
-                }, function(url) {
+                }, function(url, channel) {
                     assert.equal(url, 'rtsp://user:pass@localhost:' + port + '/Streaming/Channels/1');
+                    assert.equal( channel, 1 );
                     server.close();
                     done();
                 });
@@ -740,7 +800,6 @@ describe('Hik', function() {
         });
 
 
-        // TODO: finish this test
         it('should correctly map resolution to channel', function(done) {
 
             var hik = new Hik();
@@ -780,11 +839,201 @@ describe('Hik', function() {
                 hik.getRtspUrl({
                     resolution: '640x480',
                     framerate:  23
-                }, function(url) {
+                }, function(url, channel) {
                     assert.equal(url, 'rtsp://user:pass@localhost:' + port + '/Streaming/Channels/2');
+                    assert.equal( channel, 2 );
                     server.close();
                     done();
                 });
+            });
+        });
+
+
+        it('should correct channel if not not compatible with resolution', function(done) {
+
+            var hik = new Hik();
+
+            var server = new Server({
+                responseFunction: function(req, cb) {
+                    if (req.url == '/streaming/channels') {
+                        return cb( channelsResponseXML_3 );
+                    } else if ( req.url.indexOf('channels/1') >= 0 ) {
+                        return cb(capabilitiesResponseXML_1);
+                    } else if ( req.url.indexOf('channels/2') >= 0 ) {
+                        return cb(capabilitiesResponseXML_2);
+                    } else if ( req.url.indexOf('channels/3') >= 0 ) {
+                        return cb(capabilitiesResponseXML_3);
+                    } else {
+                        assert.equal(req.method, 'PUT');
+                        assert.ok(req.url.indexOf('Channels/1') >= 0);
+                        return cb('');
+                    }
+                },
+                onData: function(d) {
+                    if (d.method !== 'PUT') { return; }
+                    assert.ok(
+                        d.body.indexOf('<videoResolutionWidth>1280</videoResolutionWidth><videoResolutionHeight>1024</videoResolutionHeight>') >= 0
+                    );
+                    assert.ok(
+                        d.body.indexOf('<maxFrameRate>2200</maxFrameRate>') >= 0
+                    );
+                }
+            }, function(port) {
+                hik.setCameraParams({
+                    username: 'user',
+                    password: 'pass',
+                    ip: 'localhost:' + port
+                });
+
+                hik.getRtspUrl({
+                    resolution:  '1280x1024',
+                    channel:     2,
+                    framerate:   22
+                }, function(url, channel) {
+                    assert.equal(url, 'rtsp://user:pass@localhost:' + port + '/Streaming/Channels/1');
+                    assert.equal( channel, 1 );
+                    server.close();
+                    done();
+                });
+            });
+        });
+
+
+        it('it should use the specified channel if resolution is compatible', function(done) {
+
+            var hik = new Hik();
+
+            var server = new Server({
+                responseFunction: function(req, cb) {
+                    if (req.url == '/streaming/channels') {
+                        return cb( channelsResponseXML_3 );
+                    } else if ( req.url.indexOf('channels/1') >= 0 ) {
+                        return cb(capabilitiesResponseXML_1);
+                    } else if ( req.url.indexOf('channels/2') >= 0 ) {
+                        return cb(capabilitiesResponseXML_2);
+                    } else if ( req.url.indexOf('channels/3') >= 0 ) {
+                        return cb(capabilitiesResponseXML_3);
+                    } else {
+                        return cb('');
+                    }
+                },
+                onData: function(d) {
+                    if (d.method !== 'PUT') { return; }
+
+                    assert.ok(
+                        d.body.indexOf('<videoResolutionWidth>800</videoResolutionWidth><videoResolutionHeight>600</videoResolutionHeight>') >= 0
+                    );
+
+                    if (d.url.indexOf('Channels/1') > 0) {
+                        assert.ok(
+                            d.body.indexOf('<maxFrameRate>2200</maxFrameRate>') >= 0
+                        );
+                    } else if (d.url.indexOf('Channels/2') > 0) {
+                        assert.ok(
+                            d.body.indexOf('<maxFrameRate>2400</maxFrameRate>') >= 0
+                        );
+                    }
+                }
+            }, function(port) {
+                hik.setCameraParams({
+                    username: 'user',
+                    password: 'pass',
+                    ip: 'localhost:' + port
+                });
+
+                hik.getRtspUrl({
+                    resolution:  '800x600',
+                    channel:     2,
+                    framerate:   23
+                }, function(url, channel) {
+
+                    assert.equal(url, 'rtsp://user:pass@localhost:' + port + '/Streaming/Channels/2');
+                    assert.equal( channel, 2 );
+
+                    hik.setCameraParams({
+                        username: 'user',
+                        password: 'pass',
+                        ip: 'localhost:' + port
+                    });
+
+                    hik.getRtspUrl({
+                        resolution:  '800x600',
+                        channel:     1,
+                        framerate:   23
+                    }, function(url, channel) {
+
+                        assert.equal(url, 'rtsp://user:pass@localhost:' + port + '/Streaming/Channels/1');
+                        assert.equal( channel, 1 );
+
+                        server.close();
+                        done();
+                    });
+                });
+            });
+        });
+
+        
+        it('should default to channel 1 if resolution is unsupported', function(done) {
+
+            var hik = new Hik();
+
+            var server = new Server({
+                responseFunction: function(req, cb) {
+                    if (req.url == '/streaming/channels') {
+                        return cb( channelsResponseXML_3 );
+                    } else if ( req.url.indexOf('channels/1') >= 0 ) {
+                        return cb(capabilitiesResponseXML_1);
+                    } else if ( req.url.indexOf('channels/2') >= 0 ) {
+                        return cb(capabilitiesResponseXML_2);
+                    } else if ( req.url.indexOf('channels/3') >= 0 ) {
+                        return cb(capabilitiesResponseXML_3);
+                    } else {
+                        assert.equal(req.method, 'PUT');
+                        assert.ok(req.url.indexOf('Channels/1') >= 0);
+                        return cb('');
+                    }
+                },
+                onData: function(d) {
+                }
+            }, function(port) {
+                hik.setCameraParams({
+                    username: 'user',
+                    password: 'pass',
+                    ip: 'localhost:' + port
+                });
+
+                hik.getRtspUrl({
+                    resolution: '10000x10000',
+                    channel: 2
+                }, function(url, channel) {
+
+                    assert.equal(url, 'rtsp://user:pass@localhost:' + port + '/Streaming/Channels/1');
+                    assert.equal( channel, 1 );
+
+                    server.close();
+                    done();
+                });
+            });
+
+        });
+
+
+        it('should work properly with a real camera', function(done) {
+
+            var hik = new Hik();
+
+            hik.setCameraParams({
+                username:  USER,
+                password:  PASS,
+                ip:        VALID_HIK_IP
+            });
+
+            hik.getRtspUrl({
+                resolution: '640x480',
+            }, function(url) {
+                // channel 2 has priority in the resolution mapping, so it can be compatible with previous vms versions
+                assert.equal(url, 'rtsp://' + USER + ':' + PASS + '@' + VALID_HIK_IP + '/Streaming/Channels/2');
+                done();
             });
         });
     });
@@ -842,7 +1091,8 @@ var Server = function( opts, cb ) {
             if (!opts.onData) { return; }
             opts.onData( {
                 method:  req.method,
-                body:    buffer
+                body:    buffer,
+                url:     req.url
             });
         });
 
