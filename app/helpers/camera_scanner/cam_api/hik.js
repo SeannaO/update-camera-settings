@@ -224,6 +224,15 @@ Hik.prototype.getRtspUrl = function ( profile, cb ) {
 
         var channel = profile.channel || self.resolution2channel[ profile.resolution ];
 
+        if (
+            !self.resolutionOptionsPerChannel[ channel ] ||
+            !Hik.hasResolution( self.resolutionOptionsPerChannel[ channel ], profile.resolution )
+        ) {
+
+            channel = self.resolution2channel[ profile.resolution ] || 1;
+            console.error('[HIK.getRtspUrl]  channel x resolution mismatch; switching channel to ' + channel);
+        }
+
         if ( isNaN(channel) ) {
             console.error('[HIK.getRtspUrl]  could not determine a channel, using default 1');
             channel = 1; // default channel
@@ -274,7 +283,7 @@ Hik.prototype.getRtspUrl = function ( profile, cb ) {
             bitrate:  bitrate,
             fps:      fps
         }, function(err, body) {
-            if(cb) cb(url);
+            if(cb) cb(url, channel);
         });
     });
 };
@@ -318,7 +327,14 @@ var getResolutionAsyncHelper = function( hik, channel, d ) {
             for (var i in res) {
                 if ( !d.currentResolutions[ res[i].name ] ) {
                     d.currentResolutions[ res[i].name ] = true;
-                    hik.resolution2channel[ res[i].value ] = channel;
+                    if (
+                        !hik.resolution2channel[ res[i].value ] ||
+                        channel == 2
+                    ) {
+                        // this makes it consistent with the previous vms versions,
+                        // where higher channels (ie, channel 2) would overwrite the resolution mapping
+                        hik.resolution2channel[ res[i].value ] = channel;
+                    }
                     d.resolutions.push( res[i] );
                 }
             }
@@ -461,6 +477,15 @@ Hik.prototype.stopListeningForMotionDetection = function(){
 
 
 Hik.getResolutions = getResolutions;
+
+Hik.hasResolution = function( resOptions, res ) {
+
+    for (var i in resOptions) {
+        if (resOptions[i].value == res) { return true; }
+    }
+
+    return false;
+};
 
 
 module.exports = Hik;
