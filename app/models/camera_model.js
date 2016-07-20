@@ -10,6 +10,7 @@ var MotionStreamer      = require('../helpers/live_motion.js');
 var retentionCalculator = require('../helpers/retention_calculator.js');
 var async               = require('async');
 var spotMonitorHelper   = require('../helpers/spot-monitor.js');
+var _                   = require('lodash');
 
 
 // regex to separate basefolder from the other part of a segment's path
@@ -193,7 +194,11 @@ Camera.prototype.addStream = function( stream, cb ) {
                         bitrate:        stream.bitrate,
                         channel:        stream.channel,
                         camera_no:      stream.camera_no
-		}, function(url) {
+		}, function(url, channel) {
+
+                            if ( _.isNumber(channel) ) {
+                                stream.channel = channel;
+                            }
 
 			stream.url = url;
 			self.streams[stream.id] = stream;
@@ -674,7 +679,11 @@ Camera.prototype.refreshRtspUrl = function( streamId, cb ) {
               channel:        stream.channel,
               suggested_url:  stream.url,
               camera_no:      stream.camera_no
-	}, function(url) {
+	}, function(url, channel) {
+
+                    if ( _.isNumber(channel) ) {
+                        stream.channel = channel;
+                    }
 
 		var err = null;  // TODO: return err from getRtspUrl
 		self.streams[streamId].url = url;
@@ -713,9 +722,13 @@ Camera.prototype.restartStream = function( streamId, cb ) {
               channel:        stream.channel,
               suggested_url:  self.streams[streamId].url,
               camera_no:      stream.camera_no
-	}, function(url) {
+	}, function(url, channel) {
 
 		// self.streams[streamId].recordModel.stopRecording();
+
+                    if ( _.isNumber(channel) ) {
+                        stream.channel = channel;
+                    }
 
 		self.streams[streamId].url = url;
 		self.streams[streamId].rtsp = url;
