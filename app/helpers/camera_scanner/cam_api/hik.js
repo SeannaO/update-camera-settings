@@ -355,15 +355,15 @@ Hik.prototype.configCamera = function(params, cb) {
 
     var xml = requestXML
         .replace('{channel}',   params.channel)
-        .replace('{width}', 	  params.width)
-        .replace('{height}', 	  params.height)
+        .replace('{width}',     params.width)
+        .replace('{height}',    params.height)
         .replace(/{bitrate}/g,  params.bitrate)
-        .replace('{fps}', 	  params.fps);
+        .replace('{fps}',       params.fps);
 
     var url = configURL
         .replace('{username}',  this.username)
         .replace('{password}',  this.password)
-        .replace('{ip}', 	  this.ip)
+        .replace('{ip}',        this.ip)
         .replace('{channel}',   params.channel);
 
     request({ 
