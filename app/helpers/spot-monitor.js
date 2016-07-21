@@ -93,7 +93,11 @@ var addSpotMonitorStream = function( camera, stream, cb ) {
         bitrate:        stream.bitrate,
         camera_no:      stream.camera_no
 
-    }, function(url) {
+    }, function(url, channel) {
+
+        if ( _.isNumber(channel) ) {
+            stream.channel = channel;
+        }
 
         stream.url = url;
         camera.spotMonitorStreams[stream.id] = stream;
@@ -346,7 +350,11 @@ var restartSpotMonitorStream = function( camera, streamId, cb ) {
         bitrate:        stream.bitrate,
         suggested_url:  stream.url,
         camera_no:      stream.camera_no
-    }, function(url) {
+    }, function(url, channel) {
+
+        if ( _.isNumber(channel) ) {
+            camera.spotMonitorStreams[streamId].channel = channel;
+        }
 
         camera.spotMonitorStreams[streamId].url  = url;
         camera.spotMonitorStreams[streamId].rtsp = url;
