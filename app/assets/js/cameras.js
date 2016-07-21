@@ -1,6 +1,7 @@
 var mouseX = 0;
 var mouseY = 0;
 var lastThumbRequest = Date.now();
+var editCameraXHR;
 
 var current_number_of_streams = 0;
 
@@ -629,12 +630,15 @@ var validateIp = function() {
 }
 
 var editCamera = function(camId) {
+    if (editCameraXHR) {
+        editCameraXHR.abort();
+    }
     $("#update-camera").show();
     $("#add-new-camera").hide();
     $("#stream-tabs").html("");
     $("#stream-panes").html("");
     $("#camera-auth-status span").removeClass("glyphicon-remove-circle glyphicon-ok-circle");
-    $.ajax({
+    editCameraXHR = $.ajax({
         type: "GET",
         url: "/cameras/" + camId + "/json",
         contentType: 'application/json',
