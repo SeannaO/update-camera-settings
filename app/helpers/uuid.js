@@ -1,4 +1,4 @@
-'use stric';
+'use strict';
 
 exports.generateUUID = function() {
     var d = new Date().getTime();

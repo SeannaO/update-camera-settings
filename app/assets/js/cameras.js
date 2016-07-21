@@ -528,12 +528,12 @@ var updateCamera = function(id, cb) {
     var manufacturer = params.camera.manufacturer || $("#camera-manufacturer").val();
     var enable_motion = false;
     if (
-        (!current_camera.streams == 'undefined' || current_camera.streams.length == 0) && 
-        params.camera && params.camera.streams && params.camera.streams.length > 0 && 
-         typeof manufacturer !== 'undefined' && manufacturer !== 'unknown'
-    ){
-        enable_motion = true;
-    }
+            (typeof current_camera.streams == 'undefined' || current_camera.streams.length == 0) && 
+            params.camera && params.camera.streams && params.camera.streams.length > 0 && 
+            typeof manufacturer !== 'undefined' && manufacturer !== 'unknown'
+       ){
+           enable_motion = true;
+       }
 
     if (params.camera.spotMonitorStreams) { params.camera.spotMonitorStreams = _.without( params.camera.spotMonitorStreams, null, undefined ); }
     if (params.camera.streams) { params.camera.streams = _.without( params.camera.streams, null, undefined ); }
@@ -1629,7 +1629,7 @@ var checkH264 = function(new_stream_id ) {
             } else {
                 stream_status.removeClass('stream-ok')
         stream_status.addClass('stream-error');
-    stream_status.html("invalid h264 stream");
+        stream_status.html("invalid h264 stream");
             }
 
             spinner.fadeOut( function() {
