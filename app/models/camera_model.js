@@ -662,35 +662,35 @@ Camera.prototype.emitPendingMotion = function(chunk) {
  * 			rtsp {String}: rtsp url, null if none
  */
 Camera.prototype.refreshRtspUrl = function( streamId, cb ) {
-	var self = this;
+    var self = this;
 
-	if ( !this.streams[streamId] ) {
-		if (cb) { cb('no stream ' + streamId); }
-		return;
-	}
+    if ( !this.streams[streamId] ) {
+        if (cb) { cb('no stream ' + streamId); }
+        return;
+    }
 
-	var stream = this.streams[ streamId ];
+    var stream = this.streams[ streamId ];
 
-	this.api.getRtspUrl({
-              resolution:     stream.resolution,
-              framerate:      stream.framerate,
-              quality:        stream.quality,
-              bitrate:        stream.bitrate,
-              channel:        stream.channel,
-              suggested_url:  stream.url,
-              camera_no:      stream.camera_no
-	}, function(url, channel) {
+    this.api.getRtspUrl({
+        resolution:     stream.resolution,
+        framerate:      stream.framerate,
+        quality:        stream.quality,
+        bitrate:        stream.bitrate,
+        channel:        stream.channel,
+        suggested_url:  stream.url,
+        camera_no:      stream.camera_no
+    }, function(url, channel) {
 
-                    if ( _.isNumber(channel) ) {
-                        stream.channel = channel;
-                    }
+        if ( _.isNumber(channel) ) {
+            stream.channel = channel;
+        }
 
-		var err = null;  // TODO: return err from getRtspUrl
-		self.streams[streamId].url = url;
-		self.streams[streamId].rtsp = url;
+        var err = null;  // TODO: return err from getRtspUrl
+        self.streams[streamId].url = url;
+        self.streams[streamId].rtsp = url;
 
-		if (cb) { cb(err, url); }
-	});
+        if (cb) { cb(err, url); }
+    });
 };
 
 
@@ -704,73 +704,73 @@ Camera.prototype.refreshRtspUrl = function( streamId, cb ) {
  */
 Camera.prototype.restartStream = function( streamId, cb ) {
 
-	var self = this;
+    var self = this;
 
-	// for safety reasons; avoids dealing with wrong stream ids
-	if ( !self.streams[streamId] ) return; 
+    // for safety reasons; avoids dealing with wrong stream ids
+    if ( !self.streams[streamId] ) return; 
 
-	var stream = self.streams[ streamId ];
+    var stream = self.streams[ streamId ];
 
-	var oldRecordModel = self.streams[streamId].recordModel;
+    var oldRecordModel = self.streams[streamId].recordModel;
 
-	// refreshes rtsp url
-	self.api.getRtspUrl({
-              resolution:     stream.resolution,
-              framerate:      stream.framerate,
-              quality:        stream.quality,
-              bitrate:        stream.bitrate,
-              channel:        stream.channel,
-              suggested_url:  self.streams[streamId].url,
-              camera_no:      stream.camera_no
-	}, function(url, channel) {
+    // refreshes rtsp url
+    self.api.getRtspUrl({
+        resolution:     stream.resolution,
+        framerate:      stream.framerate,
+        quality:        stream.quality,
+        bitrate:        stream.bitrate,
+        channel:        stream.channel,
+        suggested_url:  self.streams[streamId].url,
+        camera_no:      stream.camera_no
+    }, function(url, channel) {
 
-		// self.streams[streamId].recordModel.stopRecording();
+        // self.streams[streamId].recordModel.stopRecording();
 
-                    if ( _.isNumber(channel) ) {
-                        stream.channel = channel;
-                    }
+        if ( _.isNumber(channel) ) {
+            stream.channel = channel;
+        }
 
-		self.streams[streamId].url = url;
-		self.streams[streamId].rtsp = url;
-		self.streams[streamId].recordModel = new RecordModel( self, self.streams[streamId], function(recorder) {
-			oldRecordModel.quitRecording();
-			delete oldRecordModel;
+        self.streams[streamId].url = url;
+        self.streams[streamId].rtsp = url;
+        self.streams[streamId].recordModel = new RecordModel( self, self.streams[streamId], function(recorder) {
+            oldRecordModel.quitRecording();
+            delete oldRecordModel;
 
-				// var folder = self.videosFolder + '/' + stream.id;
-				// stream.streamer = new Streamer(folder + '/videos/pipe.ts');
+            // var folder = self.videosFolder + '/' + stream.id;
+            // stream.streamer = new Streamer(folder + '/videos/pipe.ts');
 
-				if ( self.shouldBeRecording() ) {
-					recorder.startRecording();
-				}
+            if ( self.shouldBeRecording() ) {
+                recorder.startRecording();
+            }
 
-				recorder.on('new_chunk', function(data) {
-					data.cause = 'schedule';
-					if (self.motion != null){
-						data.cause = 'motion';
-					}
-					self.emit( 'new_chunk', data);
-					self.emitPendingMotion(data);
-				});
-				recorder.on('camera_status', function(data) {
-					self.status = data.status;
-					self.emit('camera_status', {
-						timestamp:                new Date().getTime(),
-						cam_id:                   self._id,
-						cam_name:                 self.cameraName(),
-						status:                   data.status,
-						stream_id:                data.stream_id
-					});
-				});
+            recorder.on('new_chunk', function(data) {
+                data.cause = 'schedule';
+                if (self.motion != null){
+                    data.cause = 'motion';
+                }
+                self.emit( 'new_chunk', data);
+                self.emitPendingMotion(data);
+            });
+            recorder.on('camera_status', function(data) {
+                self.status = data.status;
+                self.emit('camera_status', {
+                    timestamp:                new Date().getTime(),
+                    cam_id:                   self._id,
+                    cam_name:                 self.cameraName(),
+                    status:                   data.status,
+                    stream_id:                data.stream_id
+                });
+            });
 
-				// stream.recordModel can be null here, 
-				// so we assign it again with the object
-				// returned by the RecordModel callback
-				self.streams[streamId].recordModel = recorder;
-				//
-				if (cb) cb();
-		});
+            // stream.recordModel can be null here, 
+            // so we assign it again with the object
+            // returned by the RecordModel callback
+            self.streams[streamId].recordModel = recorder;
+            //
+            if (cb) cb();
+        });
 
-	});
+    });
 	
 };
 // end of restartStream
