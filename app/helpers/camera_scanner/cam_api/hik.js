@@ -33,6 +33,27 @@ var configURL = 'http://{username}:{password}@{ip}/PSIA/Streaming/Channels/{chan
 var rtsp_url = 'rtsp://{username}:{password}@{ip}/Streaming/Channels/{channel}';
 
 
+/**
+ * getResolutions
+ *
+ * get capabilities supported by a given channel:
+ *      - resolutions
+ *      - fps
+ *      - bitrates
+ *
+ * @param { String } ip          ip of camera
+ * @param { String } username    camera username
+ * @param { String } password    camera password
+ * @param { Number } channel     channel
+ *
+ * @param { function } cb(err, resolutions, fpsData, bitrates)  callback function, where:
+ *          - { String } err      'null' if no errors
+ *          - { Arrray } resolutions   array of resolution objects, containing:
+ *                                      - { String } name    name of resolution (eg. "800x600 - ch 1")
+ *                                      - { String } value   resolution in the format: width x height ("800x600")
+ *          - { Array } fpsData   array of supported fps (HIK multiplies fps by 100, so 30fps = 3000)
+ *          - { Object } bitrates   object containing max and min bitrates, eg.: { min: 5, max: 1000 }
+ */
 var getResolutions = function( ip, username, password, channel, cb ) {
 
     var url = 'http://' + username + ':' + password + '@' + ip + '/streaming/channels/' + channel + '/capabilities';
@@ -169,6 +190,16 @@ Hik.prototype.updateProfile = function(profileId, profile, cb) {
 };
 
 
+/**
+ * getNumberOfChannels
+ *
+ * return number of channels supported by camera
+ * determined by counting number of <StreamingChannel> tags
+ *
+ * @param { function } cb(err, nChannels)  callback function, where:
+ *          - { String } err          'null' if no errors
+ *          - { Number } nChannels    number if supported channels
+ */
 Hik.prototype.getNumberOfChannels = function( cb ) {
 
     if (!cb || typeof(cb) !== 'function') { cb = function() {}; }
@@ -206,6 +237,21 @@ Hik.prototype.getNumberOfChannels = function( cb ) {
 };
 
 
+/**
+ * getRtspUrl
+ *
+ * return rtsp url and channel corresponding to desired settings, 
+ * configuring camera as necessary
+ *
+ * @param { Object } profile    object containing stream settings:
+ *                              - { String } resolution ("800x600")
+ *                              - { Number } channel
+ *                              - { Number } fps
+ *                              - { Number } bitrate
+ *
+ * @param { function } cb(url, channel)  callback function
+ *
+ */
 Hik.prototype.getRtspUrl = function ( profile, cb ) {
 
 	var self = this;
@@ -289,20 +335,36 @@ Hik.prototype.getRtspUrl = function ( profile, cb ) {
 };
 
 
+/**
+ * configCamera
+ *
+ * configure camera through its API,
+ * using desired settings
+ *
+ * @param { Object } params    object containing desired settings:
+ *                              - { String } channel
+ *                              - { Number } width
+ *                              - { Number } height
+ *                              - { Number } bitrate
+ *                              - { Number } fps
+ *
+ * @param { function } cb(err, body)  callback function
+ *
+ */
 Hik.prototype.configCamera = function(params, cb) {
 
     var xml = requestXML
-        .replace('{channel}', 	params.channel)
-        .replace('{width}', 	params.width)
-        .replace('{height}', 	params.height)
-        .replace(/{bitrate}/g, 	params.bitrate)
-        .replace('{fps}', 		params.fps);
+        .replace('{channel}',   params.channel)
+        .replace('{width}', 	  params.width)
+        .replace('{height}', 	  params.height)
+        .replace(/{bitrate}/g,  params.bitrate)
+        .replace('{fps}', 	  params.fps);
 
     var url = configURL
-        .replace('{username}', 	this.username)
-        .replace('{password}', 	this.password)
-        .replace('{ip}', 		this.ip)
-        .replace('{channel}', 	params.channel);
+        .replace('{username}',  this.username)
+        .replace('{password}',  this.password)
+        .replace('{ip}', 	  this.ip)
+        .replace('{channel}',   params.channel);
 
     request({ 
         method: 'PUT', 
@@ -318,6 +380,19 @@ Hik.prototype.configCamera = function(params, cb) {
 };
 
 
+/**
+ * getResolutionAsyncHelper
+ *
+ * auxiliary function to get resolution from multiple channels using async
+ * @param { Hik object }  hik
+ * @param { Number }  channel
+ * @param { Object }  d    auxiliary object containing:
+ *                          - { Array } resolutions
+ *                          - { Array } bitrates
+ *                          
+ * @return { Function } async function
+ *
+ */
 var getResolutionAsyncHelper = function( hik, channel, d ) {
                 
     var r = function(callback) {
@@ -352,6 +427,29 @@ var getResolutionAsyncHelper = function( hik, channel, d ) {
 };
 
 
+/**
+ * getResolutionOptions
+ *
+ * get capabilities supported by all channels:
+ *      - resolutions
+ *      - fps
+ *      - bitrates
+ *
+ * updates number of channels and capabilities per channel attributes
+ *
+ * @param { function } cb(err, resolutions, bitrates, dataPerChannel)  callback function, where:
+ *          - { String } err      'null' if no errors
+ *          - { Arrray } resolutions   array of resolution objects, containing:
+ *                                      - { String } name    name of resolution (eg. "800x600 - ch 1")
+ *                                      - { String } value   resolution in the format: width x height ("800x600")
+ *          - { Object } bitrates   object containing max and min bitrates, eg.: { min: 5, max: 1000 }
+ *          - { Object } dataPerChannel   onbject containing capabilities per channel data:
+ *                                      - { Number } nChannels
+ *                                      - { Object } resolutionsPerChannel
+ *                                      - { Object } fpsOptionsPerChannel
+ *                                      - { Object } bitrateOptionsPerChannel
+ *
+ */
 Hik.prototype.getResolutionOptions = function(cb) {
 
     var self = this;
