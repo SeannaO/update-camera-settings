@@ -755,7 +755,6 @@ var populateChannelFields = function( optionsPerChannel ) {
                 populateResolutionFields( d, idx );
             }
 
-            console.log(optionsPerChannel.bitratesPerChannel[channel]);
             if ( optionsPerChannel.bitratesPerChannel && optionsPerChannel.bitratesPerChannel[channel] ) {
                 var bitrates = optionsPerChannel.bitratesPerChannel[channel];
                 populateBitrateFields( bitrates, idx );
@@ -763,12 +762,10 @@ var populateChannelFields = function( optionsPerChannel ) {
         });
 
         var channel = $(this).attr('data-channel') || 1;
-        console.log('setting channel to ' + channel);
         $(this).val( channel );
     });
 
 
-    // $('.camera-stream-channel-group').val( channel );
     $('.camera-stream-channel-group').show(); 
     $('.camera-stream-channel-select').change();
 };
