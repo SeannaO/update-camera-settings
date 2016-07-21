@@ -197,6 +197,31 @@ describe('addSpotMonitorStream', function() {
             done();
         });
     });
+
+    
+    it('should set stream channel if available', function(done) {
+        var cameraWithoutStreams = _.cloneDeep( _cameraWithoutStreams );
+        cameraWithoutStreams.api = {
+            getRtspUrl: function(args, cb) {
+                cb('rtsp://123', 2);
+            }
+        };
+
+        var stream = {
+            id: 'stream_x',
+            name: 'name_1',
+            framerate: 'framerate_1',
+            url: 'some_url'
+        };
+
+        spotMonitorHelper.addSpotMonitorStream( cameraWithoutStreams, stream, function( err, s ) {
+            assert.ok(!err);
+            assert.equal(s.channel, 2);
+            assert.equal(s.url, 'rtsp://123');
+            assert.equal(cameraWithoutStreams.spotMonitorStreams['stream_x'].channel, 2);
+            done();
+        });
+    });
 });
 /* end of addSpotMonitorStream */
 
@@ -745,6 +770,24 @@ describe('restartSpotMonitorStream', function() {
             spotMonitorHelper.restartSpotMonitorStream( camera, 'x', function(err) {
                 done();
             });
+        });
+    });
+
+
+    it('should update stream channel, if available', function(done) {
+        
+        camera.api = {
+            getRtspUrl: function(args, cb) {
+                cb('rtsp://123', 2);
+            }
+        };
+
+        spotMonitorHelper.restartSpotMonitorStream( camera, 'stream_1', function(err) {
+            assert.ok(!err);
+            assert.equal(camera.spotMonitorStreams['stream_1'].url, 'rtsp://123');
+            assert.equal(camera.spotMonitorStreams['stream_1'].rtsp, 'rtsp://123');
+            assert.equal(camera.spotMonitorStreams['stream_1'].channel, 2);
+            done();
         });
     });
 });
