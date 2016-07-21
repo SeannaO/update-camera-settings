@@ -1333,7 +1333,7 @@ var addStreamFieldset = function( opts, cb ) {
         //
         // channel field
         var camera_stream_channel_group = $('<div>', {
-            class: 'form-group  col-xs-4 camera-stream-channel-group',
+            class: 'form-group  col-xs-2 camera-stream-channel-group',
             style: 'display: none',
             html: '<label for="camera-streams-' + current_stream_id + '-channel">channel</label>'
         });
