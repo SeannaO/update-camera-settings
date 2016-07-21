@@ -9,8 +9,7 @@ var Hik = require('../../helpers/camera_scanner/cam_api/hik.js');
 
 // Some of these IPs and credsmay have to be changed occasionally 
 //  if we want to test with real cameras
-// TODO: have a better way to automate the IPs and credentials
-var VALID_HIK_IP     = '10.126.141.252',
+var VALID_HIK_IP     = process.env['HIK_IP'],
     INVALID_HIK_IP_1 = '127.0.0.1',
     INVALID_HIK_IP_2 = '10.126.140.10';
 
