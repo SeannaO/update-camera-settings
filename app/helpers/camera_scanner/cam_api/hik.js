@@ -357,8 +357,8 @@ Hik.prototype.getResolutionOptions = function(cb) {
     var self = this;
 
     if (!this.ip) {
-            if(cb) cb('no ip');
-            return;
+        if(cb) cb('no ip');
+        return;
     }
     
     var currentResolutions = {};

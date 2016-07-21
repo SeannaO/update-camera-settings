@@ -164,134 +164,134 @@ Camera.prototype.addAllStreams = function( streams, cb ) {
  */
 Camera.prototype.addStream = function( stream, cb ) {
 
-	if (!stream) {
-		if (cb) cb();
-		return;
-	}
+    if (!stream) {
+        if (cb) cb();
+        return;
+    }
 
-	var self = this;
-	stream.db = new Dblite( this.videosFolder + '/db_' + stream.id + '.sqlite', function(db){
- 
-		db.getEarliestAndLatestSegment( function( latestEarliest ) {
-			var latest   = latestEarliest.latest ? latestEarliest.latest.start : null;
-			var earliest = latestEarliest.earliest ? latestEarliest.earliest.start : null;
+    var self = this;
+    stream.db = new Dblite( this.videosFolder + '/db_' + stream.id + '.sqlite', function(db){
 
-			stream.latestSegmentDate   = parseInt(latest);
-			stream.earliestSegmentDate = parseInt(earliest);
-		});
+        db.getEarliestAndLatestSegment( function( latestEarliest ) {
+            var latest   = latestEarliest.latest ? latestEarliest.latest.start : null;
+            var earliest = latestEarliest.earliest ? latestEarliest.earliest.start : null;
 
-		if (stream.toBeDeleted) {
-			self.streamsToBeDeleted[stream.id] = stream;
-			if (cb) cb();
-			return;
-		}
+            stream.latestSegmentDate   = parseInt(latest);
+            stream.earliestSegmentDate = parseInt(earliest);
+        });
 
-		self.api.getRtspUrl({
-                        resolution:     stream.resolution,
-                        framerate:      stream.framerate,
-                        quality:        stream.quality,
-                        suggested_url:  stream.url,
-                        bitrate:        stream.bitrate,
-                        channel:        stream.channel,
-                        camera_no:      stream.camera_no
-		}, function(url, channel) {
+        if (stream.toBeDeleted) {
+            self.streamsToBeDeleted[stream.id] = stream;
+            if (cb) cb();
+            return;
+        }
 
-                            if ( _.isNumber(channel) ) {
-                                stream.channel = channel;
-                            }
+        self.api.getRtspUrl({
+            resolution:     stream.resolution,
+            framerate:      stream.framerate,
+            quality:        stream.quality,
+            suggested_url:  stream.url,
+            bitrate:        stream.bitrate,
+            channel:        stream.channel,
+            camera_no:      stream.camera_no
+        }, function(url, channel) {
 
-			stream.url = url;
-			self.streams[stream.id] = stream;
+            if ( _.isNumber(channel) ) {
+                stream.channel = channel;
+            }
 
-			stream.recordModel = new RecordModel( self, stream, function(recorder){
-    			var folder = self.videosFolder + '/' + stream.id;
-				stream.streamer = new Streamer(folder + '/videos/pipe.ts');
-				stream.motionStreamer = new MotionStreamer(folder + '/videos/pipe.motion');
-				stream.motionStreamer.on('grid', function( gridData ) {
+            stream.url = url;
+            self.streams[stream.id] = stream;
 
-					if (!self.motionParams.enabled) return;
+            stream.recordModel = new RecordModel( self, stream, function(recorder){
+                var folder = self.videosFolder + '/' + stream.id;
+                stream.streamer = new Streamer(folder + '/videos/pipe.ts');
+                stream.motionStreamer = new MotionStreamer(folder + '/videos/pipe.motion');
+                stream.motionStreamer.on('grid', function( gridData ) {
 
-					self.motionHandler( gridData );
+                    if (!self.motionParams.enabled) return;
 
-					self.emit('grid', {
-						cam_id:     self._id,
-						stream_id:  stream.id,
-						grid:       gridData
-					});
-				});
+                    self.motionHandler( gridData );
 
-				stream.streamer.on('bps', function(d) {
+                    self.emit('grid', {
+                        cam_id:     self._id,
+                        stream_id:  stream.id,
+                        grid:       gridData
+                    });
+                });
 
-					if (!self.streams[stream.id].bpsHist) self.streams[stream.id].bpsHist = [];
-					if (!isNaN(d)) self.streams[stream.id].bpsHist.push(d);
+                stream.streamer.on('bps', function(d) {
 
-					while (self.streams[stream.id].bpsHist.length > 30) {
-						self.streams[stream.id].bpsHist.shift();
-					}
+                    if (!self.streams[stream.id].bpsHist) self.streams[stream.id].bpsHist = [];
+                    if (!isNaN(d)) self.streams[stream.id].bpsHist.push(d);
 
-					var avg = 0;
-					for (var i = 0; i < self.streams[stream.id].bpsHist.length; i++) {
-						avg += self.streams[stream.id].bpsHist[i];
-					}
-					avg /= self.streams[stream.id].bpsHist.length;
-					avg = Math.round(avg);
-					self.streams[stream.id].bpsAvg = avg;
+                    while (self.streams[stream.id].bpsHist.length > 30) {
+                        self.streams[stream.id].bpsHist.shift();
+                    }
 
-					if ( !self.lowestBitrateStream.bps ) {
-						self.lowestBitrateStream.id = stream.id;
-						self.lowestBitrateStream.bps = avg;
-					} else if ( avg > 0 && avg < self.lowestBitrateStream.bps || !self.streams[self.lowestBitrateStream.id] ) {
-						self.lowestBitrateStream.id = stream.id;
-						self.lowestBitrateStream.bps = avg;
-					}
+                    var avg = 0;
+                    for (var i = 0; i < self.streams[stream.id].bpsHist.length; i++) {
+                        avg += self.streams[stream.id].bpsHist[i];
+                    }
+                    avg /= self.streams[stream.id].bpsHist.length;
+                    avg = Math.round(avg);
+                    self.streams[stream.id].bpsAvg = avg;
 
-					self.emit('bps', {
-						cam_id:     self._id,
-						stream_id:  stream.id,
-						bps:        d,
-						avg:        avg,
-						lowest:     self.lowestBitrateStream.id == stream.id
-					});
-				});
-				// stream.streamer.on('restart_socket', function() {
-				// 	recorder.restart();
-				// }); 
+                    if ( !self.lowestBitrateStream.bps ) {
+                        self.lowestBitrateStream.id = stream.id;
+                        self.lowestBitrateStream.bps = avg;
+                    } else if ( avg > 0 && avg < self.lowestBitrateStream.bps || !self.streams[self.lowestBitrateStream.id] ) {
+                        self.lowestBitrateStream.id = stream.id;
+                        self.lowestBitrateStream.bps = avg;
+                    }
 
-				if ( self.shouldBeRecording() ) {
-					recorder.startRecording();
-				}
+                    self.emit('bps', {
+                        cam_id:     self._id,
+                        stream_id:  stream.id,
+                        bps:        d,
+                        avg:        avg,
+                        lowest:     self.lowestBitrateStream.id == stream.id
+                    });
+                });
+                // stream.streamer.on('restart_socket', function() {
+                // 	recorder.restart();
+                // }); 
 
-				recorder.on('new_chunk', function(data) {
-					self.emit( 'new_chunk', data);
-					self.emitPendingMotion(data);
-				});
-				recorder.on('camera_status', function(data) {
-					self.status = data.status;
+                if ( self.shouldBeRecording() ) {
+                    recorder.startRecording();
+                }
 
-					// ---
-					// COMMENTED OUT FOR EXPERIMENTAL PURPOSES
-					self.emit('camera_status', { timestamp: new Date().getTime(), cam_id: self._id, cam_name: self.cameraName(), status: data.status, stream_id: stream.id } );
-					// ---
-				});
+                recorder.on('new_chunk', function(data) {
+                    self.emit( 'new_chunk', data);
+                    self.emitPendingMotion(data);
+                });
+                recorder.on('camera_status', function(data) {
+                    self.status = data.status;
 
-				// stream.recordModel mught be null here, 
-				// so we assign it again with the object
-				// returned by the RecordModel callback
-				stream.recordModel = recorder;
-				//
-				
-				if (cb) cb();
-			});
-		});
+                    // ---
+                    // COMMENTED OUT FOR EXPERIMENTAL PURPOSES
+                    self.emit('camera_status', { timestamp: new Date().getTime(), cam_id: self._id, cam_name: self.cameraName(), status: data.status, stream_id: stream.id } );
+                    // ---
+                });
 
-		db.db.on('error', function (err) {
-		    console.error(err.toString());
-		    var msg = err.toString();
-		    if (msg.indexOf('disk image is malformed') !== -1){
-				console.error('[Camera.Stream]  sqlite database is corrupted');
-		    }
-		});
-	});
+                // stream.recordModel mught be null here, 
+                // so we assign it again with the object
+                // returned by the RecordModel callback
+                stream.recordModel = recorder;
+                //
+
+                if (cb) cb();
+            });
+        });
+
+        db.db.on('error', function (err) {
+            console.error(err.toString());
+            var msg = err.toString();
+            if (msg.indexOf('disk image is malformed') !== -1){
+                console.error('[Camera.Stream]  sqlite database is corrupted');
+            }
+        });
+    });
 };
 // end of addStream
 //
