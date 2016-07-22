@@ -68,7 +68,11 @@ Streamer.prototype.initServer = function() {
 			for (var i in self.clients) {
 				var res = self.clients[i];
 				if (res) {
-					res.write(d);
+                                            if (!res._okToWrite) { 
+                                                continue; 
+                                            }
+
+                                            res._okToWrite = res.write(d);
 				}
 			}
 		});
@@ -149,11 +153,18 @@ Streamer.prototype.pipe = function(res) {
 
 	this.clients.push(res);
 
+          res._okToWrite = true;
+
+          res.on('drain', function() {
+              res._okToWrite = true;
+          });
+
 	res.on('close', function() {
 		var idx = self.clients.lastIndexOf( res );
 		if (idx >= 0) {
 			self.clients.splice( idx, 1 );
 		}
+                    res.removeAllListeners();
 	});
 
 	// var self = this;
