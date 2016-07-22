@@ -63,18 +63,18 @@ Streamer.prototype.initServer = function() {
 		});
 
 		self.socket.on('data', function(d) {
-			self.totalBytes += d.length;
-			
-			for (var i in self.clients) {
-				var res = self.clients[i];
-				if (res) {
-                                            if (!res._okToWrite) { 
-                                                continue; 
-                                            }
+                        self.totalBytes += d.length;
 
-                                            res._okToWrite = res.write(d);
-				}
-			}
+                        for (var i in self.clients) {
+                            var res = self.clients[i];
+                            if (res) {
+                                if (!res._okToWrite) { 
+                                    continue; 
+                                }
+
+                                res._okToWrite = res.write(d);
+                            }
+                        }
 		});
 
 		// start the flow of data, discarding it.
@@ -149,23 +149,23 @@ Streamer.prototype.stop = function() {
 
 
 Streamer.prototype.pipe = function(res) {
-	var self = this;
+    var self = this;
 
-	this.clients.push(res);
+    this.clients.push(res);
 
-          res._okToWrite = true;
+    res._okToWrite = true;
 
-          res.on('drain', function() {
-              res._okToWrite = true;
-          });
+    res.on('drain', function() {
+        res._okToWrite = true;
+    });
 
-	res.on('close', function() {
-		var idx = self.clients.lastIndexOf( res );
-		if (idx >= 0) {
-			self.clients.splice( idx, 1 );
-		}
-                    res.removeAllListeners();
-	});
+    res.on('close', function() {
+        var idx = self.clients.lastIndexOf( res );
+        if (idx >= 0) {
+            self.clients.splice( idx, 1 );
+        }
+        res.removeAllListeners();
+    });
 
 	// var self = this;
 	// this.stream.pipe(res);
