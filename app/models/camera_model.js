@@ -10,6 +10,7 @@ var MotionStreamer      = require('../helpers/live_motion.js');
 var retentionCalculator = require('../helpers/retention_calculator.js');
 var async               = require('async');
 var spotMonitorHelper   = require('../helpers/spot-monitor.js');
+var _                   = require('lodash');
 
 
 // regex to separate basefolder from the other part of a segment's path
@@ -159,133 +160,138 @@ Camera.prototype.addAllStreams = function( streams, cb ) {
  *	and starts recording stream if camera should be recording
  *
  * @param {stream} obj 
- *     stream should contain: { resolution, framerate, quality, bitrate}
+ *     stream should contain: { resolution, framerate, quality, bitrate, channel (optional) }
  */
 Camera.prototype.addStream = function( stream, cb ) {
 
-	if (!stream) {
-		if (cb) cb();
-		return;
-	}
+    if (!stream) {
+        if (cb) cb();
+        return;
+    }
 
-	var self = this;
-	stream.db = new Dblite( this.videosFolder + '/db_' + stream.id + '.sqlite', function(db){
- 
-		db.getEarliestAndLatestSegment( function( latestEarliest ) {
-			var latest   = latestEarliest.latest ? latestEarliest.latest.start : null;
-			var earliest = latestEarliest.earliest ? latestEarliest.earliest.start : null;
+    var self = this;
+    stream.db = new Dblite( this.videosFolder + '/db_' + stream.id + '.sqlite', function(db){
 
-			stream.latestSegmentDate   = parseInt(latest);
-			stream.earliestSegmentDate = parseInt(earliest);
-		});
+        db.getEarliestAndLatestSegment( function( latestEarliest ) {
+            var latest   = latestEarliest.latest ? latestEarliest.latest.start : null;
+            var earliest = latestEarliest.earliest ? latestEarliest.earliest.start : null;
 
-		if (stream.toBeDeleted) {
-			self.streamsToBeDeleted[stream.id] = stream;
-			if (cb) cb();
-			return;
-		}
+            stream.latestSegmentDate   = parseInt(latest);
+            stream.earliestSegmentDate = parseInt(earliest);
+        });
 
-		self.api.getRtspUrl({
-			resolution:     stream.resolution,
-			framerate:      stream.framerate,
-			quality:        stream.quality,
-			suggested_url:  stream.url,
-			bitrate:        stream.bitrate,
-			camera_no:      stream.camera_no
-		}, function(url) {
+        if (stream.toBeDeleted) {
+            self.streamsToBeDeleted[stream.id] = stream;
+            if (cb) cb();
+            return;
+        }
 
-			stream.url = url;
-			self.streams[stream.id] = stream;
+        self.api.getRtspUrl({
+            resolution:     stream.resolution,
+            framerate:      stream.framerate,
+            quality:        stream.quality,
+            suggested_url:  stream.url,
+            bitrate:        stream.bitrate,
+            channel:        stream.channel,
+            camera_no:      stream.camera_no
+        }, function(url, channel) {
 
-			stream.recordModel = new RecordModel( self, stream, function(recorder){
-    			var folder = self.videosFolder + '/' + stream.id;
-				stream.streamer = new Streamer(folder + '/videos/pipe.ts');
-				stream.motionStreamer = new MotionStreamer(folder + '/videos/pipe.motion');
-				stream.motionStreamer.on('grid', function( gridData ) {
+            if ( _.isNumber(channel) ) {
+                stream.channel = channel;
+            }
 
-					if (!self.motionParams.enabled) return;
+            stream.url = url;
+            self.streams[stream.id] = stream;
 
-					self.motionHandler( gridData );
+            stream.recordModel = new RecordModel( self, stream, function(recorder){
+                var folder = self.videosFolder + '/' + stream.id;
+                stream.streamer = new Streamer(folder + '/videos/pipe.ts');
+                stream.motionStreamer = new MotionStreamer(folder + '/videos/pipe.motion');
+                stream.motionStreamer.on('grid', function( gridData ) {
 
-					self.emit('grid', {
-						cam_id:     self._id,
-						stream_id:  stream.id,
-						grid:       gridData
-					});
-				});
+                    if (!self.motionParams.enabled) return;
 
-				stream.streamer.on('bps', function(d) {
+                    self.motionHandler( gridData );
 
-					if (!self.streams[stream.id].bpsHist) self.streams[stream.id].bpsHist = [];
-					if (!isNaN(d)) self.streams[stream.id].bpsHist.push(d);
+                    self.emit('grid', {
+                        cam_id:     self._id,
+                        stream_id:  stream.id,
+                        grid:       gridData
+                    });
+                });
 
-					while (self.streams[stream.id].bpsHist.length > 30) {
-						self.streams[stream.id].bpsHist.shift();
-					}
+                stream.streamer.on('bps', function(d) {
 
-					var avg = 0;
-					for (var i = 0; i < self.streams[stream.id].bpsHist.length; i++) {
-						avg += self.streams[stream.id].bpsHist[i];
-					}
-					avg /= self.streams[stream.id].bpsHist.length;
-					avg = Math.round(avg);
-					self.streams[stream.id].bpsAvg = avg;
+                    if (!self.streams[stream.id].bpsHist) self.streams[stream.id].bpsHist = [];
+                    if (!isNaN(d)) self.streams[stream.id].bpsHist.push(d);
 
-					if ( !self.lowestBitrateStream.bps ) {
-						self.lowestBitrateStream.id = stream.id;
-						self.lowestBitrateStream.bps = avg;
-					} else if ( avg > 0 && avg < self.lowestBitrateStream.bps || !self.streams[self.lowestBitrateStream.id] ) {
-						self.lowestBitrateStream.id = stream.id;
-						self.lowestBitrateStream.bps = avg;
-					}
+                    while (self.streams[stream.id].bpsHist.length > 30) {
+                        self.streams[stream.id].bpsHist.shift();
+                    }
 
-					self.emit('bps', {
-						cam_id:     self._id,
-						stream_id:  stream.id,
-						bps:        d,
-						avg:        avg,
-						lowest:     self.lowestBitrateStream.id == stream.id
-					});
-				});
-				// stream.streamer.on('restart_socket', function() {
-				// 	recorder.restart();
-				// }); 
+                    var avg = 0;
+                    for (var i = 0; i < self.streams[stream.id].bpsHist.length; i++) {
+                        avg += self.streams[stream.id].bpsHist[i];
+                    }
+                    avg /= self.streams[stream.id].bpsHist.length;
+                    avg = Math.round(avg);
+                    self.streams[stream.id].bpsAvg = avg;
 
-				if ( self.shouldBeRecording() ) {
-					recorder.startRecording();
-				}
+                    if ( !self.lowestBitrateStream.bps ) {
+                        self.lowestBitrateStream.id = stream.id;
+                        self.lowestBitrateStream.bps = avg;
+                    } else if ( avg > 0 && avg < self.lowestBitrateStream.bps || !self.streams[self.lowestBitrateStream.id] ) {
+                        self.lowestBitrateStream.id = stream.id;
+                        self.lowestBitrateStream.bps = avg;
+                    }
 
-				recorder.on('new_chunk', function(data) {
-					self.emit( 'new_chunk', data);
-					self.emitPendingMotion(data);
-				});
-				recorder.on('camera_status', function(data) {
-					self.status = data.status;
+                    self.emit('bps', {
+                        cam_id:     self._id,
+                        stream_id:  stream.id,
+                        bps:        d,
+                        avg:        avg,
+                        lowest:     self.lowestBitrateStream.id == stream.id
+                    });
+                });
+                // stream.streamer.on('restart_socket', function() {
+                // 	recorder.restart();
+                // }); 
 
-					// ---
-					// COMMENTED OUT FOR EXPERIMENTAL PURPOSES
-					self.emit('camera_status', { timestamp: new Date().getTime(), cam_id: self._id, cam_name: self.cameraName(), status: data.status, stream_id: stream.id } );
-					// ---
-				});
+                if ( self.shouldBeRecording() ) {
+                    recorder.startRecording();
+                }
 
-				// stream.recordModel mught be null here, 
-				// so we assign it again with the object
-				// returned by the RecordModel callback
-				stream.recordModel = recorder;
-				//
-				
-				if (cb) cb();
-			});
-		});
+                recorder.on('new_chunk', function(data) {
+                    self.emit( 'new_chunk', data);
+                    self.emitPendingMotion(data);
+                });
+                recorder.on('camera_status', function(data) {
+                    self.status = data.status;
 
-		db.db.on('error', function (err) {
-		    console.error(err.toString());
-		    var msg = err.toString();
-		    if (msg.indexOf('disk image is malformed') !== -1){
-				console.error('[Camera.Stream]  sqlite database is corrupted');
-		    }
-		});
-	});
+                    // ---
+                    // COMMENTED OUT FOR EXPERIMENTAL PURPOSES
+                    self.emit('camera_status', { timestamp: new Date().getTime(), cam_id: self._id, cam_name: self.cameraName(), status: data.status, stream_id: stream.id } );
+                    // ---
+                });
+
+                // stream.recordModel mught be null here, 
+                // so we assign it again with the object
+                // returned by the RecordModel callback
+                stream.recordModel = recorder;
+                //
+
+                if (cb) cb();
+            });
+        });
+
+        db.db.on('error', function (err) {
+            console.error(err.toString());
+            var msg = err.toString();
+            if (msg.indexOf('disk image is malformed') !== -1){
+                console.error('[Camera.Stream]  sqlite database is corrupted');
+            }
+        });
+    });
 };
 // end of addStream
 //
@@ -567,7 +573,7 @@ Camera.prototype.updateStream = function( stream, cb ) {
 
 	// these are the parameters that requires restarting the recorder when they change,
 	// because the rtsp url changes.
-	var restartParams = ['resolution', 'framerate', 'quality', 'url', 'ip', 'camera_no', 'bitrate'];
+	var restartParams = ['resolution', 'framerate', 'quality', 'url', 'ip', 'camera_no', 'bitrate', 'channel'];
 
 	// iterates through restart params, checks if any of them changed, 
 	// sets restarting if needed
@@ -656,30 +662,35 @@ Camera.prototype.emitPendingMotion = function(chunk) {
  * 			rtsp {String}: rtsp url, null if none
  */
 Camera.prototype.refreshRtspUrl = function( streamId, cb ) {
-	var self = this;
+    var self = this;
 
-	if ( !this.streams[streamId] ) {
-		if (cb) { cb('no stream ' + streamId); }
-		return;
-	}
+    if ( !this.streams[streamId] ) {
+        if (cb) { cb('no stream ' + streamId); }
+        return;
+    }
 
-	var stream = this.streams[ streamId ];
+    var stream = this.streams[ streamId ];
 
-	this.api.getRtspUrl({
-		resolution:     stream.resolution,
-		framerate:      stream.framerate,
-		quality:        stream.quality,
-		bitrate:        stream.bitrate,
-		suggested_url:  stream.url,
-		camera_no:      stream.camera_no
-	}, function(url) {
+    this.api.getRtspUrl({
+        resolution:     stream.resolution,
+        framerate:      stream.framerate,
+        quality:        stream.quality,
+        bitrate:        stream.bitrate,
+        channel:        stream.channel,
+        suggested_url:  stream.url,
+        camera_no:      stream.camera_no
+    }, function(url, channel) {
 
-		var err = null;  // TODO: return err from getRtspUrl
-		self.streams[streamId].url = url;
-		self.streams[streamId].rtsp = url;
+        if ( _.isNumber(channel) ) {
+            stream.channel = channel;
+        }
 
-		if (cb) { cb(err, url); }
-	});
+        var err = null;  // TODO: return err from getRtspUrl
+        self.streams[streamId].url = url;
+        self.streams[streamId].rtsp = url;
+
+        if (cb) { cb(err, url); }
+    });
 };
 
 
@@ -693,68 +704,73 @@ Camera.prototype.refreshRtspUrl = function( streamId, cb ) {
  */
 Camera.prototype.restartStream = function( streamId, cb ) {
 
-	var self = this;
+    var self = this;
 
-	// for safety reasons; avoids dealing with wrong stream ids
-	if ( !self.streams[streamId] ) return; 
+    // for safety reasons; avoids dealing with wrong stream ids
+    if ( !self.streams[streamId] ) return; 
 
-	var stream = self.streams[ streamId ];
+    var stream = self.streams[ streamId ];
 
-	var oldRecordModel = self.streams[streamId].recordModel;
+    var oldRecordModel = self.streams[streamId].recordModel;
 
-	// refreshes rtsp url
-	self.api.getRtspUrl({
-		resolution:     stream.resolution,
-		framerate:      stream.framerate,
-		quality:        stream.quality,
-		bitrate:        stream.bitrate,
-		suggested_url:  self.streams[streamId].url,
-		camera_no:      stream.camera_no
-	}, function(url) {
+    // refreshes rtsp url
+    self.api.getRtspUrl({
+        resolution:     stream.resolution,
+        framerate:      stream.framerate,
+        quality:        stream.quality,
+        bitrate:        stream.bitrate,
+        channel:        stream.channel,
+        suggested_url:  self.streams[streamId].url,
+        camera_no:      stream.camera_no
+    }, function(url, channel) {
 
-		// self.streams[streamId].recordModel.stopRecording();
+        // self.streams[streamId].recordModel.stopRecording();
 
-		self.streams[streamId].url = url;
-		self.streams[streamId].rtsp = url;
-		self.streams[streamId].recordModel = new RecordModel( self, self.streams[streamId], function(recorder) {
-			oldRecordModel.quitRecording();
-			delete oldRecordModel;
+        if ( _.isNumber(channel) ) {
+            stream.channel = channel;
+        }
 
-				// var folder = self.videosFolder + '/' + stream.id;
-				// stream.streamer = new Streamer(folder + '/videos/pipe.ts');
+        self.streams[streamId].url = url;
+        self.streams[streamId].rtsp = url;
+        self.streams[streamId].recordModel = new RecordModel( self, self.streams[streamId], function(recorder) {
+            oldRecordModel.quitRecording();
+            delete oldRecordModel;
 
-				if ( self.shouldBeRecording() ) {
-					recorder.startRecording();
-				}
+            // var folder = self.videosFolder + '/' + stream.id;
+            // stream.streamer = new Streamer(folder + '/videos/pipe.ts');
 
-				recorder.on('new_chunk', function(data) {
-					data.cause = 'schedule';
-					if (self.motion != null){
-						data.cause = 'motion';
-					}
-					self.emit( 'new_chunk', data);
-					self.emitPendingMotion(data);
-				});
-				recorder.on('camera_status', function(data) {
-					self.status = data.status;
-					self.emit('camera_status', {
-						timestamp:                new Date().getTime(),
-						cam_id:                   self._id,
-						cam_name:                 self.cameraName(),
-						status:                   data.status,
-						stream_id:                data.stream_id
-					});
-				});
+            if ( self.shouldBeRecording() ) {
+                recorder.startRecording();
+            }
 
-				// stream.recordModel can be null here, 
-				// so we assign it again with the object
-				// returned by the RecordModel callback
-				self.streams[streamId].recordModel = recorder;
-				//
-				if (cb) cb();
-		});
+            recorder.on('new_chunk', function(data) {
+                data.cause = 'schedule';
+                if (self.motion != null){
+                    data.cause = 'motion';
+                }
+                self.emit( 'new_chunk', data);
+                self.emitPendingMotion(data);
+            });
+            recorder.on('camera_status', function(data) {
+                self.status = data.status;
+                self.emit('camera_status', {
+                    timestamp:                new Date().getTime(),
+                    cam_id:                   self._id,
+                    cam_name:                 self.cameraName(),
+                    status:                   data.status,
+                    stream_id:                data.stream_id
+                });
+            });
 
-	});
+            // stream.recordModel can be null here, 
+            // so we assign it again with the object
+            // returned by the RecordModel callback
+            self.streams[streamId].recordModel = recorder;
+            //
+            if (cb) cb();
+        });
+
+    });
 	
 };
 // end of restartStream
@@ -1403,34 +1419,35 @@ Camera.prototype.stopRetentionCheck = function() {
  * @return { array } Json array containing all streams object
  */
 Camera.prototype.getStreamsJSON = function() {
+	
+	var self = this;
+	
+	// array with all streams ids
+	var streamIds = Object.keys(self.streams);
 
-    var self = this;
+	// json array to be returned
+	var streams = [];
 
-    // array with all streams ids
-    var streamIds = Object.keys(self.streams);
-
-    // json array to be returned
-    var streams = [];
-
-    for (var id in self.streams) {
-        var s = self.streams[id];
-        streams.push({
-            retention:            s.retention,
-            url:                  s.url,
-            rtsp:                 s.rtsp,
-            resolution:           s.resolution,
-            quality:              s.quality,
-            framerate:            s.framerate,
-            bitrate:              s.bitrate,
-            name:                 s.name,
-            id:                   id,
-            latestThumb:          s.latestThumb,
-            camera_no:            s.camera_no,
-            average_bps:          s.bpsAvg,
-            latestSegmentDate:    s.latestSegmentDate,
-            earliestSegmentDate:  s.earliestSegmentDate
-        }); 
-    }
+	for (var id in self.streams) {
+		var s = self.streams[id];
+		streams.push({
+                        retention:            s.retention,
+                        url:                  s.url,
+                        rtsp:                 s.rtsp,
+                        resolution:           s.resolution,
+                        quality:              s.quality,
+                        framerate:            s.framerate,
+                        bitrate:              s.bitrate,
+                        name:                 s.name,
+                        channel:              s.channel,
+                        id:                   id,
+                        latestThumb:          s.latestThumb,
+                        camera_no:            s.camera_no,
+                        average_bps:          s.bpsAvg,
+                        latestSegmentDate:    s.latestSegmentDate,
+                        earliestSegmentDate:  s.earliestSegmentDate
+		}); 
+	}
 
     return streams;
 }; 

@@ -52,7 +52,7 @@ module.exports = function( app, socket, passport) {
 				return;
 			}
 			api.setCameraParams(camera);
-			api.getResolutionOptions(function(err, resolutions, bitrates){
+			api.getResolutionOptions(function(err, resolutions, bitrates, optionsPerChannel){
 				if (err) {
 					console.error("*** getResolutionOptions for " + camera.manufacturer + ": ");
 					console.error( err ) ;
@@ -60,10 +60,11 @@ module.exports = function( app, socket, passport) {
 					res.status(422).json( { error: err } );
 				} else {
 					res.json({
-						framerate_range:  api.getFrameRateRange(),
-						resolutions:      resolutions,
-						quality_range:    api.getVideoQualityRange(),
-						bitrate_range:    bitrates
+						framerate_range:    api.getFrameRateRange(),
+						resolutions:        resolutions,
+						quality_range:      api.getVideoQualityRange(),
+						bitrate_range:      bitrates,
+                                                optionsPerChannel:  optionsPerChannel
 					});
 				}
 			});

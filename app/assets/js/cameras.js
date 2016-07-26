@@ -1,6 +1,7 @@
 var mouseX = 0;
 var mouseY = 0;
 var lastThumbRequest = Date.now();
+var editCameraXHR;
 
 var current_number_of_streams = 0;
 
@@ -629,12 +630,15 @@ var validateIp = function() {
 }
 
 var editCamera = function(camId) {
+    if (editCameraXHR) {
+        editCameraXHR.abort();
+    }
     $("#update-camera").show();
     $("#add-new-camera").hide();
     $("#stream-tabs").html("");
     $("#stream-panes").html("");
     $("#camera-auth-status span").removeClass("glyphicon-remove-circle glyphicon-ok-circle");
-    $.ajax({
+    editCameraXHR = $.ajax({
         type: "GET",
         url: "/cameras/" + camId + "/json",
         contentType: 'application/json',
@@ -659,14 +663,14 @@ var editCamera = function(camId) {
                             addStreamFieldOverlay( '#' + id );
                         });
                     }
-                }else if (
-                        !data.camera.spotMonitorStreams || 
-                        !data.camera.spotMonitorStreams.length
-                        ) {
-                            addStream(function(id) {
-                                addStreamFieldOverlay( '#' + id );						
-                            });
-                        }
+                } else if (
+                    !data.camera.spotMonitorStreams || 
+                    !data.camera.spotMonitorStreams.length
+                ) {
+                    addStream(function(id) {
+                        addStreamFieldOverlay( '#' + id );
+                    });
+                }
 
                 for (var i in data.camera.spotMonitorStreams) {
                     var stream = data.camera.spotMonitorStreams[i];
@@ -726,7 +730,48 @@ var editCamera = function(camId) {
     });    
 };
 
-var populateBitrateFields = function(bitrates) {
+
+var populateChannelFields = function( optionsPerChannel ) {
+
+    if (!optionsPerChannel) { return; }
+
+    for (var i = 1; i <= optionsPerChannel.nChannels; i++) {
+        $('.camera-stream-channel-select').append(
+            $('<option>', {
+                value: i,
+                text: i
+            })
+        );
+    }
+
+    $('.camera-stream-channel-select').each( function(idx) {
+        $(this).change( function() {
+            var channel = $(this).val();
+
+            if ( optionsPerChannel.resolutionsPerChannel && optionsPerChannel.resolutionsPerChannel[channel] ) {
+                var d = {
+                    resolutions: optionsPerChannel.resolutionsPerChannel[channel]
+                };
+                populateResolutionFields( d, idx );
+            }
+
+            if ( optionsPerChannel.bitratesPerChannel && optionsPerChannel.bitratesPerChannel[channel] ) {
+                var bitrates = optionsPerChannel.bitratesPerChannel[channel];
+                populateBitrateFields( bitrates, idx );
+            }
+        });
+
+        var channel = $(this).attr('data-channel') || 1;
+        $(this).val( channel );
+    });
+
+
+    $('.camera-stream-channel-group').show(); 
+    $('.camera-stream-channel-select').change();
+};
+
+
+var populateBitrateFields = function(bitrates, idx) {
 
     // TODO: also handle list of bitrates instead of just range
     if (!bitrates || !bitrates.min || !bitrates.max) { 
@@ -735,6 +780,28 @@ var populateBitrateFields = function(bitrates) {
 
     var min = parseInt( bitrates.min );
     var max = parseInt( bitrates.max );
+
+    if ( !isNaN(idx) ) {
+
+        var el = $( $('.camera-stream-bitrate-select')[idx] );
+
+        var default_val = '512';
+        var current_val = el.val() || el.attr('data-bitrate') || default_val;
+
+        el.html('');
+        for (var i = min; i <= max; i*=2) {
+            el.append($('<option>', {
+                value:  i,
+                text:   i
+            }));
+        };
+
+        el.val(current_val);
+
+        $('.camera-stream-bitrate-group').show();
+
+        return;
+    }
 
     $('.camera-stream-bitrate-select').each(function(){
         var self = $(this);
@@ -755,7 +822,26 @@ var populateBitrateFields = function(bitrates) {
     $('.camera-stream-bitrate-group').show();
 };
 
-var populateResolutionFields = function(data) {
+
+var populateResolutionFields = function(data, idx) {
+
+    if ( !isNaN(idx) ) {
+
+        var el = $( $('.camera-stream-resolution-select')[idx] );
+
+        var first_val = data.resolutions[0] ? data.resolutions[0].value : 0;
+        var current_val = el.val() || el.attr('data-resolution') || first_val;
+
+        el.html('');
+        for (idx in data.resolutions) {
+            el.append($('<option>', {
+                value: data.resolutions[idx].value,
+                text: data.resolutions[idx].name
+            }));
+        }
+        el.val(current_val);
+        return;
+    }
 
     $('.camera-stream-resolution-select').each(function(){
         var self = $(this);
@@ -765,9 +851,6 @@ var populateResolutionFields = function(data) {
 
         self.html('');
         for (idx in data.resolutions) {
-            // remove duplicate resolution (HIK)
-            // TODO: handle same resolution on different channels
-            $(self).find("option[value='"+data.resolutions[idx].value+"']").remove();
             self.append($('<option>', {
                 value: data.resolutions[idx].value,
                 text: data.resolutions[idx].name
@@ -776,6 +859,7 @@ var populateResolutionFields = function(data) {
         self.val(current_val);
     });
 };
+
 
 var setConstraintsOnStreamFields = function(data, cb){
     if (data){
@@ -831,6 +915,9 @@ var setConstraintsOnStreamFields = function(data, cb){
         if (data.bitrate_range) {
             $(".camera-stream-bitrate-input").attr('');
             populateBitrateFields( data.bitrate_range );
+        }
+        if (data.optionsPerChannel) {
+            populateChannelFields( data.optionsPerChannel );
         }
 
         cb(null);
@@ -1243,6 +1330,24 @@ var addStreamFieldset = function( opts, cb ) {
         // end of bitrate field
         //
 
+        //
+        // channel field
+        var camera_stream_channel_group = $('<div>', {
+            class: 'form-group  col-xs-2 camera-stream-channel-group',
+            style: 'display: none',
+            html: '<label for="camera-streams-' + current_stream_id + '-channel">channel</label>'
+        });
+
+        var camera_stream_channel = $('<select>', {
+            class: 'form-control camera-stream-channel-select',
+            id: 'camera-streams-' + current_stream_id + '-channel',
+            name: 'camera['+fieldType+'][' + current_stream_id + '][channel]'
+        });
+
+        camera_stream_channel_group.append( camera_stream_channel );
+        // end of channel field
+        //
+
         fieldset.append( camera_stream_id );
         // fieldset.append( camera_stream_rtsp_group );
         fieldset.append( camera_stream_name_group );
@@ -1251,6 +1356,7 @@ var addStreamFieldset = function( opts, cb ) {
         fieldset.append( camera_stream_framerate_group );
         fieldset.append( camera_stream_quality_group );
         fieldset.append( camera_stream_bitrate_group );
+        fieldset.append( camera_stream_channel_group );
     }
 
     if (!isSpotMonitorStream) {
