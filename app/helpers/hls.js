@@ -61,7 +61,7 @@ var generatePlaylist = function( camId, streamId, videos, targetDuration, mediaS
     var content = "#EXTM3U\n" +
                   "#EXT-X-VERSION:3\n" +         
                   "#EXT-X-ALLOW-CACHE:YES\n" +
-                  "#EXT-X-TARGETDURATION: 30\n" +
+                  "#EXT-X-TARGETDURATION:30\n" +
                   "#EXT-X-MEDIA-SEQUENCE:0\n";
 
 	if (!videos) {
