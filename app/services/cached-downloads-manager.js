@@ -2,8 +2,9 @@
 
 var CachedDownloads = require('./cached-downloads');
 
-var N_DOWNLOAD_SERVICES = 4;
-var downloadServices = [];
+var N_DOWNLOAD_SERVICES = 4,
+    downloadServices = [];
+
 
 var _init = function() {
     
@@ -15,13 +16,12 @@ var _init = function() {
 
 var getVideo = function( fileList, filename, format, res ) {
 
-    var statesCount= {},
-        availableService = null;
+    var availableService = null;
 
     for (var i in downloadServices) {
 
-        var service  = downloadServices[i];
-        var state    = service.getState(),
+        var service  = downloadServices[i],
+            state    = service.getState(),
             isCached = service.isCached( fileList, format );
 
         if ( state == CachedDownloads.States.READY) {
@@ -34,18 +34,14 @@ var getVideo = function( fileList, filename, format, res ) {
             // video is cached, return it right away
             return service.getVideo( fileList, filename, format, res );
         }
-
-        if ( !statesCount[ state ] ) {
-            statesCount[ state ] = 1;
-        } else {
-            statesCount[ state ]++;
-        }
     }
 
     // video is not cached, but there is a service available
     if ( availableService && availableService.getVideo ) {
         return availableService.getVideo( fileList, filename, format, res );
     }
+
+    var statesCount = getStates();
 
     // no services available; return appropriate error message
     // depending on the state of all services
@@ -75,12 +71,32 @@ var getVideo = function( fileList, filename, format, res ) {
         }
 
         res.status(429).json( error );
-
         return;
     }
+};
+
+
+var getStates = function() {
+
+    var statesCount = {};
+
+    for (var i in downloadServices) {
+
+        var service = downloadServices[i],
+            state   = service.getState();
+
+        if ( !statesCount[ state ] ) {
+            statesCount[ state ] = 1;
+        } else {
+            statesCount[ state ]++;
+        }
+    }
+
+    return statesCount;
 };
 
 
 _init();
 
 exports.getVideo = getVideo;
+exports.getStates = getStates;
