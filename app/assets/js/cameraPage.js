@@ -351,127 +351,162 @@ CameraPage.prototype.setupStreamSelector = function() {
 
 CameraPage.prototype.setupButtons = function() {
 
-	var self = this;
+    var self = this;
 
-	// download button
-	this.buttons.download.click(function() {
+    var supportedFormats = [
+        'ts',
+        'mp4',
+        'mp4_subs',
+        'avi',
+        'srt'
+    ];
 
-		if( !self.timeline.currBegin || !self.timeline.currEnd ) {
-			bootbox.alert('Select a day and a time interval first.');
-			return;
-		}
+    var formatSelector = 
+        '<select name="" id="video-format-selector">'
+            + '<option value="mp4">fMP4</option>'
+            + '<option value="ts">MPEG-TS</option>'
+            + '<option disabled>──────────</option>'
+            + '<option disabled>rate limited options</option>'
+            + '<option value="mp4_subs">MP4 (with embedded timestamp track)</option>'
+            + '<option value="avi">AVI</option>'
+            + '<option disabled>──────────</option>'
+            + '<option disabled>subtitles</option>'
+            + '<option value="srt">timestamp srt track (srt file only)</option>'
+        + '</select>';
 
-		var stream = self.inputs.streams.val();
-		var begin  = new Date( self.timeline.currBegin );
-		var end    = new Date( self.timeline.currEnd );
+    this.buttons.download.click(function() {
 
-		bootbox.confirm('Download video<br><br> <b>FROM</b>: ' + begin + '<br> <b>TO</b>: ' + end  + '<br><br> Confirm? ', function(ok) {
-			if(!ok) {
-				return;	
-			} else {
-				var url = window.location.protocol + "//" + window.location.host
-						+ "/cameras/" + self.camId
-						+ "/download?begin=" + parseInt( self.timeline.currBegin )
-						+ "&end=" + parseInt( self.timeline.currEnd )
-						+ "&stream=" + stream;
+        if( !self.timeline.currBegin || !self.timeline.currEnd ) {
+            bootbox.alert('Select a day and a time interval first.');
+            return;
+        }
 
-				var w = window.open( url );
-				window.focus();
-				w.onload = function() {
-					if (w.document.body.innerHTML.length > 0) {
-						w.close();
-						if (w.document.body.innerHTML.indexOf('long') >= 0) {
-							toastr.error('requested video is too long, please select a shorter interval');
-						} else {
-							toastr.error('couldn\'t find the requested video');
-						}
-					}
-				};
-			}
-		});
+        var stream = self.inputs.streams.val();
+        var begin  = new Date( self.timeline.currBegin );
+        var end    = new Date( self.timeline.currEnd );
 
+        bootbox.confirm('Download video<br><br> <b>FROM</b>: ' + begin + '<br> <b>TO</b>: ' + end  
+                + '<br><br> Format:  ' + formatSelector
+                + '<br><br> Confirm? ', 
 
-	});
+        function(ok) {
 
-	// snapshot button
-	this.buttons.snapshot.click(function() {
- 
+            if(!ok) {
+                return;	
+            } 
+
+            var format = $('#video-format-selector').val();
+            if ( supportedFormats.indexOf( format ) < 0 ) {
+                format = 'ts';
+            }
+
+            var url = window.location.protocol + "//" + window.location.host
+                + "/cameras/" + self.camId
+                + "/download?begin=" + parseInt( self.timeline.currBegin )
+                + "&end=" + parseInt( self.timeline.currEnd )
+                + "&stream=" + stream
+                + "&format=" + format;
+
+            var w = window.open( url );
+            window.focus();
+
+            w.onload = function() {
+                if (w.document.body.innerHTML.length > 0) {
+                    w.close();
+                    console.log( w.document.body.innerHTML );
+                    if (w.document.body.innerHTML.indexOf('long') >= 0) {
+                        toastr.warning('requested video is too long, please select a shorter interval');
+                    } else if (w.document.body.innerHTML.indexOf('busy') >= 0) {
+                        toastr.warning('the download service is busy; <br>please try again in a few minutes or select a format that\'s not rate limited ( fMP4 / MPEG-TS )');
+                    } else {
+                        toastr.error('couldn\'t find the requested video');
+                    }
+                }
+            };
+        });
+    });
+
+    // snapshot button
+    this.buttons.snapshot.click(function() {
+
         var snapshotTime  = self.timeline.currTime;
+
         if(!snapshotTime) {
-    			bootbox.alert('Select a frame to snapshot first.');
-    			return;
-    		}
-     var stream = self.inputs.streams.val();
-     var url = window.location.protocol + "//" + window.location.host
-         + "/cameras/" + self.camId
-         + "/snapshot/?precision=1&time=" + snapshotTime
-         + "&stream=" + stream;
-     document.getElementById("downloadSnapshot").setAttribute("href",url);
-     document.getElementById("downloadSnapshot").setAttribute("download", "CAPTURE_" + new Date(snapshotTime) + "_" + self.camId);
-	});
+            bootbox.alert('Select a frame to snapshot first.');
+            return;
+        }
 
-	// livestream button
-	this.buttons.livestream.click(function() {
-		var stream = self.inputs.streams.val();
-		if (!stream) {
-			console.log('[livestream] no stream selected');
-			// return;
-		}
-		self.mode = 'live';
-		self.inputs.date.val('');
-		self.timeline.liveOverlay.fadeIn();
-		$('#video').html('');
-		self.player = new Player('#video');
-		self.player.playVideo( self.camId, stream );
+        var stream = self.inputs.streams.val();
 
+        var url = window.location.protocol + "//" + window.location.host
+            + "/cameras/" + self.camId
+            + "/snapshot/?precision=1&time=" + snapshotTime
+            + "&stream=" + stream;
 
-	});
+        document.getElementById("downloadSnapshot").setAttribute("href",url);
+        document.getElementById("downloadSnapshot").setAttribute("download", "CAPTURE_" + new Date(snapshotTime) + "_" + self.camId);
+    });
 
-
-	this.buttons.toggleMotion.click(function() {
-		self.toggleMotion();
-	});
-
-	this.buttons.togglePlay.click(function() {
-		self.player.togglePlay();
-	});
-
-	this.buttons.jumpForward5.click(function() {
-		self.skip( 5 );
-	});
-
-	this.buttons.jumpBackward5.click(function() {
-		self.skip( -6 );
-	});
-
-	this.buttons.getLink.click( function() {
-		console.log( self.getURL() );
-	});
-
-	this.buttons.openCamera.click( function() {
-		console.log(' open new camera ');
-
-	});
-
-	this.buttons.datepicker.click( function() {
-		setTimeout(function() {
-			self.inputs.date.click();
-		},30);
-	});
+    // livestream button
+    this.buttons.livestream.click(function() {
+        var stream = self.inputs.streams.val();
+        if (!stream) {
+            console.log('[livestream] no stream selected');
+            // return;
+        }
+        self.mode = 'live';
+        self.inputs.date.val('');
+        self.timeline.liveOverlay.fadeIn();
+        $('#video').html('');
+        self.player = new Player('#video');
+        self.player.playVideo( self.camId, stream );
+    });
 
 
-	var client = new ZeroClipboard( document.getElementById("link-to-timeline") );
+    this.buttons.toggleMotion.click(function() {
+        self.toggleMotion();
+    });
 
-	client.on( "ready", function( readyEvent ) {
-		client.on( "copy", function (event) {
-			var clipboard = event.clipboardData;
-			clipboard.setData( "text/plain", self.getURL() );
-		});
-		client.on( "aftercopy", function( event ) {
-			toastr.info("Copied timeline link to clipboard");
+    this.buttons.togglePlay.click(function() {
+        self.player.togglePlay();
+    });
 
-		} );
-	} );
+    this.buttons.jumpForward5.click(function() {
+        self.skip( 5 );
+    });
+
+    this.buttons.jumpBackward5.click(function() {
+        self.skip( -6 );
+    });
+
+    this.buttons.getLink.click( function() {
+        console.log( self.getURL() );
+    });
+
+    this.buttons.openCamera.click( function() {
+        console.log(' open new camera ');
+
+    });
+
+    this.buttons.datepicker.click( function() {
+        setTimeout(function() {
+            self.inputs.date.click();
+        },30);
+    });
+
+
+    var client = new ZeroClipboard( document.getElementById("link-to-timeline") );
+
+    client.on( "ready", function( readyEvent ) {
+        client.on( "copy", function (event) {
+            var clipboard = event.clipboardData;
+            clipboard.setData( "text/plain", self.getURL() );
+        });
+        client.on( "aftercopy", function( event ) {
+            toastr.info("Copied timeline link to clipboard");
+
+        } );
+    } );
 };
 
 
