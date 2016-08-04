@@ -15,6 +15,7 @@ describe('CachedDownloads', function() {
         before( function() {
             fs.removeSync( CachedDownloads.TMP_DIR );
         });
+
         after( function() {
             delete CachedDownloads.instancesCounter;
             clearTimeout( s_1._cleanTimeout );
@@ -83,13 +84,22 @@ describe('CachedDownloads', function() {
     });
 
 
-    describe('set cache', function() {
+    /**
+    * setCache
+    *
+    * set cache with given file list
+    * only the first and last file names, the length and the format are stored in the cache
+    *
+    * @param { string } fileList  array containing full path of segments
+    */
+    describe('setCache', function() {
 
         var s_1;
 
-        before( function() {
+        before( function(done) {
             s_1 = new CachedDownloads( function(err) {
                 assert.equal(err, null);
+                done();
             });
         });
 
@@ -134,13 +144,26 @@ describe('CachedDownloads', function() {
         });
     });
 
+
+    /**
+    * getVideo
+    *
+    * sends response according to current state;
+    * if READY or BUSY but cached, download file
+    *
+    * @param { Array } fileList    list of segments to be concatenated
+    * @param { String } filename   output filename (without extension)
+    * @param { String } format     output format ( avi / mp4 )
+    * @param { object } res        Response object
+    */
     describe('getVideo', function() {
 
         var s_1;
 
-        before( function() {
+        before( function(done) {
             s_1 = new CachedDownloads( function(err) {
                 assert.equal(err, null);
+                done();
             });
         });
 
@@ -198,17 +221,28 @@ describe('CachedDownloads', function() {
         });
 
 
-        it('should call downloadVideo with proper params when in READY state', function() {
+        it('should call downloadVideo with proper params when in READY state', function( done ) {
+
+            var fileList = ['1','2','3'],
+                filename = 'a_filename',
+                format = 'a_format',
+                res = {};
+
+            s_1.downloadVideo = function( a, b, c, d, e ) {
+
+                assert.equal( a, fileList );
+                assert.equal( b, filename );
+                assert.equal( c, format );
+                assert.equal( d, res );
+
+                assert.equal( s_1._state, CachedDownloads.States.READY );
+                done();
+            };
 
             var downloadVideoSpy = sinon.spy( s_1, 'downloadVideo' );
 
             s_1._state = CachedDownloads.States.READY;
-            s_1.getVideo( ['1','2'], 'filename', 'format', {} );
-
-            assert.ok( downloadVideoSpy.calledOnce );
-            assert.ok( downloadVideoSpy.calledWith(['1','2'], 'filename', 'format', {}) );
-
-            s_1.downloadVideo.restore();
+            s_1.getVideo( fileList, filename, format, res );
         });
 
 
@@ -226,6 +260,7 @@ describe('CachedDownloads', function() {
                 assert.equal( c, format );
                 assert.equal( d, res );
 
+                assert.equal( s_1._state, CachedDownloads.States.BUSY );
                 done();
             };
 
@@ -265,7 +300,61 @@ describe('CachedDownloads', function() {
 
             s_1.getVideo( ['1', '2'], filename, format, res );
         });
+    });
 
+    
+    /**
+    * triggerCleanDirTimeout
+    *
+    * set timeout to clean dir and set state to READY after 't' ms
+    *
+    * @param { Number } t  time in ms
+    */
+    describe('triggerCleanDirTimeout', function() {
+
+        var s_1;
+
+        before( function(done) {
+            s_1 = new CachedDownloads( function(err) {
+                assert.equal(err, null);
+                done();
+            });
+
+        });
+
+        after( function() {
+            delete CachedDownloads.instancesCounter;
+            clearTimeout( s_1._cleanTimeout );
+        });
+
+
+        it('should delete files after the specified time', function( done ) {
+
+            this.timeout( 5000 );
+
+            var t = 500;
+
+            fs.ensureFileSync( s_1.VIDEO_FILE );
+            fs.ensureFileSync( s_1.SRT_FILE );
+
+            assert.ok( fs.existsSync( s_1.VIDEO_FILE ) );
+            assert.ok( fs.existsSync( s_1.SRT_FILE ) );
+
+            clearTimeout( s_1._cleanTimeout );
+            assert.ok( !s_1._cleanTimeout );
+
+            s_1.triggerCleanDirTimeout( t );
+            assert.ok( s_1._cleanTimeout );
+
+            setTimeout( function() {
+
+                assert.ok( !fs.existsSync( s_1.VIDEO_FILE ) );
+                assert.ok( !fs.existsSync( s_1.SRT_FILE ) );
+
+                done();
+
+            }, t + 50);
+        });
     });
 });
 
