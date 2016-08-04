@@ -386,6 +386,10 @@ CachedDownloads.prototype.sendFile = function( filename, res ) {
 
     res.set( 'Content-disposition', 'attachment; filename=' + filename);
 
+    res.once('close', function() {
+        self.triggerCleanDirTimeout( MIN_REQ_INTERVAL_MS );
+    });
+
     res.sendfile( this.VIDEO_FILE, function(err) {
         self.triggerCleanDirTimeout( MIN_REQ_INTERVAL_MS );
         if (err) {
