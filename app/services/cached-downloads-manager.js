@@ -98,5 +98,5 @@ var getStates = function() {
 
 _init();
 
-exports.getVideo = getVideo;
+exports.getVideo  = getVideo;
 exports.getStates = getStates;

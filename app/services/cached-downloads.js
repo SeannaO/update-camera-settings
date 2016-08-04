@@ -17,7 +17,7 @@ var States = {
 };
 
 
-var CachedDownloads = function() {
+var CachedDownloads = function( cb ) {
 
     if (!CachedDownloads.instancesCounter) {
         CachedDownloads.instancesCounter = 1;
@@ -30,11 +30,11 @@ var CachedDownloads = function() {
     this.VIDEO_FILE = path.resolve( TMP_DIR, 'tmp_video_for_download_' + this._id );
     this.SRT_FILE   = path.resolve( TMP_DIR, 'tmp_subs_for_download_' + this._id );
 
-    this._state         = States.LOADING,    // current state
+    this._state         = States.LOADING;    // current state
     this._cachedRequest = {};                // current cached request
     this._cleanTimeout  = null;              // folder cleanup timeout
 
-    this.launch();
+    this.launch( cb );
 };
 
 
@@ -74,7 +74,7 @@ CachedDownloads.prototype.setCache = function( fileList, format ) {
 
     if ( !fileList || !fileList.length) { 
         console.error('[cached-downloads : setCache]  invalid list of files');
-        return;
+        return 'invalid list of files';
     }
 
     this._cachedRequest = {
@@ -402,7 +402,8 @@ CachedDownloads.prototype.getState = function() {
     return this._state;
 };
 
-CachedDownloads.States = States;
+CachedDownloads.States  = States;
+CachedDownloads.TMP_DIR = TMP_DIR;
 
 /** 
  * exports
