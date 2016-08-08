@@ -138,3 +138,4 @@ _init();
 
 exports.getVideo  = getVideo;
 exports.getStates = getStates;
+exports._getDownloadServices = _getDownloadServices;
