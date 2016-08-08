@@ -848,6 +848,10 @@ describe('CachedDownloads', function() {
             });
     
             s1.downloadVideo( filelist2, filename, 'mp4', res );
+
+            // run CachedDownloadsManager tests only after done with all tests here
+            // TODO: find a better way to launch these tests
+            require('./cached-downloads-manager.test');
         });
     });
 });
