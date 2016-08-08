@@ -327,12 +327,12 @@ CachedDownloads.prototype.downloadVideo = function( fileList, filename, format, 
 
     this._state = States.BUSY;
 
+    // reset timer and make sure the folder will be eventually cleaned
+    this.triggerCleanDirTimeout( CACHE_TTL_MS );
+
     if ( this.isCached( fileList, format ) ) {
         return this.sendFile( filename, res );
     }
-
-    // reset timer and make sure the folder will be eventually cleaned
-    self.triggerCleanDirTimeout( CACHE_TTL_MS );
 
     this.prepareSubs( fileList, function(subs_err) {
         if (subs_err) { 
