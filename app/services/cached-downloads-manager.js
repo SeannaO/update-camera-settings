@@ -6,6 +6,11 @@ var N_DOWNLOAD_SERVICES = 4,
     downloadServices = [];
 
 
+/**
+ * _init
+ *
+ * launch 'N_DOWNLOAD_SERVICES' download services
+ */
 var _init = function() {
     
     for (var i = 0; i < N_DOWNLOAD_SERVICES; i++) {
@@ -14,6 +19,27 @@ var _init = function() {
 };
 
 
+/**
+ * _getDownloadServices
+ *
+ * for tests only; return array of download services
+ */
+var _getDownloadServices = function() {
+    return downloadServices;
+};
+
+
+/**
+ * getVideo
+ *
+ * sends response according to states of the services;
+ * if at least one service is READY or BUSY but cached, download file
+ *
+ * @param { Array } fileList    list of segments to be concatenated
+ * @param { String } filename   output filename (without extension)
+ * @param { String } format     output format ( avi / mp4 )
+ * @param { object } res        Response object
+ */
 var getVideo = function( fileList, filename, format, res ) {
 
     var availableService = null;
@@ -76,6 +102,14 @@ var getVideo = function( fileList, filename, format, res ) {
 };
 
 
+/**
+ * getStates
+ *
+ * sends response according to current state;
+ * if READY or BUSY but cached, download file
+ *
+ * @return { object }  count of services in each state
+ */
 var getStates = function() {
 
     var statesCount = {};
@@ -96,7 +130,11 @@ var getStates = function() {
 };
 
 
+/**
+ * launch services
+ **/
 _init();
+
 
 exports.getVideo  = getVideo;
 exports.getStates = getStates;
