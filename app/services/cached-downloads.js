@@ -331,15 +331,19 @@ CachedDownloads.prototype.downloadVideo = function( fileList, filename, format, 
         return this.sendFile( filename, res );
     }
 
+    // reset timer and make sure the folder will be eventually cleaned
+    self.triggerCleanDirTimeout( CACHE_TTL_MS );
+
     this.prepareSubs( fileList, function(subs_err) {
         if (subs_err) { 
             console.error('[cached-downloads : downloadVideo]  error when generating subtitles; video will not have subs');
         }
         self.prepareVideo( fileList, format, !subs_err, function(err) {
-            // reset timer and make sure the folder will be eventually cleaned
-            self.triggerCleanDirTimeout( CACHE_TTL_MS );
 
-            if (err) { return res.status(500).end(err); }
+            if (err) { 
+                self.triggerCleanDirTimeout( MIN_REQ_INTERVAL_MS );
+                return res.status(500).end(err); 
+            }
 
             self.setCache( fileList, format );
             self.sendFile( filename, res );
