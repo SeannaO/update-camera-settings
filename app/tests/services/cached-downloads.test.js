@@ -753,9 +753,13 @@ describe('CachedDownloads', function() {
             s1.triggerCleanDirTimeout = function(t) {
 
                 cleanDirCallCounter++;
+                if (cleanDirCallCounter == 1) {
+                    return assert.equal( t, 60*60*1000 );
+                }
+
                 assert.equal( t, 5*60*1000 );
                 assert.ok( s1.isCached( filelist, 'mp4' ) );
-                assert.equal( cleanDirCallCounter, 1 );
+                assert.equal( cleanDirCallCounter, 2 );
                 assert.ok( prepareSubsSpy.notCalled );
                 prepareSubsSpy.restore();
                 done();
