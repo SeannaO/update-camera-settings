@@ -107,6 +107,10 @@ describe('CachedDownloadsManager', function() {
                 },
                 json_cb: function(d) {
                     assert.ok(d.message.indexOf('is busy') > 0);
+                    assert.equal( d.states[ CachedDownloads.States.BUSY ], 1 );
+                    assert.equal( d.states[ CachedDownloads.States.LOADING ], 1 );
+                    assert.equal( d.states[ CachedDownloads.States.ERROR ], 2 );
+                    assert.equal( d.servicesCount, 4 );
                     done();
                 }
             });
