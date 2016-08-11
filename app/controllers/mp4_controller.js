@@ -2,7 +2,7 @@ var ffmpeg = require('./../helpers/ffmpeg');
 var fs = require('fs');
 var path = require('path');
 
-var cachedDownloadManager = require('../services/cached-downloads');
+var cachedDownloadsManager = require('../services/cached-downloads-manager');
 
 var spawn = require('child_process').spawn;
 
@@ -133,7 +133,7 @@ function inMemoryMp4Video( db, cam, begin, end, req, res ) {
 			var formatedBegin = new Date(begin);
 			var formatedEnd = new Date(end);
 			
-			res.end('no videos found');
+			res.status(404).end('no videos found');
 		}
 		else {
 			var fileList = videoList.map( function(video) {
@@ -153,7 +153,7 @@ function inMemoryMp4Video( db, cam, begin, end, req, res ) {
                             req.query.filename = req.query.filename ? req.query.filename + '.' + format : null;
                             var filename = req.query.filename || 'solinkVms_' + camId + '_' + begin + '_' + end + '.' + format;
 
-                            cachedDownloadManager.getVideo( fileList, filename, format, res );
+                            cachedDownloadsManager.getVideo( fileList, filename, format, res );
 
                         } else {
                             ffmpeg.inMemoryStitch( fileList, offset, req, res );

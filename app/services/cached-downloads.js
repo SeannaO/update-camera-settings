@@ -4,11 +4,9 @@ var fs    = require('fs-extra'),
     path  = require('path'),
     spawn = require('child_process').spawn
 
-var TMP_DIR    = path.resolve( './tmp-downloads' ),
-    VIDEO_FILE = path.resolve( TMP_DIR, 'tmp_video_for_download'),
-    SRT_FILE   = path.resolve( TMP_DIR, 'tmp_subs_for_download');
+var TMP_DIR = path.resolve( './tmp-downloads' );
 
-var MIN_REQ_INTERVAL_MS = 2*60*1000,    // minimum interval between requests that are not cached
+var MIN_REQ_INTERVAL_MS = 5*60*1000,    // minimum interval between requests that are not cached
     CACHE_TTL_MS        = 60*60*1000;   // maximum interval to delete cached files and reset state
 
 var States = {
@@ -18,9 +16,26 @@ var States = {
     ERROR:    'error'
 };
 
-var state         = States.LOADING,     // current state
-    cachedRequest = {},                 // current cached request
-    cleanTimeout  = null;               // folder cleanup timeout
+
+var CachedDownloads = function( cb ) {
+
+    if (!CachedDownloads.instancesCounter) {
+        CachedDownloads.instancesCounter = 1;
+    } else {
+        CachedDownloads.instancesCounter++;
+    }
+
+    this._id = CachedDownloads.instancesCounter;
+
+    this.VIDEO_FILE = path.resolve( TMP_DIR, 'tmp_video_for_download_' + this._id );
+    this.SRT_FILE   = path.resolve( TMP_DIR, 'tmp_subs_for_download_' + this._id );
+
+    this._state         = States.LOADING;    // current state
+    this._cachedRequest = {};                // current cached request
+    this._cleanTimeout  = null;              // folder cleanup timeout
+
+    this.launch( cb );
+};
 
 
 /**
@@ -32,7 +47,9 @@ var state         = States.LOADING,     // current state
  * @param { Function } cb  callback( err )
  * 		- err (String):  error message, null if none
  */
-var prepareDir = function( cb ) {
+CachedDownloads.prototype.prepareDir = function( cb ) {
+
+    var self = this;
 
     console.log('[cached-downloads]  preparing folder ' + TMP_DIR);
     fs.ensureDir( TMP_DIR, function(err) {
@@ -40,7 +57,7 @@ var prepareDir = function( cb ) {
             console.error('[cached-downloads : prepareDir] ' + err);  
             return cb( err );
         }
-        cleanDir( cb );            
+        self.cleanDir( cb );            
     });
 };
 
@@ -53,14 +70,14 @@ var prepareDir = function( cb ) {
  *
  * @param { string } fileList  array containing full path of segments
  */
-var setCache = function( fileList, format ) {
+CachedDownloads.prototype.setCache = function( fileList, format ) {
 
     if ( !fileList || !fileList.length) { 
         console.error('[cached-downloads : setCache]  invalid list of files');
-        return;
+        return 'invalid list of files';
     }
 
-    cachedRequest = {
+    this._cachedRequest = {
         firstSegment:  fileList[0],
         lastSegment:   fileList[ fileList.length -1 ],
         nSegments:     fileList.length,
@@ -74,9 +91,9 @@ var setCache = function( fileList, format ) {
  *
  * reset cached request (does not delete cached files - see 'cleanDir')
  */
-var resetCachedRequest = function() {
+CachedDownloads.prototype.resetCachedRequest = function() {
 
-    cachedRequest = {
+    this._cachedRequest = {
         firstSegment:  null,        // first element on the list of segments
         lastSegment:   null,        // last     "    "   "   "   "     "
         nSegments:     null,        // length of list of segments
@@ -93,14 +110,16 @@ var resetCachedRequest = function() {
  * @param { Function } cb  callback( err )
  * 		- err (String):  error message, null if none
  */
-var cleanDir = function( cb ) {
+CachedDownloads.prototype.cleanDir = function( cb ) {
 
-    resetCachedRequest();
+    var self = this;
 
-    console.log('[cached-downloads : cleanDir ]  cleaning folder ' + TMP_DIR);
-    fs.unlink( VIDEO_FILE, function(err) {
+    this.resetCachedRequest();
+
+    console.log('[cached-downloads : cleanDir]  cleaning folder ' + TMP_DIR);
+    fs.unlink( this.VIDEO_FILE, function(err) {
         if (err) { console.error( '[cached-downloads : cleanDir]  ' + err ); }
-        fs.unlink( SRT_FILE, function(err) {
+        fs.unlink( self.SRT_FILE, function(err) {
             if (err) { console.error( '[cached-downloads : cleanDir]  ' + err ); }
             if ( cb ) { cb(); }
         });
@@ -116,23 +135,26 @@ var cleanDir = function( cb ) {
  * @param { Function } cb  callback( err )
  * 		- err (String):  error message, null if none
  */
-var launch = function( cb ) {
+CachedDownloads.prototype.launch = function( cb ) {
 
-    resetCachedRequest();
+    var self = this;
 
-    prepareDir( function(err) {
+    this.resetCachedRequest();
+
+    this.prepareDir( function(err) {
 
         if (err) {      
 
             // if there's error preparing folder,
             // service won't be available
-            state = States.ERROR;
+            self._state = States.ERROR;
             if (cb) { cb(err); }
 
             return;
         } 
 
-        state = States.READY;
+        self._state = States.READY;
+
         if (cb) { cb(); }
     });
 };
@@ -149,16 +171,16 @@ var launch = function( cb ) {
  * @param { String } format     output format ( avi / mp4 )
  * @param { object } res        Response object
  */
-var getVideo = function( fileList, filename, format, res ) {
+CachedDownloads.prototype.getVideo = function( fileList, filename, format, res ) {
 
-    switch( state ) {
+    switch( this._state ) {
         case States.ERROR:
             res.status(500).end('cached downloads service could not be launched');
             break;
 
         case States.BUSY:
-            if ( isCached( fileList, format ) ) {
-                downloadVideo( fileList, filename, format, res );
+            if ( this.isCached( fileList, format ) ) {
+                this.downloadVideo( fileList, filename, format, res );
             } else {
                 res.status(429).end('cached downloads service is busy');
             }
@@ -169,7 +191,7 @@ var getVideo = function( fileList, filename, format, res ) {
             break;
 
         case States.READY:
-            downloadVideo( fileList, filename, format, res );
+            this.downloadVideo( fileList, filename, format, res );
             break;
     }
 };
@@ -183,9 +205,9 @@ var getVideo = function( fileList, filename, format, res ) {
  * @param { Array } fileList    list of segments to be concatenated
  * @param { Function } cb       callback when done
  */
-var prepareSubs = function( fileList, cb ) {
+CachedDownloads.prototype.prepareSubs = function( fileList, cb ) {
     
-    var srtStream = fs.createWriteStream( SRT_FILE ),
+    var srtStream = fs.createWriteStream( this.SRT_FILE ),
         gensubs = spawn('./gensubs', fileList );
 
     gensubs.stdout.pipe( srtStream );
@@ -219,7 +241,7 @@ var prepareSubs = function( fileList, cb ) {
  * @param { boolean } embed_subs    embed subs? (mp4 only)
  * @param { Function } cb           callback when done
  */
-var prepareVideo = function( fileList, format, embed_subs, cb ) {
+CachedDownloads.prototype.prepareVideo = function( fileList, format, embed_subs, cb ) {
     
     var args = [
         '-y',
@@ -230,7 +252,7 @@ var prepareVideo = function( fileList, format, embed_subs, cb ) {
     if (format == 'mp4' && embed_subs) {
         args.push(
             '-f', 'srt',
-            '-i', SRT_FILE,
+            '-i', this.SRT_FILE,
             '-c:s', 'mov_text'
         );
     }
@@ -238,7 +260,7 @@ var prepareVideo = function( fileList, format, embed_subs, cb ) {
     args.push( 
         '-an',
         '-c:v', 'copy',
-        '-f', format, VIDEO_FILE 
+        '-f', format, this.VIDEO_FILE 
     );
 
     var ffmpegProcess = spawn('./ffmpeg', args);
@@ -270,15 +292,17 @@ var prepareVideo = function( fileList, format, embed_subs, cb ) {
  *
  * @param { Number } t  time in ms
  */
-var triggerCleanDirTimeout = function( t ) {
+CachedDownloads.prototype.triggerCleanDirTimeout = function( t ) {
+
+    var self = this;
 
     console.log('[cached-downloads]  cleaning folder in ' + t + ' ms');
 
-    clearTimeout( cleanTimeout );
+    clearTimeout( this._cleanTimeout );
 
-    cleanTimeout = setTimeout( function() {
-       cleanDir( function() {
-           state = States.READY;
+    this._cleanTimeout = setTimeout( function() {
+       self.cleanDir( function() {
+           self._state = States.READY;
        }); 
     }, t);
 };
@@ -297,26 +321,32 @@ var triggerCleanDirTimeout = function( t ) {
  * @param { String } format     desired format (avi / mp4)
  * @param { Function } res      Response object
  */
-var downloadVideo = function( fileList, filename, format, res ) {
+CachedDownloads.prototype.downloadVideo = function( fileList, filename, format, res ) {
 
-    state = States.BUSY;
+    var self = this;
 
-    if ( isCached( fileList, format ) ) {
-        return sendFile( filename, res );
+    this._state = States.BUSY;
+
+    // reset timer and make sure the folder will be eventually cleaned
+    this.triggerCleanDirTimeout( CACHE_TTL_MS );
+
+    if ( this.isCached( fileList, format ) ) {
+        return this.sendFile( filename, res );
     }
 
-    prepareSubs( fileList, function(subs_err) {
+    this.prepareSubs( fileList, function(subs_err) {
         if (subs_err) { 
             console.error('[cached-downloads : downloadVideo]  error when generating subtitles; video will not have subs');
         }
-        prepareVideo( fileList, format, !subs_err, function(err) {
-            // reset timer and make sure the folder will be eventually cleaned
-            triggerCleanDirTimeout( CACHE_TTL_MS );
+        self.prepareVideo( fileList, format, !subs_err, function(err) {
 
-            if (err) { return res.status(500).end(err); }
+            if (err) { 
+                self.triggerCleanDirTimeout( MIN_REQ_INTERVAL_MS );
+                return res.status(500).end(err); 
+            }
 
-            setCache( fileList, format );
-            sendFile( filename, res );
+            self.setCache( fileList, format );
+            self.sendFile( filename, res );
         });
     });
 };
@@ -332,21 +362,21 @@ var downloadVideo = function( fileList, filename, format, res ) {
  *
  * @returns { Boolean }
  */
-var isCached = function( fileList, format ) {
+CachedDownloads.prototype.isCached = function( fileList, format ) {
 
     if ( !fileList || !fileList.length ) {
         return false;
     }
 
-    return ( fileList[0] == cachedRequest.firstSegment )
-        && ( fileList[ fileList.length - 1 ] == cachedRequest.lastSegment )
-        && ( fileList.length == cachedRequest.nSegments )
-        && ( format == cachedRequest.format );
+    return ( fileList[0] == this._cachedRequest.firstSegment )
+        && ( fileList[ fileList.length - 1 ] == this._cachedRequest.lastSegment )
+        && ( fileList.length == this._cachedRequest.nSegments )
+        && ( format == this._cachedRequest.format );
 };
 
 
 /**
- * downloadVideo
+ * sendFile
  *
  * sends cached video file to response, generating it if necessary,
  * then trigger timeout to clear cache and reset state to READY
@@ -354,12 +384,18 @@ var isCached = function( fileList, format ) {
  * @param { String } filename   desired filename in response (without extension)
  * @param { Function } res      Response object
  */
-var sendFile = function( filename, res ) {
+CachedDownloads.prototype.sendFile = function( filename, res ) {
+
+    var self = this;
 
     res.set( 'Content-disposition', 'attachment; filename=' + filename);
 
-    res.sendfile( VIDEO_FILE, function(err) {
-        triggerCleanDirTimeout( MIN_REQ_INTERVAL_MS );
+    res.once('close', function() {
+        self.triggerCleanDirTimeout( MIN_REQ_INTERVAL_MS );
+    });
+
+    res.sendfile( this.VIDEO_FILE, function(err) {
+        self.triggerCleanDirTimeout( MIN_REQ_INTERVAL_MS );
         if (err) {
             console.error('[cached-downloads : sendFile]  ' + err);
             return res.status(500).end('error when sending file');
@@ -370,13 +406,14 @@ var sendFile = function( filename, res ) {
 };
 
 
-/**
- * launch service
- */
-launch();
+CachedDownloads.prototype.getState = function() {
+    return this._state;
+};
 
+CachedDownloads.States  = States;
+CachedDownloads.TMP_DIR = TMP_DIR;
 
 /** 
  * exports
  */
-exports.getVideo = getVideo;
+module.exports = CachedDownloads;

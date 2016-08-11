@@ -732,9 +732,9 @@ module.exports = function( app, passport, camerasController ) {
             res.status(422).json({error:'begin time greater than end time'});
             return;
         }
-        if ( end - begin > 5 * 60 * 60 * 1000 ) {
-            res.status(422).json({error:'video requested is too long ( > 5h )'});
-            console.error('[api/cameras download] attempt to download video/subs longer than 5h');
+        if ( end - begin > 3 * 60 * 60 * 1000 ) {
+            res.status(422).json({error:'video requested is too long ( > 3h )'});
+            console.error('[api/cameras download] attempt to download video/subs longer than 3h');
             return;
         }
 
