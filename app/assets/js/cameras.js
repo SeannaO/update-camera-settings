@@ -735,6 +735,9 @@ var populateChannelFields = function( optionsPerChannel ) {
 
     if (!optionsPerChannel) { return; }
 
+    // clear selector before updating it
+    $('.camera-stream-channel-select').html('');
+
     for (var i = 1; i <= optionsPerChannel.nChannels; i++) {
         $('.camera-stream-channel-select').append(
             $('<option>', {
