@@ -1355,11 +1355,11 @@ var addStreamFieldset = function( opts, cb ) {
         // fieldset.append( camera_stream_rtsp_group );
         fieldset.append( camera_stream_name_group );
         fieldset.append( camera_stream_source_group);
+        fieldset.append( camera_stream_channel_group );
         fieldset.append( camera_stream_resolution_group );
         fieldset.append( camera_stream_framerate_group );
-        fieldset.append( camera_stream_quality_group );
+        // fieldset.append( camera_stream_quality_group ); // not being used for now
         fieldset.append( camera_stream_bitrate_group );
-        fieldset.append( camera_stream_channel_group );
     }
 
     if (!isSpotMonitorStream) {
