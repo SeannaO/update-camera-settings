@@ -1432,8 +1432,8 @@ Camera.prototype.getStreamsJSON = function() {
 		var s = self.streams[id];
 		streams.push({
                         retention:            s.retention,
-                        url:                  s.url,
-                        rtsp:                 s.rtsp,
+                        url:                  _.trim( s.url ),
+                        rtsp:                 _.trim( s.rtsp ),
                         resolution:           s.resolution,
                         quality:              s.quality,
                         framerate:            s.framerate,

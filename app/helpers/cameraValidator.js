@@ -1,5 +1,8 @@
 'use strict';
 
+var _ = require('lodash');
+
+
 /**
  * Checks if IP does not contain non-numeric chars
  *   TODO: perform full validation
@@ -47,7 +50,9 @@ function validateCamera( cam ) {
 			
 			if ( rtsp_url && !checkIP( rtsp_url ) ) {
 				return 'invalid IP in rtsp url: ' + rtsp_url;
-			}
+			} else if ( rtsp_url ) {
+                                  cam.streams[s].url = _.trim( cam.streams[s].url );
+                              }
 		}
 	}
 
@@ -62,7 +67,9 @@ function validateCamera( cam ) {
 			
 			if ( rtsp_url && !checkIP( rtsp_url ) ) {
 				return 'invalid IP in rtsp url: ' + rtsp_url;
-			}
+			} else if ( rtsp_url ) {
+                                  cam.spotMonitorStreams[s].url = _.trim( cam.spotMonitorStreams[s].url );
+                              }
 		}
 	}
 }
