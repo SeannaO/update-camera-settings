@@ -1438,7 +1438,7 @@ Camera.prototype.getStreamsJSON = function() {
                         quality:              s.quality,
                         framerate:            s.framerate,
                         bitrate:              s.bitrate,
-                        name:                 s.name,
+                        name:                 _.trim( s.name ),
                         channel:              s.channel,
                         id:                   id,
                         latestThumb:          s.latestThumb,
@@ -1464,7 +1464,7 @@ Camera.prototype.getStreamsJSON = function() {
 Camera.prototype.toJSON = function() {
     var info = {};
 
-    info.name             = this.name;
+    info.name             = _.trim( this.name );
     info.ip               = this.ip;
     info._id              = this._id;
     info.schedule_enabled = this.schedule_enabled;

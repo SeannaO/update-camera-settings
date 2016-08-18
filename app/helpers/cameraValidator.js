@@ -38,6 +38,10 @@ function validateCamera( cam ) {
 		return 'invalid ip';
 	}
 
+          if (cam.name) { 
+              cam.name = _.trim( cam.name );
+          }
+
 	// validate rtsp url for each stream
 	if (cam.streams && cam.streams.length > 0) {
 		for (var s in cam.streams) {
@@ -52,6 +56,10 @@ function validateCamera( cam ) {
 				return 'invalid IP in rtsp url: ' + rtsp_url;
 			} else if ( rtsp_url ) {
                                   cam.streams[s].url = _.trim( cam.streams[s].url );
+                              }
+
+                              if ( cam.streams[s].name ) {
+                                  cam.streams[s].name = _.trim( cam.streams[s].name );
                               }
 		}
 	}
@@ -69,6 +77,10 @@ function validateCamera( cam ) {
 				return 'invalid IP in rtsp url: ' + rtsp_url;
 			} else if ( rtsp_url ) {
                                   cam.spotMonitorStreams[s].url = _.trim( cam.spotMonitorStreams[s].url );
+                              }
+
+                              if ( cam.spotMonitorStreams[s].name ) {
+                                  cam.spotMonitorStreams[s].name = _.trim( cam.spotMonitorStreams[s].name );
                               }
 		}
 	}
