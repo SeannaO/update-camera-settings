@@ -1,0 +1,456 @@
+swagger: '2.0'
+
+info:
+  version: 1.1.0
+  title: PSIA IPMD
+
+schemes:
+  - http
+
+basePath: /PSIA
+
+security:
+  - psia_auth: []
+
+paths:
+  /System/reboot:
+    put:
+      operationId: putReboot
+      tags:
+        - system
+      description: Reboot the device
+      produces:
+        - application/xml
+      responses:
+        200:
+          description: ResponseStatus
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+
+  /System/updateFirmware:
+    put:
+      operationId: putUpdateFirmware
+      tags:
+        - system
+      description: Update the firmware of the device.
+      produces:
+        - application/xml
+      consumes:
+        - application/octet-stream
+      responses:
+        200:
+          description: ResponseStatus
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+
+  /System/configurationData:
+    get:
+      operationId: getConfigurationData
+      tags:
+        - system
+      description: The function is used to get or set the configuration data for the device. This is opaque data that can be used to save and restore the device configuration.
+      produces:
+        - application/binary
+      responses:
+        200:
+          description: ResponseStatus
+          schema:
+           type: string
+      security:
+        - psia_auth: []
+    put:
+      operationId: putConfigurationData
+      tags:
+        - system
+      description: The function is used to get or set the configuration data for the device. This is opaque data that can be used to save and restore the device configuration.
+      produces:
+        - application/xml
+      consumes:
+        - application/binary
+      responses:
+        200:
+          description: ResponseStatus
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+
+  /System/factoryReset:
+    put:
+      operationId: putFactoryReset
+      tags:
+        - system
+      description: This function is used to reset the configuration for the device to the factory default.
+      produces:
+        - application/xml
+      parameters:
+        - name: Mode
+          in: query
+          description: |
+            Two factory reset modes are supported:
+
+            `full` resets all device parameters and settings to their factory values.
+
+            `basic` resets all device parameters and settings except the values in _/PSIA/System/Network_ and _/PSIA/Security_.
+
+            The default mode is `full`.
+            The device may be rebooted after it is reset.
+          required: true
+          default: full
+          type: string
+          enum:
+            - full
+            - basic
+      responses:
+        200:
+          description: ResponseStatus
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+
+  /System/deviceInfo:
+    get:
+      operationId: getDeviceInfo
+      description: This function is used to get or set device information.
+      tags:
+        - system
+      produces:
+        - application/xml
+      responses:
+        200:
+          description: DeviceInfo
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+    put:
+      operationId: putDeviceInfo
+      description: |
+        Some fields are read-only and may not be set. If these fields are present in the inbound XML block, they are ignored.
+
+        For the `DeviceInfo` uploaded to the device during a PUT operation, all fields are considered optional and any fields that are not present in the inbound XML are not changed on the device. This allows setting of the fields individually without having to load the entire XML block to the device.
+      tags:
+        - system
+      produces:
+        - application/xml
+      consumes:
+        - application/xml
+      responses:
+        200:
+          description: ResponseStatus
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+
+  /System/supportReport:
+    get:
+      operationId: getSupportReport
+      description: This function is used to get a compressed archive of support information for the device. The archive must contain at least the device‟s current configuration and log files. Other items that might also be packaged include syslog and operating system information, statistics, etc.
+      tags:
+        - system
+      produces:
+        - application/octet-stream
+      responses:
+        200:
+          description: |
+            The format of the archive is device-dependent (could be tar, zip, etc.).
+            Use http `Accept` header field to inform server what formats are accepted by client.
+      security:
+        - psia_auth: []
+
+  /System/status:
+    get:
+      operationId: getStatus
+      description: This function is used to get the status of the device.
+      tags:
+        - system
+      produces:
+        - application/xml
+      responses:
+        200:
+          description: DeviceStatus
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+
+  /System/time:
+    get:
+      operationId: getTime
+      description: Access the device time information.
+      tags:
+        - system
+      produces:
+        - application/xml
+      responses:
+        200:
+          description: Time
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+    put:
+      operationId: putTime
+      description: Access the device time information.
+      tags:
+        - system
+      produces:
+        - application/xml
+      consumes:
+        - application/xml
+      parameters:
+        - name: timeMode
+          in: query
+          description: |
+            If _timeMode_ is set to `manual` the _localTime_ and _timeZone_ fields are required. The _LocalTime_ block sets the device time.
+
+            If _timeMode_ is set to `NTP`, only the _timeZone_ field is required. The device time is set by synchronizing with NTP.
+          type: string
+          enum:
+            - NTP
+            - manual
+        - name: localTime
+          in: query
+          description: |
+            If the _localTime_ query string with a value is specified, the `Time` XML block is not required as inbound data.
+          type: string
+        - name: timeZone
+          in: query
+          type: string
+        - name: body
+          in: body
+          description: Time
+          schema:
+            type: object
+      responses:
+        200:
+          description: ResponseStatus
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+
+#TODO System/time
+#TODO System/logging
+#TODO System/Storage
+
+  /System/Network/interfaces:
+    get:
+      operationId: getNetworkInterfaces
+      description: Access the device network interfaces.
+      tags:
+        - system
+        - network
+        - interfaces
+      produces:
+        - application/xml
+      responses:
+        200:
+          description: NetworkInterfaceList
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+
+  /System/Network/interfaces/{ID}:
+    parameters:
+      - name: ID
+        in: path
+        type: string
+        required: true
+    get:
+      operationId: getNetworkInterfaceById
+      description: Access the device network interfaces.
+      tags:
+        - system
+        - network
+        - interfaces
+      produces:
+        - application/xml
+      responses:
+        200:
+          description: NetworkInterface
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+    put:
+      operationId: putNetworkInterfaceById
+      description: Access the device network interfaces.
+      tags:
+        - system
+        - network
+        - interfaces
+      produces:
+        - application/xml
+      consumes:
+        - application/xml
+      parameters:
+        - name: body
+          in: body
+          description: NetworkInterface
+          schema:
+            type: object
+      responses:
+        200:
+          description: ResponseStatus
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+
+  /System/Network/interfaces/{ID}/ipAddress:
+    parameters:
+      - name: ID
+        in: path
+        type: string
+        required: true
+    get:
+      operationId: getIpAddressByNetworkInterfaceId
+      description: Access IP addressing settings
+      tags:
+        - system
+        - network
+        - interfaces
+      produces:
+        - application/xml
+      responses:
+        200:
+          description: IPAddress
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+    put:
+      operationId: putIpAddressByNetworkInterfaceId
+      description: Access IP addressing settings
+      tags:
+        - system
+        - network
+        - interfaces
+      produces:
+        - application/xml
+      consumes:
+        - application/xml
+      parameters:
+        - name: body
+          in: body
+          description: IPAddress
+          schema:
+            type: object
+      responses:
+        200:
+          description: ResponseStatus
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+
+#TODO System/Network/interfaces/{ID}/wireless
+#TODO System/Network/interfaces/{ID}/ieee802.1x
+#TODO System/Network/interfaces/{ID}/ipFilter
+#TODO System/Network/interfaces/{ID}/snmp
+#TODO System/Network/interfaces/{ID}/qos
+#TODO System/Network/interfaces/{ID}/discovery
+#TODO System/Network/interfaces/{ID}/syslog
+#TODO System/IO
+#TODO System/Audio
+#TODO System/Video
+#TODO System/Serial
+#TODO Diagnostics
+#TODO Security
+
+  /Streaming/channels:
+    get:
+      operationId: getStreamingChannels
+      description: Access streaming channels.
+      tags:
+        - streaming
+      produces:
+        - application/xml
+      responses:
+        200:
+          description: StreamingChannelList
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+    put:
+      operationId: putStreamingChannels
+      description: Update streaming channels.
+      tags:
+        - streaming
+      produces:
+        - application/xml
+      consumes:
+        - application/xml
+      parameters:
+        - name: body
+          in: body
+          description: StreamingChannelList
+          schema:
+            type: object
+      responses:
+        200:
+          description: ResponseStatus
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+
+  /Streaming/channels/{ID}:
+    parameters:
+      - name: ID
+        in: path
+        type: string
+        required: true
+    get:
+      operationId: getStreamingChannelById
+      description: Access streaming channels.
+      tags:
+        - streaming
+      produces:
+        - application/xml
+      responses:
+        200:
+          description: StreamingChannel
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+    put:
+      operationId: putStreamingChannelById
+      description: Update streaming channel.
+      tags:
+        - streaming
+      produces:
+        - application/xml
+      consumes:
+        - application/xml
+      parameters:
+        - name: body
+          in: body
+          description: StreamingChannel
+          schema:
+            type: object
+      responses:
+        200:
+          description: ResponseStatus
+          schema:
+           type: object
+      security:
+        - psia_auth: []
+
+#TODO PTZ
+#TODO Custom
+
+securityDefinitions:
+  psia_auth:
+    type: basic
+
