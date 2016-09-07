@@ -44,9 +44,6 @@ var fs                = require('fs');                               // for send
 var exec              = require('child_process').exec;
 var DiskSpaceAgent    = require('./helpers/diskSpaceAgent.js');      // agent that periodically checks disk space
 
-var btoa = require('btoa');
-var proxy = require('express-http-proxy');
-
 var passport          = require('passport');
 var BasicStrategy     = require('passport-http').BasicStrategy;
 var MemoryMonitors    = require('./services/memory-monitors.js');
@@ -184,13 +181,7 @@ portChecker.check(port, function(err, found) {
 		app.use(express.compress());
 		app.use(express.static('public'));
 		app.use(express.cookieParser());				// cookies middleware
-		app.use('/listener', proxy(config.listener.url, {
-			timeout: 5000,  // in milliseconds
-			decorateRequest: function (proxyReq, originalReq) {
-				proxyReq.headers['authorization'] = 'Basic ' + btoa(config.listener.username+':'+config.listener.password);
-				return proxyReq;
-			}
-		}));
+		require('./middleware/listener_proxy')(app);
 		// - - - -
 		// express config
 		app.use(express.bodyParser());  // middleware for parsing request body contents
