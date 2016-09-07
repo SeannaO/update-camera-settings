@@ -25,8 +25,8 @@ var all = {
 
     listener: {
         url: process.env.LISTENER_URL || 'https://localhost:3000',
-        username: process.env.LISTENER_URL || 'solink',
-        password: process.env.LISTENER_URL || '_tcpdump_wrapper_'
+        username: process.env.LISTENER_USERNAME || 'solink',
+        password: process.env.LISTENER_PASSWORD || '_tcpdump_wrapper_'
     }
 };
 
