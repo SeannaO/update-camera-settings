@@ -22,6 +22,12 @@ var all = {
     https_ports: {
         main: process.env.HTTPS_PORT || 9080
     },
+
+    listener: {
+        url: process.env.LISTENER_URL || 'https://localhost:3000',
+        username: process.env.LISTENER_URL || 'solink',
+        password: process.env.LISTENER_URL || '_tcpdump_wrapper_'
+    }
 };
 
 module.exports = all;
