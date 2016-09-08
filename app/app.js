@@ -181,6 +181,7 @@ portChecker.check(port, function(err, found) {
 		app.use(express.compress());
 		app.use(express.static('public'));
 		app.use(express.cookieParser());				// cookies middleware
+		require('./middleware/listener_proxy')(app);
 		// - - - -
 		// express config
 		app.use(express.bodyParser());  // middleware for parsing request body contents
