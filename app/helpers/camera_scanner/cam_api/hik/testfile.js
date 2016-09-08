@@ -6,6 +6,7 @@ var spawn             = require('child_process').spawn;
 var _                 = require('lodash');
 var xml2js            = require('xml2js');
 var streamingChannels = require('./streaming_channel').StreamingChannels;
+var SSDPClient = require('node-ssdp').Client;
 
 function indentObject(o) {
     var s = '';
@@ -176,3 +177,12 @@ var scanAndActivate = function () {
 //    host    : '10.126.141.253',
 //    body    : streamingChannels.channelListXML
 //});
+
+
+function ssdp() {
+    var ssdpClient = new SSDPClient();
+    ssdpClient.on('response', function (headers, statusCode, rinfo) {
+        console.log('m-search response ', rinfo);
+    });
+    ssdpClient.search('ssdp:all');
+}

@@ -36,6 +36,7 @@
     "memwatch": "^0.2.2",
     "moment": "^2.10.2",
     "nedb": "^1.5.0",
+    "node-ssdp": "^2.8.0",
     "passport": "^0.1.17",
     "passport-http": "^0.2.2",
     "pem": "^1.8.1",
