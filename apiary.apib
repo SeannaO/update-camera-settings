@@ -306,7 +306,50 @@ FORMAT: 1A
           "tz_name": "MSK",
           "utc_offset": -240
         }
-        
+
+
+# Group Listener proxy
+### POST /listener/push/video
+
++ Request (application/json)
+
+    + body
+
+            {
+                "cameraId": "nJhMcHzOKc5RdUho",
+                "streamId" : "9b31f7d4-df3b-47e5-eb6e-c3fc35f59b94",
+                "startTime": 1473269182000,
+                "endTime" : 1473269222000
+            }
+
++ Response 200 (application/json)
+
+        {
+            "message": "queued",
+            "url": "b56e2ac0-6323-11e6-829f-213a72b24ca6/nJhMcHzOKc5RdUho/9b31f7d4-df3b-47e5-eb6e-c3fc35f59b94_1473269182000-1473269222000.ts"
+        }
+
+### POST /listener/push/image
+
++ Request (application/json)
+
+    + body
+
+            {
+                "cameraId": "nJhMcHzOKc5RdUho",
+                "snapshot_time": 1473269182000,
+                "precision" : 0,
+                "width": 320
+            }
+
++ Response 200 (application/json)
+
+        {
+            "message": "queued",
+            "url": "b56e2ac0-6323-11e6-829f-213a72b24ca6/nJhMcHzOKc5RdUho/9b31f7d4-df3b-47e5-eb6e-c3fc35f59b94_1473269182000-1473269222000.ts"
+        }
+
+# Group socket.io
 ## Motion - socket.io [/motion]
 ### listen to motion events [GET]
 + Response 200 (application/json)
