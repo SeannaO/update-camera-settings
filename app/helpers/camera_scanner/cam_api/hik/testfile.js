@@ -5,8 +5,9 @@ var Promise           = require('bluebird');
 var spawn             = require('child_process').spawn;
 var _                 = require('lodash');
 var xml2js            = require('xml2js');
+var path              = require('path');
 var streamingChannels = require('./streaming_channel').StreamingChannels;
-var SSDPClient = require('node-ssdp').Client;
+var SSDPClient        = require('node-ssdp').Client;
 
 function indentObject(o) {
     var s = '';
@@ -40,7 +41,7 @@ var setupInquiryAndGetDeviceInfo = function () {
         return Promise.resolve('[HikIot] started');
     });
 };
-setupInquiryAndGetDeviceInfo();
+//setupInquiryAndGetDeviceInfo();
 
 
 var runActivate = function (code) {
@@ -50,12 +51,7 @@ var runActivate = function (code) {
             resolve([]);
             return;
         }
-        var activateProcess = spawn(__dirname + '/sadp_tool', [],
-            {
-                env: {
-                    LD_LIBRARY_PATH: process.env.LD_LIBRARY_PATH + ':' + __dirname
-                }
-            });
+        var activateProcess = spawn(__dirname + '/run_sadp_tool.sh', ['"S0l1nk!!"', '"10.126.141.1"', '"10.126.141"', 254]);
 
         var devices = [];
         activateProcess.stdout.setEncoding('utf8');
@@ -147,37 +143,28 @@ var scanAndActivate = function () {
         //        });
         //    })
         //});
-        .then(function (results) {
-            console.log('Results: \n%s', indentObject(results));
-            if (results && results.length <= 0) {
-                console.log('Skipping putStreamingChannels');
-                return Promise.resolve({});
-            }
-            results.unshift({});
-            return Promise.reduce(results, function (accumulator, device) {
-                return hiksdk.putStreamingChannels({
-                    username: 'admin',
-                    password: 'S0l1nk!!',
-                    host    : device.ipv4,
-                    body    : streamingChannels.channelListXML
-                });
-            });
-        })
+        //.then(function (results) {
+        //    console.log('Results: \n%s', indentObject(results));
+        //    if (results && results.length <= 0) {
+        //        console.log('Skipping putStreamingChannels');
+        //        return Promise.resolve({});
+        //    }
+        //    results.unshift({});
+        //    return Promise.reduce(results, function (accumulator, device) {
+        //        return hiksdk.putStreamingChannels({
+        //            username: 'admin',
+        //            password: 'S0l1nk!!',
+        //            host    : device.ipv4,
+        //            body    : streamingChannels.channelListXML
+        //        });
+        //    });
+        //})
         .catch(function (err) {
             console.error('some uncaught error ', err);
         });
     });
 };
-//scanAndActivate();
-
-
-//hiksdk.putStreamingChannels({
-//    username: 'admin',
-//    password: 'S0l1nk!!',
-//    host    : '10.126.141.253',
-//    body    : streamingChannels.channelListXML
-//});
-
+scanAndActivate();
 
 function ssdp() {
     var ssdpClient = new SSDPClient();
@@ -186,3 +173,4 @@ function ssdp() {
     });
     ssdpClient.search('ssdp:all');
 }
+//ssdp();

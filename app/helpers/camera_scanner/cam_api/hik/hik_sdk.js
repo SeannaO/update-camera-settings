@@ -76,9 +76,7 @@ self.networkAddresses = _.flatten(_.map(self.networkInterfaces, function (o) {
 self.externalNetworkAddresses = _.filter(self.networkAddresses, function (o) {
     return !o.internal && o.family === 'IPv4';
 });
-self.externalNetworkAddresses.push ({
-    address: '192.168.1.1'
-});
+
 var multicastSetup = function () {
     return _.map(self.externalNetworkAddresses, function (o) {
         return new Promise(function (resolve, reject) {
